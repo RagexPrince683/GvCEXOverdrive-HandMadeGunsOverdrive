@@ -1047,19 +1047,39 @@ public class HandmadeGunsCore {
 	{
 		public LivingEventHooks() {}
 
+		// Reuse render scopes; nested player renders must restore their own item-use state.
+		private final List<RenderItemUseState> renderItemUseStates = new ArrayList<RenderItemUseState>();
+		private int renderItemUseDepth;
+
+		private class RenderItemUseState {
+			EntityPlayer player;
+			ItemStack item;
+			int count;
+			boolean changed;
+		}
+
 		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
+		@SubscribeEvent(priority = cpw.mods.fml.common.eventhandler.EventPriority.LOWEST)
 		public void renderLiving(RenderPlayerEvent.Pre event)
 		{
+			if (renderItemUseDepth == renderItemUseStates.size()) renderItemUseStates.add(new RenderItemUseState());
+			RenderItemUseState state = renderItemUseStates.get(renderItemUseDepth++);
+			state.player = event.entityPlayer;
+			state.item = event.entityPlayer.getItemInUse();
+			state.count = event.entityPlayer.getItemInUseCount();
+			state.changed = false;
 			ItemStack itemstack = event.entityPlayer.getCurrentEquippedItem();
 			RenderPlayer renderplayer = event.renderer;
 			if(itemstack != null && (itemstack.getItem() instanceof HMGItem_Unified_Guns) && itemstack.hasTagCompound()){
 				// Signal ADS state through vanilla "using bow" semantics so external armour
 				// models that compute aimed pose from item use action (e.g. Flan's armour)
-				// receive the same arm transform intent.
+				// receive the same arm transform intent. Restore it after equipment rendering:
+				// leaving it set makes Minecraft.runTick suppress right-click firing.
 				if(Key_ADS(event.entityPlayer)) {
+					state.changed = true;
 					event.entityPlayer.setItemInUse(itemstack, itemstack.getMaxItemUseDuration());
 				} else if(event.entityPlayer.getItemInUse() == itemstack) {
+					state.changed = true;
 					event.entityPlayer.clearItemInUse();
 				}
 				if(itemstack.getTagCompound().getBoolean("set_up")) {
@@ -1071,6 +1091,21 @@ public class HandmadeGunsCore {
 			if(event.entityPlayer.ridingEntity instanceof PlacedGunEntity){
 				renderplayer.modelArmor.aimedBow = renderplayer.modelArmorChestplate.aimedBow = renderplayer.modelBipedMain.aimedBow = true;
 			}
+		}
+
+		@SideOnly(Side.CLIENT)
+		@SubscribeEvent(priority = cpw.mods.fml.common.eventhandler.EventPriority.LOWEST)
+		public void renderLivingPost(RenderPlayerEvent.Post event) {
+			if (renderItemUseDepth == 0) return;
+			RenderItemUseState state = renderItemUseStates.get(renderItemUseDepth - 1);
+			if (state.player != event.entityPlayer) return;
+			if (state.changed) {
+				event.entityPlayer.clearItemInUse();
+				if (state.item != null && state.count > 0) event.entityPlayer.setItemInUse(state.item, state.count);
+			}
+			state.player = null;
+			state.item = null;
+			renderItemUseDepth--;
 		}
 		int knife = 0;
 		@SubscribeEvent

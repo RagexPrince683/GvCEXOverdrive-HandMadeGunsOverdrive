@@ -627,3 +627,9 @@ CustomMagazine,12g_slug
 - Player-fired handheld projectiles now use synchronized effective eye geometry and gameplay body yaw/pitch while preserving elevation offsets, spread, and the existing forward spawn distance.
 - Removed the legacy post-construction head-yaw override only for projectiles that used the authoritative ray, and aligned handheld player lock-on direction and block-ray origin without changing placed guns, turrets, vehicles, or NPC firing.
 - Source-level audit and call-site searches were performed; build and in-game validation remain outstanding per the task's no-build instruction.
+
+2026-09-09 02:59 — Bound third-person ADS item-use compatibility to rendering
+
+- LivingEventHooks now captures and restores the prior item-use stack/count around player rendering, retaining the existing Flan's bow-style ADS signal through armour and held-item rendering. Reusable scopes support nested renders, and the Pre hook runs at LOWEST priority to respect earlier cancellation.
+- Previously the synthetic item-use state escaped into Minecraft.runTick, suppressing normal right-click firing before C08 packet creation. This HMG defect does not require Combatives; the swapped-key PacketTriggerHeld path bypasses that gate. No aim, spread, recoil, server packet or projectile behavior was changed.
+- Source-traced normal and swapped input through trigger handling, readiness checks and authoritative projectile construction. Java 8 :HMG:compileJava was attempted but dependency resolution failed offline for vecmath, InventoryTweaks and OpenComputers before compilation. No packaged or in-game success is claimed; both key layouts and integrated/dedicated servers still need testing.

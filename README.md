@@ -64,6 +64,13 @@ other renderer, and requires no Angelica-specific dependency.
 5. Start the game once to generate `config/HandmadeGuns.cfg`.
 6. Review key bindings under the `HandmadeGuns` category.
 
+HMG's third-person ADS armour compatibility temporarily exposes bow-style item use
+only during player rendering and restores the previous item-use stack/count after
+armour and held items finish. This prevents the visual ADS signal from suppressing
+normal right-click firing on subsequent client ticks. With Combatives, use a version
+that resolves crawl/swim animation before the biped ADS arm pose; Flan's armour then
+copies those resolved arms. Neither compatibility path requires Flan's to be installed.
+
 ### Dedicated Servers
 
 1. Install a Forge 1.7.10 server.
