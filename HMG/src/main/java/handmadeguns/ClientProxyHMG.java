@@ -208,6 +208,8 @@ public class ClientProxyHMG extends CommonSideProxyHMG {
 		ClientRegistry.registerKeyBinding(SeekerOpen_Close.keyBinding);
 		ClientRegistry.registerKeyBinding(Mode.keyBinding);
 		ClientRegistry.registerKeyBinding(HMGManualGunPickupClientHandler.PICKUP_KEY);
+		ClientRegistry.registerKeyBinding(handmadeguns.client.animation.AnimationClient.INSPECT);
+		cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(new handmadeguns.client.animation.AnimationClient());
 		HMGManualGunPickupClientHandler manualPickupHandler = new HMGManualGunPickupClientHandler();
 		cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(manualPickupHandler);
 		MinecraftForge.EVENT_BUS.register(manualPickupHandler);

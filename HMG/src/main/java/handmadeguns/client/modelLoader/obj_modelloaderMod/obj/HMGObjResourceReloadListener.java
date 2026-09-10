@@ -10,6 +10,8 @@ import net.minecraft.client.resources.IResourceManagerReloadListener;
 public class HMGObjResourceReloadListener implements IResourceManagerReloadListener {
     @Override
     public void onResourceManagerReload(IResourceManager resourceManager) {
+		// Animation files contain no GL resources and can safely refresh existing bindings.
+		handmadeguns.client.animation.AnimationResources.reloadAll();
         // SimpleReloadableResourceManager invokes a newly registered listener
         // immediately.  HMG registers this listener during init, after gun and
         // vehicle packs have already bound their initial models during pre-init.

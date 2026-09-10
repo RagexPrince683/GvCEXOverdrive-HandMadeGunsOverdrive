@@ -2,6 +2,8 @@
 
 HMG is pack-driven. Content packs can add guns, magazines, bullets, attachments, recipes, sounds, textures, models, tabs, and scripts without changing Java code.
 
+Optional named JSON animations can drive the existing HMG gun parts without replacing OBJ/MQO models. See [Animation authoring](animation-authoring.md) for `Animations,animations/name.json`, units, transitions, events, the example asset, and legacy compatibility.
+
 ## Supported Pack Roots
 
 Preferred path:

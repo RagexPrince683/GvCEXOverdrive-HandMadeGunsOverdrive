@@ -75,6 +75,7 @@ public class HMGGunMaker {
 		int parsedLines = 0;
 		int modelRegistrations = 0;
 		GunInfo gunInfo = new GunInfo();
+		String animationPath = null;
 		String  GunName = null;
 		String  displayNamegun = null;
 		String  objtexture;
@@ -319,6 +320,10 @@ public class HMGGunMaker {
 					if (type.length != 0){// 1
 
 						switch (type[0]) {
+							case "Animations":
+								animationPath = type.length == 2 ? type[1] : null;
+								if (animationPath == null) System.err.println("[HMG Animation] " + file1 + " | Expected Animations,animations/name.json");
+								break;
 							case "attachmentlocation":
 								parseAttachmentLocation(gunInfo, type, file1, 0);
 								break;
@@ -1027,6 +1032,7 @@ public class HMGGunMaker {
 											((HMGRenderItemGun_U_NEW)gunrender).setSprintOffsetAndRotation(spposx, spposy, spposz, sprotex, sprotey, sprotez);
 											
 											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.partslist = partslist;
+											handmadeguns.client.animation.AnimationResources.bind(((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun, file1, animationPath);
 											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.hasAttachmentAnchor = attachmentAnchor != null;
 										for (int attachmentSlot = 1; attachmentSlot <= 5; attachmentSlot++) ((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.hasNumberedAttachmentAnchor[attachmentSlot] = attachmentAnchors[attachmentSlot] != null;
 											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.gunPartsScale = gunPartsScale;
@@ -1059,6 +1065,7 @@ public class HMGGunMaker {
 											renderItemGun_u_new.setSprintOffsetAndRotation(spposx, spposy, spposz, sprotex, sprotey, sprotez);
 											
 											renderItemGun_u_new.partsRender_gun.partslist = partslist;
+											handmadeguns.client.animation.AnimationResources.bind(renderItemGun_u_new.partsRender_gun, file1, animationPath);
 											renderItemGun_u_new.partsRender_gun.hasAttachmentAnchor = attachmentAnchor != null;
 										for (int attachmentSlot = 1; attachmentSlot <= 5; attachmentSlot++) renderItemGun_u_new.partsRender_gun.hasNumberedAttachmentAnchor[attachmentSlot] = attachmentAnchors[attachmentSlot] != null;
 											renderItemGun_u_new.partsRender_gun.gunPartsScale = gunPartsScale;
@@ -1331,6 +1338,7 @@ public class HMGGunMaker {
 
 	public static void clearCachedModels() {
 		MODEL_CACHE.clear();
+		handmadeguns.client.animation.AnimationResources.reloadAll();
 	}
 
 	public static void invalidateCachedModel(String path) {
@@ -1356,6 +1364,7 @@ public class HMGGunMaker {
 		File sourceFile = GUN_SOURCE_FILES.get(item);
 		Set<String> modelPaths = ITEM_MODEL_PATHS.get(item);
 		if (sourceFile == null || !sourceFile.isFile() || modelPaths == null || modelPaths.isEmpty()) return false;
+		handmadeguns.client.animation.AnimationResources.invalidateSource(sourceFile);
 
 		// Never call the global invalidation path: this command owns only these resources.
 		for (String path : new ArrayList<String>(modelPaths)) {

@@ -331,7 +331,9 @@ public class PartsRender_Vehicle extends PartsRender {
 				HMGRenderItemGun_U_NEW.turretPitch = (float) (turretObj.prevturretrotationPitch +
 						(turretObj.turretrotationPitch - turretObj.prevturretrotationPitch) * smooth);
 
-				gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, gunStack);
+				if (((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.animationDefinition != null)
+					gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, gunStack, turretObj);
+				else gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, gunStack);
 
 				HMGRenderItemGun_U_NEW.isPlacedGun = false;
 			} else if (gunrender instanceof HMGRenderItemGun_U) {

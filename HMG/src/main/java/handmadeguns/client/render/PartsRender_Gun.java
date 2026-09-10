@@ -20,6 +20,8 @@ import static handmadeguns.client.render.HMGRenderItemGun_U_NEW.*;
 import static org.lwjgl.opengl.GL11.glTranslatef;
 
 public class PartsRender_Gun extends PartsRender {
+	/** Immutable opt-in data only; playback belongs to AnimationClient's instance registry. */
+	public handmadeguns.animation.AnimationDefinition animationDefinition;
 	public ArrayList<HMGGunParts> partslist = new ArrayList<HMGGunParts>();
 	public static Entity curretnEntity;
 	public GunTemp guntemp = new GunTemp();//TODO readPropertyFromNBTで銃の状態に同期
@@ -60,6 +62,8 @@ public class PartsRender_Gun extends PartsRender {
 			remainbullets = (int) data[2];
 		}
 		
+		if (rootRender && animationDefinition != null)
+			handmadeguns.client.animation.AnimationClient.prepare(this, states, flame, remainbullets);
 		for (HMGGunParts parts : partslist_temp) {
 			for (GunState state : states) {
 				if(checkState2(state,parts,flame,remainbullets))break;
@@ -177,6 +181,8 @@ public class PartsRender_Gun extends PartsRender {
 		return false;
 	}
 	public void PartSidentification_Attach(HMGGunParts parts, GunState state, float flame, int remainbullets, HMGGunParts_Motion_PosAndRotation OffsetAndRotation){
+		if (animationDefinition != null)
+			OffsetAndRotation = handmadeguns.client.animation.AnimationClient.pose(this, parts, OffsetAndRotation);
 		if(gunitem.gunInfo.magazine.length >1) {
 			if (parts.current_magazineType != null) {
 				int currentmagazineid = nbt.getInteger("getcurrentMagazine");

@@ -324,6 +324,17 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	int pass = 0;
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack gunstack, Object... data) {
+		if (partsRender_gun.animationDefinition == null || handmadeguns.client.animation.AnimationClient.scopedFor(partsRender_gun, gunstack)) {
+			renderItemContents(type, gunstack, data);
+			return;
+		}
+		try (handmadeguns.client.animation.AnimationClient.Scope scope =
+				handmadeguns.client.animation.AnimationClient.begin(partsRender_gun, gunstack, type, data, isUnder, isPlacedGun)) {
+			renderItemContents(type, gunstack, data);
+		}
+	}
+
+	private void renderItemContents(ItemRenderType type, ItemStack gunstack, Object... data) {
 
 //		glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,120);
 		HMGItem_Unified_Guns gunitem;
@@ -427,6 +438,17 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 
 	}
 	public void rendering(ItemRenderType type, ItemStack gunstack, Object... data){
+		if (partsRender_gun.animationDefinition == null || handmadeguns.client.animation.AnimationClient.scoped(partsRender_gun)) {
+			renderingContents(type, gunstack, data);
+			return;
+		}
+		try (handmadeguns.client.animation.AnimationClient.Scope scope =
+				handmadeguns.client.animation.AnimationClient.begin(partsRender_gun, gunstack, type, data, isUnder, isPlacedGun)) {
+			renderingContents(type, gunstack, data);
+		}
+	}
+
+	private void renderingContents(ItemRenderType type, ItemStack gunstack, Object... data){
 		HMGItem_Unified_Guns gunitem = null;
 		if (gunstack.getItem() instanceof HMGItem_Unified_Guns)
 			gunitem = (HMGItem_Unified_Guns) gunstack.getItem();

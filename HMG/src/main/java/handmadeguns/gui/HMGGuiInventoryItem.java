@@ -126,7 +126,16 @@ public class HMGGuiInventoryItem extends GuiContainer
                 if (gunrender instanceof HMGRenderItemGun_U_NEW ||
                         gunrender instanceof HMGRenderItemGun_U)
                 {
-                    gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, previewItem);
+                    if (gunrender instanceof HMGRenderItemGun_U_NEW
+                            && ((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.animationDefinition != null) {
+                        try (handmadeguns.client.animation.AnimationClient.Scope scope =
+                                handmadeguns.client.animation.AnimationClient.beginPreview(
+                                        ((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun, currentItem, previewItem, this)) {
+                            gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, previewItem);
+                        }
+                    } else {
+                        gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, previewItem);
+                    }
                 }
 
                 GL11.glDisable(GL12.GL_RESCALE_NORMAL);

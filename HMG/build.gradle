@@ -200,6 +200,14 @@ tasks.withType(JavaCompile) {
 // RUNCLIENT JVM FIX
 // ===========================
 
+// CPU-only animation regression suite; uses existing Minecraft Gson, no test dependency.
+task animationTest(type: JavaExec, dependsOn: testClasses) {
+	main = 'handmadeguns.animation.AnimationTests'
+	classpath = sourceSets.test.runtimeClasspath
+	args rootProject.file('docs/examples/animations/foundation.json').absolutePath
+}
+test.dependsOn animationTest
+
 tasks.withType(JavaExec) {
 	if (name == "runClient") {
 		jvmArgs "-Djinput.useDefaultPlugin=false"

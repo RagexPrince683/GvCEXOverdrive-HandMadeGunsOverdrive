@@ -125,7 +125,9 @@ public class PlacedGun_Render extends Render {
 
                             GL11.glScalef(0.5f, 0.5f, 0.5f);
                             try {
-                                gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, entity.gunStack);
+                                if (((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.animationDefinition != null)
+                                    gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, entity.gunStack, entity);
+                                else gunrender.renderItem(IItemRenderer.ItemRenderType.ENTITY, entity.gunStack);
                             } catch (Throwable t) {
                                 // fail-safe: avoid breaking the game if a custom renderer throws
                                 t.printStackTrace();
