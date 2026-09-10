@@ -135,3 +135,25 @@ jumps, slabs/stairs, ledges, holding jump on landing, heavy/light switches,
 creative flight/landing, crawl clearance, reconnect/respawn/dimension changes,
 server reload and mismatched client pack values. Dedicated and integrated server
 runs are both required, including real coremod/Mixin transformer ordering.
+
+## HMG configured explosion damage
+
+For projectile explosions with configured damage and radius `R`, damage eligibility
+requires `abs(entity.posY - explosionY) <= R`. Within that vertical reach, damage
+uses horizontal distance `h = sqrt(dx*dx + dz*dz)`: full configured damage through
+`h <= R`, linear falloff between `R` and `2R`, and zero at or beyond `2R`.
+Vertical separation uses the entity position, not eye height. This is a cylindrical
+damage volume with an abrupt vertical cutoff; equal horizontal distance gives equal
+distance falloff at every eligible height.
+
+Damage is still multiplied by HMG terrain exposure, so terrain and target bounding
+box visibility can produce different damage at different heights. Vegetation and
+webs do not count as cover; stone and physical transparent blocks do. Exposure
+retains its existing coarse occupied-cell sampling for partial blocks.
+
+Knockback retains its original 3D distance, spherical reach and eye-based direction,
+including player packet values. Consequently damage and knockback reach differ.
+The legacy constructor without configured damage (used by GVC's guerrilla bomber)
+retains its previous spherical damage formula. Explosion damage remains server-owned;
+block destruction is unchanged. These rules have compilation and mathematical
+validation; in-game height, cover and dedicated-server checks remain outstanding.

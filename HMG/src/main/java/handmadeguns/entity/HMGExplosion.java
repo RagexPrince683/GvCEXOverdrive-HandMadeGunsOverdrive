@@ -120,24 +120,34 @@ public class HMGExplosion extends Explosion {
 		{
 			Entity entity = (Entity)list.get(i1);
 			double d4 = entity.getDistance(this.explosionX, this.explosionY, this.explosionZ) / (double)this.explosionSize;
+			double horizontalX = entity.posX - this.explosionX;
+			double horizontalZ = entity.posZ - this.explosionZ;
+			double horizontalDistance = Math.sqrt(horizontalX * horizontalX + horizontalZ * horizontalZ);
+			// Configured damage uses a cylinder; legacy damage and knockback retain their sphere.
+			boolean inDamageRange = this.explosionDamage >= 0.0F
+					? abs(entity.posY - this.explosionY) <= f && horizontalDistance < this.explosionSize
+					: d4 <= 1.0D;
 
-			if (d4 <= 1.0D)
+			if (inDamageRange || d4 <= 1.0D)
 			{
 				d5 = entity.posX - this.explosionX;
 				d6 = entity.posY + (double)entity.getEyeHeight() - this.explosionY;
 				d7 = entity.posZ - this.explosionZ;
 				double d9 = (double)MathHelper.sqrt_double(d5 * d5 + d6 * d6 + d7 * d7);
 
-				if (d9 != 0.0D)
+				// Damage eligibility is independent of the eye-based knockback direction.
+				double d10 = (double)this.getHMGBlockDensity(vec3, entity.boundingBox);
+				double d11 = (1.0D - d4) * d10;
+				if (inDamageRange && (this.explosionDamage >= 0.0F || d9 != 0.0D))
+				{
+					entity.attackEntityFrom(DamageSource.setExplosionSource(this), getExplosionDamage(horizontalDistance, d10, d11, f));
+				}
+
+				if (d4 <= 1.0D && d9 != 0.0D)
 				{
 					d5 /= d9;
 					d6 /= d9;
 					d7 /= d9;
-					// Use HMG exposure so grass, flowers, vines, snow layers, fire, and other
-					// non-cover blocks do not incorrectly absorb configured blast damage.
-					double d10 = (double)this.getHMGBlockDensity(vec3, entity.boundingBox);
-					double d11 = (1.0D - d4) * d10;
-					entity.attackEntityFrom(DamageSource.setExplosionSource(this), getExplosionDamage(entity, d10, d11, f));
 					//we're gonna be buffing this by a multiple of 3 so mcheli fucks off with it's retarded damg calc
 					//old method:
 					//entity.attackEntityFrom(DamageSource.setExplosionSource(this), (float)((int)((d11 * d11 + d11) / 2.0D * 8.0D * (double)this.explosionSize + 1.0D)));
@@ -245,17 +255,15 @@ public class HMGExplosion extends Explosion {
 
 		Material material = block.getMaterial();
 
-		if (material == Material.air || material.isReplaceable() || material == Material.plants || material == Material.vine || material == Material.leaves || material == Material.snow || material == Material.fire || material == Material.water || material == Material.lava)
+		// Use physical properties, not opacity/render type: glass, doors, fences,
+		// and slabs can provide cover. Webs slow entities but are not blast cover.
+		if (material == Material.web || !material.blocksMovement() || block.isReplaceable(world, x, y, z))
 		{
 			return false;
 		}
 
-		if (block == Blocks.tallgrass || block == Blocks.double_plant || block == Blocks.yellow_flower || block == Blocks.red_flower || block == Blocks.deadbush || block == Blocks.vine || block == Blocks.snow_layer || block == Blocks.fire || block == Blocks.wheat || block == Blocks.carrots || block == Blocks.potatoes || block == Blocks.reeds || block == Blocks.waterlily)
-		{
-			return false;
-		}
-
-		if (!block.isOpaqueCube() || !block.renderAsNormalBlock())
+		// Preserve HMG's existing treatment of foliage as non-protective.
+		if (material == Material.leaves)
 		{
 			return false;
 		}
@@ -270,20 +278,19 @@ public class HMGExplosion extends Explosion {
 		return true;
 	}
 
-	private float getExplosionDamage(Entity entity, double blockDensity, double vanillaExposure, float fullDamageRadius)
+	private float getExplosionDamage(double horizontalDistance, double blockDensity, double vanillaExposure, float fullDamageRadius)
 	{
 		if (this.explosionDamage < 0.0F)
 		{
 			return (float)((int)((vanillaExposure * vanillaExposure + vanillaExposure) / 1.2D * (double)this.explosionSize * 3));
 		}
 
-		double distance = entity.getDistance(this.explosionX, this.explosionY, this.explosionZ);
 		double falloff = 1.0D;
 		double falloffRange = (double)this.explosionSize - (double)fullDamageRadius;
 
-		if (falloffRange > 0.0D && distance > (double)fullDamageRadius)
+		if (falloffRange > 0.0D && horizontalDistance > (double)fullDamageRadius)
 		{
-			falloff = 1.0D - ((distance - (double)fullDamageRadius) / falloffRange);
+			falloff = 1.0D - ((horizontalDistance - (double)fullDamageRadius) / falloffRange);
 		}
 
 		if (falloff <= 0.0D || blockDensity <= 0.0D)
