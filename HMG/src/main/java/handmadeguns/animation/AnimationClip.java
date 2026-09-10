@@ -24,6 +24,7 @@ public final class AnimationClip {
                 || !Double.isFinite(fadeOut) || fadeOut < 0) throw new IllegalArgumentException("Invalid clip metadata");
         for (AnimationTrack track : tracks.values()) for (AnimationKeyframe frame : track.keyframes)
             if (frame.time > duration) throw new IllegalArgumentException("Keyframe after duration");
+        // Independent channels may retain control keys after the clip end (e.g. cubic end tangents).
         for (AnimationEvent event : events) if (event.time > duration) throw new IllegalArgumentException("Event after duration");
         this.name = name; this.duration = duration; this.loop = loop;
         this.fadeIn = fadeIn; this.fadeOut = fadeOut; this.priority = priority; this.interruptible = interruptible;

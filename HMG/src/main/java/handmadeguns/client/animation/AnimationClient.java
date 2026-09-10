@@ -198,7 +198,8 @@ public final class AnimationClient {
                                                          HMGGunParts_Motion_PosAndRotation legacy) {
         Scope scope = ACTIVE.get();
         if (scope == null || scope.renderer != renderer || scope.entry == null) return legacy;
-        return LegacyMotionAdapter.apply(scope.entry.pose, part.partsname, legacy);
+        String key = scope.entry.pose.parts.containsKey(part.animationKey()) ? part.animationKey() : part.partsname;
+        return LegacyMotionAdapter.apply(scope.entry.pose, key, legacy);
     }
 
     public static final class Scope implements AutoCloseable {

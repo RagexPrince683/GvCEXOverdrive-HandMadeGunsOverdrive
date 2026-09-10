@@ -10,6 +10,7 @@ public class HMGGunParts_Motion_PosAndRotation {
     public float posX;
     public float posY;
     public float posZ;
+    public float scaleX = 1, scaleY = 1, scaleZ = 1;
     public boolean renderOnOff = true;
     public Vector3f rotateVec;
     public HMGGunParts_Motion_PosAndRotation(){

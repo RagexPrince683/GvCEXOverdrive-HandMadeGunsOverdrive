@@ -76,6 +76,7 @@ public class HMGGunMaker {
 		int modelRegistrations = 0;
 		GunInfo gunInfo = new GunInfo();
 		String animationPath = null;
+		String blockbenchPath = null;
 		String  GunName = null;
 		String  displayNamegun = null;
 		String  objtexture;
@@ -394,6 +395,12 @@ public class HMGGunMaker {
 								break;
 							case "ObjModel":
 								objmodel = type[1];
+								break;
+							case "BlockbenchModel":
+								if (type.length != 2 || !type[1].endsWith(".bbmodel"))
+									throw new IllegalArgumentException("Expected BlockbenchModel,models/name.bbmodel in " + file1);
+								blockbenchPath = type[1];
+								gunInfo.canobj = true;
 								break;
 							case "ObjTexture":
 								objtexture = type[1];
@@ -1003,12 +1010,22 @@ public class HMGGunMaker {
 								}
 								if (isClient) recordGunSource(newgun, file1);
 								if (gunInfo.canobj && isClient) {
-									recordReloadableModel(newgun, file1, "handmadeguns:textures/model/" + objmodel);
-									IModelCustom gunobj = getCachedModel("handmadeguns:textures/model/" + objmodel);
-									ResourceLocation guntexture = getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
+									recordReloadableModel(newgun, file1, blockbenchPath == null ? "handmadeguns:textures/model/" + objmodel : "blockbench:" + blockbenchPath);
+									IModelCustom gunobj;
+									ResourceLocation guntexture;
+									if (blockbenchPath != null) {
+										handmadeguns.client.modelLoader.blockbench.BlockbenchProject project =
+												handmadeguns.client.modelLoader.blockbench.BlockbenchProject.load(file1, blockbenchPath);
+										handmadeguns.client.modelLoader.blockbench.BlockbenchModel imported = new handmadeguns.client.modelLoader.blockbench.BlockbenchModel(project);
+										gunobj = imported; guntexture = imported.texture(); partslist = imported.parts;
+										for (String warning : project.warnings) System.err.println("[HMG Blockbench] " + project.file + " | " + warning);
+									} else {
+										gunobj = getCachedModel("handmadeguns:textures/model/" + objmodel);
+										guntexture = getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
+									}
 									modelRegistrations++;
 									boolean useLegacyInventoryScale = false;
-									if(partslist.isEmpty()) {
+									if(partslist.isEmpty() && blockbenchPath == null) {
 										partslist = createLegacyCompatibleParts(mat22, mat22posx, mat22posy, mat22posz, mat22rotex, mat22rotey, mat22rotez, mat25, mat25posx, mat25posy, mat25posz, mat25rotex, mat25rotey, mat25rotez, mat31posx, mat31posy, mat31posz, mat31rotex, mat31rotey, mat31rotez, mat32posx, mat32posy, mat32posz, mat32rotex, mat32rotey, mat32rotez, remat31, remat3, cockleft, alljump);
 										useLegacyInventoryScale = true;
 									}
@@ -1368,6 +1385,7 @@ public class HMGGunMaker {
 
 		// Never call the global invalidation path: this command owns only these resources.
 		for (String path : new ArrayList<String>(modelPaths)) {
+			if (path.startsWith("blockbench:")) continue; // External project is reread by the pack reparse below.
 			ResourceLocation resource = getCachedResourceLocation(path);
 			invalidateCachedModel(path);
 			HMGObjModelLoader.invalidateModel(resource);

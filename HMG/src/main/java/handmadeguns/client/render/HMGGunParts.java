@@ -13,6 +13,9 @@ public class HMGGunParts {
     public ScriptEngine script_global;
     public boolean rotateTypeIsVector = false;
     public String partsname;
+    /** Imported bones use stable UUIDs; legacy parts continue to use their names. */
+    public String animationId;
+    public String animationKey() { return animationId == null ? partsname : animationId; }
     public HMGGroupObject currentGroup_parts;
     public String partsname_reticlePlate;
     public HMGGroupObject currentGroup_reticlePlate;

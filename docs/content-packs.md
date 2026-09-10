@@ -4,6 +4,8 @@ HMG is pack-driven. Content packs can add guns, magazines, bullets, attachments,
 
 Optional named JSON animations can drive the existing HMG gun parts without replacing OBJ/MQO models. See [Animation authoring](animation-authoring.md) for `Animations,animations/name.json`, units, transitions, events, the example asset, and legacy compatibility.
 
+Unified guns can instead use `BlockbenchModel,models/name.bbmodel` to import geometry, bone parts, embedded PNG textures and animations directly from a Blockbench project. No OBJ export, `AddParts` declarations or separate animation JSON is needed. The checked-in `GVCguns/guns/AKM_Blockbench.txt` and `GVCguns/models/cod4_ak.bbmodel` provide a complete AK example. See [direct Blockbench importing](animation-authoring.md#direct-blockbench-projects) for the supported formats, TaCZ action aliases and limitations.
+
 ## Supported Pack Roots
 
 Preferred path:

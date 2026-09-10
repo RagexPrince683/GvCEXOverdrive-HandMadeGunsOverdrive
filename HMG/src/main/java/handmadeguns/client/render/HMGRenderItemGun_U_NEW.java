@@ -204,6 +204,8 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		partsRender_gun.modelscala = this.modelscala = scala;
 	}
 	public void reloadConstructor(IModelCustom modelgun, ResourceLocation texture, float scala) {
+		if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel && model != modelgun)
+			((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).release();
 		partsRender_gun = new PartsRender_Gun();
 		partsRender_gun.model = model = modelgun;
 		partsRender_gun.texture = guntexture = texture;

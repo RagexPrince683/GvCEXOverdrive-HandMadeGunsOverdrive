@@ -30,11 +30,16 @@ public final class AnimationPose {
 
     public static final class Transform {
         public static final Transform IDENTITY = new Transform(0, 0, 0, 0, 0, 0);
-        public final float x, y, z, rx, ry, rz;
+        public final float x, y, z, rx, ry, rz, sx, sy, sz;
 
         public Transform(float x, float y, float z, float rx, float ry, float rz) {
+            this(x, y, z, rx, ry, rz, 1, 1, 1);
+        }
+
+        public Transform(float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) {
             this.x = finite(x); this.y = finite(y); this.z = finite(z);
             this.rx = finite(rx); this.ry = finite(ry); this.rz = finite(rz);
+            this.sx = finite(sx); this.sy = finite(sy); this.sz = finite(sz);
         }
 
         private static float finite(float value) {
@@ -46,13 +51,16 @@ public final class AnimationPose {
             return new Transform((float)(x + ((double)other.x - x) * weight),
                     (float)(y + ((double)other.y - y) * weight), (float)(z + ((double)other.z - z) * weight),
                     (float)(rx + ((double)other.rx - rx) * weight), (float)(ry + ((double)other.ry - ry) * weight),
-                    (float)(rz + ((double)other.rz - rz) * weight));
+                    (float)(rz + ((double)other.rz - rz) * weight),
+                    (float)(sx + ((double)other.sx - sx) * weight),
+                    (float)(sy + ((double)other.sy - sy) * weight),
+                    (float)(sz + ((double)other.sz - sz) * weight));
         }
 
         /** Component addition, not matrix multiplication; angles intentionally do not wrap. */
         public Transform add(Transform other) {
             return new Transform(x + other.x, y + other.y, z + other.z,
-                    rx + other.rx, ry + other.ry, rz + other.rz);
+                    rx + other.rx, ry + other.ry, rz + other.rz, sx * other.sx, sy * other.sy, sz * other.sz);
         }
     }
 }

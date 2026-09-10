@@ -42,6 +42,8 @@ public abstract class PartsRender {
 	public static final FrameBuffer FBO = FrameBuffer.create();
 
 	public void part_Render(HMGGunParts parts, GunState state, float flame, int remainbullets, HMGGunParts_Motion_PosAndRotation OffsetAndRotation){
+		if (parts instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part
+				&& !((handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part)parts).visible) return;
 		FMLClientHandler.instance().getWorldClient().theProfiler.startSection("partRender");
 		if(!parts.initialized){
 			/*
@@ -76,8 +78,14 @@ public abstract class PartsRender {
 		HMGGunParts_Motion_PosAndRotation rotationCenterAndRotation = parts.getRenderinfCenter();
 		if(OffsetAndRotation != null && !OffsetAndRotation.renderOnOff)return;
 		GL11.glPushMatrix();
-		transformParts(rotationCenterAndRotation,parts.getRenderinfDefault_offset(),parts);
-		if(OffsetAndRotation != null)transformParts(rotationCenterAndRotation,OffsetAndRotation,parts);
+		if (parts instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part) {
+			handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part bone =
+					(handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part)parts;
+			handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.apply(bone.localOrigin, bone.restRotation, OffsetAndRotation, gunPartsScale);
+		} else {
+			transformParts(rotationCenterAndRotation,parts.getRenderinfDefault_offset(),parts);
+			if(OffsetAndRotation != null)transformParts(rotationCenterAndRotation,OffsetAndRotation,parts);
+		}
 		applyPartExtraTransform(parts);
 
 
@@ -155,7 +163,9 @@ public abstract class PartsRender {
 			float lastBrightnessX = OpenGlHelper.lastBrightnessX;
 			float lastBrightnessY = OpenGlHelper.lastBrightnessY;
 			if(!skip) {
-				parts.currentGroup_parts.render();
+				if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+					((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).renderGeometry(parts,gunPartsScale,null);
+				else parts.currentGroup_parts.render();
 				if (gunSkinTexture != null && renderGunSkinOverlay && shouldApplyGunSkin(parts)) {
 					GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_POLYGON_BIT);
 					FMLClientHandler.instance().getClient().getTextureManager().bindTexture(gunSkinTexture);
@@ -167,7 +177,9 @@ public abstract class PartsRender {
 					GL11.glDepthFunc(GL11.GL_EQUAL);
 					GL11.glDepthMask(false);
 					GL11.glColor4f(1, 1, 1, 1);
-					parts.currentGroup_parts.render();
+					if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+						((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).renderGeometry(parts,gunPartsScale,gunSkinTexture);
+					else parts.currentGroup_parts.render();
 					GL11.glPopAttrib();
 					FMLClientHandler.instance().getClient().getTextureManager().bindTexture(texture);
 				}

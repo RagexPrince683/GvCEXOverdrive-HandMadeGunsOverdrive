@@ -77,6 +77,8 @@ public class PartsRender_Gun extends PartsRender {
 	@Override
 	protected void renderPartHook(HMGGunParts parts, GunState state, float flame, int remainbullets,
 	                              HMGGunParts_Motion_PosAndRotation offsetAndRotation) {
+		if (isfirstperson && pass != 1 && model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+			((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).renderHand(parts,gunPartsScale);
 		for (int slot = 1; slot <= 5; slot++) if (parts.attachmentAttachSlots[slot]) renderAttachmentSlot(slot);
 		if (parts.attachmentAttach) for (int slot = 1; slot <= 5; slot++)
 			if (!hasNumberedAttachmentAnchor[slot]) renderAttachmentSlot(slot);

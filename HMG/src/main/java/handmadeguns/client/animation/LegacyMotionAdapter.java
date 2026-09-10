@@ -24,10 +24,11 @@ public final class LegacyMotionAdapter {
         for (HMGGunParts part : parts) {
             GunState selected = null;
             for (GunState state : states) if (enabled(part, state)) { selected = state; break; }
-            if (selected != null && targets.contains(part.partsname)) {
+            String key = targets.contains(part.animationKey()) ? part.animationKey() : part.partsname;
+            if (selected != null && targets.contains(key)) {
                 HMGGunParts_Motion_PosAndRotation value = sample(part, selected, time);
                 // Legacy interpolation returns a GLOBAL scratch object. Copy before any child/other sample.
-                if (value != null) result.put(part.partsname, new AnimationPose.Transform(
+                if (value != null) result.put(key, new AnimationPose.Transform(
                         value.posX, value.posY, value.posZ, value.rotationX, value.rotationY, value.rotationZ));
             }
             // HMG propagates the selected parent state, not the original fallback list, to children.
@@ -66,6 +67,7 @@ public final class LegacyMotionAdapter {
         HMGGunParts_Motion_PosAndRotation result = new HMGGunParts_Motion_PosAndRotation(
                 value.x, value.y, value.z, value.rx, value.ry, value.rz);
         result.renderOnOff = legacy.renderOnOff;
+        result.scaleX = value.sx; result.scaleY = value.sy; result.scaleZ = value.sz;
         result.rotateVec = legacy.rotateVec;
         return result;
     }

@@ -18,6 +18,11 @@ public final class AnimationResources {
     public static void bind(PartsRender_Gun renderer, File gunFile, String reference) {
         renderer.animationDefinition = null;
         BINDINGS.remove(renderer);
+        if (renderer.model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
+            renderer.animationDefinition = ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)renderer.model).project.animations;
+            if (reference != null) System.err.println("[HMG Blockbench] " + gunFile + " | Embedded animations take precedence over Animations JSON");
+            return;
+        }
         if (reference == null || reference.isEmpty()) return;
         try {
             File root = gunFile.getCanonicalFile().getParentFile().getParentFile();

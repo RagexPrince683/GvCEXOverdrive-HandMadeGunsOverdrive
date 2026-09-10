@@ -99,7 +99,7 @@ public final class AnimationController {
                 if (entry.getKey() == Layer.ADDITIVE) {
                     AnimationPose.Transform base = result.get(track.getKey());
                     if (base != null) value = base.add(value);
-                }
+                } else value = track.getValue().overlay(result.get(track.getKey()), value);
                 result.put(track.getKey(), value);
             }
         }
