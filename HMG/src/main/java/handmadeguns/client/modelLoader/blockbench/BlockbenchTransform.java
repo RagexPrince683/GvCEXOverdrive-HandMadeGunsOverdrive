@@ -3,16 +3,25 @@ package handmadeguns.client.modelLoader.blockbench;
 import handmadeguns.animation.AnimationPose;
 import org.lwjgl.opengl.GL11;
 
-/** One conversion boundary: BB pixels, +Y up/-Z forward -> HMG units, +Y up/+Z forward.
- * C = rotationY(180 degrees), units = 1/16. C preserves winding. Bedrock uses ZYX Euler.
+/** One conversion boundary from saved Blockbench project space to HMG model space.
+ * C = rotationZ(180 degrees), so positions are [-x,-y,z] and Euler angles are
+ * [-rx,-ry,rz]. Bedrock uses ZYX Euler and C preserves winding.
+ *
+ * Blockbench pixels use a 3/16 HMG unit baseline. The factor of three matches the
+ * legacy HMG firearm baseline (legacy MQO coordinates are divided by 100) while
+ * leaving ModelScala and Gunparts_offsetScale as author controls.
  * Origins in the project are absolute even when bones are nested; translations are parent-local.
  */
 public final class BlockbenchTransform {
+    private static final double HMG_UNITS_PER_PIXEL = 3.0 / 16.0;
+    private static final float HMG_MODEL_NORMALIZATION = 3.0f;
     private BlockbenchTransform() { }
     public static double factor(String channel, int axis) {
         if ("scale".equals(channel)) return 1;
-        return (axis == 1 ? 1 : -1) * ("position".equals(channel) ? 1.0 / 16 : 1);
+        return (axis == 2 ? 1 : -1) * ("position".equals(channel) ? HMG_UNITS_PER_PIXEL : 1);
     }
+    /** Scale a non-Blockbench mesh placed inside the converted model, such as a player arm. */
+    public static float modelNormalization() { return HMG_MODEL_NORMALIZATION; }
     public static float[] point(double[] position, double[] parentOrigin) {
         float[] result = new float[3];
         for (int i = 0; i < 3; i++) result[i] = (float)((position[i] - parentOrigin[i]) * factor("position", i));
@@ -47,10 +56,8 @@ public final class BlockbenchTransform {
         GL11.glRotatef(rest[2]+rz,0,0,1); GL11.glRotatef(rest[1]+ry,0,1,0); GL11.glRotatef(rest[0]+rx,1,0,0);
         GL11.glScalef(sx,sy,sz);
     }
-    /** TaCZ's hand anchor applies Rz(180) in its Bedrock Java frame.
-     * C_hmg * inverse(C_bedrockJava) * Rz(180) = Ry(180).
-     */
+    /** TaCZ hand anchors rotate the player arm 180 degrees around local Z. */
     public static void playerArmFrame() {
-        GL11.glRotatef(180,0,1,0);
+        GL11.glRotatef(180,0,0,1);
     }
 }

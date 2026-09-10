@@ -60,7 +60,7 @@ public final class BlockbenchProject {
         return path;
     }
     public static BlockbenchProject load(File gunFile, String reference) throws IOException {
-        File root = gunFile.getCanonicalFile().getParentFile().getParentFile();
+        File root = handmadeguns.HandmadeGunsCore.gunPackRoot(gunFile);
         try { return new BlockbenchProject(resolve(root, root, reference), root); }
         catch (IOException | RuntimeException failure) {
             throw new IOException("[HMG Blockbench] " + gunFile + " | " + reference + " | " + failure.getMessage(),failure);

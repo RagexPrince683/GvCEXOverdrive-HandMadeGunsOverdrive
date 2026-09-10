@@ -42,6 +42,7 @@ handmadeguns_Packs/
 
 ## Loader Behavior
 
+- Pack ownership is limited to immediate directories under the two HMG roots above. Startup resources, definitions, recipes, scripts and settings reloads reject packs outside those roots, including redirected pack paths. `Flan/` is not an HMG root; model or animation files do not identify a directory as an HMG pack. Direct gun loading also requires an owned `guns/` directory. Blockbench models, their external textures and animation JSON references must remain inside that active pack. Legacy OBJ/MQO resource locations retain their existing shared resource namespace.
 - Pack folders are sorted by name before loading.
 - Files inside major definition folders are sorted by name where the source explicitly sorts them.
 - Resource folders are copied into generated `assets/handmadeguns` paths under the pack root and registered as resource containers on the client.

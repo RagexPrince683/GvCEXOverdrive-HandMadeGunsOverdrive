@@ -37,6 +37,8 @@ public class PartsRender_Gun extends PartsRender {
 	public float overbarrelattachoffset[] = new float[3];
 	public float overbarrelattachrotation[] = new float[3];
 	public boolean useLegacyInventoryScale = false;
+	/** ModelArm controls imported locator arms; legacy OBJ/MQO part behavior is unchanged. */
+	public boolean blockbenchArmsEnabled = false;
 	/** Set by the gun-part parser when this model has a SetAttachmentAttach anchor. */
 	public boolean hasAttachmentAnchor = false;
 	public final boolean[] hasNumberedAttachmentAnchor = new boolean[6];
@@ -69,6 +71,15 @@ public class PartsRender_Gun extends PartsRender {
 				if(checkState2(state,parts,flame,remainbullets))break;
 			}
 		}
+		if (rootRender && isfirstperson && pass != 1 && blockbenchArmsEnabled
+				&& model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
+			handmadeguns.client.modelLoader.blockbench.BlockbenchModel imported =
+					(handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model;
+			// Authored locators are primary. Existing ModelArm offsets/rotations remain the
+			// fallback for either hand when its locator is absent or hidden.
+			if (!imported.hasHandLocator(true)) renderarmL();
+			if (!imported.hasHandLocator(false)) renderarmR();
+		}
 		if (rootRender) for (int slot = 1; slot <= 5; slot++)
 			if (!attachmentRendered[slot] && !hasNumberedAttachmentAnchor[slot] && !hasAttachmentAnchor)
 				renderAttachmentSlot(slot);
@@ -77,7 +88,8 @@ public class PartsRender_Gun extends PartsRender {
 	@Override
 	protected void renderPartHook(HMGGunParts parts, GunState state, float flame, int remainbullets,
 	                              HMGGunParts_Motion_PosAndRotation offsetAndRotation) {
-		if (isfirstperson && pass != 1 && model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+		if (isfirstperson && pass != 1 && blockbenchArmsEnabled
+				&& model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
 			((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).renderHand(parts,gunPartsScale);
 		for (int slot = 1; slot <= 5; slot++) if (parts.attachmentAttachSlots[slot]) renderAttachmentSlot(slot);
 		if (parts.attachmentAttach) for (int slot = 1; slot <= 5; slot++)

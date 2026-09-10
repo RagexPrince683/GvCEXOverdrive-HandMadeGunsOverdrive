@@ -51,3 +51,22 @@
 
 - Added `AKM_Blockbench.txt`, cloning the existing AKM stats and attachments while using `models/cod4_ak.bbmodel` and its embedded animations. Its 52-tick reload timer matches the embedded 2.6-second tactical reload clip.
 - Copied the reference AK Blockbench project into the GVCguns pack so content authors can load the example directly without an OBJ export or manual `AddParts` declarations. The empty-magazine 3.4-second clip remains selected by ammo state and may require a longer timer if a pack wants to match that branch exactly.
+
+2026-09-10 17:12 — Enforce HMG pack ownership before gun importing
+
+- Added ownership checks for immediate packs under the existing normal and legacy HMG roots, used by startup resource/definition/script/recipe enumeration and settings reload. Direct gun loading rejects external or redirected gun paths before parsing; Blockbench and animation JSON resolve their root through that same check. Flan directories cannot enter the gun importer via these entry points. Existing pack formats and OBJ/MQO resource lookup remain unchanged.
+- Source and production-instance inspection found no recursive Blockbench discovery or Flan fallback. TaP-Escalation is registered from `Flan/TaP-Escalation` by Flan's Mod; the only production `BlockbenchModel` directive is the HMG `GVCguns/guns/AKM_Blockbench.txt`. The ownership gap was trust in caller-supplied pack/gun locations.
+- Java 8 offline `:HMG:compileJava :HMG:animationTest` passed, including all 74 existing animation checks. Reviewed ownership/path and reload call sites; no new test infrastructure or runtime launch. Co-installed Flan/TaP-Escalation and HMG in-game loading still requires runtime validation.
+
+2026-09-10 17:35 — Defer Blockbench texture upload until rendering
+
+- Fixed the production startup crash in `BlockbenchModel.texture`: Forge 1.7.10 calls mod pre-initialization before `Minecraft.renderEngine`/`TextureManager` is constructed, while HMG was creating `DynamicTexture` during gun TXT parsing. Model parsing and embedded PNG decoding remain CPU-only; the first actual item render now registers the texture and updates the renderer's primary texture reference.
+- Production evidence confirms the crashing model is the HMG `GVCguns` AK fixture (identical SHA-256 to the repository copy), not TaP-Escalation. The crash report lists TaP because Flan loaded it as its own content pack. Texture disposal tolerates the same early lifecycle as a secondary safeguard.
+- Java 8 offline `:HMG:compileJava :HMG:animationTest` passed, including all 74 existing animation checks. Source inspection confirmed Forge's texture manager is constructed after mod pre-initialization. The production client was inspected read-only and was not relaunched.
+
+2026-09-10 17:56 — Correct Blockbench model-space transforms
+
+- Replaced the incorrect Y-axis half-turn with the TaCZ-compatible Z-axis half-turn for imported geometry, pivots and animation channels. Blockbench absolute origins remain parent-relative at runtime, rest and animated rotations compose in ZYX order, and the entire correction stays inside `BlockbenchTransform` before HMG presentation transforms.
+- Normalized Blockbench pixels at `3/16` HMG unit so the reference AK matches the legacy MQO firearm baseline with its inherited `ModelScala,0.5`; `ModelScala`, `InworldScale` and `Gunparts_offsetScale` remain content controls and OBJ/MQO units are unchanged.
+- `ModelArm,true` now enables imported TaCZ hand locators, whose arm frame and mesh scale follow the corrected model coordinates. A missing or hidden locator falls back per hand to the existing `ModelArmOffset*`/`ModelArmRotation*` path; authored locators take precedence.
+- Source comparison covered Blockbench parent-space evaluation and TaCZ geometry, animation and hand-render conversion. Java 8 offline `:HMG:compileJava :HMG:animationTest` passed, including all 74 existing animation checks. No runtime launch or packaging was performed; in-game fire/reload/inspect and arm alignment remain to be checked.

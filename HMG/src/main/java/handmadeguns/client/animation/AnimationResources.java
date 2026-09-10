@@ -25,7 +25,7 @@ public final class AnimationResources {
         }
         if (reference == null || reference.isEmpty()) return;
         try {
-            File root = gunFile.getCanonicalFile().getParentFile().getParentFile();
+            File root = handmadeguns.HandmadeGunsCore.gunPackRoot(gunFile);
             File file = new File(root, reference).getCanonicalFile();
             if (!file.toPath().startsWith(root.toPath()) || file.equals(root))
                 throw new IOException("Animation path must stay inside pack root: " + reference);

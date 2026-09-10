@@ -339,7 +339,7 @@ public class HandmadeGunsCore {
 		if (packlist != null) {
 			Arrays.sort(packlist, FILE_NAME_COMPARATOR);
 			for (File aPacklist : packlist) {
-				if (aPacklist.isDirectory()) {
+				if (isHMGPack(aPacklist)) {
 					File[] addscripts = getFileList(aPacklist, "addscripts");
 					if (addscripts != null && addscripts.length > 0) {
 						for (File aScript : addscripts) {
@@ -413,7 +413,7 @@ public class HandmadeGunsCore {
 		if(packlist == null)return;
 		Arrays.sort(packlist, FILE_NAME_COMPARATOR);
 		for (File apack : packlist) {
-			if (apack.isDirectory()) {
+			if (isHMGPack(apack)) {
 				String assetsdirstring = apack.getName() + File.separatorChar + "assets" + File.separatorChar + "handmadeguns" + File.separatorChar;
 				File diremodel = new File(apack, "addmodel");
 				File[] filemodel = diremodel.listFiles();
@@ -486,7 +486,7 @@ public class HandmadeGunsCore {
 
 		for (File file : packlist)
 		{
-			if (file.isDirectory())
+			if (isHMGPack(file))
 			{
 				try
 				{
@@ -514,6 +514,34 @@ public class HandmadeGunsCore {
 		Debug("[Timing] config/resource scan %s packs=%s copiedResources=%s took %s ms", packdir.getPath(), packlist.length, copiedResources, ((System.nanoTime() - startNanos) / 1000000L));
 	}
 
+	/** Ownership is determined by the existing HMG roots, never by model file extensions. */
+	public static boolean isHMGPack(File pack) {
+		if (pack == null || !pack.isDirectory()) return false;
+		try {
+			File instance = HMG_proxy.ProxyFile().getCanonicalFile();
+			File absolute = pack.getAbsoluteFile().toPath().normalize().toFile();
+			for (String directory : new String[]{"handmadeguns_Packs", "mods/handmadeguns/addgun"}) {
+				File root = new File(instance, directory);
+				if (absolute.getParentFile().equals(root)
+						&& root.getCanonicalFile().equals(root)
+						&& absolute.getCanonicalFile().equals(absolute)) return true;
+			}
+		} catch (IOException failure) {
+			System.err.println("[HMG] Cannot resolve pack ownership: " + pack);
+		}
+		return false;
+	}
+
+	public static File gunPackRoot(File gun) throws IOException {
+		File absolute = gun.getAbsoluteFile().toPath().normalize().toFile();
+		File directory = absolute.getParentFile();
+		File pack = directory == null ? null : directory.getParentFile();
+		if (directory == null || !"guns".equals(directory.getName()) || !isHMGPack(pack)
+				|| !absolute.getCanonicalFile().equals(absolute))
+			throw new IOException("Gun definition must belong to an HMG pack guns directory: " + gun);
+		return pack;
+	}
+
 	public void readPack(File packdir,boolean isClient){
 		long startNanos = System.nanoTime();
 		long attachmentNanos = 0L;
@@ -536,7 +564,7 @@ public class HandmadeGunsCore {
 
 			Arrays.sort(packlist);
 			for (File apack : packlist) {
-				if (apack.isDirectory()) {
+				if (isHMGPack(apack)) {
 					configurePackCoefficients(apack);
 					File direTab = new File(apack, "addTab");
 					File[] filetab = direTab.listFiles();
@@ -1146,7 +1174,7 @@ public class HandmadeGunsCore {
 		Arrays.sort(packlist, FILE_NAME_COMPARATOR);
 
 		for (File aPacklist : packlist) {
-			if (aPacklist.isDirectory()) {
+			if (isHMGPack(aPacklist)) {
 
 				File[] recipelist = getFileList(aPacklist, "addpackrecipe");
 

@@ -5,6 +5,7 @@ import handmadeguns.client.modelLoader.obj_modelloaderMod.obj.*;
 import handmadeguns.client.render.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 
 /** Uses HMG's existing mesh batches, VBO/display-list fallback and part traversal. No playback state. */
 public final class BlockbenchModel implements IModelCustom_HMG {
+    private static final ResourceLocation DEFERRED_TEXTURE = new ResourceLocation("missingno");
     private static final HMGGroupObject NO_GEOMETRY = new HMGGroupObject() {
         @Override public void render() { }
     };
@@ -59,10 +61,15 @@ public final class BlockbenchModel implements IModelCustom_HMG {
                 "hmg_bbmodel", new DynamicTexture(project.textures.get(index).image));
         return textures[index];
     }
-    public ResourceLocation texture() { return textures.length == 0 ? new ResourceLocation("missingno") : texture(0); }
+    /** HMG parses guns during FML pre-init, before Minecraft constructs its TextureManager. */
+    public ResourceLocation texture() {
+        if (textures.length == 0 || Minecraft.getMinecraft().getTextureManager() == null) return DEFERRED_TEXTURE;
+        return texture(0);
+    }
     public void release() {
         for (Part part : byId.values()) ((Mesh)part.currentGroup_parts).releaseVbo();
-        for (ResourceLocation texture : textures) if (texture != null) Minecraft.getMinecraft().getTextureManager().deleteTexture(texture);
+        TextureManager manager = Minecraft.getMinecraft().getTextureManager();
+        if (manager != null) for (ResourceLocation texture : textures) if (texture != null) manager.deleteTexture(texture);
         Arrays.fill(textures,null);
     }
     private final class Mesh extends HMGGroupObject {
@@ -118,11 +125,22 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         if (mc.thePlayer == null) return;
         GL11.glPushMatrix(); GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
         try {
-            GL11.glScalef(units,units,units);
+            float scale = units * BlockbenchTransform.modelNormalization();
+            GL11.glScalef(scale,scale,scale);
             BlockbenchTransform.playerArmFrame();
             mc.getTextureManager().bindTexture(mc.thePlayer.getLocationSkin());
             (left ? HANDS.bipedLeftArm : HANDS.bipedRightArm).render(1.0f/16);
         } finally { GL11.glPopAttrib(); GL11.glPopMatrix(); }
+    }
+    public boolean hasHandLocator(boolean left) {
+        List<Part> candidates = byName.get(left ? "lefthand_pos" : "righthand_pos");
+        if (candidates == null) return false;
+        for (Part candidate : candidates) {
+            Part current = candidate;
+            while (current != null && current.visible) current = (Part)current.mother;
+            if (current == null) return true;
+        }
+        return false;
     }
     @Override public String getType() { return "bbmodel"; }
     @Override public boolean isReady() { return true; }

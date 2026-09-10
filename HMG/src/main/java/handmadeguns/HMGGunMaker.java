@@ -67,6 +67,12 @@ public class HMGGunMaker {
 
 
 	public void load( boolean isClient, File file1) {
+		try {
+			HandmadeGunsCore.gunPackRoot(file1);
+		} catch (IOException failure) {
+			System.err.println("[HMG] Skipping non-pack gun definition: " + failure.getMessage());
+			return;
+		}
 		attachmentAnchor = null;
 		for (int slot = 1; slot <= 5; slot++) attachmentAnchors[slot] = null;
 		currentGunConfig = file1;
@@ -1045,6 +1051,7 @@ public class HMGGunMaker {
 											
 											((HMGRenderItemGun_U_NEW)gunrender).setarmOffsetAndRotationL(armoffsetxl, armoffsetyl, armoffsetzl, armrotationxl, armrotationyl, armrotationzl);
 											((HMGRenderItemGun_U_NEW)gunrender).setarmOffsetAndRotationR(armoffsetxr, armoffsetyr, armoffsetzr, armrotationxr, armrotationyr, armrotationzr);
+											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.blockbenchArmsEnabled = arm;
 											((HMGRenderItemGun_U_NEW)gunrender).setArmoffsetScale(armscale);
 											((HMGRenderItemGun_U_NEW)gunrender).setSprintOffsetAndRotation(spposx, spposy, spposz, sprotex, sprotey, sprotez);
 											
@@ -1078,6 +1085,7 @@ public class HMGGunMaker {
 											
 											renderItemGun_u_new.setarmOffsetAndRotationL(armoffsetxl, armoffsetyl, armoffsetzl, armrotationxl, armrotationyl, armrotationzl);
 											renderItemGun_u_new.setarmOffsetAndRotationR(armoffsetxr, armoffsetyr, armoffsetzr, armrotationxr, armrotationyr, armrotationzr);
+											renderItemGun_u_new.partsRender_gun.blockbenchArmsEnabled = arm;
 											renderItemGun_u_new.setArmoffsetScale(armscale);
 											renderItemGun_u_new.setSprintOffsetAndRotation(spposx, spposy, spposz, sprotex, sprotey, sprotez);
 											

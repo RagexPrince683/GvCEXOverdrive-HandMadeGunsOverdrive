@@ -326,6 +326,10 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	int pass = 0;
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack gunstack, Object... data) {
+		if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
+			ResourceLocation blockbenchTexture = ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).texture();
+			partsRender_gun.texture = guntexture = blockbenchTexture;
+		}
 		if (partsRender_gun.animationDefinition == null || handmadeguns.client.animation.AnimationClient.scopedFor(partsRender_gun, gunstack)) {
 			renderItemContents(type, gunstack, data);
 			return;
