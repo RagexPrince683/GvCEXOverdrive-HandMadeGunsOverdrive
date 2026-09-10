@@ -103,7 +103,7 @@ public class HMGXItemGun_Sword extends HMGItemSwordBase {
 					this.isreload = 0;
 					if (entity != null && entity instanceof EntityPlayer) {
 						EntityPlayer entityplayer = (EntityPlayer) entity;
-						boolean var5 = entityplayer.capabilities.isCreativeMode || EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, itemstack) > 0;
+						boolean var5 = handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entityplayer) || EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, itemstack) > 0;
 						if (var5 || entityplayer.inventory.hasItem(Items.arrow)) {
 							if (flag) {
 								{
@@ -147,7 +147,7 @@ public class HMGXItemGun_Sword extends HMGItemSwordBase {
 
 		par1ItemStack.damageItem(li, par3EntityPlayer);
 		setDamage(par1ItemStack, -this.getMaxDamage());
-		if (!linfinity) {
+		if (!linfinity && !handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(par3EntityPlayer)) {
 			par3EntityPlayer.inventory.consumeInventoryItem(Items.arrow);}
 		//par2World.playSoundAtEntity(par3EntityPlayer, "random.click", 1.0F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
 		par2World.playSoundAtEntity(par3EntityPlayer, this.soundre, 1.0F, 1.0F);

@@ -124,6 +124,9 @@ public class HMG_CommandReloadparm extends CommandBase implements ICommand{
         }
 
         HMG_proxy.setUpModels();
+        if (cpw.mods.fml.common.FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+            handmadeguns.event.HMGJumpHandler.syncReloadedPolicy();
+        }
     }
 
 }

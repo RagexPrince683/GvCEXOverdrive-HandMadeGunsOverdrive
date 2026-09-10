@@ -7,7 +7,7 @@ This HMG-focused documentation pass found these systems that were not described 
 - `HandmadeGuns` is the maintained mod id for HandMadeGunsOverdrive.
 - HMG loads content packs from `handmadeguns_Packs` and the legacy `mods/handmadeguns/addgun` path.
 - HMG includes a Gun Smithing Table, crafting materials, metal ores/blocks, gun parts, gun racks, placed guns, projectile entities, optional Guide-API manual integration, and manual dropped-gun pickup.
-- HMG registers `/reloadSettings` and `/hmgmanual`, both with permission level `0`.
+- HMG registers legacy reload/manual commands with permission level `0`, and `/hmg infiniteammo` with permission level `2`; see the command reference.
 - HMG auto-generates copper and aluminum only when external ore dictionary entries are not present.
 - HMG has configurable rendering, ADS/key behavior, cartridges, block destruction, knockback, threaded hit checks, LMM compatibility, GuideBook, and manual pickup options.
 

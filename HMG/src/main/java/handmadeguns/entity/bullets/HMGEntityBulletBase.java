@@ -1252,32 +1252,21 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 				entities.add(new MovingObjectPosition_And_Entity(entity1));
 			}
 		}
-		double d0 = 0.0D;
-		double d1;
 		float f = 0.1F;
-		if(!entities.isEmpty()) {
-			MovingObjectPosition_And_Entity backup = entities.get(0);//cnt - 1
-			for (int cnt = 0; cnt < entities.size(); cnt++) {
-				MovingObjectPosition_And_Entity movingObjectPosition_and_entity = entities.get(cnt);
-				AxisAlignedBB axisalignedbb = movingObjectPosition_and_entity.entity.boundingBox.expand((double) f, (double) f, (double) f);
-				MovingObjectPosition movingobjectposition1 = axisalignedbb.calculateIntercept(vec3, vec31);
-				movingObjectPosition_and_entity.movingObjectPosition = movingobjectposition1;
-				if (movingobjectposition1 != null) {
-					d1 = vec3.distanceTo(movingobjectposition1.hitVec);
-					if ((d1 < d0 || d0 == 0.0D) && cnt > 0) {
-						entities.set(cnt, backup);
-						entities.set(cnt-1, movingObjectPosition_and_entity);
-					}else {
-						d0 = d1;
-						backup = movingObjectPosition_and_entity;
-					}
-				}else {
-					entities.remove(cnt);
-					cnt--;
-				}
+		for (int cnt = 0; cnt < entities.size(); cnt++) {
+			MovingObjectPosition_And_Entity candidate = entities.get(cnt);
+			AxisAlignedBB bounds = candidate.entity.boundingBox.expand((double) f, (double) f, (double) f);
+			candidate.movingObjectPosition = bounds.calculateIntercept(vec3, vec31);
+			if (candidate.movingObjectPosition == null) {
+				entities.remove(cnt--);
 			}
 		}
-//				System.out.println("debug" + entities);
+		// Resolve every hit from the same segment, nearest first. A single adjacent
+		// swap did not sort three or more targets and could select a farther victim.
+		final Vec3 traceOrigin = vec3;
+		java.util.Collections.sort(entities, (left, right) -> Double.compare(
+				traceOrigin.distanceTo(left.movingObjectPosition.hitVec),
+				traceOrigin.distanceTo(right.movingObjectPosition.hitVec)));
 		for(MovingObjectPosition_And_Entity current : entities){
 			if(!canbounce && canPenetrate_entity > 0 && canPenetrate_entity <= hitedCNT){
 				fuse--;

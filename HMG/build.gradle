@@ -184,6 +184,8 @@ jar {
 
 	baseName = "HandmadeGunsOverdrive"
 	version = project.version
+	manifest.attributes 'FMLCorePlugin': 'handmadeguns.loading.HMGJumpCorePlugin',
+			'FMLCorePluginContainsFMLMod': 'true'
 }
 
 // ===========================
@@ -213,5 +215,8 @@ tasks.withType(JavaExec) {
 		jvmArgs "-Djinput.useDefaultPlugin=false"
 		jvmArgs "-Djinput.plugins=none"
 		jvmArgs "-Djinput.loglevel=OFF"
+	}
+	if (name == "runClient" || name == "runServer") {
+		jvmArgs "-Dfml.coreMods.load=handmadeguns.loading.HMGJumpCorePlugin"
 	}
 }

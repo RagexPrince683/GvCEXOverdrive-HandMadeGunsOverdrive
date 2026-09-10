@@ -63,5 +63,7 @@ public class HMGPacketHandler {
                 Side.SERVER);
         INSTANCE.registerMessage(MessageCatcher_ManualGunPickup.class, PacketManualGunPickup.class, ++id,
                 Side.SERVER);
+        INSTANCE.registerMessage(PacketJumpPolicy.Handler.class, PacketJumpPolicy.class, ++id,
+                Side.CLIENT);
     }
 }

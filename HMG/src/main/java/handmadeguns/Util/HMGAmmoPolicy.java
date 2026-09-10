@@ -5,10 +5,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 
 /** Server-owned ammunition entitlement; loaded rounds still cycle normally. */
 public final class HMGAmmoPolicy {
-    private static final String ENABLED = "HMGInfiniteAmmo";
+    private static final String GLOBAL_RULE = "hmgInfiniteAmmo";
     private static final String SUPPLIED = "HMGInfiniteSupply";
 
     private HMGAmmoPolicy() { }
@@ -16,7 +17,7 @@ public final class HMGAmmoPolicy {
     public static boolean hasInfiniteAmmo(EntityPlayer player) {
         return player != null && !player.worldObj.isRemote
                 && (player.capabilities.isCreativeMode
-                || player.getEntityData().getCompoundTag(EntityPlayer.PERSISTED_NBT_TAG).getBoolean(ENABLED));
+                || isGlobalInfiniteAmmo());
     }
 
     public static boolean hasInfiniteAmmo(Entity user) {
@@ -24,11 +25,15 @@ public final class HMGAmmoPolicy {
                 : user != null && user.riddenByEntity instanceof EntityPlayer ? (EntityPlayer) user.riddenByEntity : null);
     }
 
-    public static void setInfiniteAmmo(EntityPlayer player, boolean enabled) {
-        if (player.worldObj.isRemote) return;
-        NBTTagCompound persisted = player.getEntityData().getCompoundTag(EntityPlayer.PERSISTED_NBT_TAG);
-        persisted.setBoolean(ENABLED, enabled);
-        player.getEntityData().setTag(EntityPlayer.PERSISTED_NBT_TAG, persisted);
+    /** One saved-world setting for every dimension, including future logins. */
+    public static boolean isGlobalInfiniteAmmo() {
+        return MinecraftServer.getServer().worldServerForDimension(0).getGameRules()
+                .getGameRuleBooleanValue(GLOBAL_RULE);
+    }
+
+    public static void setGlobalInfiniteAmmo(boolean enabled) {
+        MinecraftServer.getServer().worldServerForDimension(0).getGameRules()
+                .setOrCreateGameRule(GLOBAL_RULE, Boolean.toString(enabled));
     }
 
     public static ItemStack suppliedMagazine(Item item) {

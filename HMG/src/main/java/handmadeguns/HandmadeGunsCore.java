@@ -845,19 +845,9 @@ public class HandmadeGunsCore {
 		//if(pEvent.getSide().isClient())
 		{
 			HMGJumpHandler jumpHandler = new HMGJumpHandler();
-			HMGJumpHandlerClient jumpHandler2 = new HMGJumpHandlerClient();
-
-			//this first one ENSURES players aren't overriding the mobility of the guns using their own custom configs
-			//it's handled on the SERVER
+			HMGJumpHandler.registerCombativesPolicy();
 			FMLCommonHandler.instance().bus().register(jumpHandler);
 			MinecraftForge.EVENT_BUS.register(jumpHandler);
-
-			//second one is client side...
-			//client smoothing... hopefully...
-			FMLCommonHandler.instance().bus().register(jumpHandler2);
-			MinecraftForge.EVENT_BUS.register(jumpHandler2);
-
-			//;
 
 			FMLCommonHandler.instance().bus().register(new GunPickupHandler());
 			MinecraftForge.EVENT_BUS.register(new GunPickupHandler());
@@ -1071,7 +1061,7 @@ public class HandmadeGunsCore {
 			ItemStack itemstack = event.entityPlayer.getCurrentEquippedItem();
 			RenderPlayer renderplayer = event.renderer;
 			if(itemstack != null && (itemstack.getItem() instanceof HMGItem_Unified_Guns) && itemstack.hasTagCompound()){
-				// Signal ADS state through vanilla "using bow" semantics so external armour
+				// Signal the same ADS/temporary set_up pose as modelBipedMain through bow use so armour
 				// models that compute aimed pose from item use action (e.g. Flan's armour)
 				// receive the same arm transform intent. Restore it after equipment rendering:
 				// leaving it set makes Minecraft.runTick suppress right-click firing.

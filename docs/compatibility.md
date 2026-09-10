@@ -51,3 +51,87 @@ The bundled GTNH-NEI reference source confirms that `ItemsGridSlot` passes its s
 `safeItemRenderContext` wraps third-party item rendering with matrix/attribute and Tessellator recovery, catches a broken item renderer so the rest of the panel can continue, and substitutes a fire icon only for the failed grid draw. It does not publish a general NEI thread-local ownership marker. None is needed here: an NEI render has no HMG-owned BackTools scope, whereas the bridge's exact player-and-stack scope positively identifies the legitimate call without loading or naming any NEI class.
 
 The previously changing compatibility `stackIdentity` values came from the old bridge copying the remembered BackTools stack once per `RenderPlayerEvent.Specials.Post`; they were not identities of stacks cloned by the NEI grid. NEI could make the timing and model churn conspicuous by rendering many HMG icons, but its grid path cannot itself fire a player-specials event. The former compatibility entry was broad in a different dimension: every player-specials post event performed a remembered-stack candidate check, and acceptance was based on a remembered HMG item plus renderer/type checks rather than an unforgeable render owner. The scoped bridge now makes the only renderer invocation itself and requires object identity with its private selected-stack token.
+
+## HMG temporary firing pose and Flan's armor
+
+HMG's `triggerHeldGun` sets `set_up` for the temporary hip-fire aiming pose. The player renderer already reads that state into `aimedBow`; the render-scoped item-use bridge now includes the same state as well as normal ADS. Previously that bridge included only `Key_ADS`.
+
+Flan's `ModelCustomArmour.render` resets its own `aimedBow` from bow-use state, calls `ModelBiped.setRotationAngles`, then copies those resolved biped parts into TurboModel parts. Supplying the same aiming state before this calculation lets vanilla and custom armor follow the same final pose calculation. No gun rotation constants or cached arm transforms are introduced. The bridge restores real item-use state after equipment rendering.
+
+Combatives' existing crawl-before-aim, lean-after-aim, leg/lean cleanup, optional late mixin and TurboModel rotation-order correction are unchanged. This fixes the divergent pose input; it does not introduce a separate snapshot/copy system for the main player model. Normal ADS, transient hip-fire, crawl, lean, release and player switching still require visual checks with Flan's installed.
+
+## Server-validated HMG headshots
+
+Direct HMG bullet damage carries classification from its actual entity impact, not a second ray reconstructed from projectile orientation. Entity candidates are traced on the same block-clipped segment and ordered by distance before penetration handling. Only that direct impact source receives the existing 1.75 multiplier and headshot sound; melee, unrelated mods and explosions do not inherit HMG's bonus. There is no client-supplied headshot flag. Each damage attempt is independent, without a victim-wide per-tick suppression flag.
+
+The head region is bounded by the struck entity's actual AABB and eye height, allowing HMG's existing 0.1 collision envelope but no downward expansion into shoulders. The existing common-side Combatives aim bridge supplies its authoritative pose/scale eye height when available. This is an eye-based region within HMG's collision geometry, not skeletal hitboxes: unusual non-humanoid models and prone visual geometry require in-game verification. It does not enlarge HMG's collision box to match a cosmetic lean or rendered head outside that box.
+## Weight-based jump rejection and Combatives
+
+HMG now evaluates weapon weight at `EntityLivingBase.jump()` entry. The existing
+`gunInfo.motion <= 0.70` heavy cutoff rejects the jump outright; it no longer
+clamps a first jump and arms a later cancellation. Light weapons (`motion >= 0.95`)
+allow vanilla jumping immediately, including after switching away from a heavy
+weapon. Medium weapons retain the existing 3/6-tick landing delay, but an allowed
+jump keeps vanilla vertical velocity. The former 0.2/0.35 velocity clamps and
+post-jump correction paths are removed. Horizontal gun mobility is unchanged.
+
+With the updated Combatives installed, HMG registers a common Java predicate
+through the optional `JumpRestrictions.register(String, Predicate<EntityPlayer>)`
+API using reflection once during initialization. Combatives evaluates it from its
+existing jump HEAD injection alongside crawl rejection. Crawl-key release and
+standing-clearance checks still run even if weight also rejects the jump. HMG's
+fallback hook delegates ownership only after registration succeeds. An absent or
+older Combatives without this API uses the HMG fallback; there is no hard mod
+or Mixin dependency added to HMG.
+
+HMG alone uses a Forge coremod entry branch targeting MCP `jump()V` / SRG
+`func_70664_aZ()V` after deobfuscation. The jar manifest loads the coremod; existing
+Gradle `runClient`/`runServer` tasks receive its development loading property.
+Neither hook changes position, bounding boxes, onGround, fallDistance,
+isAirBorne, flight flags, velocity or movement packets. Active creative flight
+and riding bypass HMG's jump policy and clear its pending landing delay. Ordinary
+falling/landing continues through vanilla movement. Vanilla's `EntityPlayer.jump`
+wrapper still performs its existing statistics/exhaustion bookkeeping, as it did
+with Combatives' original base-class cancellation.
+
+The logical server reads its gun definitions. On login and after server pack
+settings reload, HMG sends all registered gun mobility values to clients. Client
+jump prediction reads only this snapshot, never client pack values. Until the
+snapshot arrives, held HMG guns reject ground jumps; creative flight remains
+available. Snapshots are connection-scoped and immutable; network handlers only
+publish data and never mutate entities/worlds. Medium landing-delay prediction
+uses the same algorithm on distinct client/server player instances. The server's
+timer is authoritative, but prediction may differ while movement or policy
+updates are in flight. No correction teleport is sent to reconcile those cases.
+Use matching updated HMG builds on both sides for the new appended packet type.
+
+This is jump-action rejection, not new anti-cheat movement validation: vanilla
+1.7.10 still accepts C03 position reports separately after calling server jump.
+A modified client ignoring prediction is not prevented from reporting movement
+by this hook alone. HMG does not rewrite that packet path or Combatives geometry.
+
+The old implementation registered two independent handlers on both physical
+sides. `HMGJumpHandlerClient` lacked a logical-side check, used shared static UUID
+maps in integrated play, and cleared motionY/isAirBorne/fallDistance from Forge's
+post-vanilla jump event. It allowed jumps during its cooldown. The server END
+tick handler instead blocked upward motion during cooldown, reset fallDistance,
+sent velocity changes, and called `setPositionAndUpdate(posY - 0.01)`. Neither
+excluded flight. This is confirmed source evidence for competing movement
+corrections; the precise reported desync sequence has not been captured in-game.
+
+For short reproduction traces, add `-Dhmg.jumpTrace=true` to both client and
+server JVM arguments. HMG logs logical side, player/world tick, position, motionY,
+onGround, isAirBorne, fallDistance, flying, held weapon/slot, synchronized mobility,
+thresholds, timers, jump entry/owner/rejection, and successful vanilla jump events.
+Enable Combatives `verboseMovementDebug` for crawl cancellation and C03/travel
+traces. Remove the diagnostic JVM argument after collecting logs.
+
+Java 8 offline HMG/Combatives compilation and Combatives Mixin annotation
+processing passed. HMG's transformed cached Forge MCP and SRG classes passed ASM
+structure/dataflow checks with one conditional entry return each. No packaging,
+reobfuscation, runtime launch or in-game validation was performed. Verify HMG
+alone and together with Combatives: light/heavy/medium weapons, repeated/sprinting
+jumps, slabs/stairs, ledges, holding jump on landing, heavy/light switches,
+creative flight/landing, crawl clearance, reconnect/respawn/dimension changes,
+server reload and mismatched client pack values. Dedicated and integrated server
+runs are both required, including real coremod/Mixin transformer ordering.
