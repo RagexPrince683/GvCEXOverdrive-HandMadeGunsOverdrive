@@ -1737,6 +1737,9 @@ public class HMGItem_Unified_Guns extends Item {
 		if (currentLoadedAmmo >= max_Bullet(itemstack)) {
 			return false;
 		}
+		if (handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity)) {
+			return commitOnePerShellReload(itemstack, world, null, currentLoadedAmmo);
+		}
 
 		IInventory inventory = getInventory_VehicleCheck(entity);
 		if (inventory != null && commitOnePerShellReload(itemstack, world, inventory, currentLoadedAmmo)) {
@@ -1748,7 +1751,9 @@ public class HMGItem_Unified_Guns extends Item {
 	}
 
 	private boolean commitOnePerShellReload(ItemStack itemstack, World world, IInventory inventory, int currentLoadedAmmo) {
-		StackAndSlot reserveShell = searchMagazines(itemstack, world, inventory);
+		StackAndSlot reserveShell = inventory == null
+				? new StackAndSlot(-1, handmadeguns.Util.HMGAmmoPolicy.suppliedMagazine(get_selectingMagazine(itemstack)))
+				: searchMagazines(itemstack, world, inventory);
 		if (reserveShell == null || reserveShell.stack == null || reserveShell.stack.stackSize <= 0) {
 			return false;
 		}
@@ -1778,6 +1783,7 @@ public class HMGItem_Unified_Guns extends Item {
 			}
 		}
 
+		if (inventory != null) {
 		reserveShell.stack.stackSize--;
 		if (reserveShell.stack.stackSize <= 0) {
 			inventory.setInventorySlotContents(reserveShell.slot, null);
@@ -1785,11 +1791,13 @@ public class HMGItem_Unified_Guns extends Item {
 			inventory.setInventorySlotContents(reserveShell.slot, reserveShell.stack);
 		}
 		inventory.markDirty();
+		}
 
 		if (currentMagzine_has_roundOption(itemstack)) {
 			ItemStack loadedMagazine = magazines[loadedMagazineSlot];
 			if (loadedMagazine == null) {
 				loadedMagazine = new ItemStack(get_selectingMagazine(itemstack), 1);
+				if (inventory == null) handmadeguns.Util.HMGAmmoPolicy.markSupplied(loadedMagazine);
 				loadedMagazine.setItemDamage(loadedMagazine.getMaxDamage() - 1);
 				magazines[loadedMagazineSlot] = loadedMagazine;
 			} else {
@@ -1967,6 +1975,11 @@ public class HMGItem_Unified_Guns extends Item {
 	}
 	public void reloadBullets(ItemStack itemstack, World world, Entity entity){
 		itemstack.getTagCompound().setBoolean("detached",false);
+		if (handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity) && get_selectingMagazine(itemstack) != null) {
+			if (isPerShellReload(itemstack)) commitOnePerShellReload(itemstack, world, entity);
+			else consumeAndSetMagazine(itemstack, world, null);
+			return;
+		}
 
 		if(isPerShellReload(itemstack)){
 			boolean loadedShell = false;
@@ -2014,6 +2027,7 @@ public class HMGItem_Unified_Guns extends Item {
 			return false;
 		}
 		if(get_selectingMagazine(itemstack) == null)return true;
+		if(handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity))return true;
 		IInventory inventory = getInventory_VehicleCheck(entity);
 		if(inventory != null && searchMagazines(itemstack,world,inventory)!= null){
 			return true;
@@ -2055,6 +2069,8 @@ public class HMGItem_Unified_Guns extends Item {
 		set_loadedMagazineStack(gunStack,mgazines);
 	}
 	public boolean consumeAndSetMagazine(ItemStack gunStack, World world, IInventory inventory){
+		// A null reserve is used only by the server-authorized reload entry above.
+		if (world.isRemote) return false;
 		ItemStack[] magazines = get_loadedMagazineStack(gunStack);
 		StackAndSlot[] stackAndSlots = new StackAndSlot[magazines.length];
 		int magazine_cnt = countLoadedMagazines(magazines);
@@ -2076,10 +2092,13 @@ public class HMGItem_Unified_Guns extends Item {
 			if (perShellReload && currentLoadedAmmo >= maxLoadedAmmo) {
 				break;
 			}
-			StackAndSlot stackAndSlot = searchMagazines(gunStack, world, inventory);
+			StackAndSlot stackAndSlot = inventory == null
+					? new StackAndSlot(-1, handmadeguns.Util.HMGAmmoPolicy.suppliedMagazine(get_selectingMagazine(gunStack)))
+					: searchMagazines(gunStack, world, inventory);
 			if(stackAndSlot != null && stackAndSlot.stack.stackSize>0) {
 				magazines[magazine_cnt] = stackAndSlot.stack.copy();
 				magazines[magazine_cnt].stackSize = 1;
+				if (inventory == null) continue;
 				stackAndSlot.stack.stackSize--;
 				if(prevStackAndSlot == null || prevStackAndSlot.slot != stackAndSlot.slot) {
 					stackAndSlots[cnt_useStackSlot] = stackAndSlot;
@@ -2691,7 +2710,7 @@ public class HMGItem_Unified_Guns extends Item {
 //                            System.out.println("debug" + returnmagazineCount);
 			ItemStack[] itemStacks =  this.get_loadedMagazineStack(gunstack);
 			for(int i= 0;i<returnmagazineCount;i++) {
-				if(itemStacks[i] != null) {
+				if(itemStacks[i] != null && !handmadeguns.Util.HMGAmmoPolicy.isSupplied(itemStacks[i])) {
 					if (gunInfo.dropMagEntity && HandmadeGunsCore.cfg_canEjectCartridge) {
 						HMGEntityBulletCartridge var8;
 						String magmodel = currentMagazine_magazineModel(gunstack);

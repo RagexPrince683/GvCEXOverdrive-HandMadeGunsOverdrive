@@ -78,7 +78,8 @@ public class HMGItemCustomMagazine extends HMGItemAttachmentBase {
                     world.spawnEntityInWorld(new EntityItem(world,entityPlayer.posX,entityPlayer.posY,entityPlayer.posZ,copied));
                     itemStack.stackSize = 1;
                 }
-                if(entityPlayer.inventory.consumeInventoryItem(bulletItem)){
+                if(handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entityPlayer)
+                        || entityPlayer.inventory.consumeInventoryItem(bulletItem)){
                     itemStack.setItemDamage(itemStack.getItemDamage() -1);
                     entityPlayer.stopUsingItem();
                 }

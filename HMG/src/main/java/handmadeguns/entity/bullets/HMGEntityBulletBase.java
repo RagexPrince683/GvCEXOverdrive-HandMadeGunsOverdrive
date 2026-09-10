@@ -537,9 +537,9 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 
 			boolean flag;
 			if(var1.entityHit instanceof I_SPdamageHandle){
-				flag = ((I_SPdamageHandle)var1.entityHit).attackEntityFrom_with_Info(var1,(new EntityDamageSourceIndirect("arrow", this, this.getThrower())).setProjectile(),var2);
+				flag = ((I_SPdamageHandle)var1.entityHit).attackEntityFrom_with_Info(var1,new handmadeguns.Util.HMGImpactDamageSource("arrow", this, var1),var2);
 			}else {
-				flag = var1.entityHit.attackEntityFrom((new EntityDamageSourceIndirect("arrow", this, this.getThrower())).setProjectile(),var2);
+				flag = var1.entityHit.attackEntityFrom(new handmadeguns.Util.HMGImpactDamageSource("arrow", this, var1),var2);
 			}
 			if(flag){
 				var1.entityHit.motionX = moXback;
@@ -555,7 +555,7 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 						if(((EntityLivingBase) var1.entityHit).getHealth() < 0)var1.entityHit.hurtResistantTime = 20;
 					}
 				}
-			}else if(var1.entityHit.attackEntityFrom((new EntityDamageSourceIndirect("penetrate", this, this.getThrower()).setProjectile()),(float)var2)){
+			}else if(var1.entityHit.attackEntityFrom(new handmadeguns.Util.HMGImpactDamageSource("penetrate", this, var1),(float)var2)){
 				var1.entityHit.motionX = moXback;
 				var1.entityHit.motionY = moYback;
 				var1.entityHit.motionZ = moZback;

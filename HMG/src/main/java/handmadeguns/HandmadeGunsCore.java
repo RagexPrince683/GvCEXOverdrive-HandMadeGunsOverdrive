@@ -1075,7 +1075,7 @@ public class HandmadeGunsCore {
 				// models that compute aimed pose from item use action (e.g. Flan's armour)
 				// receive the same arm transform intent. Restore it after equipment rendering:
 				// leaving it set makes Minecraft.runTick suppress right-click firing.
-				if(Key_ADS(event.entityPlayer)) {
+				if(Key_ADS(event.entityPlayer) || itemstack.getTagCompound().getBoolean("set_up")) {
 					state.changed = true;
 					event.entityPlayer.setItemInUse(itemstack, itemstack.getMaxItemUseDuration());
 				} else if(event.entityPlayer.getItemInUse() == itemstack) {
@@ -1198,6 +1198,7 @@ public class HandmadeGunsCore {
 		event.registerServerCommand(hmg_commandReloadparm);
 		event.registerServerCommand(hmgCommandReloadparmNoModel);
 		event.registerServerCommand(new HMG_CommandManual());
+		event.registerServerCommand(new handmadeguns.command.HMG_Command());
 		net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(hmg_commandReloadparm);
 		net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(hmgCommandReloadparmNoModel);
 		net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new HMG_CommandReloadSetOnlyHeldItem());
