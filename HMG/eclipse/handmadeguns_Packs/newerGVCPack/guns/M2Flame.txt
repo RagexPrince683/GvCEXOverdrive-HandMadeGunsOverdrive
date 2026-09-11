@@ -27,7 +27,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,M2F
+Texture,items/M2F.png
 GunSound,handmadeguns.m2flame,handmadeguns.m2flame
 GunSoundLV,2,2
 GunSoundReload,handmadeguns.reload
@@ -64,7 +64,7 @@ SprintingRotation,-40,0f,0f
 
 SoundSpeed,1.5f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 Magazine,0,HandmadeGuns,gastank

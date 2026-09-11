@@ -13,7 +13,7 @@ Zoom,2.0f,4.0f,8.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,type4auto
+Texture,items/type4auto.png
 SoundSpeed,1.2f
 GunSound,handmadeguns.garand3006,handmadeguns.supu
 GunSoundReload,handmadeguns.f_reload_SVT

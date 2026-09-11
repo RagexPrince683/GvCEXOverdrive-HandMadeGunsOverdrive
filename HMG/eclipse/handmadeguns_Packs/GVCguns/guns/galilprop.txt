@@ -23,7 +23,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,m4a1
+Texture,items/M4A1.png
 GunSound,handmadeguns.galil,handmadeguns.galil
 //the second sound is the suppressed sound btw
 GunSoundReload,handmadeguns.reload
@@ -71,7 +71,7 @@ SprintingRotation,20f,60f,0f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 MultiMagazine,HandmadeGuns:5.56mm magazinepro,HandmadeGuns:5.56mm magazinepro2

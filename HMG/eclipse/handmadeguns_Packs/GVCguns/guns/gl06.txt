@@ -17,7 +17,7 @@ ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Explosion,4
 BlockDestory,false
-Texture,M320
+Texture,items/M320.png
 GunSound,handmadeguns.firegrenade,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -45,7 +45,7 @@ OnUnderGunOffset,0,-1.1,-1.6
 //0307
 //BulletGravity,0.49f
 
-ScopeTexture,acog.png,acog.png,scope.png
+ScopeTexture,misc/acog.png,misc/acog.png,misc/scope.png
 RenderCross,false
 Magazine,0,HandmadeGuns,bullet_gl
 

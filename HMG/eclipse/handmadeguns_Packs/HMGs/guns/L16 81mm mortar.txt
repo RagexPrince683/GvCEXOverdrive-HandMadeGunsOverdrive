@@ -12,7 +12,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 Cycle,4
-Texture,L16Mortar
+Texture,items/L16Mortar.png
 GunSound,handmadeguns.mortareighty,handmadeguns.mortareighty
 SoundSpeed,1f
 GunSoundReload,handmadeguns.null
@@ -32,7 +32,7 @@ SprintingPoint,0.0f,-2.0f,0.0f
 Motion,0.01
 
 CustomFlash,CannonMuzzleFlash,1
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

@@ -16,7 +16,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,3
-Texture,dp28
+Texture,items/dp28.png
 GunSound,handmadeguns.dp28,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -41,7 +41,7 @@ ModelArmOffsetL,0.3f,0.6f,-0.1f
 
 Canfix,true
 FixAsEntity,true
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

@@ -17,6 +17,7 @@ import handmadeguns.items.guns.*;
 import handmadeguns.gunsmithing.GunSmithRecipe;
 import handmadeguns.gunsmithing.GunSmithRecipeRegistry;
 import handmadeguns.gunsmithing.DeferredHMGRecipes;
+import handmadeguns.pack.HMGPackAssetResolver;
 import handmadeguns.client.render.*;
 import handmadeguns.client.modelLoader.obj_modelloaderMod.obj.HMGObjModelLoader;
 import handmadeguns.client.modelLoader.emb_modelloader.MQO_ModelLoader;
@@ -67,8 +68,9 @@ public class HMGGunMaker {
 
 
 	public void load( boolean isClient, File file1) {
+		final HMGPackAssetResolver assetResolver;
 		try {
-			HandmadeGunsCore.gunPackRoot(file1);
+			assetResolver = new HMGPackAssetResolver(HandmadeGunsCore.gunPackRoot(file1));
 		} catch (IOException failure) {
 			System.err.println("[HMG] Skipping non-pack gun definition: " + failure.getMessage());
 			return;
@@ -327,6 +329,11 @@ public class HMGGunMaker {
 					if (type.length != 0){// 1
 
 						switch (type[0]) {
+							case "Model":
+								if (type.length != 2) throw new IllegalArgumentException("Expected Model,name.obj or Model,name.mqo in " + file1);
+								objmodel = type[1];
+								gunInfo.canobj = true;
+								break;
 							case "Animations":
 								animationPath = type.length == 2 ? type[1] : null;
 								if (animationPath == null) System.err.println("[HMG Animation] " + file1 + " | Expected Animations,animations/name.json");
@@ -409,6 +416,7 @@ public class HMGGunMaker {
 								gunInfo.canobj = true;
 								break;
 							case "ObjTexture":
+							case "ModelTexture":
 								objtexture = type[1];
 								break;
 							case "ModelEquipped":
@@ -1016,7 +1024,6 @@ public class HMGGunMaker {
 								}
 								if (isClient) recordGunSource(newgun, file1);
 								if (gunInfo.canobj && isClient) {
-									recordReloadableModel(newgun, file1, blockbenchPath == null ? "handmadeguns:textures/model/" + objmodel : "blockbench:" + blockbenchPath);
 									IModelCustom gunobj;
 									ResourceLocation guntexture;
 									if (blockbenchPath != null) {
@@ -1024,10 +1031,14 @@ public class HMGGunMaker {
 												handmadeguns.client.modelLoader.blockbench.BlockbenchProject.load(file1, blockbenchPath);
 										handmadeguns.client.modelLoader.blockbench.BlockbenchModel imported = new handmadeguns.client.modelLoader.blockbench.BlockbenchModel(project);
 										gunobj = imported; guntexture = imported.texture(); partslist = imported.parts;
+										recordReloadableModel(newgun, file1, "blockbench:" + blockbenchPath);
 										for (String warning : project.warnings) System.err.println("[HMG Blockbench] " + project.file + " | " + warning);
 									} else {
-										gunobj = getCachedModel("handmadeguns:textures/model/" + objmodel);
-										guntexture = getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
+										String modelResource = assetResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel);
+										String textureResource = assetResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture);
+										recordReloadableModel(newgun, file1, modelResource);
+										gunobj = getCachedModel(modelResource);
+										guntexture = getCachedResourceLocation(textureResource);
 									}
 									modelRegistrations++;
 									boolean useLegacyInventoryScale = false;
@@ -1140,9 +1151,11 @@ public class HMGGunMaker {
 
 							if (isClient) recordGunSource(newgun, file1);
 							if (gunInfo.canobj && isClient) {
-								recordReloadableModel(newgun, file1, "handmadeguns:textures/model/" + objmodel);
-								ResourceLocation guntexture = getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
-								IModelCustom gunobj = getCachedModel("handmadeguns:textures/model/" + objmodel);
+								String modelResource = assetResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel);
+							String textureResource = assetResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture);
+								recordReloadableModel(newgun, file1, modelResource);
+								ResourceLocation guntexture = getCachedResourceLocation(textureResource);
+								IModelCustom gunobj = getCachedModel(modelResource);
 								modelRegistrations++;
 								MinecraftForgeClient.registerItemRenderer(newgun, new HMGRenderItemGun_S(gunobj,guntexture,
 										                                                                        gunInfo.modelscale, modelhigh, modelhighr, modelhighs, modelwidthx, modelwidthxr, modelwidthxs, modelwidthz
@@ -1973,6 +1986,30 @@ public class HMGGunMaker {
 		return sourceFile != null ? sourceFile.getPath() : "<unknown>";
 	}
 
+	private static String resolveItemTexture(File sourceFile, String reference) {
+		if (sourceFile == null) return reference;
+		try {
+			return new HMGPackAssetResolver(HandmadeGunsCore.gunPackRoot(sourceFile)).itemTextureName(reference);
+		} catch (FileNotFoundException missing) {
+			return reference;
+		} catch (IOException invalid) {
+			throw new IllegalArgumentException("Invalid texture path in " + sourceName(sourceFile) + ": " + invalid.getMessage(), invalid);
+		}
+	}
+
+	private static String resolveTextureResource(File sourceFile, HMGPackAssetResolver.Type type,
+			String reference, String legacyPrefix) {
+		if (sourceFile == null) return legacyPrefix + reference;
+		try {
+			return new HMGPackAssetResolver(HandmadeGunsCore.gunPackRoot(sourceFile))
+					.resourceLocation(type, reference);
+		} catch (FileNotFoundException missing) {
+			return legacyPrefix + reference;
+		} catch (IOException invalid) {
+			throw new IllegalArgumentException("Invalid texture path in " + sourceName(sourceFile) + ": " + invalid.getMessage(), invalid);
+		}
+	}
+
 	private static float parseFiniteFloat(String value) {
 		float parsed = parseFloat(value.trim());
 		if (Float.isNaN(parsed) || Float.isInfinite(parsed)) throw new NumberFormatException("non-finite value");
@@ -2125,9 +2162,12 @@ public class HMGGunMaker {
 				gunInfo.zoomrest = parseBoolean(type[3]);
 				break;
 			case "ScopeTexture":
-				gunInfo.adstexture =  "handmadeguns:textures/misc/" + type[1];
-				gunInfo.adstexturer = "handmadeguns:textures/misc/" + type[2];
-				gunInfo.adstextures = "handmadeguns:textures/misc/" + type[3];
+				gunInfo.adstexture = resolveTextureResource(sourceFile, HMGPackAssetResolver.Type.MISC_TEXTURE,
+						type[1], "handmadeguns:textures/misc/");
+				gunInfo.adstexturer = resolveTextureResource(sourceFile, HMGPackAssetResolver.Type.MISC_TEXTURE,
+						type[2], "handmadeguns:textures/misc/");
+				gunInfo.adstextures = resolveTextureResource(sourceFile, HMGPackAssetResolver.Type.MISC_TEXTURE,
+						type[3], "handmadeguns:textures/misc/");
 				break;
 			case "RenderCross":
 				gunInfo.renderMCcross = parseBoolean(type[1]);
@@ -2165,7 +2205,7 @@ public class HMGGunMaker {
 			}
 			break;
 			case "Texture":
-				gunInfo.texture = type[1];
+				gunInfo.texture = resolveItemTexture(sourceFile, type[1]);
 				break;
 			case "UseModelIcon": //todo new
 				gunInfo.useModelAsIcon = Boolean.parseBoolean(type[1]);

@@ -12,7 +12,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,1
-Texture,AR_sample
+Texture,items/AR_sample.png
 GunSound,handmadeguns.fire,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -39,7 +39,7 @@ Mat31Rotation,0f,0f,60f
 Mat32Point,0.0f,0.5f,0.0f
 Mat32Rotation,0f,0f,90f
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

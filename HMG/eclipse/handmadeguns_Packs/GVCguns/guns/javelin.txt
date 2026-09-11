@@ -24,11 +24,11 @@ attachRestriction,true
 
 InventoryScale,3
 
-ScopeTexture,javfix.png,redPoint.png,scope_RPG7.png
+ScopeTexture,misc/javfix.png,misc/redPoint.png,misc/scope_RPG7.png
 Explosion,0.5f
 damagerange,3
 BlockDestory,false
-Texture,RR_sample
+Texture,items/RR_sample.png
 GunSound,handmadeguns.rpg29,handmadeguns.rpg29
 GunSoundReload,handmadeguns.reload
 CanObj,true

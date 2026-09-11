@@ -14,7 +14,7 @@ Zoom,2.0f,2.0f,16.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,ptrs
+Texture,items/ptrs.png
 GunSound,handmadeguns.ptrs,handmadeguns.14.5mmFire
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -38,7 +38,7 @@ ModelArmOffsetR,0.5f,0.5f,0.4f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.1f,0.8f,-0.0f
 
-ScopeTexture,scope.png,reddot.png,scope.png
+ScopeTexture,misc/scope.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,1
 Automatic,true

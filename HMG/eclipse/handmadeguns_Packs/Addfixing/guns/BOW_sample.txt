@@ -11,7 +11,7 @@ Zoom,1.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,BOW_sample
+Texture,items/BOW_sample.png
 GunSound,handmadeguns.firebow,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -33,7 +33,7 @@ ModelArmOffsetR,0.5f,0.5f,0.5f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.1f,0.4f,-1.2f
 
-ScopeTexture,acog.png,acog.png,scope.png
+ScopeTexture,misc/acog.png,misc/acog.png,misc/scope.png
 RenderCross,true
 RightType,0
 Magazine,262

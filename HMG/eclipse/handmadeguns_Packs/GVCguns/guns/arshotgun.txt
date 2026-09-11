@@ -14,7 +14,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,SGF_sample
+Texture,items/SGF_sample.png
 GunSound,handmadeguns.AR12,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -292,7 +292,7 @@ AddParts,Base_Sys
 ShotGun_Pellet,9
 CartridgeType,3
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,1
 Magazine,0,HandmadeGuns,bullet_shell_hmgmag

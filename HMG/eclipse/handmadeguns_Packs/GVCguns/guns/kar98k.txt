@@ -24,7 +24,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,R700
+Texture,items/R700.png
 GunSound,handmadeguns.K98K,handmadeguns.K98K
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -59,7 +59,7 @@ SprintingRotation,20f,60f,0f
 
 SoundSpeed,1f
 
-ScopeTexture,scope_r700.png,scope_r700.png,scope_r700.png
+ScopeTexture,misc/scope_r700.png,misc/scope_r700.png,misc/scope_r700.png
 RenderCross,false
 
 Mat22,false
@@ -132,7 +132,7 @@ AddParts,mat1
 			//AddReloadMotionKey,160,-0.4,0,-1.2,0,0,0,		   165,0,0,-1.2,0,0,0
 		BackParts
 
-		//排莢されるカートリッジ
+		//排莢されるカートリチE��
 		AddChildParts,cart
 			AddPartsRotationCenterAndRotationAmount,0,0.4703f,1.1899f,0,0,0
 			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
@@ -149,7 +149,7 @@ AddParts,mat1
 			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
 			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 
-			//コッキングモーション
+			//コチE��ングモーション
 			AddCockMotionKey,0,0,0,0,0,0,0,		  2,0,0,0,0,0,0
 			//ボルトを左に回して
 			AddCockMotionKey,2,0,0,0,0,0,0,		  4,0,0,0,0,0,-90
@@ -159,7 +159,7 @@ AddParts,mat1
 			AddCockMotionKey,9,0,0,-1.2,0,0,-90,	 11,0,0,-1.2,0,0,-90
 			//戻して
 			AddCockMotionKey,11,0,0,-1.2,0,0,-90,	16,0,0,0,0,0,-90
-			//戻す
+			//戻ぁE
 			AddCockMotionKey,16,0,0,0,0,0,-90,	   18,0,0,0,0,0,0
 
 			AddCockMotionKey,18,0,0,0,0,0,0,		 20,0,0,0,0,0,0

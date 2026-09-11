@@ -10,7 +10,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,6f
 BlockDestory,true
-Texture,Mk82
+Texture,items/Mk82.png
 ObjModel,mk82.mqo
 ObjTexture,mk8x.png
 ModelScala,0.5f

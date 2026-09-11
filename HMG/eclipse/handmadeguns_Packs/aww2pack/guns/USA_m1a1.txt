@@ -12,7 +12,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,m1a1
+Texture,items/m1a1.png
 GunSound,handmadeguns.thompson,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -152,7 +152,7 @@ AddParts,mat1
         AddReloadMotionKey,41,0,0,-0.6,0,0,0,       45,0,0,0,0,0,0
         AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
     BackParts
-ScopeTexture,ironsight2.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight2.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,thomp30

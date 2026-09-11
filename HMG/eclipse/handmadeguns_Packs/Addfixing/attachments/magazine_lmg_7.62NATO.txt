@@ -1,0 +1,17 @@
+Texture,items/bullet_lmg7.62NATO.png
+Stack,1
+Name,200 Rnd 7.62x51mm NATO Box
+BulletRound,200
+
+Tabname,HMG_Ammo
+
+CustomMagazine,bullet_lmg_hmg_7_62_NATO
+
+Recipe1,aab
+Recipe2,ccc
+Recipe3,bbb
+ItemA,HandmadeGuns,copperBlock
+ItemB,HandmadeGuns,steelIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_lmg_hmg_7_62_NATO,1
+

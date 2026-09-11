@@ -674,6 +674,14 @@ public class ClientProxyHMG extends CommonSideProxyHMG {
 	public boolean reloadHeldItemModel(ItemStack heldItem){
 		return HMGGunMaker.reloadModelsForItem(heldItem == null ? null : heldItem.getItem());
 	}
+	@Override
+	public void handleReloadAnimation(final int eventId, final int slot, final int itemId, final boolean empty) {
+		Minecraft.getMinecraft().func_152344_a(new Runnable() {
+			@Override public void run() {
+				handmadeguns.client.animation.AnimationClient.reloadStarted(eventId, slot, itemId, empty);
+			}
+		});
+	}
 	public void AddModel(Object o){
 		modelList.add((IModelCustom_HMG) o);
 	}

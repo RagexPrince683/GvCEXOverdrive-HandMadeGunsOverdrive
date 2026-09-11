@@ -11,7 +11,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 Cycle,4
-Texture,bofors
+Texture,items/bofors.png
 GunSound,handmadeguns.bofors,handmadeguns.bofors
 SoundSpeed,1f
 GunSoundReload,handmadeguns.reload
@@ -30,7 +30,7 @@ Tabname,HMG_GVCGuns
 
 
 CustomFlash,CannonMuzzleFlash,3
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0
@@ -50,7 +50,7 @@ Turretanglelimit,15,-85,360,-360
 
 attachRestriction,true
 
-//ƒp[ƒc’Ç‰ÁŠJŽn
+//ƒp[ƒc’ÁE��ÁE�JŽn
 
 AddParts,obj10
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

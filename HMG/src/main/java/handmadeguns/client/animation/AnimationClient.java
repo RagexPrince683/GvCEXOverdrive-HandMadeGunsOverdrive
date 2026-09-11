@@ -9,6 +9,7 @@ import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.client.IItemRenderer;
@@ -25,10 +26,33 @@ public final class AnimationClient {
     private static final ThreadLocal<Scope> ACTIVE = new ThreadLocal<Scope>();
     private static Object world;
     private static ItemStack held;
+    private static ItemStack heldIdentity;
+    private static int heldSlot = -1;
     private static long ticks;
     private static double seconds;
 
     public static void clearPlayback() { INSTANCES.clear(); }
+
+    /** Receives one server-authorized reload presentation event on the client thread. */
+    public static boolean reloadStarted(int eventId, int slot, int itemId, boolean empty) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.thePlayer.inventory.currentItem != slot) return false;
+        ItemStack stack = mc.thePlayer.getHeldItem();
+        if (stack == null || Item.getIdFromItem(stack.getItem()) != itemId) return false;
+        IItemRenderer.ItemRenderType context = IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON;
+        IItemRenderer itemRenderer = MinecraftForgeClient.getItemRenderer(stack, context);
+        if (!(itemRenderer instanceof HMGRenderItemGun_U_NEW)) return false;
+        AnimationDefinition definition = ((HMGRenderItemGun_U_NEW)itemRenderer).partsRender_gun.animationDefinition;
+        if (definition == null) return false;
+        Entry entry = entry(stack, mc.thePlayer, context, 0, definition);
+        ReloadAnimationBridge.Request request = entry.reloadBridge.accept(
+                new ReloadAnimationBridge.StartEvent(eventId, slot, itemId, empty),
+                mc.thePlayer.inventory.currentItem, Item.getIdFromItem(stack.getItem()), definition.clips.keySet());
+        if (request == null) return false;
+        entry.reloadRequest = request;
+        entry.reloadPlaybackEndedAt = Double.NaN;
+        return true;
+    }
 
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -38,7 +62,7 @@ public final class AnimationClient {
         }
         if (mc.theWorld != null && !mc.isGamePaused()) ticks++;
         ItemStack next = mc.thePlayer == null ? null : mc.thePlayer.getHeldItem();
-        if (held != next) { if (held != null) INSTANCES.remove(held); held = next; }
+        updateHeld(mc, next);
         if (ticks % 40 == 0) {
             for (List<Entry> entries : INSTANCES.values()) {
                 Iterator<Entry> iterator = entries.iterator();
@@ -72,6 +96,12 @@ public final class AnimationClient {
     /** Queues a custom presentation clip; the next root render performs the final priority/state check. */
     public static boolean request(ItemStack stack, Entity owner, IItemRenderer.ItemRenderType context,
                                   String clip, AnimationController.Layer layer) {
+        return request(stack, owner, context, clip, layer, false);
+    }
+
+    /** Explicit retrigger for discrete actions; ordinary state requests are idempotent. */
+    public static boolean request(ItemStack stack, Entity owner, IItemRenderer.ItemRenderType context,
+                                  String clip, AnimationController.Layer layer, boolean restart) {
         IItemRenderer renderer = MinecraftForgeClient.getItemRenderer(stack, context);
         if (!(renderer instanceof HMGRenderItemGun_U_NEW)) return false;
         AnimationDefinition definition = ((HMGRenderItemGun_U_NEW)renderer).partsRender_gun.animationDefinition;
@@ -80,7 +110,7 @@ public final class AnimationClient {
         if (tag != null && (tag.getBoolean("IsReloading") || tag.getInteger("CockingTime") > 0)) return false;
         Entry entry = entry(stack, owner, context, 0, definition);
         // Defer until the render scope has the real legacy baseline and event recipient.
-        entry.request = clip; entry.requestLayer = layer;
+        entry.request = clip; entry.requestLayer = layer; entry.requestRestart = restart;
         return true;
     }
 
@@ -91,6 +121,7 @@ public final class AnimationClient {
         // Inventory/attachment preview scopes are isolated from held/world scopes, including preview copies.
         if (type == IItemRenderer.ItemRenderType.INVENTORY) owner = data != null && data.length > 0 ? data[0] : null;
         ItemStack identity = stack;
+        ItemStack stateStack = stack;
         int flags = placed ? 2 : 0;
         Scope parent = ACTIVE.get();
         if (under && parent != null) {
@@ -98,8 +129,16 @@ public final class AnimationClient {
             identity = parent.identity; owner = parent.owner; type = parent.context;
             flags = (parent.entry == null ? 0 : parent.entry.flags) * 4 + 1;
         }
+        if (type == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON && owner == Minecraft.getMinecraft().thePlayer
+                && flags == 0) {
+            ItemStack live = Minecraft.getMinecraft().thePlayer == null ? null : Minecraft.getMinecraft().thePlayer.getHeldItem();
+            // ItemRenderer draws its cached itemToRender. Its NBT can trail the selected
+            // hotbar stack even though both represent the same equipped gun, so playback
+            // state must come from the live slot while retaining the stable render identity.
+            if (live != null && stack != null && live.getItem() == stack.getItem()) stateStack = live;
+        }
         Entry entry = renderer.animationDefinition == null ? null : entry(identity, owner, type, flags, renderer.animationDefinition);
-        Scope scope = new Scope(parent, renderer, identity, stack, owner, type, entry);
+        Scope scope = new Scope(parent, renderer, identity, stack, stateStack, owner, type, entry);
         ACTIVE.set(scope);
         return scope;
     }
@@ -110,17 +149,42 @@ public final class AnimationClient {
         return scoped(renderer) && ACTIVE.get().stack == stack;
     }
 
+    /** One render snapshot: an accepted imported ACTION outranks asynchronously replicated gameplay state. */
+    public static boolean reloadState(PartsRender_Gun renderer, boolean fallback) {
+        Scope scope = ACTIVE.get();
+        if (scope == null || scope.renderer != renderer || scope.entry == null) return fallback;
+        validateReloadIdentity(scope);
+        scope.entry.settleReloadCompletion();
+        return scope.entry.reloadBridge.presentationReload(authoritativeReload(scope, fallback));
+    }
+
+    public static boolean ownsReload(PartsRender_Gun renderer) {
+        Scope scope = ACTIVE.get();
+        if (scope == null || scope.renderer != renderer || scope.entry == null) return false;
+        validateReloadIdentity(scope);
+        scope.entry.settleReloadCompletion();
+        return scope.entry.reloadBridge.ownsAction();
+    }
+
     /** Stable preview identity while the GUI supplies a fresh, presentation-only NBT copy each frame. */
     public static Scope beginPreview(PartsRender_Gun renderer, ItemStack identity, ItemStack preview, Object gui) {
         Entry entry = renderer.animationDefinition == null ? null : entry(identity, gui,
                 IItemRenderer.ItemRenderType.INVENTORY, 0, renderer.animationDefinition);
-        Scope scope = new Scope(ACTIVE.get(), renderer, identity, preview, gui, IItemRenderer.ItemRenderType.INVENTORY, entry);
+        Scope scope = new Scope(ACTIVE.get(), renderer, identity, preview, preview, gui,
+                IItemRenderer.ItemRenderType.INVENTORY, entry);
         ACTIVE.set(scope);
         return scope;
     }
 
     private static Entry entry(ItemStack stack, Object owner, IItemRenderer.ItemRenderType context, int flags,
                                AnimationDefinition definition) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON && owner == mc.thePlayer && flags == 0) {
+            updateHeld(mc, mc.thePlayer == null ? null : mc.thePlayer.getHeldItem());
+            // Vanilla slot synchronization replaces ItemStack objects as gun NBT changes.
+            // Playback belongs to this equipped slot session, not each packet's object.
+            if (held != null && stack.getItem() == held.getItem()) stack = heldIdentity;
+        }
         List<Entry> entries = INSTANCES.get(stack);
         if (entries == null) { entries = new ArrayList<Entry>(); INSTANCES.put(stack, entries); }
         Iterator<Entry> iterator = entries.iterator();
@@ -135,6 +199,16 @@ public final class AnimationClient {
         Entry entry = new Entry(owner, context, flags, definition);
         entries.add(entry);
         return entry;
+    }
+
+    private static void updateHeld(Minecraft mc, ItemStack next) {
+        int slot = mc.thePlayer == null ? -1 : mc.thePlayer.inventory.currentItem;
+        if (slot != heldSlot || held == null || next == null || held.getItem() != next.getItem()) {
+            if (heldIdentity != null) INSTANCES.remove(heldIdentity);
+            heldIdentity = next;
+        }
+        held = next;
+        heldSlot = slot;
     }
 
     /** Runs only at the root part traversal, once at a given animation clock value. */
@@ -154,8 +228,11 @@ public final class AnimationClient {
             }
         };
         entry.controller.advanceTo(seconds, sink);
-        NBTTagCompound tag = scope.stack.getTagCompound();
-        boolean reload = tag != null && tag.getBoolean("IsReloading");
+        NBTTagCompound tag = scope.stateStack.getTagCompound();
+        if (scope.stateStack != scope.stack && scope.stateStack.getItem() instanceof HMGItem_Unified_Guns)
+            ammunition = ((HMGItem_Unified_Guns)scope.stateStack.getItem()).remain_Bullet(scope.stateStack);
+        entry.settleReloadCompletion();
+        boolean reload = entry.reloadBridge.presentationReload(authoritativeReload(scope, false));
         int cock = tag == null ? 0 : tag.getInteger("CockingTime");
         int bolt = tag == null ? 0 : tag.getByte("Bolt");
         boolean recoil = states[0] == GunState.Recoil;
@@ -165,13 +242,11 @@ public final class AnimationClient {
             if (scope.context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON)
                 entry.play(AnimationController.Layer.ACTION, "draw", false);
         }
-        if (reload && !entry.reload) {
+        if (entry.reloadRequest != null) {
             entry.controller.stop(AnimationController.Layer.ACTION);
-            String variant = ammunition == 0 ? "reload_empty" : "reload_tactical";
-            entry.reloadClip = entry.definition.clips.containsKey(variant) ? variant : "reload";
-            entry.play(AnimationController.Layer.ACTION, entry.reloadClip, true);
-        } else if (!reload && entry.reload) {
-            if (entry.controller.active(entry.reloadClip)) entry.controller.stop(AnimationController.Layer.ACTION);
+            entry.reloadBridge.started(entry.play(entry.reloadRequest.layer, entry.reloadRequest.clip,
+                    entry.reloadRequest.restart));
+            entry.reloadRequest = null;
         }
         if (!reload && cock > 0 && entry.cock == 0) {
             entry.controller.stop(AnimationController.Layer.ACTION);
@@ -183,15 +258,32 @@ public final class AnimationClient {
             entry.play(AnimationController.Layer.ADDITIVE, "fire", true);
         }
         if (entry.request != null) {
-            if (!reload && cock == 0 && !shot) entry.play(entry.requestLayer, entry.request, true);
+            if (!reload && cock == 0 && !shot) entry.play(entry.requestLayer, entry.request, entry.requestRestart);
             entry.request = null;
         }
-        entry.initialized = true; entry.reload = reload; entry.cock = cock; entry.recoil = recoil;
+        entry.initialized = true; entry.cock = cock; entry.recoil = recoil;
         entry.bolt = bolt; entry.ammunition = ammunition;
         // Zero-time markers fire now, once; repeated GL passes neither advance nor re-dispatch.
         entry.controller.advanceTo(seconds, sink);
+        entry.observeReloadCompletion();
         entry.pose = entry.controller.sample(legacy);
         for (HMGAnimationEvent marker : markers) MinecraftForge.EVENT_BUS.post(marker);
+    }
+
+    private static boolean authoritativeReload(Scope scope, boolean fallback) {
+        if (scope == null || scope.stateStack == null) return fallback;
+        NBTTagCompound tag = scope.stateStack.getTagCompound();
+        return tag == null ? fallback : tag.getBoolean("IsReloading");
+    }
+
+    private static void validateReloadIdentity(Scope scope) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (scope.context != IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON
+                || scope.entry.flags != 0 || scope.owner != mc.thePlayer) return;
+        ItemStack live = mc.thePlayer == null ? null : mc.thePlayer.getHeldItem();
+        int slot = mc.thePlayer == null ? -1 : mc.thePlayer.inventory.currentItem;
+        int itemId = live == null ? -1 : Item.getIdFromItem(live.getItem());
+        scope.entry.invalidateReloadIdentity(slot, itemId);
     }
 
     public static HMGGunParts_Motion_PosAndRotation pose(PartsRender_Gun renderer, HMGGunParts part,
@@ -205,12 +297,14 @@ public final class AnimationClient {
     public static final class Scope implements AutoCloseable {
         final Scope previous;
         final PartsRender_Gun renderer;
-        final ItemStack identity, stack;
+        final ItemStack identity, stack, stateStack;
         final Object owner;
         final IItemRenderer.ItemRenderType context;
         final Entry entry;
-        Scope(Scope previous, PartsRender_Gun renderer, ItemStack identity, ItemStack stack, Object owner, IItemRenderer.ItemRenderType context, Entry entry) {
-            this.previous = previous; this.renderer = renderer; this.identity = identity; this.stack = stack; this.owner = owner;
+        Scope(Scope previous, PartsRender_Gun renderer, ItemStack identity, ItemStack stack, ItemStack stateStack,
+              Object owner, IItemRenderer.ItemRenderType context, Entry entry) {
+            this.previous = previous; this.renderer = renderer; this.identity = identity; this.stack = stack;
+            this.stateStack = stateStack; this.owner = owner;
             this.context = context; this.entry = entry;
         }
         @Override public void close() { if (previous == null) ACTIVE.remove(); else ACTIVE.set(previous); }
@@ -223,19 +317,40 @@ public final class AnimationClient {
         final int flags;
         final AnimationDefinition definition;
         final AnimationController controller;
-        double lastSeen = seconds, preparedAt = Double.NaN;
+        double lastSeen = seconds, preparedAt = Double.NaN, reloadPlaybackEndedAt = Double.NaN;
         AnimationPose pose = AnimationPose.EMPTY;
-        boolean initialized, reload, recoil;
+        final ReloadAnimationBridge.State reloadBridge = new ReloadAnimationBridge.State();
+        boolean initialized, recoil, requestRestart;
         int cock, bolt, ammunition;
-        String reloadClip, request;
+        ReloadAnimationBridge.Request reloadRequest;
+        String request;
         AnimationController.Layer requestLayer;
         Entry(Object owner, IItemRenderer.ItemRenderType context, int flags, AnimationDefinition definition) {
             this.owner = new WeakReference<Object>(owner); hasOwner = owner != null;
             this.context = context; this.flags = flags; this.definition = definition;
             controller = new AnimationController(definition);
         }
-        void play(AnimationController.Layer layer, String clip, boolean restart) {
-            if (definition.clips.containsKey(clip)) controller.play(layer, clip, restart, 1, null);
+        boolean play(AnimationController.Layer layer, String clip, boolean restart) {
+            return definition.clips.containsKey(clip) && controller.play(layer, clip, restart, 1, null);
+        }
+        void observeReloadCompletion() {
+            if (reloadBridge.ownsAction() && reloadBridge.playbackStarted()
+                    && !reloadBridge.clip().equals(controller.current(AnimationController.Layer.ACTION))
+                    && Double.isNaN(reloadPlaybackEndedAt)) reloadPlaybackEndedAt = seconds;
+        }
+        void settleReloadCompletion() {
+            // Preserve one snapshot across every render pass at the clock where ACTION naturally ended.
+            if (!Double.isNaN(reloadPlaybackEndedAt) && seconds > reloadPlaybackEndedAt) {
+                reloadBridge.finishNaturally();
+                reloadPlaybackEndedAt = Double.NaN;
+            }
+        }
+        void invalidateReloadIdentity(int slot, int itemId) {
+            String invalidated = reloadBridge.invalidateIfIdentityChanged(slot, itemId);
+            if (invalidated == null) return;
+            reloadRequest = null;
+            reloadPlaybackEndedAt = Double.NaN;
+            if (controller.active(invalidated)) controller.stop(AnimationController.Layer.ACTION);
         }
     }
 }

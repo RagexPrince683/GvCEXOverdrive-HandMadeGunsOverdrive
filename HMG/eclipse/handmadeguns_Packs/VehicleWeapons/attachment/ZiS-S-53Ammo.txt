@@ -1,5 +1,0 @@
-Texture,bullet_ZiS-S-53
-Stack,64
-Tabname,VehicleWeapons
-Name,ZiS-S-53Ammo
-Magazine,ZiS-S-53Ammo

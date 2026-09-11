@@ -12,7 +12,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,2.5f
 BlockDestory,true
-Texture,R-73
+Texture,items/R-73.png
 ObjModel,R-73.mqo
 ObjTexture,R-3.png
 ModelScala,0.5f

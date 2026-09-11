@@ -1,0 +1,15 @@
+Texture,items/40mmClip.png
+Stack,8
+Name,40x311mmR Clip
+
+Tabname,HMG_Ammo
+
+Magazine,40mm Clip
+
+//Recipe1,ba 
+//Recipe2,aa 
+//Recipe3,bbc
+//ItemA,minecraft,iron_block
+//ItemB,minecraft,gunpowder
+//ItemC,minecraft,emerald
+//addNewRecipe,HandmadeGuns,40mm Clip,1

@@ -12,7 +12,7 @@ Zoom,2.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,mosin
+Texture,items/mosin.png
 GunSound,handmadeguns.mosinnag,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.a_cock
@@ -39,7 +39,7 @@ Mat25Point,0.0f,0.554f,1.0f
 Mat25Rotation,0f,0f,-90f
 CockingTime,20
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 Automatic,false
 Magazine,0,HandmadeGuns,7.62mmR bulletmosin
@@ -99,7 +99,7 @@ AddParts,mat1
 		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
 		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 
-		//コッキングモーション
+		//コチE��ングモーション
 		AddCockMotionKey,0,0,0,0,0,0,0,		2,0,0,0,0,0,0
 		//ボルトを左に回して
 		AddCockMotionKey,2,0,0,0,0,0,0,		4,0,0,0,0,0,-90
@@ -109,7 +109,7 @@ AddParts,mat1
 		AddCockMotionKey,9,0,0,-0.9,0,0,-90,	11,0,0,-0.9,0,0,-90
 		//戻して
 		AddCockMotionKey,11,0,0,-0.9,0,0,-90,	16,0,0,0,0,0,-90
-		//戻す
+		//戻ぁE
 		AddCockMotionKey,16,0,0,0,0,0,-90,	18,0,0,0,0,0,0
 
 		AddCockMotionKey,18,0,0,0,0,0,0,		20,0,0,0,0,0,0

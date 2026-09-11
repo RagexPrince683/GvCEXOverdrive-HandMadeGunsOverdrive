@@ -61,7 +61,11 @@ public final class BlockbenchProject {
     }
     public static BlockbenchProject load(File gunFile, String reference) throws IOException {
         File root = handmadeguns.HandmadeGunsCore.gunPackRoot(gunFile);
-        try { return new BlockbenchProject(resolve(root, root, reference), root); }
+        try {
+            File project = new handmadeguns.pack.HMGPackAssetResolver(root)
+                    .resolve(handmadeguns.pack.HMGPackAssetResolver.Type.BLOCKBENCH_MODEL, reference);
+            return new BlockbenchProject(project, root);
+        }
         catch (IOException | RuntimeException failure) {
             throw new IOException("[HMG Blockbench] " + gunFile + " | " + reference + " | " + failure.getMessage(),failure);
         }
@@ -150,8 +154,8 @@ public final class BlockbenchProject {
         if (parent == null) roots.add(node); else parent.children.add(node);
         if (!string(data, "bedrock_binding", "").isEmpty()) throw new IOException("Unsupported bone binding: " + node.name);
         if (bool(data,"reset",false)) throw new IOException("Unsupported reset bone: " + node.name);
-        if ("camera".equals(node.name) || "constraint".equals(node.name) || "idle_view".equals(node.name))
-            warnings.add("TaCZ camera/constraint/view bones are retained as parts; camera effects and automatic sight alignment are not applied");
+        if ("camera".equals(node.name) || "constraint".equals(node.name))
+            warnings.add("TaCZ camera/constraint bones are retained as parts; their animated camera effects are not applied");
         for (JsonElement child : array(entry, "children")) readNode(child, node, depth + 1);
     }
     // Top-left, top-right, bottom-right, bottom-left, outward winding (Three BoxGeometry faces).

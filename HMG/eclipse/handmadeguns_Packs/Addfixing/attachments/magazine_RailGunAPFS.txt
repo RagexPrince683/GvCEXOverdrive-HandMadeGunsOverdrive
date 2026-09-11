@@ -1,0 +1,5 @@
+Texture,items/bullet_14_5_APFSDS.png
+Stack,64
+Name,14.5mm APFSDS
+
+Tabname,HMG_Ammo

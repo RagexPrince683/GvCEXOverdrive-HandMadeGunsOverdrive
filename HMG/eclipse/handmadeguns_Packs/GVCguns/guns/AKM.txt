@@ -23,7 +23,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,AKM
+Texture,items/AKM.png
 GunSound,handmadeguns.AK47,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -68,7 +68,7 @@ SprintingRotation,20f,60f,5f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,7.62mm magazine 30Round

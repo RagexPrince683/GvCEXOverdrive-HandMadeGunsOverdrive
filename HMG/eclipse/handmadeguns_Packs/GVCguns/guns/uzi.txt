@@ -21,13 +21,13 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,G17
+Texture,items/G17.png
 GunSound,handmadeguns.UZI,handmadeguns.supu
 GunSoundLV,160,129
 GunSoundReload,handmadeguns.reload
 CanObj,true
 ObjModel,uzi.mqo
-ObjTexture,MGL140.png
+ObjTexture,mgl140.png
 ModelScala,0.5f
 InworldScale,2f
 CustomFlash,arrow,1
@@ -64,7 +64,7 @@ SprintingPoint,0.0f,-0.2f,-0.2f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,bullet_hg_hmg

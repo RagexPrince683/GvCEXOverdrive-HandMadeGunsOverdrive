@@ -1,0 +1,15 @@
+Texture,items/bullet_lmg5.56mm.png
+Stack,1
+Name,200 Rnd 5.56x45mm Box
+BulletRound,200
+
+Tabname,HMG_Ammo
+
+CustomMagazine,bullet_lmg_hmg_5_56
+Recipe1,aab
+Recipe2,ccc
+Recipe3,bbb
+ItemA,HandmadeGuns,copperBlock
+ItemB,HandmadeGuns,steelIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_lmg_hmg_5_56,1

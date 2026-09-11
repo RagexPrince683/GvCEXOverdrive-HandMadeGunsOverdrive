@@ -12,11 +12,11 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,3
-Texture,m3
+Texture,items/M3.png
 GunSound,handmadeguns.greasegun,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
-ObjModel,m3.obj
+ObjModel,M3.obj
 ObjTexture,a_pallete1.png
 ModelScala,0.5f
 InworldScale,2f
@@ -154,7 +154,7 @@ AddParts,mat1
         AddReloadMotionKey,41,0,0,-0.6,0,0,0,       45,0,0,0,0,0,0
         AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
     BackParts
-ScopeTexture,ironsight2.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight2.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,grease30

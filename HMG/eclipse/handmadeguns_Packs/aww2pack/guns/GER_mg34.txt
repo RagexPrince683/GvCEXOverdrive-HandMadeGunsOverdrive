@@ -16,7 +16,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,1
-Texture,MG34
+Texture,items/MG34.png
 GunSound,handmadeguns.mg34,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -54,7 +54,7 @@ Mat22Rotation,90f,0f,0f
 
 SprintingPoint,0.4f,-0.2f,-0.0f
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 

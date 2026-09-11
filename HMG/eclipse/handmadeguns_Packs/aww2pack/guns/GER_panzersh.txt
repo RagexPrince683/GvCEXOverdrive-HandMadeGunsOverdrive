@@ -14,7 +14,7 @@ Explosion,0.5f
 damagerange,3
 
 BlockDestory,false
-Texture,panzersh
+Texture,items/panzersh.png
 GunSound,handmadeguns.panzershrek,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -45,7 +45,7 @@ ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.1f,0.4f,-0.7f
 Tabname,HMG_WW2Guns
 
-ScopeTexture,rr.png,rr.png,scope.png
+ScopeTexture,misc/rr.png,misc/rr.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

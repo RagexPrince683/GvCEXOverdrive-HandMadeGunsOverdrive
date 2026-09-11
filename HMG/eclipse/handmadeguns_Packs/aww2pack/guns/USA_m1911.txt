@@ -11,7 +11,7 @@ Zoom,1.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,m1911
+Texture,items/m1911.png
 GunSound,handmadeguns.1911,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -39,7 +39,7 @@ ModelArmOffsetL,0.1f,0.53F,0.18F
 SprintingPoint,0.5f,-0.4f,-0.1f
 SprintingRotation,-40f,0f,0f
 
-ScopeTexture,hg.png,hgred.png,scope.png
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 MultiMagazine,HandmadeGuns:bullet_hg_hmg19117,HandmadeGuns:bullet_hg_hmg19118

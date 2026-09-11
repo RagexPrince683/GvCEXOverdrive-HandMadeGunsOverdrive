@@ -15,7 +15,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,4
-Texture,HMG_M2HB
+Texture,items/HMG_M2HB.png
 GunSound,handmadeguns.browning,handmadeguns.browning
 GunSoundReload,handmadeguns.reload
 SoundSpeed,1.0f
@@ -419,7 +419,7 @@ DropMagazine,false
 
 CustomFlash,CannonMuzzleFlash,3
 
-ScopeTexture,ironsight.png,ironsight.png,ironsight.png
+ScopeTexture,misc/ironsight.png,misc/ironsight.png,misc/ironsight.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

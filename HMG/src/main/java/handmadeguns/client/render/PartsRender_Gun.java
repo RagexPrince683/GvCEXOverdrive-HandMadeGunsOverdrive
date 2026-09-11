@@ -66,11 +66,18 @@ public class PartsRender_Gun extends PartsRender {
 		
 		if (rootRender && animationDefinition != null)
 			handmadeguns.client.animation.AnimationClient.prepare(this, states, flame, remainbullets);
+		boolean importedRoot = rootRender && model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel;
+		if (importedRoot) {
+			GL11.glPushMatrix();
+			handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.presentationFrame();
+		}
+		try {
 		for (HMGGunParts parts : partslist_temp) {
 			for (GunState state : states) {
 				if(checkState2(state,parts,flame,remainbullets))break;
 			}
 		}
+		} finally { if (importedRoot) GL11.glPopMatrix(); }
 		if (rootRender && isfirstperson && pass != 1 && blockbenchArmsEnabled
 				&& model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
 			handmadeguns.client.modelLoader.blockbench.BlockbenchModel imported =

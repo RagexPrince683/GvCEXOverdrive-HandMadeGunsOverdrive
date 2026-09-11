@@ -1,5 +1,5 @@
 attachRestriction,true
-Texture,ukgacha
+Texture,items/ukgacha.png
 BPItemStack,8
 BPItems,BoysMk1,Sten Mk.‡U,LeeEnfield,BrenGunMk.2,Enfield Revolver,SMLE,Rieder Automatic Rifle,Rieder Automatic Rifle Short Magazine
 

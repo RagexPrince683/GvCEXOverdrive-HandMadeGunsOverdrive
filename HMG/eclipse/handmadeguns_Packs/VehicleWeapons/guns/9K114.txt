@@ -11,7 +11,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,2.5f
 BlockDestory,true
-Texture,9K114
+Texture,items/9K114.png
 ObjModel,9K114.mqo
 ObjTexture,9K114.png
 ModelScala,0.5f

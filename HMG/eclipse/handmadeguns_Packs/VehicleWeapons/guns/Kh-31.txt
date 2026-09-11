@@ -11,7 +11,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,3f
 BlockDestory,true
-Texture,Kh-31
+Texture,items/Kh-31.png
 ObjModel,Kh-31.mqo
 ObjTexture,kh-31.png
 ModelScala,0.5f

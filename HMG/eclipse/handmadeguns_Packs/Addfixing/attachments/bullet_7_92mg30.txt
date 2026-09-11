@@ -1,0 +1,18 @@
+Texture,items/556bullet.png
+Stack,2
+Name,30 Rnd 7.92x57mm Mauser Box Magazine
+BulletRound,30
+
+Tabname,HMG_Ammo
+
+CustomMagazine,7.92mm bulletmg30
+
+//TEMPLATE
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,7.92mm bulletmg30,2

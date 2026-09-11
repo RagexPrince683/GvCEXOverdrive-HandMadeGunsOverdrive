@@ -27,7 +27,7 @@ ZoomRender,true
 ZoomRenderType,false,true,false
 ZoomRenderTypeTxture,true,false,true
 
-Texture,M110
+Texture,items/M110.png
 GunSound,handmadeguns.AR10,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -72,7 +72,7 @@ SoundSpeed,0.9f
 //me when i do nothing as a variable
 //GunSoundLV,1,5
 
-ScopeTexture,scope_m110.png,scope_m110.png,scope_m110.png
+ScopeTexture,misc/scope_m110.png,misc/scope_m110.png,misc/scope_m110.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,7.62mm sr magazine

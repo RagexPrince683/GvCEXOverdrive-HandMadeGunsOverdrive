@@ -22,7 +22,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,M1911
+Texture,items/M1911.png
 GunSound,handmadeguns.1911,handmadeguns.supu
 GunSoundLV,164,127
 GunSoundReload,handmadeguns.reload
@@ -72,7 +72,7 @@ SprintingRotation,-40f,0f,0f
 
 SoundSpeed,1.2f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,bullet_hg_hmg

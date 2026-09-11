@@ -11,7 +11,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,3
-Texture,sten
+Texture,items/sten.png
 GunSound,handmadeguns.stenmk2,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -40,7 +40,7 @@ ModelArmOffsetL,0.3f,0.2f,0.7f
 SimpleADSOffsetZ,0.8,0.8,0.8
 SprintingPoint,0.5f,-0.5f,0.5f
 
-ScopeTexture,ironsight2.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight2.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_9mm32rndmp28

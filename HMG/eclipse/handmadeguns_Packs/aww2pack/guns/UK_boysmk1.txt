@@ -15,7 +15,7 @@ Zoom,1.8f,2.0f,16.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,boysmk1
+Texture,items/boysmk1.png
 GunSound,handmadeguns.boysat,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -42,7 +42,7 @@ ModelArmOffsetR,0.2f,0.3f,0.5f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.1f,0.4f,0.2f
 
-ScopeTexture,scope.png,reddot.png,scope.png
+ScopeTexture,misc/scope.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,1
 Automatic,false
@@ -160,7 +160,7 @@ AddParts,mat1
 		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
 		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 
-		//コッキングモーション
+		//コチE��ングモーション
 		AddCockMotionKey,0,0,0,0,0,0,0,		1,0,0,0,0,0,0
 		//ボルトを左に回して
 		AddCockMotionKey,1,0,0,0,0,0,0,		5,0,0,0,0,0,-90
@@ -170,7 +170,7 @@ AddParts,mat1
 		AddCockMotionKey,15,0,0,-1.6,0,0,-90,	20,0,0,-1.6,0,0,-90
 		//戻して
 		AddCockMotionKey,20,0,0,-1.6,0,0,-90,	31,0,0,0,0,0,-90
-		//戻す
+		//戻ぁE
 		AddCockMotionKey,31,0,0,0,0,0,-90,	35,0,0,0,0,0,0
 
 		AddCockMotionKey,35,0,0,0,0,0,0,		40,0,0,0,0,0,0

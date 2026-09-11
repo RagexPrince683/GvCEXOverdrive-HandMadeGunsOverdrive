@@ -21,7 +21,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,M1895Nagant
+Texture,items/M1895Nagant.png
 GunSound,handmadeguns.ragingjudge,handmadeguns.ragingjudge
 GunSoundLV,164,4
 GunSoundReload,handmadeguns.reload
@@ -61,7 +61,7 @@ SprintingRotation,-50f,0f,0f
 
 //SoundSpeed,0.8f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 Magazine,0,HandmadeGuns,ragingjudgeblt

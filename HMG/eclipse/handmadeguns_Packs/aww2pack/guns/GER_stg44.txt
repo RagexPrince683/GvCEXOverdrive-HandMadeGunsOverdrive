@@ -25,7 +25,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,stg44
+Texture,items/stg44.png
 GunSound,handmadeguns.stg44,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -61,7 +61,7 @@ SprintingRotation,20f,60f,0f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 Magazine,0,HandmadeGuns,stg4430

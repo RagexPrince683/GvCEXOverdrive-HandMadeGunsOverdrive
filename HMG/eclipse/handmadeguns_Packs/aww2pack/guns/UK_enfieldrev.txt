@@ -10,7 +10,7 @@ Zoom,1.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,enfieldrev
+Texture,items/enfieldrev.png
 GunSound,handmadeguns.enfield,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -41,7 +41,7 @@ SprintingRotation,-40f,0f,0f
 MuzzleJump,-20f
 Mat2,False
 
-ScopeTexture,hg.png,hgred.png,scope.png
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_hmgerev

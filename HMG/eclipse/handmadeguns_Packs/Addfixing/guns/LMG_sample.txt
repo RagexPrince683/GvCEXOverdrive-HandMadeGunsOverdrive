@@ -15,7 +15,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,LMG_sample
+Texture,items/LMG_sample.png
 GunSound,handmadeguns.fire,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -259,7 +259,7 @@ Mat22Rotation,90f,0f,0f
 Mat25Point,0.0f,0.0f,0.0f
 Mat25Rotation,0f,0f,0f
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

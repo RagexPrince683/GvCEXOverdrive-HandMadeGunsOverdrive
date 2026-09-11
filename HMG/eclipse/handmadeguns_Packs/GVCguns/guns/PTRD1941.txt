@@ -21,7 +21,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,PTRD1941
+Texture,items/PTRD1941.png
 GunSound,handmadeguns.ptrd,handmadeguns.ptrd
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -60,7 +60,7 @@ SprintingRotation,20f,60f,5f
 
 SoundSpeed,1
 
-ScopeTexture,scope_svd.png,scope_svd.png,scope_svd.png
+ScopeTexture,misc/scope_svd.png,misc/scope_svd.png,misc/scope_svd.png
 RenderCross,false
 DropMagazine,false
 

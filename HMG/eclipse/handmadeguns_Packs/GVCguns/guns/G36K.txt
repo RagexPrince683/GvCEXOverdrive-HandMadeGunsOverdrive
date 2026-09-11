@@ -27,10 +27,10 @@ allowattach,Bullet_AT
 ZoomRender,true
 ZoomRenderType,false,false,false
 ZoomRenderTypeTxture,true,true,true
-ScopeTexture,scope_g36.png,scope_g36_night.png,scope_g36.png
+ScopeTexture,misc/scope_g36.png,misc/scope_g36_night.png,misc/scope_g36.png
 NightVision,false,true,false
 
-Texture,G36C
+Texture,items/G36C.png
 GunSound,handmadeguns.g36,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true

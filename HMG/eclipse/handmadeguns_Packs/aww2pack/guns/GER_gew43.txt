@@ -10,7 +10,7 @@ Zoom,2.0f,1.5f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,true,true
-Texture,gew43
+Texture,items/gew43.png
 SoundSpeed,0.7f
 GunSound,handmadeguns.gew43,handmadeguns.handmadeguns.supu
 GunSoundReload,handmadeguns.f_reload_SVT
@@ -150,7 +150,7 @@ AddParts,mat1
         AddReloadMotionKey,41,0,0,-1.2,0,0,0,       45,0,0,0,0,0,0
         AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
     BackParts
-ScopeTexture,ironsight.png,holosight.png,leupold_itm.png
+ScopeTexture,misc/ironsight.png,holosight.png,leupold_itm.png
 RenderCross,false
 Automatic,true
 

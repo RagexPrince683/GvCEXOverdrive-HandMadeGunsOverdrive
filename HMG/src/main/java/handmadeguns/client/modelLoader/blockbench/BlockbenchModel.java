@@ -142,6 +142,25 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         }
         return false;
     }
+    /** TaCZ first-person placement is authored by inverse camera/view nodes. */
+    public void applyFirstPersonPosition(float ads, float units) {
+        List<Part> idle = path("idle_view");
+        if (idle == null) idle = path("camera");
+        List<Part> aiming = path("iron_view");
+        BlockbenchTransform.applyPositioning(idle, aiming, ads, units);
+    }
+    /** TaCZ third-person item placement aligns this authored node with the hand origin. */
+    public void applyThirdPersonPosition(float units) {
+        BlockbenchTransform.applyPositioning(path("thirdperson_hand"), null, 0, units);
+    }
+    private List<Part> path(String name) {
+        List<Part> candidates = byName.get(name);
+        if (candidates == null || candidates.isEmpty()) return null;
+        LinkedList<Part> path = new LinkedList<Part>();
+        Part part = candidates.get(0);
+        while (part != null) { path.addFirst(part); part = (Part)part.mother; }
+        return path;
+    }
     @Override public String getType() { return "bbmodel"; }
     @Override public boolean isReady() { return true; }
     @Override public ExecutorService getLoadThread() { return null; }

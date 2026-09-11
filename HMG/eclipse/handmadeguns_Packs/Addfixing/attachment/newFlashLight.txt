@@ -1,9 +1,0 @@
-﻿
-Texture,right2
-Model,true
-ObjModel,am_flashlight.mqo
-ObjTexture,am_flashlight.png
-CenterPoint,0F,0.0F,0F
-ColorLevel,0.2F
-
-Model_Light,FlashLight_new

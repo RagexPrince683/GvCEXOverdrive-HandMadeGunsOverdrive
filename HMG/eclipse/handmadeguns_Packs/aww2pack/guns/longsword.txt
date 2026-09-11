@@ -8,7 +8,7 @@ RemainingBullet,500
 InworldScale,2f
 Attacking,9.0f
 Zoom,-1.0f,2.0f,4.0f
-Texture,longsword
+Texture,items/longsword.png
 GunSound,handmadeguns.firebow,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true

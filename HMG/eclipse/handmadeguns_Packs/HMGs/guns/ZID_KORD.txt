@@ -13,7 +13,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,ZID_KORD
+Texture,items/ZID_KORD.png
 GunSound,handmadeguns.kord,handmadeguns.kord
 SoundSpeed,1f
 GunSoundReload,handmadeguns.reload
@@ -491,7 +491,7 @@ DropMagazine,false
 CustomFlash,CannonMuzzleFlash,3
 
 Motion,0.15d
-ScopeTexture,ironsight.png,ironsight.png,ironsight.png
+ScopeTexture,misc/ironsight.png,misc/ironsight.png,misc/ironsight.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

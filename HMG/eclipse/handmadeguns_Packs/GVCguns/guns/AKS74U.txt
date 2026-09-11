@@ -21,7 +21,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,AKS74U
+Texture,items/AKS74U.png
 GunSound,handmadeguns.AKS74U,handmadeguns.AKS74U
 GunSoundLV,165,4
 GunSoundReload,handmadeguns.reload
@@ -177,7 +177,7 @@ SprintingRotation,20f,60f,5f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope_svd.png
+ScopeTexture,null.png,null.png,misc/scope_svd.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,5.45mm magazine

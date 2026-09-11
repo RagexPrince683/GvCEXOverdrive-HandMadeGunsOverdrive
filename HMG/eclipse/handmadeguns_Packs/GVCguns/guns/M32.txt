@@ -16,7 +16,7 @@ ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,true,true,true
 Explosion,4
 BlockDestory,false
-Texture,GL_sample
+Texture,items/GL_sample.png
 GunSound,handmadeguns.m32,handmadeguns.m32
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -55,7 +55,7 @@ Mat22Rotation,0f,0f,-90f
 //0307
 attachRestriction,true
 
-ScopeTexture,acog.png,acog.png,acog.png
+ScopeTexture,misc/acog.png,misc/acog.png,misc/acog.png
 RenderCross,false
 Magazine,0,HandmadeGuns,bullet_gl
 MagazineItemCount,6

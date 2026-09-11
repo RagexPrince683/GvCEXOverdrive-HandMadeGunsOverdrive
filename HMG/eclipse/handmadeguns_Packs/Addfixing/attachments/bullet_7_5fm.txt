@@ -1,0 +1,18 @@
+Texture,items/20mmMagazine.png
+Stack,1
+Name,25 Rnd 7.5x54mm French Bullet Detachable Box Magazine
+BulletRound,25
+
+Tabname,HMG_Ammo
+
+CustomMagazine,7.5mm bulletfm
+
+//TEMPLATE
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,7.5mm bulletfm,1

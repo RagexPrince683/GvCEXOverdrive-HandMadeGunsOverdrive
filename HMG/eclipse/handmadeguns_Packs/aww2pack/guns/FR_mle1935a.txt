@@ -10,7 +10,7 @@ Zoom,1.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,mle1935a
+Texture,items/mle1935a.png
 GunSound,handmadeguns.modela,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -41,7 +41,7 @@ ModelArmOffsetL,0.1f,0.5f,0.2f
 SprintingPoint,0.5f,0.0f,-0.2f
 SprintingRotation,-60f,0f,0f
 
-ScopeTexture,hg.png,hgred.png,scope.png
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,longue8rd

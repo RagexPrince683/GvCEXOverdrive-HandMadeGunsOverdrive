@@ -11,7 +11,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,mas38
+Texture,items/mas38.png
 GunSound,handmadeguns.mas38,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -42,7 +42,7 @@ SimpleADSOffsetX,0.05,0.05,0.05
 SimpleADSOffsetZ,0.4,0.4,0.4
 
 
-ScopeTexture,ironsight2.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight2.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,mas38mag

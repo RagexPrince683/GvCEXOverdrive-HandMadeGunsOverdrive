@@ -26,7 +26,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,RPK74
+Texture,items/RPK74.png
 GunSound,handmadeguns.RPK74,handmadeguns.fire
 GunSoundLV,165,4
 GunSoundReload,handmadeguns.reload
@@ -80,7 +80,7 @@ ModelArmOffsetL,0.13f,0.31f,-0.3f
 SprintingPoint,0.3f,-0.1f,0.5f
 SprintingRotation,20f,60f,5f
 
-ScopeTexture,null.png,null.png,scope_svd.png
+ScopeTexture,null.png,null.png,misc/scope_svd.png
 RenderCross,false
 
 MultiMagazine,HandmadeGuns:5.45mm magazine,HandmadeGuns:5.45mm long magazine,HandmadeGuns:5.45mm casket magazine

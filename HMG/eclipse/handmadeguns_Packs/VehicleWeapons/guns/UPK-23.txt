@@ -10,7 +10,7 @@ Bursts,-1
 Rates,0
 isOneuse,true
 MaxstackSize,16
-Texture,UPK-23
+Texture,items/UPK-23.png
 ObjModel,UPK-23.mqo
 ObjTexture,UPK-23.png
 ModelScala,0.5f

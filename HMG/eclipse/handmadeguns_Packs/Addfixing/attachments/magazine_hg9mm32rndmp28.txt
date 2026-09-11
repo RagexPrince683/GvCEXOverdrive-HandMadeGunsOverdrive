@@ -1,0 +1,13 @@
+Texture,items/mac10mag.png
+Stack,1
+Tabname,HMG_Ammo
+BulletRound,32
+Name,32 Rnd 9x19mm Parabellum MP-28 Magazine
+Magazine,bullet_hg_9mm32rndmp28
+Recipe1,aa 
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_hg_9mm32rndmp28,1

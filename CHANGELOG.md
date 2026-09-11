@@ -70,3 +70,66 @@
 - Normalized Blockbench pixels at `3/16` HMG unit so the reference AK matches the legacy MQO firearm baseline with its inherited `ModelScala,0.5`; `ModelScala`, `InworldScale` and `Gunparts_offsetScale` remain content controls and OBJ/MQO units are unchanged.
 - `ModelArm,true` now enables imported TaCZ hand locators, whose arm frame and mesh scale follow the corrected model coordinates. A missing or hidden locator falls back per hand to the existing `ModelArmOffset*`/`ModelArmRotation*` path; authored locators take precedence.
 - Source comparison covered Blockbench parent-space evaluation and TaCZ geometry, animation and hand-render conversion. Java 8 offline `:HMG:compileJava :HMG:animationTest` passed, including all 74 existing animation checks. No runtime launch or packaging was performed; in-game fire/reload/inspect and arm alignment remain to be checked.
+
+2026-09-10 22:08 — Separate Blockbench display basis and stabilize playback ownership
+
+- Added one root-traversal X half-turn between TaCZ model space and HMG presentation, covering equipped, dropped, GUI and nested gun renders. Preserved the `3/16` units and all bone/keyframe conversions. The correction rotates locator arms with the gun; verified the local Z hand frame and both vanilla shoulder/wrist offsets against TaCZ and the AK placeholders instead of adding weapon-specific arm rotations. Legacy arm fallback remains outside the imported frame.
+- Custom animation requests are idempotent unless the new explicit restart overload is used; automatic shots still retrigger. Transition snapshots now evaluate the current composed pose before layer mutation, including consecutive requests without an intervening sample. First-person ownership survives vanilla synchronized ItemStack replacement in the same item/slot session instead of restarting draw. Imported opaque/transparent passes share ADS progress.
+- Extended the existing animation suite with repeated-state, back-to-back request and rapid-reversal checks. Java 8 offline `:HMG:compileJava :HMG:animationTest` passed with 82 checks, and `git diff --check` passed. No runtime launch or packaging was performed; dropped/equipped orientation, animated hand alignment and ADS transitions still require in-game verification.
+
+2026-09-10 22:45 — Use TaCZ positioning nodes for equipped Blockbench guns
+
+- First-person imported models now align the authored `idle_view` node and blend its inverse rigid transform to `iron_view` during ADS. This bypasses legacy HMG equipped, ADS and sprint placement for Blockbench models while preserving it for OBJ/MQO guns; reload returns to the authored idle view and continues through the shared Phase A action layer.
+- Third-person player-held imports align `thirdperson_hand` at the existing 1.7 hand-context basis instead of applying legacy configured model rotation/translation. Dropped, GUI and nested presentation, the global display correction, model units and bone transforms are unchanged.
+- The animation suite now parses the reference TaCZ AK and proves its tactical/dry reload mapping, 2.6-second duration, advancing playback and nonzero root pose. Java 8 compilation and all 89 checks passed. User runtime evidence confirms the imported reload pose is rendered in inventory; first-person/third-person placement, ADS, reload visibility and hands still require visual verification.
+
+2026-09-10 23:14 — Consume live first-person gun state and retain the hand origin
+
+- First-person animation playback now reads reload, cock, bolt and ammunition state from the live selected hotbar stack when Vanilla renders an equivalent cached `itemToRender`. Playback identity and the rendered stack remain unchanged, so synchronization cannot hide a reload pose or restart the equipped animation session.
+- Blockbench third-person placement retains HMG's fixed 1.7 player-hand origin translation before model scaling and then applies the authored `thirdperson_hand` inverse. Configured legacy model offsets remain bypassed, and OBJ/MQO rendering is unchanged.
+- Source inspection covered Vanilla 1.7 `ItemRenderer`, `RenderPlayer`, Forge's equipped-item helper and TaCZ's inverse positioning-node transform. Java 8 offline `:HMG:compileJava :HMG:animationTest` passed with all 89 checks. Runtime verification of first-person reload and third-person grip alignment remains pending.
+
+2026-09-10 23:29 — Give imported reload clips first-person pose ownership
+
+- Blockbench first-person ACTION playback now follows the same tick-stable reload state that already controls the renderer's ADS and sprint transitions. Imported guns traverse from the neutral HMG baseline during reload so legacy `GunState.Reload` transforms cannot take ownership from the Blockbench clip; OBJ/MQO reload presentation is unchanged.
+- Source tracing confirmed the resulting ownership path. Java 8 offline `:HMG:compileJava :HMG:animationTest` passed with all 89 checks; first-person reload, hands and sprint placement still require in-game verification.
+
+2026-09-11 04:31 — Add pack-scoped clean asset layout
+
+- Added one deterministic content-pack resolver for definitions, models, textures, Blockbench projects, animations, sounds, and attachment-related resources. Recommended `models/`, `textures/`, `animations/`, `sounds/`, and plural `attachments/` paths resolve before known legacy locations, while absolute paths, parent traversal, canonical escapes, and cross-pack searching are rejected.
+- Added concise gun directives such as `Model,akm.mqo`, `Texture,akm.png`, `BlockbenchModel,cod4_ak.bbmodel`, and `Animations,akm.json`. Existing `CanObj`/`ObjModel`/`ObjTexture`, singular `attachment/`, convenience resource folders, and Minecraft-style asset trees remain supported as compatibility fallbacks.
+- Blockbench first-person guns no longer consume legacy `SprintingPoint` or `SprintingRotation`; OBJ/MQO sprint presentation is unchanged. Updated the checked-in Blockbench AK example and content-pack documentation to show the clean logical directories.
+- Java 8 offline compilation passed. All 89 existing animation checks and 20 focused resolver checks passed, covering clean and legacy resolution, clean-name precedence, definition merging, staging, path escape rejection, and neighboring-pack isolation. In-game validation remains required for both clean and legacy packs.
+
+2026-09-11 12:00 — Migrate repository HMG content packs to clean asset folders
+
+- Moved authored models (`.mqo`, `.mqoz`, `.obj`, `.bbmodel`) to each pack's `models/`, model/source textures to `textures/`, item icons to `textures/items/`, sight overlays to `textures/misc/`, OGG files to `sounds/`, and legacy `attachment/` definitions to `attachments/`. Pack boundaries were preserved; `HMG/src/main/resources/assets/` was not changed.
+- Updated migrated TXT references to clean `items/` and `misc/` paths and corrected on-disk case. Verified cross-pack dependencies were copied only into packs that already referenced them, because clean resolution is intentionally pack-local. The existing `assets/handmadeguns/sounds.json` files in Addfixing/aww2pack remain as Minecraft resource-domain metadata; their OGG sources are now clean `sounds/` files.
+- Added `repositoryPackAssetTest`, which rejects authored files left under legacy pack asset directories, deprecated path references, path escapes, case mismatches, and missing migrated references. It records a small allowlist of pre-existing missing logical icon/scope references rather than inventing replacement assets.
+- Java 8 offline `:HMG:compileJava` passed; the 89-check animation suite, 26-check resolver suite, and 2,566-check repository-pack validation passed. `git diff --check` passed. No packaging or in-game validation is claimed here; the validator reports only the documented pre-existing missing logical icon/scope references.
+
+2026-09-11 05:35 — Separate HMG model, item, and misc textures
+
+- Reclassified repository pack textures into `textures/models/`, `textures/items/`, and `textures/misc/`; no content-pack texture remains at `textures/` root. `HMG/src/main/resources/assets/` remains untouched.
+- Replaced the generic resolver texture type with explicit model, item, and misc categories. `ObjTexture`, `ModelTexture`, `SkinTexture`, and `3dmodeltex` now resolve only model textures; `Texture` resolves only item icons; `ScopeTexture` resolves only misc textures. Startup staging mirrors each category to its corresponding Minecraft resource location without cross-category copies.
+- Added STG44 regression coverage proving `aww2pack` resolves `stg44.png` independently from `textures/models/` and `textures/items/`, while `itemTextureName()` still rejects a model-texture path. Legacy resource-folder lookup remains supported for third-party packs.
+- Java 8 offline `:HMG:compileJava` passed; the animation suite passed 89 checks, the resolver suite passed 32 checks, and repository-pack validation passed 2,584 checks (with only its existing 36 allowlisted unresolved references). `git diff --check` passed. No packaging or in-game validation is claimed here.
+
+2026-09-11 05:46 — Bridge accepted reloads to imported ACTION clips
+
+- Added a server-authorized reload presentation event for the owning client. Accepted manual reloads capture empty versus tactical from the pre-mutation ammunition state, identify the selected slot/item and event, and queue exactly one imported ACTION request with the existing `reload` fallback. Rejected requests send nothing; mismatched client weapons ignore delayed events.
+- Removed imported reload startup from `IsReloading` edge inference. The event-owned presentation snapshot now drives both imported animation ownership and renderer reload branching; live `IsReloading` validates/cancels it after a short synchronization grace. Guns without an imported reload clip continue through legacy reload motion.
+- Moved the reload request handler's player, inventory, gun NBT and reload mutations onto a server-tick queue because Forge 1.7.10 SimpleImpl invokes handlers on its network thread. Gameplay reload timing, ammunition and magazine authority remain server-owned; the new client packet mutates presentation state only.
+- Java 8 offline `:HMG:compileJava :HMG:animationTest` passed; the suite reported 107 checks including the reload bridge cases. `git diff --check` passed. No packaging, runtime launch or in-game validation was performed. First-person empty/tactical playback, aborts, rapid switching and dedicated-server behavior remain to be tested in game.
+
+2026-09-11 06:02 — Let accepted imported reload actions finish naturally
+
+- Removed `IsReloading`-loss and synchronization-timeout cancellation from accepted reload presentation. Gameplay completion cannot be distinguished from an abort by that boolean, so it no longer stops or releases the imported ACTION clip.
+- Imported reload pose ownership now follows the accepted pending/playing ACTION until the controller reaches the clip's natural end. Completion is settled on the next animation-clock snapshot so opaque/transparent render passes cannot disagree at the ending frame. Selected-slot/item mismatch still invalidates the action immediately; existing entry removal continues to cover unequip, weapon switch and world change.
+- Reworked reload bridge coverage for tactical/empty exactly-once startup, true/false NBT transitions without restart or cancellation, natural duration and ownership release, explicit invalidation, slot/item mismatch and legacy fallback. Java 8 offline `:HMG:compileJava :HMG:animationTest` passed with 109 checks; `git diff --check` passed. No packaging or runtime launch was performed. The corrected full-length animation still requires in-game confirmation; gameplay/visual magazine-event alignment remains a separate concern.
+
+2026-09-11 06:18 — Bundle vecmath for dedicated-server runtime
+
+- Added a Java 8/Forge 1.7.10-compatible Shadow packaging step that carries `javax.vecmath:vecmath:1.5.2` inside HMG at `META-INF/libraries/vecmath-1.5.2.jar`. The existing coremod bootstrap checks for an already available `javax.vecmath.Vector3d` and extracts/adds the bundled fallback only when needed, so companion GVC/WW2/Linker APIs remain binary-compatible and an existing provider is not replaced.
+- Disabled the thin jar as the release artifact and registered the embedded archive with ForgeGradle reobfuscation; the existing coremod manifest markers are preserved. Development compilation still uses the normal Maven dependency.
+- Java 8 `:HMG:compileJava`, `:HMG:shadowJar --offline`, and `:HMG:reobf --offline` passed. The inspected reobfuscated jar contained the embedded vecmath jar and no top-level duplicate `javax/vecmath` classes. No fresh dedicated-server launch was performed; server startup with the produced jar remains the final runtime check.

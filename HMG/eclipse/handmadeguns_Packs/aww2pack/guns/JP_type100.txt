@@ -11,7 +11,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,type100
+Texture,items/type100.png
 GunSound,handmadeguns.t100,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -41,7 +41,7 @@ Tabname,HMG_WW2Guns
 SprintingPoint,1.2f,-0.2f,1.0f
 
 
-ScopeTexture,ironsight2.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight2.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_hmgt100

@@ -6,7 +6,7 @@ ReloadTime,200
 RemainingBullet,100
 Attacking,7.0f
 Zoom,1.0f,2.0f,4.0f
-Texture,SWORD_sample
+Texture,items/SWORD_sample.png
 GunSound,handmadeguns.firebow,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true

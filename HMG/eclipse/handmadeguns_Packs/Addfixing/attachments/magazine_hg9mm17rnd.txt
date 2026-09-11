@@ -1,0 +1,13 @@
+Texture,items/bullet_hg8rnd.png
+Stack,3
+Tabname,HMG_Ammo
+BulletRound,17
+Name,17 Rnd 9x19mm Parabellum Magazine
+Magazine,bullet_hg_9mm17rnd
+Recipe1,aa 
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_hg_9mm17rnd,3

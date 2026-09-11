@@ -37,6 +37,8 @@ import handmadeguns.gunsmithing.GunSmithTable;
 import handmadeguns.gunsmithing.GunSmithTableTileEntity;
 import handmadeguns.items.*;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
+import handmadeguns.pack.HMGPackAssetResolver;
+import handmadeguns.network.HMGServerTaskQueue;
 import handmadeguns.world.HGWorldGen;
 import handmadeguns.world.HGWorldGenConfig;
 import handmadevehicle.entity.EntityDummy_rider;
@@ -322,6 +324,7 @@ public class HandmadeGunsCore {
 	    }*/
 		// ResourceLocation aa = new ResourceLocation("handmadeguns").getResourceDomain();
 		FMLCommonHandler.instance().bus().register(this);
+		FMLCommonHandler.instance().bus().register(HMGServerTaskQueue.INSTANCE);
 		HMG_proxy.setuprender();
 		File packdir_normal = new File(HMG_proxy.ProxyFile(), "handmadeguns_Packs");
 		packdir_normal.mkdirs();
@@ -414,73 +417,15 @@ public class HandmadeGunsCore {
 		Arrays.sort(packlist, FILE_NAME_COMPARATOR);
 		for (File apack : packlist) {
 			if (isHMGPack(apack)) {
-				String assetsdirstring = apack.getName() + File.separatorChar + "assets" + File.separatorChar + "handmadeguns" + File.separatorChar;
-				File diremodel = new File(apack, "addmodel");
-				File[] filemodel = diremodel.listFiles();
-				if(filemodel != null) {
-					for (int ii = 0; ii < filemodel.length; ii++) {
-						if (filemodel[ii].isFile()) {
-							File directory111 = new File(packdir, assetsdirstring +
-									"textures" + File.separatorChar + "model" + File.separatorChar + filemodel[ii].getName());
-							try {
-								FileUtils.copyFile(filemodel[ii], directory111);
-								copiedResources++;
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-					}
+				try {
+					HMGPackAssetResolver resolver = new HMGPackAssetResolver(apack);
+					copiedResources += resolver.stageResources();
+					File assets = new File(apack, "assets" + File.separatorChar + "handmadeguns");
+					HMGAddSounds.load(new File(assets, "sounds"), assets);
+				} catch (IOException failure) {
+					System.err.println("[HMG] Cannot stage content-pack resources from " + apack);
+					failure.printStackTrace();
 				}
-				File diretexture = new File(apack, "addtexture");
-				File[] filetexture = diretexture.listFiles();
-				if(filetexture != null) {
-					for (int ii = 0; ii < filetexture.length; ii++) {
-						if (filetexture[ii].isFile()) {
-							File directory111 = new File(packdir, assetsdirstring +
-									"textures" + File.separatorChar + "items" + File.separatorChar + filetexture[ii].getName());
-							try {
-								FileUtils.copyFile(filetexture[ii], directory111);
-								copiedResources++;
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-				File diresighttexture = new File(apack, "addsighttex");
-				File[] filesighttexture = diresighttexture.listFiles();
-				if (filesighttexture != null) {
-					for (int ii = 0; ii < filesighttexture.length; ii++) {
-						if (filesighttexture[ii].isFile()) {
-							File directory111 = new File(packdir,assetsdirstring +
-									"textures" + File.separatorChar + "misc" + File.separatorChar + filesighttexture[ii].getName());
-							try {
-								FileUtils.copyFile(filesighttexture[ii], directory111);
-								copiedResources++;
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-				File diresound = new File(apack, "addsounds");
-				File[] filesound = diresound.listFiles();
-				if (filesound != null) {
-					for (int ii = 0; ii < filesound.length; ii++) {
-						if (filesound[ii].isFile()) {
-							File directory111 = new File(packdir,assetsdirstring +
-									"sounds" + File.separatorChar + filesound[ii].getName());
-							try {
-								FileUtils.copyFile(filesound[ii], directory111);
-								copiedResources++;
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-					}/**/
-				}
-				HMGAddSounds.load(new File(packdir,assetsdirstring +
-						"sounds"),new File(packdir,assetsdirstring));
 			}
 		}
 
@@ -580,37 +525,29 @@ public class HandmadeGunsCore {
 							}
 						}
 					}
-					File direattach = new File(apack, "attachment");
+					HMGPackAssetResolver resolver;
+					try {
+						resolver = new HMGPackAssetResolver(apack);
+					} catch (IOException failure) {
+						System.err.println("[HMG] Cannot resolve content pack " + apack + ": " + failure.getMessage());
+						continue;
+					}
 					Debug("[AmmoDebug] Pack=%s damageCof=%s speedCof=%s before attachment load", apack.getName(), HMGGunMaker.damageCof, HMGGunMaker.speedCof);
-					File[] fileattach = direattach.listFiles();
-					if (fileattach != null) {
-						Arrays.sort(fileattach, new Comparator<File>() {
-							public int compare(File file1, File file2) {
-								return file1.getName().compareTo(file2.getName());
-							}
-						});
-						for (int ii = 0; ii < fileattach.length; ii++) {
-							if (fileattach[ii].isFile()) {
+					try {
+						for (File attachmentFile : resolver.listDefinitions(HMGPackAssetResolver.Type.ATTACHMENT_DEFINITION)) {
 								long phaseStart = System.nanoTime();
-								HMGAddAttachment.load(isClient, fileattach[ii]);
+								HMGAddAttachment.load(isClient, attachmentFile);
 								attachmentNanos += System.nanoTime() - phaseStart;
 								attachmentFiles++;
-							}
 						}
+					} catch (IOException failure) {
+						failure.printStackTrace();
 					}
-					File diremag = new File(apack, "magazines");
-					File[] filelistmag = diremag.listFiles();
-					if (filelistmag != null) {
-						Arrays.sort(filelistmag, new Comparator<File>() {
-							public int compare(File file1, File file2) {
-								return file1.getName().compareTo(file2.getName());
-							}
-						});
-						for (int ii = 0; ii < filelistmag.length; ii++) {
-							if (filelistmag[ii].isFile()) {
+					try {
+						for (File magazineFile : resolver.listDefinitions(HMGPackAssetResolver.Type.MAGAZINE_DEFINITION)) {
 								try {
 									long phaseStart = System.nanoTime();
-									HMGAddmagazine.load(isClient, filelistmag[ii]);
+									HMGAddmagazine.load(isClient, magazineFile);
 									magazineNanos += System.nanoTime() - phaseStart;
 									magazineFiles++;
 								} catch (ModelFormatException e) {
@@ -618,25 +555,23 @@ public class HandmadeGunsCore {
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
-							}
 						}
+					} catch (IOException failure) {
+						failure.printStackTrace();
 					}
-
-					File direbullet = new File(apack, "bullets");
-					File[] filebullet = direbullet.listFiles();
-					if (filebullet != null) {
-						for (int ii = 0; ii < filebullet.length; ii++) {
-							if (filebullet[ii].isFile()) {
+					try {
+						for (File bulletFile : resolver.listDefinitions(HMGPackAssetResolver.Type.BULLET_DEFINITION)) {
 								try {
 									long phaseStart = System.nanoTime();
-									HMGAddBullets.load(isClient, filebullet[ii]);
+									HMGAddBullets.load(isClient, bulletFile);
 									bulletNanos += System.nanoTime() - phaseStart;
 									bulletFiles++;
 								} catch (ModelFormatException e) {
 									e.printStackTrace();
 								}
-							}
 						}
+					} catch (IOException failure) {
+						failure.printStackTrace();
 					}
 					File direjs = new File(apack, "addscripts");
 					File[] filejs = direjs.listFiles();
@@ -657,23 +592,19 @@ public class HandmadeGunsCore {
 						}
 					}
 					// Coefficients were resolved before attachments; guns use that same pack context.
-					File diregun = new File(apack, "guns");
-					File[] filegun = diregun.listFiles();
-					if (filegun == null) {
-						continue;
-					}
-					Arrays.sort(filegun, FILE_NAME_COMPARATOR);
-					for (int ii = 0; ii < filegun.length; ii++) {
-						if (filegun[ii].isFile()) {
+					try {
+						for (File gunFile : resolver.listDefinitions(HMGPackAssetResolver.Type.GUN_DEFINITION)) {
 							try {
 								long phaseStart = System.nanoTime();
-								new HMGGunMaker().load(isClient, filegun[ii]);
+								new HMGGunMaker().load(isClient, gunFile);
 								gunNanos += System.nanoTime() - phaseStart;
 								gunFiles++;
 							} catch (ModelFormatException e) {
 								e.printStackTrace();
 							}
 						}
+					} catch (IOException failure) {
+						failure.printStackTrace();
 					}
 				}
 

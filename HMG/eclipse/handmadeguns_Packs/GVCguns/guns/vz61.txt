@@ -21,7 +21,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,G17
+Texture,items/G17.png
 GunSound,handmadeguns.vzscorp,handmadeguns.supu
 GunSoundLV,157,4
 GunSoundReload,handmadeguns.reload
@@ -61,7 +61,7 @@ SprintingRotation,20f,60f,5f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,bullet_hg_hmg

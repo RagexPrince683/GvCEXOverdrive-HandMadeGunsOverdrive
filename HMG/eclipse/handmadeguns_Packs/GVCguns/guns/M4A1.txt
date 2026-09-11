@@ -22,7 +22,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,M4A1
+Texture,items/M4A1.png
 GunSound,handmadeguns.m4a1,handmadeguns.m4a1
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -70,7 +70,7 @@ SprintingRotation,20f,60f,5f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 MultiMagazine,HandmadeGuns:5.56mm magazine,HandmadeGuns:bullet_lmg_hmg_CMag,HandmadeGuns:5.56mm magazine20,HandmadeGuns:5.56mm magazine90

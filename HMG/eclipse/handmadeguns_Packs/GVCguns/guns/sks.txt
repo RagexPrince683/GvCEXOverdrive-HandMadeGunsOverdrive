@@ -10,7 +10,7 @@ Zoom,1.0f,1.0f,8.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,svt40
+Texture,items/svt40.png
 SoundSpeed,1f
 GunSound,handmadeguns.SKS,handmadeguns.supu
 GunSoundReload,handmadeguns.f_reload_SVT

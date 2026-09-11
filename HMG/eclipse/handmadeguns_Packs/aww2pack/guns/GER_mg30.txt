@@ -15,7 +15,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,2
-Texture,mg30
+Texture,items/mg30.png
 GunSound,handmadeguns.mg30,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -48,7 +48,7 @@ ModelArmOffsetL,0.1f,0.6f,-0.2f
 //ThirdModelEquipped,1.5,0,-2
 SprintingPoint,0.4f,-0.1f,-0.0f
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

@@ -7,7 +7,7 @@ ReloadTime,100
 RemainingBullet,500
 Attacking,6.0f
 Zoom,-1.0f,2.0f,4.0f
-Texture,m1943
+Texture,items/m1943.png
 GunSound,handmadeguns.firebow,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true

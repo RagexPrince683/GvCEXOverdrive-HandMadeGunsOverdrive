@@ -12,7 +12,7 @@ Zoom,1.4f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,smle
+Texture,items/smle.png
 GunSound,handmadeguns.smle,handmadeguns.supu
 GunSoundReload,handmadeguns.f_reload_enfield
 GunSoundCooking,handmadeguns.a_cock
@@ -146,7 +146,7 @@ AddParts,mat1
         AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
         AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 
-        //コッキングモーション
+        //コチE��ングモーション
         AddCockMotionKey,0,0,0,0,0,0,0,          1,0,0,0,0,0,0
         //ボルトを左に回して
         AddCockMotionKey,1,0,0,0,0,0,0,          2,0,0,0,0,0,-90
@@ -156,7 +156,7 @@ AddParts,mat1
         AddCockMotionKey,4,0,0,-0.4,0,0,-90,     5,0,0,-0.4,0,0,-90
         //戻して
         AddCockMotionKey,5,0,0,-0.4,0,0,-90,     7,0,0,0,0,0,-90
-        //戻す
+        //戻ぁE
         AddCockMotionKey,7,0,0,0,0,0,-90,       8,0,0,0,0,0,0
 
         AddCockMotionKey,8,0,0,0,0,0,0,         10,0,0,0,0,0,0
@@ -193,7 +193,7 @@ AddParts,mat1
     BackParts
 
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 Automatic,false
 

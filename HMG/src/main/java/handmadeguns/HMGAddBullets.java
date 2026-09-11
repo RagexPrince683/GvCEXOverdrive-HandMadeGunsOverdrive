@@ -4,6 +4,7 @@ import handmadeguns.Util.SoundInfo;
 import handmadeguns.Util.TrailInfo;
 import handmadeguns.client.render.ModelSetAndData;
 import handmadeguns.client.modelLoader.obj_modelloaderMod.obj.HMGObjModelLoader;
+import handmadeguns.pack.HMGPackAssetResolver;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModelCustom;
 
@@ -25,6 +26,7 @@ public class HMGAddBullets {
 
         try {
             File file = file1;
+            HMGPackAssetResolver resolver = new HMGPackAssetResolver(file1.getParentFile().getParentFile());
             // File file = new File(configfile,"hmg_handmadeguns.txt");
             if (checkBeforeReadfile(file)) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"));
@@ -73,6 +75,7 @@ public class HMGAddBullets {
                                 objmodel = type[1];
                                 break;
                             case "ObjTexture":
+                            case "ModelTexture":
                                 objtexture = type[1];
                                 break;
                             case "Objscale":
@@ -142,12 +145,13 @@ public class HMGAddBullets {
                                 animationspeed = Float.parseFloat(type[1]);
                                 break;
                             case "Name":
-            
-                                ResourceLocation model = new ResourceLocation("handmadeguns:textures/model/" + objmodel);
-                                ResourceLocation texture = new ResourceLocation("handmadeguns:textures/model/" + objtexture);
                                 BulletName = type[1];
                                 cnt++;
                                 if (isClient) {
+                                    ResourceLocation model = objmodel == null ? null : new ResourceLocation(
+                                            resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel));
+                                    ResourceLocation texture = objtexture == null ? null : new ResourceLocation(
+                                            resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture));
                                     System.out.println("model" + model);
                                     System.out.println("textures" + texture);
                                     if (objmodel != null && objtexture != null) {

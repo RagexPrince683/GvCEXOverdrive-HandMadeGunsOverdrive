@@ -1,3 +1,14 @@
+buildscript {
+	repositories {
+		maven { url = "https://plugins.gradle.org/m2/" }
+	}
+	dependencies {
+		classpath "com.github.jengelman.gradle.plugins:shadow:2.0.4"
+	}
+}
+
+apply plugin: "com.github.johnrengelman.shadow"
+
 // ===========================
 // VERSION HANDLING
 // ===========================
@@ -138,6 +149,10 @@ repositories {
 // DEPENDENCIES
 // ===========================
 
+configurations {
+	embedded
+}
+
 dependencies {
 	compileOnly fileTree(dir: "libs/compileOnly", include: ["*.jar"])
 
@@ -153,6 +168,21 @@ dependencies {
 	compile fileTree(dir: "lib", include: ["*.jar"])
 
 	compile "javax.vecmath:vecmath:1.5.2"
+	embedded "javax.vecmath:vecmath:1.5.2"
+}
+
+task stageEmbeddedVecmath {
+	inputs.files configurations.embedded
+	outputs.file file("${buildDir}/generated/embedded-libraries/vecmath-1.5.2.jar.bin")
+	doLast {
+		File target = outputs.files.singleFile
+		target.parentFile.mkdirs()
+		java.nio.file.Files.copy(
+			configurations.embedded.singleFile.toPath(),
+			target.toPath(),
+			java.nio.file.StandardCopyOption.REPLACE_EXISTING
+		)
+	}
 }
 
 // ===========================
@@ -188,6 +218,68 @@ jar {
 			'FMLCorePluginContainsFMLMod': 'true'
 }
 
+shadowJar {
+	baseName = "HandmadeGunsOverdrive"
+	version = project.version
+	classifier = null
+	configurations = []
+	dependsOn stageEmbeddedVecmath
+	doLast {
+		File archive = archivePath
+		File rewritten = new File(archive.parentFile, archive.name + ".tmp")
+		java.util.zip.ZipFile source = new java.util.zip.ZipFile(archive)
+		java.util.zip.ZipOutputStream target = new java.util.zip.ZipOutputStream(
+				new java.io.BufferedOutputStream(new java.io.FileOutputStream(rewritten)))
+		try {
+			source.entries().each { entry ->
+				java.util.zip.ZipEntry copy = new java.util.zip.ZipEntry(entry.name)
+				copy.time = entry.time
+				target.putNextEntry(copy)
+				if (!entry.directory) {
+					source.getInputStream(entry).withStream { input ->
+						byte[] buffer = new byte[8192]
+						int read
+						while ((read = input.read(buffer)) != -1) {
+							target.write(buffer, 0, read)
+						}
+					}
+				}
+				target.closeEntry()
+			}
+			java.util.zip.ZipEntry library = new java.util.zip.ZipEntry("META-INF/libraries/vecmath-1.5.2.jar")
+			target.putNextEntry(library)
+			project.configurations.embedded.singleFile.withInputStream { input ->
+				byte[] buffer = new byte[8192]
+				int read
+				while ((read = input.read(buffer)) != -1) {
+					target.write(buffer, 0, read)
+				}
+			}
+			target.closeEntry()
+		} finally {
+			target.close()
+			source.close()
+		}
+		java.nio.file.Files.move(
+			rewritten.toPath(),
+			archive.toPath(),
+			java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+	}
+	manifest.attributes 'FMLCorePlugin': 'handmadeguns.loading.HMGJumpCorePlugin',
+			'FMLCorePluginContainsFMLMod': 'true'
+}
+
+jar.enabled = false
+
+afterEvaluate {
+	shadowJar.configurations = []
+	// ForgeGradle registers the normal jar for reobfuscation before this project block runs.
+	reobf.obfOutput.removeAll { it.toObf == jar.archivePath }
+	reobf.reobf(shadowJar) {
+		it.classpath = sourceSets.main.compileClasspath
+	}
+}
+
 // ===========================
 // ENCODING FIX
 // ===========================
@@ -206,9 +298,21 @@ tasks.withType(JavaCompile) {
 task animationTest(type: JavaExec, dependsOn: testClasses) {
 	main = 'handmadeguns.animation.AnimationTests'
 	classpath = sourceSets.test.runtimeClasspath
-	args rootProject.file('docs/examples/animations/foundation.json').absolutePath
+	args rootProject.file('docs/examples/animations/foundation.json').absolutePath,
+			rootProject.file('HMG/Reference files/cod4_ak.bbmodel').absolutePath
 }
-test.dependsOn animationTest
+
+task packResolverTest(type: JavaExec, dependsOn: testClasses) {
+	main = 'handmadeguns.pack.HMGPackAssetResolverTests'
+	classpath = sourceSets.test.runtimeClasspath
+}
+
+task repositoryPackAssetTest(type: JavaExec, dependsOn: testClasses) {
+	main = 'handmadeguns.pack.HMGRepositoryPackAssetTests'
+	classpath = sourceSets.test.runtimeClasspath
+	args rootProject.file('HMG/eclipse/handmadeguns_Packs').absolutePath
+}
+test.dependsOn animationTest, packResolverTest, repositoryPackAssetTest
 
 tasks.withType(JavaExec) {
 	if (name == "runClient") {

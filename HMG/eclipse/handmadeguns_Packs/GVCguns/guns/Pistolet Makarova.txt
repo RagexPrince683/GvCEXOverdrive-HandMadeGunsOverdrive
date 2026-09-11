@@ -22,7 +22,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,PM
+Texture,items/PM.png
 GunSound,handmadeguns.Makarov,handmadeguns.supu
 GunSoundLV,160,129
 GunSoundReload,handmadeguns.reload
@@ -72,7 +72,7 @@ SprintingRotation,-30f,0f,0f
 
 SoundSpeed,1.5f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,bullet_hg_9mm8rnd

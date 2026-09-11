@@ -50,6 +50,7 @@ other renderer, and requires no Angelica-specific dependency.
 ### Client and Server Requirements
 
 - Install Handmade Guns Overdrive on **both the client and server**. The mod registers gameplay items, blocks, entities, GUIs, sounds, networking, and content-pack resources.
+- Release jars carry HMG's vecmath runtime fallback and load it only when the Forge classloader does not already provide `javax.vecmath`; a separate vecmath jar is not required on a dedicated server.
 - Clients and servers should use matching HMG config and content packs. Mismatched gun, magazine, bullet, or attachment definitions can cause missing items, unusable weapons, or disconnects.
 - Client-only render options still belong in the generated config, but gameplay-affecting options should be treated as server policy.
 
@@ -88,7 +89,7 @@ This repository uses legacy ForgeGradle 1.2 conventions for Minecraft 1.7.10:
 ./gradlew build
 ```
 
-HMG releases are versioned from `HMG/version.properties`. Edit only `mod_version=x.y.z` when preparing a new release; production packaging tasks such as `build`, `jar`, and `reobfJar` automatically reserve the next `build_number` and produce jars with the computed `mod_version.build_number` value. Development tasks such as `runClient`, `runServer`, `test`, and workspace/IDE setup do not increment the build number. If a production build fails, Gradle restores the previous build number so failed builds do not consume release iterations.
+HMG releases are versioned from `HMG/version.properties`. Edit only `mod_version=x.y.z` when preparing a new release; production packaging tasks such as `build`, `shadowJar`, and `reobf` automatically reserve the next `build_number` and produce jars with the computed `mod_version.build_number` value. Development tasks such as `runClient`, `runServer`, `test`, and workspace/IDE setup do not increment the build number. If a production build fails, Gradle restores the previous build number so failed builds do not consume release iterations.
 
 If your environment uses a different ForgeGradle 1.2 setup task, use the equivalent workspace-generation task for your IDE.
 

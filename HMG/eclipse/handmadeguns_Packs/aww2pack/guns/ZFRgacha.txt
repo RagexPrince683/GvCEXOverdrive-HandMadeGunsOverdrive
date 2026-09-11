@@ -1,5 +1,5 @@
 attachRestriction,true
-Texture,frgacha
+Texture,items/frgacha.png
 BPItemStack,5
 BPItems,MAS36,FM_Mle1924,MAS38,Mle.1935A,RSC M1917
 

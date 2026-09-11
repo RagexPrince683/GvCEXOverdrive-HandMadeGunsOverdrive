@@ -25,13 +25,13 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,Type38
+Texture,items/type38.png
 GunSound,handmadeguns.type38,handmadeguns.fireRifle
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
 CanObj,true
 ObjModel,Type38.mqo
-ObjTexture,Type38.png
+ObjTexture,type38.png
 ModelScala,0.5f
 InworldScale,1.8f
 CustomFlash,arrow,1
@@ -66,7 +66,7 @@ SprintingRotation,20f,60f,0f
 SoundSpeed,1f
 DropMagazine,false
 
-ScopeTexture,scope_r700.png,scope_r700.png,scope_r700.png
+ScopeTexture,misc/scope_r700.png,misc/scope_r700.png,misc/scope_r700.png
 RenderCross,false
 
 Mat22,false
@@ -202,7 +202,7 @@ AddParts,SYS_RotationBySight
 	            BackParts
 	        BackParts
 
-	        //排莢されるカートリッジ
+	        //排莢されるカートリチE��
 	        AddChildParts,cart
 	            AddPartsRotationCenterAndRotationAmount,0,0.4703f,1.1899f,0,0,0
 	            AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
@@ -210,7 +210,7 @@ AddParts,SYS_RotationBySight
 	            AddCockMotionKey,9,0,0,-0.85,0,0,0,         12,-0.2,0,-0.85,0,0,0
 	            AddCockMotionKey,12,-0.2,0,-0.85,0,0,0,     14,-0.3,-0.4,-0.85,0,0,0
 	        BackParts
-	        //装填用クリップ
+	        //裁E��用クリチE�E
 	        AddChildParts,clipplane
 	    	        AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
 	    	        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
@@ -234,7 +234,7 @@ AddParts,SYS_RotationBySight
 	            AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
 	            AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 
-	            //コッキングモーション
+	            //コチE��ングモーション
 	            AddCockMotionKey,0,0,0,0,0,0,0,          2,0,0,0,0,0,0
 	            //ボルトを左に回して
 	            AddCockMotionKey,2,0,0,0,0,0,0,          4,0,0,0,0,0,-90
@@ -244,7 +244,7 @@ AddParts,SYS_RotationBySight
 	            AddCockMotionKey,9,0,0,-0.9,0,0,-90,     11,0,0,-0.9,0,0,-90
 	            //戻して
 	            AddCockMotionKey,11,0,0,-0.9,0,0,-90,    16,0,0,0,0,0,-90
-	            //戻す
+	            //戻ぁE
 	            AddCockMotionKey,16,0,0,0,0,0,-90,       18,0,0,0,0,0,0
 
 	            AddCockMotionKey,18,0,0,0,0,0,0,         20,0,0,0,0,0,0

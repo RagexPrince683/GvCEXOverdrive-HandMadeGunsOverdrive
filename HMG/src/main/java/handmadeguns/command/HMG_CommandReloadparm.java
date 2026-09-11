@@ -115,7 +115,10 @@ public class HMG_CommandReloadparm extends CommandBase implements ICommand{
 					}
 				}
 			}
-			File[] attachmentFiles = new File(apack, "attachment").listFiles(File::isFile);
+			// Prefer the migrated plural directory while retaining the singular legacy fallback.
+			File attachmentDirectory = new File(apack, "attachments");
+			if (!attachmentDirectory.isDirectory()) attachmentDirectory = new File(apack, "attachment");
+			File[] attachmentFiles = attachmentDirectory.listFiles(File::isFile);
 			if (attachmentFiles != null) {
 				Arrays.sort(attachmentFiles, Comparator.comparing(File::getName));
 				for (File attachmentFile : attachmentFiles) {

@@ -2,9 +2,9 @@
 
 HMG is pack-driven. Content packs can add guns, magazines, bullets, attachments, recipes, sounds, textures, models, tabs, and scripts without changing Java code.
 
-Optional named JSON animations can drive the existing HMG gun parts without replacing OBJ/MQO models. See [Animation authoring](animation-authoring.md) for `Animations,animations/name.json`, units, transitions, events, the example asset, and legacy compatibility.
+Optional named JSON animations can drive the existing HMG gun parts without replacing OBJ/MQO models. See [Animation authoring](animation-authoring.md) for `Animations,name.json`, units, transitions, events, the example asset, and legacy compatibility.
 
-Unified guns can instead use `BlockbenchModel,models/name.bbmodel` to import geometry, bone parts, embedded PNG textures and animations directly from a Blockbench project. No OBJ export, `AddParts` declarations or separate animation JSON is needed. The checked-in `GVCguns/guns/AKM_Blockbench.txt` and `GVCguns/models/cod4_ak.bbmodel` provide a complete AK example. See [direct Blockbench importing](animation-authoring.md#direct-blockbench-projects) for the supported formats, TaCZ action aliases and limitations.
+Unified guns can instead use `BlockbenchModel,name.bbmodel` to import geometry, bone parts, embedded PNG textures and animations directly from a Blockbench project. No OBJ export, `AddParts` declarations or separate animation JSON is needed. The checked-in `GVCguns/guns/AKM_Blockbench.txt` and `GVCguns/models/cod4_ak.bbmodel` provide a complete AK example. See [direct Blockbench importing](animation-authoring.md#direct-blockbench-projects) for the supported formats, TaCZ action aliases and limitations.
 
 ## Supported Pack Roots
 
@@ -20,32 +20,63 @@ Legacy path still read by source:
 mods/handmadeguns/addgun/<PackName>/
 ```
 
-## Common Pack Layout
+## Recommended Pack Layout
 
 ```text
 handmadeguns_Packs/
   ExamplePack/
     guns/
+      AKM.txt
+    models/
+      akm.mqo
+      cod4_ak.bbmodel
+    textures/
+      models/akm.png
+      items/akm_icon.png
+      misc/scope.png
+    animations/
+      akm.json
+    sounds/
+      ak47.ogg
+      reload.ogg
+    attachments/
     magazines/
     bullets/
-    attachment/
     addpackrecipe/
     addTab/
-    addmodel/
-    addtexture/
-    addsighttex/
-    addsounds/
     addscripts/
     scripts/
     additionalSettings.txt
 ```
 
+The asset resolver is always bound to the pack containing the definition. A simple name is looked up in its logical folder first, so a gun can use:
+
+```text
+Model,akm.mqo
+ModelTexture,akm.png
+Texture,akm_icon.png
+ScopeTexture,null.png,null.png,scope.png
+Animations,akm.json
+```
+
+`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `Texture` selects an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence.
+
+Authors may include the logical directory explicitly (`Model,models/akm.mqo`, `ModelTexture,textures/models/akm.png`, `Texture,textures/items/akm_icon.png`, or `Animations,animations/akm.json`). Short references are preferred because the directive determines the category. Absolute paths, `..` traversal, and canonical or symbolic-link escapes are rejected. HMG does not recursively search the Minecraft instance, resource packs, Flan packs, or neighboring HMG packs.
+
+Item icons can also use the concise `Texture,akm_icon.png`; sight overlays can use `ScopeTexture,scope.png,...`. The checked-in packs use these clean categories so their references do not depend on legacy fallback lookup.
+
+Resolution is deterministic: the matching logical category wins, followed by the known legacy folders for that asset type. Clean `models/`, `textures/models/`, `textures/items/`, `textures/misc/`, and `sounds/` files are mirrored into the pack's registered `assets/handmadeguns` resource tree during startup; this is an internal compatibility detail rather than an authoring requirement.
+
+## Legacy Layout
+
+Third-party or older packs may continue using `attachment/`, `addmodel/`, `addtexture/`, `addsighttex/`, `addsounds/`, and Minecraft-style paths under `assets/handmadeguns/`. Model lookup recognizes both `assets/handmadeguns/textures/model/` and the historical plural `assets/handmadeguns/textures/models/`; textures and sounds retain their known legacy locations. These layouts are supported for compatibility but deprecated for new pack authoring. The repository-owned packs have been migrated: authored models, textures, animations, sounds, and attachment definitions are under their clean logical folders. `assets/handmadeguns/sounds.json` remains only where the Minecraft resource manager requires that resource-domain file; it is generated/consumed from the clean `sounds/` OGG files and is not a pack-authoring location.
+
 ## Loader Behavior
 
-- Pack ownership is limited to immediate directories under the two HMG roots above. Startup resources, definitions, recipes, scripts and settings reloads reject packs outside those roots, including redirected pack paths. `Flan/` is not an HMG root; model or animation files do not identify a directory as an HMG pack. Direct gun loading also requires an owned `guns/` directory. Blockbench models, their external textures and animation JSON references must remain inside that active pack. Legacy OBJ/MQO resource locations retain their existing shared resource namespace.
+- Pack ownership is limited to immediate directories under the two HMG roots above. Startup resources, definitions, recipes, scripts and settings reloads reject packs outside those roots, including redirected pack paths. `Flan/` is not an HMG root; model or animation files do not identify a directory as an HMG pack. Direct gun loading also requires an owned `guns/` directory. Model, texture, Blockbench, external texture, and animation references must resolve from that active pack even though Minecraft still exposes staged legacy files through HMG's resource domain.
 - Pack folders are sorted by name before loading.
 - Files inside major definition folders are sorted by name where the source explicitly sorts them.
-- Resource folders are copied into generated `assets/handmadeguns` paths under the pack root and registered as resource containers on the client.
+- Clean and legacy resource folders are mirrored into generated `assets/handmadeguns` paths under the same pack root and registered as resource containers on the client.
 - Client resource reload is triggered after pack resources are scanned.
 - `additionalSettings.txt` is read with Shift-JIS encoding.
 
@@ -56,13 +87,15 @@ handmadeguns_Packs/
 | `guns/` | Gun definition files parsed by `HMGGunMaker`. |
 | `magazines/` | Magazine definitions parsed by `HMGAddmagazine`. |
 | `bullets/` | Bullet/projectile definitions parsed by `HMGAddBullets`. |
-| `attachment/` | Attachment definitions parsed by `HMGAddAttachment`. |
+| `attachments/` | Recommended attachment definitions parsed by `HMGAddAttachment`; legacy `attachment/` remains a fallback. |
 | `addpackrecipe/` | Recipes parsed directly into the canonical Gun Smithing Table registry (and exposed to NEI without a vanilla crafting copy). |
 | `addTab/` | Creative-tab definitions. |
-| `addmodel/` | Model resources copied to `textures/model`. |
-| `addtexture/` | Item texture resources copied to `textures/items`. |
-| `addsighttex/` | Sight/overlay textures copied to `textures/misc`. |
-| `addsounds/` | Sound files copied to `sounds` and processed by the HMG sound loader. |
+| `models/` | Recommended OBJ, MQO, and Blockbench project location. |
+| `textures/models/` | PNG and source-texture location for OBJ, MQO, Blockbench, and skin rendering. |
+| `textures/items/` | PNG location for inventory and hotbar item icons. |
+| `textures/misc/` | PNG location for scopes, reticles, overlays, and other non-model textures. |
+| `animations/` | Optional external animation JSON files. |
+| `sounds/` | Recommended OGG location, processed by the existing HMG sound loader. |
 | `addscripts/` | JavaScript files copied to the legacy HMG scripts resource path and evaluated during pre-init. |
 | `scripts/` | JavaScript files evaluated during pre-init. |
 | `additionalSettings.txt` | Optional pack-level multipliers such as `damageCof` and `speedCof`. |
@@ -160,9 +193,9 @@ affect menus, placed guns, non-HMG items, or vehicle cameras.
 
 ## Data-driven gun skins
 
-Gun skins are normal pack items and may be declared in an `attachment/*.txt` file. The
-item icon still uses the ordinary `Texture` key and belongs in
-`assets/handmadeguns/textures/items/`. A minimal definition is:
+Gun skins are normal pack items and should be declared in an `attachments/*.txt` file
+(legacy `attachment/*.txt` is still accepted). The item icon uses the ordinary
+`Texture` key; new packs place that PNG in `textures/items/`. A minimal definition is:
 
 ```text
 Texture,my_skin_item
@@ -176,9 +209,11 @@ GunSkinItem,my_skin
 in the gun's `GunSkin` NBT value. Every skin is universal: `SkinTarget`, gun names,
 and Forge registry names are neither required nor consulted. The deprecated
 `SkinTarget` key is accepted only so older definitions continue loading, and its value
-is ignored. The overlay resolves through the pack resource domain. With the path above it must be at
-`assets/handmadeguns/textures/model/skins/my_gun_overlay.png`; an explicit resource
-such as `othermod:textures/model/skin.png` is also supported.
+is ignored. The overlay resolves through the active pack. With the path above it may be
+stored as `textures/models/skins/my_gun_overlay.png`; the legacy
+`assets/handmadeguns/textures/model/skins/my_gun_overlay.png` path remains supported.
+Explicit resource locations such as `othermod:textures/model/skin.png` remain a legacy
+compatibility feature.
 
 The overlay is separate from the inventory icon. Its UV content is the pack author's
 responsibility; HMG does not reject overlays based on a gun's model, UV layout, or

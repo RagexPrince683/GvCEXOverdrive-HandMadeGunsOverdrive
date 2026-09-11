@@ -18,7 +18,7 @@ ZoomRenderTypeTxture,true,true,true
 Explosion,0.5f
 damagerange,4
 BlockDestory,false
-Texture,smaw
+Texture,items/smaw.png
 GunSound,handmadeguns.smaw,handmadeguns.smaw
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -51,7 +51,7 @@ BulletNameALL,byfrou01_Rocket
 //0307
 BulletGravity,0.485
 
-ScopeTexture,scope_smaw.png,scope_smaw.png,scope_smaw.png
+ScopeTexture,misc/scope_smaw.png,misc/scope_smaw.png,misc/scope_smaw.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

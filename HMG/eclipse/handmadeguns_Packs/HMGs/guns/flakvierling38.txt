@@ -11,7 +11,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 Cycle,2
-Texture,flakvierling
+Texture,items/flakvierling.png
 GunSound,handmadeguns.20mmfire,handmadeguns.20mmfire
 SoundSpeed,1f
 GunSoundReload,handmadeguns.reload
@@ -26,7 +26,7 @@ Motion,0.01
 Tabname,HMG_GVCGuns
 
 CustomFlash,CannonMuzzleFlash,3
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0
@@ -46,7 +46,7 @@ Turretanglelimit,0,-85,360,-360
 
 attachRestriction,true
 
-//ƒp[ƒc’Ç‰ÁŠJŽn
+//ƒp[ƒc’ÁE��ÁE�JŽn
 
 AddParts,SYS_ALL_Base
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

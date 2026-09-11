@@ -19,7 +19,7 @@ Cycle,1.6
 //it's 750 idk why it says 749, its the same as the g36 this mod is just fucking special needs sometimes
 
 Cartridge,true
-Texture,m1c
+Texture,items/m1c.png
 //SoundSpeed,1.2f
 GunSound,handmadeguns.m1carbine,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
@@ -42,7 +42,7 @@ ModelArmOffsetR,0.38f,0.5f,0.5f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.2f,0.6f,-0.2f
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 Automatic,true
 //Magazine,0,HandmadeGuns,carbine15

@@ -1,0 +1,18 @@
+Texture,items/303british30rnd.png
+Stack,1
+Name,30 Rnd .303 British Curved Magazine
+BulletRound,30
+
+Tabname,HMG_Ammo
+
+CustomMagazine,bren30
+
+//TEMPLATE
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bren30,1

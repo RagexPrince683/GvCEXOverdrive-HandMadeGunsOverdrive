@@ -1,0 +1,20 @@
+Texture,items/reddot.png
+Name,Generic Red Dot
+
+Tabname,HMG_Attachments
+
+attach3dmodel1 = am_dotsight
+3dmodeltex = am_dotsight
+InventoryScale,0.4
+InventoryOffset,-1.2,-1.1,0
+
+RedDot,attachmenttest
+//addRecipe,reddot,1,a00,de0,000,331,0,0,265,265,0,0,0,0
+Recipe1, a 
+Recipe2,bbb
+Recipe3, c 
+ItemA,minecraft,redstone
+ItemB,HandmadeGuns,aluminumIngot
+ItemC,HandmadeGuns,polymer
+
+addNewRecipe,HandmadeGuns,attachmenttest,1

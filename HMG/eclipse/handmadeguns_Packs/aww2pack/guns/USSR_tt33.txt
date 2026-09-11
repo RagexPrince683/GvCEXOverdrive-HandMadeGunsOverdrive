@@ -12,7 +12,7 @@ Zoom,1.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,tt33
+Texture,items/tt33.png
 GunSound,handmadeguns.tokarev,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -42,7 +42,7 @@ ModelArmOffsetL,0.1f,0.5f,0.2f
 SprintingRotation,-30,0f,0f
 SprintingPoint,0.0f,-0.5f,-0.1f
 
-ScopeTexture,hg.png,hgred.png,scope.png
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Tabname,HMG_WW2Guns

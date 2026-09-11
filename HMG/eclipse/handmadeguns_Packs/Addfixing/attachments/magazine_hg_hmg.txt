@@ -1,0 +1,6 @@
+Texture,items/bullet_hg.png
+Stack,4
+Tabname,HMG_Ammo
+Name,Generic Handgun Magazine
+Magazine,bullet_hg_hmg
+//addRecipe,bullet_hg_hmg,2,a00,0e0,000,265,289,289,289,289,289,289,289,289

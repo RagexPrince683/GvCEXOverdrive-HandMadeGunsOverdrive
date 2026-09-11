@@ -1,5 +1,6 @@
 package handmadeguns.animation;
 
+import handmadeguns.client.modelLoader.blockbench.BlockbenchProject;
 import java.io.*;
 import java.util.*;
 
@@ -9,7 +10,7 @@ public final class AnimationTests {
     private static final AnimationLoader LOADER = new AnimationLoader();
 
     public static void main(String[] args) throws Exception {
-        parsing(); evaluation(); transitions(); events(); isolationAndClock();
+        parsing(); evaluation(); transitions(); events(); isolationAndClock(); reloadBridge();
         if (args.length > 0) {
             AnimationDefinition example = LOADER.load(new File(args[0]));
             example.validateParts(new LinkedHashSet<String>(Arrays.asList("bolt", "magazine")));
@@ -18,7 +19,27 @@ public final class AnimationTests {
             LOADER.invalidate(new File(args[0]));
             check(LOADER.load(new File(args[0])) != example, "cache invalidation");
         }
-        System.out.println("HMG animation: " + checks + " checks passed (parser, evaluator, controller, events, isolation).");
+        if (args.length > 1) blockbenchReload(new File(args[1]));
+        System.out.println("HMG animation: " + checks + " checks passed (parser, evaluator, controller, events, isolation, reload bridge).");
+    }
+
+    private static void blockbenchReload(File file) throws Exception {
+        BlockbenchProject project = new BlockbenchProject(file, file.getParentFile());
+        AnimationClip reload = project.animations.requireClip("reload_tactical");
+        check(project.animations.clips.containsKey("reload"), "TaCZ tactical reload alias");
+        check(project.animations.clips.containsKey("reload_empty"), "TaCZ dry reload alias");
+        near(reload.duration,2.6,"TaCZ tactical reload duration");
+        String root = null;
+        for (BlockbenchProject.Node node : project.nodes.values()) if ("root".equals(node.name)) root=node.uuid;
+        check(root != null && reload.tracks.containsKey(root), "TaCZ reload animates gun root");
+        AnimationController controller = new AnimationController(project.animations);
+        controller.advanceTo(0,null);
+        check(controller.play(AnimationController.Layer.ACTION,"reload_tactical",true,1,null), "TaCZ reload request accepted");
+        controller.advanceTo(.5,null);
+        AnimationPose.Transform pose = controller.sample(AnimationPose.EMPTY).get(root);
+        check(Math.abs(pose.x)+Math.abs(pose.y)+Math.abs(pose.z)+Math.abs(pose.rx)+Math.abs(pose.ry)+Math.abs(pose.rz)>0,
+                "TaCZ reload contributes rendered root pose");
+        near(controller.progress(AnimationController.Layer.ACTION),.5/2.6,"TaCZ reload clock advances");
     }
 
     private static AnimationDefinition parse(String clips) throws IOException {
@@ -110,6 +131,27 @@ public final class AnimationTests {
         check(!controller.play(AnimationController.Layer.ACTION,"reload"), "noninterruptible rejected");
         controller.stop(AnimationController.Layer.ACTION);
         check(!controller.active("locked"), "owner cancellation bypasses lock");
+
+        AnimationController states = new AnimationController(definition(clip("idle",0,1,0,true),
+                clip("ads",10,1,0,true), clip("instant",20,0,0,true)));
+        states.sample(baseline(0)); states.advanceTo(0,null);
+        states.play(AnimationController.Layer.BASE,"instant");
+        // No intervening sample: the source must include the immediate layer change.
+        states.play(AnimationController.Layer.BASE,"ads");
+        near(states.sample(baseline(0)).get("bolt").x,20,"back-to-back requests capture evaluated pose");
+        states.advanceTo(.5,null);
+        near(states.sample(baseline(0)).get("bolt").x,15,"state blend halfway");
+        states.play(AnimationController.Layer.BASE,"ads");
+        states.advanceTo(1,null);
+        near(states.sample(baseline(0)).get("bolt").x,10,"duplicate state does not restart blend");
+        check(!states.transitioning(),"duplicate state blend completes");
+        states.play(AnimationController.Layer.BASE,"idle"); states.advanceTo(1.25,null);
+        near(states.sample(baseline(0)).get("bolt").x,7.5,"ADS exit advances");
+        states.play(AnimationController.Layer.BASE,"ads");
+        near(states.sample(baseline(0)).get("bolt").x,7.5,"rapid reversal captures visible pose");
+        states.advanceTo(2.25,null);
+        near(states.sample(baseline(0)).get("bolt").x,10,"reversal reaches destination");
+        check(!states.transitioning(),"reversal releases source");
     }
 
     private static AnimationClip eventClip(AnimationClip.Loop loop) {
@@ -185,6 +227,77 @@ public final class AnimationTests {
         stalled.advanceTo(1.25,null);
         near(stalled.sample(baseline(0)).get("bolt").x,5,"stall spends remainder in exit fade");
         expectFailure(() -> stalled.advanceTo(1,null),"backwards");
+    }
+
+    private static void reloadBridge() {
+        Set<String> variants = new LinkedHashSet<String>(Arrays.asList("reload_tactical", "reload_empty", "reload"));
+        List<String> requests = new ArrayList<String>();
+        ReloadAnimationBridge.State tactical = new ReloadAnimationBridge.State();
+        ReloadAnimationBridge.StartEvent tacticalEvent = ReloadAnimationBridge.acceptedEvent(true, 1, 2, 100, false);
+        ReloadAnimationBridge.Request request = tactical.accept(tacticalEvent, 2, 100, variants);
+        if (request != null) requests.add(request.layer + ":" + request.clip + ":" + request.restart);
+        check(requests.equals(Collections.singletonList("ACTION:reload_tactical:true")),
+                "accepted tactical reload makes one restarting ACTION request");
+        check(tactical.accept(tacticalEvent, 2, 100, variants) == null, "duplicate reload event ignored");
+
+        AnimationController tacticalController = new AnimationController(definition(
+                onceClip("reload_tactical", 1), onceClip("reload_empty", 1), onceClip("reload", 1)));
+        tacticalController.advanceTo(0, null);
+        tactical.started(tacticalController.play(request.layer, request.clip, request.restart, 1, null));
+        tacticalController.advanceTo(.5, null);
+        check(tactical.ownsAction() && tactical.presentationReload(false),
+                "imported reload owns renderer pose while ACTION is active");
+        near(tacticalController.progress(AnimationController.Layer.ACTION), .5,
+                "imported reload continues after gameplay state becomes false");
+        check(tactical.presentationReload(true), "later IsReloading true does not alter reload ownership");
+        check(requests.size() == 1, "IsReloading true does not request a second clip");
+        tacticalController.advanceTo(1, null);
+        check(tacticalController.current(AnimationController.Layer.ACTION) == null,
+                "reload ACTION reaches its natural duration");
+        tactical.finishNaturally();
+        check(!tactical.ownsAction() && !tactical.presentationReload(false),
+                "natural completion returns renderer ownership to default");
+
+        ReloadAnimationBridge.State empty = new ReloadAnimationBridge.State();
+        ReloadAnimationBridge.StartEvent emptyEvent = ReloadAnimationBridge.acceptedEvent(true, 2, 2, 100, true);
+        request = empty.accept(emptyEvent, 2, 100, variants);
+        check(request != null && request.layer == AnimationController.Layer.ACTION
+                && "reload_empty".equals(request.clip), "accepted empty reload requests empty ACTION clip");
+        check(empty.accept(emptyEvent, 2, 100, variants) == null, "accepted empty reload starts exactly once");
+        empty.started(true);
+        check(empty.presentationReload(false), "gameplay completion does not cancel empty reload");
+        check("reload_empty".equals(empty.invalidate()), "explicit invalidation identifies cancelled ACTION clip");
+        check(!empty.ownsAction(), "explicit invalidation releases ACTION owner");
+
+        ReloadAnimationBridge.State rejected = new ReloadAnimationBridge.State();
+        check(rejected.accept(ReloadAnimationBridge.acceptedEvent(false, 3, 2, 100, false),
+                2, 100, variants) == null, "rejected reload emits no animation event");
+        check(rejected.accept(new ReloadAnimationBridge.StartEvent(4, 1, 100, false),
+                2, 100, variants) == null, "slot change does not animate another stack");
+        check(rejected.accept(new ReloadAnimationBridge.StartEvent(5, 2, 101, false),
+                2, 100, variants) == null, "weapon change does not animate another gun");
+
+        ReloadAnimationBridge.State switched = new ReloadAnimationBridge.State();
+        request = switched.accept(new ReloadAnimationBridge.StartEvent(6, 2, 100, false), 2, 100, variants);
+        switched.started(request != null);
+        check("reload_tactical".equals(switched.invalidateIfIdentityChanged(3, 100))
+                && !switched.ownsAction(), "selected-slot change cancels active reload ownership");
+
+        ReloadAnimationBridge.State legacy = new ReloadAnimationBridge.State();
+        check(legacy.accept(new ReloadAnimationBridge.StartEvent(7, 2, 100, false), 2, 100,
+                Collections.singleton("idle")) == null, "missing imported reload clip makes no ACTION request");
+        check(legacy.presentationReload(true) && !legacy.ownsAction(),
+                "authoritative reload remains available to legacy renderer");
+        ReloadAnimationBridge.State fallback = new ReloadAnimationBridge.State();
+        request = fallback.accept(new ReloadAnimationBridge.StartEvent(8, 2, 100, true),
+                2, 100, Collections.singleton("reload"));
+        check(request != null && "reload".equals(request.clip), "reload alias remains the variant fallback");
+    }
+
+    private static AnimationClip onceClip(String name, double duration) {
+        return new AnimationClip(name, duration, AnimationClip.Loop.ONCE,
+                Collections.<String, AnimationTrack>emptyMap(), Collections.<AnimationEvent>emptyList(),
+                0, 0, 0, true);
     }
 
     private static AnimationKeyframe key(double time,float x) { return new AnimationKeyframe(time,new AnimationPose.Transform(x,0,0,0,0,0)); }

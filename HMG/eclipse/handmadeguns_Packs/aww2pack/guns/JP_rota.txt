@@ -13,7 +13,7 @@ ZoomRenderTypeTxture,false,false,false
 Explosion,0.5f
 damagerange,1
 BlockDestory,false
-Texture,rota
+Texture,items/rota.png
 GunSound,handmadeguns.panzershrek,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -45,7 +45,7 @@ DropMagazine,false
 SprintingPoint,0.4f,-0.2f,-0.0f
 
 
-ScopeTexture,rr.png,rr.png,scope.png
+ScopeTexture,misc/rr.png,misc/rr.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

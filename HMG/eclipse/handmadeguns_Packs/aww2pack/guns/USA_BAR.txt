@@ -12,7 +12,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 Cycle,3
-Texture,BAR
+Texture,items/BAR.png
 GunSound,handmadeguns.browningbar,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -40,7 +40,7 @@ allowattach,Bullet_AP
 //allowattach,Bullet_AT
 
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

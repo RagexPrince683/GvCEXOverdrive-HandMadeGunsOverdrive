@@ -1,5 +1,5 @@
 attachRestriction,true
-Texture,gergacha
+Texture,items/gergacha.png
 BPItemStack,7
 BPItems,Gew98,MG34,MP38,Panzerschreck,Walther P-38,Gewehr43,Maschinengewehr 30
 

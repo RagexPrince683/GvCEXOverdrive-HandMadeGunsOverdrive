@@ -1,0 +1,13 @@
+Texture,items/berdrum.png
+Stack,1
+Tabname,HMG_Ammo
+BulletRound,50
+Name,50 Rnd 9x19mm Parabellum Beretta Drum Magazine
+Magazine,bullet_hg_hmgber50
+Recipe1,aaa
+Recipe2,bcc
+Recipe3,ccc
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperBlock
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_hg_hmgber50,1

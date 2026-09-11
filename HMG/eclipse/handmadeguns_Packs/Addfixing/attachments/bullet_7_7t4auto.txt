@@ -1,0 +1,25 @@
+Texture,items/1270bullet5.png
+Stack,2
+Name,10 Rnd 7.7x58mm Arisaka Magazine
+BulletRound,10
+
+Tabname,HMG_Ammo
+
+CustomMagazine,7.7mm bullett4
+
+Recipe1,aaa
+Recipe2,aaa
+Recipe3,aaa
+ItemA,HandmadeGuns,7.7mm bullet
+addNewRecipe,HandmadeGuns,7.7mm bullett4,1
+
+
+//TEMPLATE
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,7.7mm bullett4,2

@@ -1,9 +1,0 @@
-// Universal sample: this same item can be applied to every unified HMG gun.
-// Inventory icon: assets/handmadeguns/textures/items/AR_sample.png
-// The overlay is resolved from the same pack model-texture directory as ObjTexture.
-Texture,skins/sample_yellow
-Stack,64
-Name,Yellow Tint Skin
-GunSkin,true
-SkinTexture,skins/sample_yellow.png
-GunSkinItem,skins/sample_yellowyellow

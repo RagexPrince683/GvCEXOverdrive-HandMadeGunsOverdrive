@@ -1,0 +1,14 @@
+Texture,items/pra.png
+Stack,64
+Name,Plastic
+
+Tabname,HMG_Ammo
+
+Magazine,Prastic
+Recipe1,aba
+Recipe2,   
+Recipe3,   
+ItemA,minecraft,coal
+ItemB,minecraft,reeds
+addNewRecipe,HandmadeGuns,Prastic,12
+

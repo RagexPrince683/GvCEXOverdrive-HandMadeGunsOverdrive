@@ -1,0 +1,15 @@
+Texture,items/556bullet20.png
+Stack,3
+Tabname,HMG_Ammo
+BulletRound,15
+Name,15 Rnd .30 Carbine Magazine
+Magazine,carbine15
+//TEMPLATE
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,carbine15,3

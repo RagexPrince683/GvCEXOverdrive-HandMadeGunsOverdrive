@@ -13,7 +13,7 @@ Zoom,1.0f,1.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
-Texture,SG_sample
+Texture,items/SG_sample.png
 GunSound,handmadeguns.r870,null
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -73,7 +73,7 @@ MagCount,1
 MagType,3
 Cartridge,true
 
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,1
 Automatic,false

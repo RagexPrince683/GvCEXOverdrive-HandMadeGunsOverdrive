@@ -1,0 +1,5 @@
+Texture,items/bullet_2A46.png
+Stack,64
+Tabname,VehicleWeapons
+Name,2A46Ammo
+Magazine,2A46Ammo

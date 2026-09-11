@@ -31,7 +31,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 Cycle,2
-Texture,Dshk38
+Texture,items/Dshk38.png
 GunSound,handmadeguns.dshk,handmadeguns.dshk
 SoundSpeed,1f
 GunSoundReload,handmadeguns.reload
@@ -46,7 +46,7 @@ ModelEquipped,-0.5F,0.35,3.0
 Tabname,HMG_GVCGuns
 
 CustomFlash,CannonMuzzleFlash,3
-ScopeTexture,ironsight.png,reddot.png,scope.png
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0
@@ -65,7 +65,7 @@ allowattach,Bullet_AP
 
 OnEntity_Yoffset,1.5
 
-//パーツ追加開始
+//パ�EチE��加開姁E
 
 AddParts,SYS_ALL_Base
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
@@ -95,17 +95,17 @@ AddParts,SYS_ALL_Base
         AddYawInfoKey,-360,0,0,0,0,-360,0        ,360,0,0,0,0,360,0
 
         AddChildParts,MainBody
-            //パーツを回転させる中心と、デフォルトで回転させる場合の設定
+            //パ�EチE��回転させる中忁E��、デフォルトで回転させる場合�E設宁E
             AddPartsRotationCenterAndRotationAmount,0,1.1593,-1.2688,0,0,0
-            //通常時に描画するか
+            //通常時に描画するぁE
             RenderOnNormal
-            //ADS中にどのくらい移動するかと、どのくらい回転するか
+            //ADS中にどのくらぁE��動するかと、どのくらぁE��転するぁE
             AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
-            //リコイル中にどのくらい移動するかと、どのくらい回転するか Stg44の排莢口蓋くらいしか用途が思いつかない。でもこれを書かないとそもそも描画されない
+            //リコイル中にどのくらぁE��動するかと、どのくらぁE��転するぁEStg44の排莢口蓋くらいしか用途が思いつかなぁE��でもこれを書かなぁE��そもそも描画されなぁE
             AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
-            //コッキング中に(RY
+            //コチE��ング中に(RY
             AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
-            //リローｄ(RY
+            //リロー�E�ERY
             AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
             AddPitchInfoKey,-360,0,0,0,-360,0,0        ,360,0,0,0,360,0,0
 
@@ -119,7 +119,7 @@ AddParts,SYS_ALL_Base
 //			AddSomeMotion,5,0,0,0     ,-2.7    ,0,0,      6,0,0,0     ,-2.7    ,0,0,   0
 //			AddSomeMotion,6,0,0,0     ,-3.2    ,0,0,      7,0,0,0     ,-3.2    ,0,0,   0
 
-            //レシーバー
+            //レシーバ�E
             AddChildParts,Receiver
                 AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
                 RenderOnNormal
@@ -132,7 +132,7 @@ AddParts,SYS_ALL_Base
                 AddRecoilMotionKey,0,0,0,0,0,0,0,           4,0,0,2.20,0,0,0
                 //一瞬保って
                 AddRecoilMotionKey,4,0,0,2.20,0,0,0,         6,0,0,2.20,0,0,0
-                //戻す
+                //戻ぁE
                 AddRecoilMotionKey,6,0,0,2.20,0,0,0,         10,0,0,0,0,0,0
 
 
@@ -157,7 +157,7 @@ AddParts,SYS_ALL_Base
                 AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
                 AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
                 //リコイルモーション 10キー
-                //待機
+                //征E��E
                 AddRecoilMotionKey,0,0,0,0,0,0,0,           4,0,0,0,0,0,0
                 //45度回転
                 AddRecoilMotionKey,0,0,0,0,0,0,0,           4,0,0,0,0,0,45
@@ -205,7 +205,7 @@ AddParts,SYS_ALL_Base
                 AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
             BackParts
 
-                //チェンバー蓋
+                //チェンバ�E蓁E
             AddChildParts,Dustcover
                 AddPartsRotationCenterAndRotationAmount,0,2.08f,-1.52f,0,0,0
                 RenderOnNormal
@@ -214,7 +214,7 @@ AddParts,SYS_ALL_Base
                 AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
                 AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
                 //リロードモーション
-                //開放状態で保持される
+                //開放状態で保持されめE
                 AddReloadMotionKey,0,0,0,0,0,0,0,           10,0,0,0,0,0,0
                 AddReloadMotionKey,10,0,0,0,0,0,0,           25,0,0,0,90,0,0
                 AddReloadMotionKey,25,0,0,0,90,0,0,         125,0,0,0,90,0,0
@@ -235,7 +235,7 @@ AddParts,SYS_ALL_Base
                 BackParts
             BackParts
 
-            //ノーマルサイト
+            //ノ�EマルサイチE
             AddChildParts,RearSightBase
                 AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
                 RenderOnNormal
@@ -285,7 +285,7 @@ AddParts,SYS_ALL_Base
             //弾箱
             AddChildParts,AmmoBox
                 AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
-                //↓これを削ると描画されなくなる。がしかし子パーツにも影響が出るので注意
+                //↓これを削ると描画されなくなる。がしかし子パーチE��も影響が�Eる�Eで注愁E
                 RenderOnNormal
                 AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
                 AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
@@ -319,7 +319,7 @@ AddParts,SYS_ALL_Base
             //        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
             //        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 GunSoundLV,172,1
-            //        //弾として描画するかどうかと、描画する最大弾数
+            //        //弾として描画するかどぁE��と、描画する最大弾数
             //        Isbullet,true,13
             //        AddPartsRenderAsBulletInf,0,0,0,0,0,0
             //        AddBulletPositions,0,-0.3  ,0      ,0,0,0,90        ,4,0.1    ,0      ,0,0,0,90

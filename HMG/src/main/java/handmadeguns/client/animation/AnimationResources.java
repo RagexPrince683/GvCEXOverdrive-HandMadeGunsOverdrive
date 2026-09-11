@@ -4,6 +4,7 @@ import handmadeguns.animation.AnimationDefinition;
 import handmadeguns.animation.AnimationLoader;
 import handmadeguns.client.render.HMGGunParts;
 import handmadeguns.client.render.PartsRender_Gun;
+import handmadeguns.pack.HMGPackAssetResolver;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -26,9 +27,7 @@ public final class AnimationResources {
         if (reference == null || reference.isEmpty()) return;
         try {
             File root = handmadeguns.HandmadeGunsCore.gunPackRoot(gunFile);
-            File file = new File(root, reference).getCanonicalFile();
-            if (!file.toPath().startsWith(root.toPath()) || file.equals(root))
-                throw new IOException("Animation path must stay inside pack root: " + reference);
+            File file = new HMGPackAssetResolver(root).resolve(HMGPackAssetResolver.Type.ANIMATION, reference);
             Set<String> parts = new LinkedHashSet<String>();
             collect(renderer.partslist, parts);
             Binding binding = new Binding(gunFile.getCanonicalFile(), file, parts);

@@ -13,7 +13,7 @@ Zoom,8.0f,2.0f,16.0f
 ZoomRender,false
 ZoomRenderType,false,false,false
 ZoomRenderTypeTxture,true,true,true
-Texture,AMR_sample
+Texture,items/AMR_sample.png
 GunSound,handmadeguns.HeavyGun,handmadeguns.HeavyRifle
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -48,7 +48,7 @@ MagCount,10
 //0307
 BulletGravity,0.029f
 
-ScopeTexture,scope.png,reddot.png,scope.png
+ScopeTexture,misc/scope.png,misc/reddot.png,misc/scope.png
 RenderCross,false
 RightType,1
 Automatic,true

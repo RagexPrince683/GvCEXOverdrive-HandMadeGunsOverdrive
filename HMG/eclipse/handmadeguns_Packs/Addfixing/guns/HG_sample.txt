@@ -11,7 +11,7 @@ Zoom,1.0f,2.0f,4.0f
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,HG_sample
+Texture,items/HG_sample.png
 GunSound,handmadeguns.firehg,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -44,7 +44,7 @@ BulletGravity,0.029f
 
 CartridgeType,2
 
-ScopeTexture,hg.png,hgred.png,scope.png
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_hmg

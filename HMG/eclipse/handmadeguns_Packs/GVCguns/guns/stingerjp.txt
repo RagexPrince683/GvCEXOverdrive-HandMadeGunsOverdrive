@@ -21,7 +21,7 @@ ZoomRenderTypeTxture,true,true,true
 ElevationOffsets,-0
 Explosion,2.0f
 BlockDestory,false
-Texture,9k38
+Texture,items/9k38.png
 GunSound,handmadeguns.igla,handmadeguns.igla
 lockSound_entity,handmadeguns:handmadeguns.9k38Lock
 lockSound_NoStop,true
@@ -64,7 +64,7 @@ SprintingRotation,30f,45,0f
 
 BulletNameALL,S-5
 
-ScopeTexture,scope_smaw.png,scope_smaw.png,scope_smaw.png
+ScopeTexture,misc/scope_smaw.png,misc/scope_smaw.png,misc/scope_smaw.png
 RenderCross,false
 //how many degrees the missile can turn per tick...???
 Induction_precision,22

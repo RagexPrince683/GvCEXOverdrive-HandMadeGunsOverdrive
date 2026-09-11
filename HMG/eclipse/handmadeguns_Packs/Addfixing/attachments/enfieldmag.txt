@@ -1,0 +1,20 @@
+Texture,items/303brit10.png
+Stack,2
+Name,10 Rnd .303 British Magaizne
+BulletRound,10
+
+Tabname,HMG_Ammo
+
+CustomMagazine,enfieldmag
+
+
+//TEMPLATE
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,enfieldmag,2
+

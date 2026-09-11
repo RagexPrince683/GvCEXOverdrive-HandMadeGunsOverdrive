@@ -38,7 +38,7 @@ ZoomRender,true
 ZoomRenderType,false,true,false
 ZoomRenderTypeTxture,true,false,true
 
-Texture,AMR_sample
+Texture,items/AMR_sample.png
 GunSound,handmadeguns.GM6,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -81,7 +81,7 @@ SprintingRotation,20f,60f,0f
 
 SoundSpeed,1
 
-ScopeTexture,scope_m82a3.png,scope_m82a3.png,scope_m82a3_16.png
+ScopeTexture,misc/scope_m82a3.png,misc/scope_m82a3.png,misc/scope_m82a3_16.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,12.7mm Magazine

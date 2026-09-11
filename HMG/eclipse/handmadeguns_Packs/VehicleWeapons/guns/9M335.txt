@@ -10,7 +10,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,5.5f
 BlockDestory,true
-Texture,9M335
+Texture,items/9M335.png
 ModelScala,0.5f
 GunSound_FullName,handmadevehicle:handmadevehicle.Tube_missileLauch,handmadevehicle:handmadevehicle.Tube_missileLauch
 GunSoundReload,handmadeguns.null

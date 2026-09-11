@@ -12,6 +12,7 @@ import handmadeguns.gunsmithing.GunSmithRecipeCategory;
 import handmadeguns.gunsmithing.DeferredHMGRecipes;
 import handmadeguns.gunsmithing.GunSmithRecipe;
 import handmadeguns.items.*;
+import handmadeguns.pack.HMGPackAssetResolver;
 import handmadeguns.client.render.HMGRenderItemCustom;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -120,6 +121,7 @@ public class HMGAddAttachment
 		String skinTexture = null;
 		try {
 			File file = file1;
+			HMGPackAssetResolver resolver = new HMGPackAssetResolver(file1.getParentFile().getParentFile());
 			//File file = new File(configfile,"hmg_handmadeguns.txt");
 			if (checkBeforeReadfile(file))
 			{
@@ -148,7 +150,8 @@ public class HMGAddAttachment
 						}
 						switch (type[0]) {
 							case "Texture":
-								texture = type[1];
+								try { texture = resolver.itemTextureName(type[1]); }
+								catch (FileNotFoundException missing) { texture = type[1]; }
 								break;
 							case "Stack":
 								kazu = Integer.parseInt(type[1]);
@@ -181,6 +184,7 @@ public class HMGAddAttachment
 								objmodel = type[1];
 								break;
 							case "ObjTexture":
+							case "ModelTexture":
 								objtexture = type[1];
 								break;
 							case "attach3dmodel":
@@ -338,7 +342,11 @@ public class HMGAddAttachment
 								gunSkin = Boolean.parseBoolean(type[1]);
 								break;
 							case "SkinTexture":
-								skinTexture = type[1];
+								if (type[1].indexOf(':') >= 0) skinTexture = type[1];
+								else {
+									try { skinTexture = resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, type[1]); }
+									catch (FileNotFoundException missing) { skinTexture = type[1]; }
+								}
 								break;
 							case "SkinTarget":
 								// Deprecated compatibility key. Skins are universal, so targets are ignored.
@@ -368,7 +376,7 @@ public class HMGAddAttachment
 							//}
 							((HMGItemSightBase)newitem).isnightvision = isnightvision;
 
-							if(hud != null)((HMGItemSightBase)newitem).scopetexture = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/misc/" + hud);
+							if(hud != null)((HMGItemSightBase)newitem).scopetexture = resolveTexture(resolver, HMGPackAssetResolver.Type.MISC_TEXTURE, hud, "handmadeguns:textures/misc/");
 							((HMGItemSightBase)newitem).scopeonly = textureOnly;
 							if(Namegun != null){
 								LanguageRegistry.instance().addNameForObject(newitem, "jp_JP", Namegun);
@@ -384,7 +392,7 @@ public class HMGAddAttachment
 									.setTextureName("handmadeguns:"+ texture).setCreativeTab(HandmadeGunsCore.tabhmg);
 							((HMGItemSightBase)newitem).zoomlevel = zoom;
 							((HMGItemSightBase)newitem).isnightvision = isnightvision;
-							if(hud != null)((HMGItemSightBase)newitem).scopetexture = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/misc/" + hud);
+							if(hud != null)((HMGItemSightBase)newitem).scopetexture = resolveTexture(resolver, HMGPackAssetResolver.Type.MISC_TEXTURE, hud, "handmadeguns:textures/misc/");
 							if(Namegun != null){
 								LanguageRegistry.instance().addNameForObject(newitem, "jp_JP", Namegun);
 								LanguageRegistry.instance().addNameForObject(newitem, "en_US", Namegun);
@@ -399,7 +407,7 @@ public class HMGAddAttachment
 									.setTextureName("handmadeguns:"+texture).setCreativeTab(HandmadeGunsCore.tabhmg);
 							((HMGItemSightBase)newitem).zoomlevel = zoom;
 							((HMGItemSightBase)newitem).isnightvision = isnightvision;
-							if(hud != null)((HMGItemSightBase)newitem).scopetexture = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/misc/" + hud);
+							if(hud != null)((HMGItemSightBase)newitem).scopetexture = resolveTexture(resolver, HMGPackAssetResolver.Type.MISC_TEXTURE, hud, "handmadeguns:textures/misc/");
 							if(Namegun != null){
 								LanguageRegistry.instance().addNameForObject(newitem, "jp_JP", Namegun);
 								LanguageRegistry.instance().addNameForObject(newitem, "en_US", Namegun);
@@ -622,10 +630,10 @@ public class HMGAddAttachment
 							try {
 								if (canobj && isClient && !(newitem instanceof HMGItemAttachmentBase)) {
 //									System.out.println("" + objmodel);
-									IModelCustom attach = HMGGunMaker.getCachedModel("handmadeguns:textures/model/" + objmodel);
+									IModelCustom attach = HMGGunMaker.getCachedModel(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel));
 									//todo gun skins here
 
-									ResourceLocation attachtexture = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
+									ResourceLocation attachtexture = HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture));
 									MinecraftForgeClient.registerItemRenderer(newitem, new HMGRenderItemCustom(attach, attachtexture));
 								}
 							}catch (Throwable e){
@@ -828,10 +836,10 @@ public class HMGAddAttachment
 					attachment.inventoryOffsetX = inventoryOffsetX;
 					attachment.inventoryOffsetY = inventoryOffsetY;
 					attachment.inventoryOffsetZ = inventoryOffsetZ;
-					if (isClient && attachment.getStandalone3dModelSlot() >= 0) registerModelAttachment(attachment, attachment.getUnlocalizedName());
+					if (isClient && attachment.getStandalone3dModelSlot() >= 0) registerModelAttachment(attachment, attachment.getUnlocalizedName(), resolver);
 					else if (isClient && canobj) {
-						IModelCustom model = HMGGunMaker.getCachedModel("handmadeguns:textures/model/" + objmodel);
-						ResourceLocation tex = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
+						IModelCustom model = HMGGunMaker.getCachedModel(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel));
+						ResourceLocation tex = HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture));
 						MinecraftForgeClient.registerItemRenderer(attachment, new HMGRenderItemCustom(model, tex));
 					}
 				}
@@ -863,7 +871,16 @@ public class HMGAddAttachment
 		return item == null ? null : new ItemStack(item);
 	}
 
-	private static void registerModelAttachment(HMGItemAttachmentBase attachment, String registryName) {
+	private static ResourceLocation resolveTexture(HMGPackAssetResolver resolver, HMGPackAssetResolver.Type type,
+			String reference, String legacyPrefix) throws IOException {
+		try {
+			return HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(type, reference));
+		} catch (FileNotFoundException missing) {
+			return HMGGunMaker.getCachedResourceLocation(legacyPrefix + reference);
+		}
+	}
+
+	private static void registerModelAttachment(HMGItemAttachmentBase attachment, String registryName, HMGPackAssetResolver resolver) {
 		try {
 			IModelCustom[] models = new IModelCustom[6];
 			ResourceLocation[] textures = new ResourceLocation[6];
@@ -880,8 +897,8 @@ public class HMGAddAttachment
 					if (attachment.model3dTextures[slot] != null && attachment.model3dTextures[slot].length() > 0)
 						attachment.model3dTextures[slot] = textureName;
 				}
-				models[slot] = HMGGunMaker.getCachedModel("handmadeguns:textures/model/" + modelName);
-				textures[slot] = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/model/" + textureName);
+				models[slot] = HMGGunMaker.getCachedModel(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, modelName));
+				textures[slot] = HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, textureName));
 			}
 			MinecraftForgeClient.registerItemRenderer(attachment, HMGRenderItemCustom.forAttachment(models, textures,
 					attachment.getStandalone3dModelSlot()));
@@ -939,7 +956,8 @@ public class HMGAddAttachment
 				attachment.inventoryOffsetY = inventoryOffset[1];
 				attachment.inventoryOffsetZ = inventoryOffset[2];
 				if (attachment.getStandalone3dModelSlot() >= 0)
-					registerModelAttachment(attachment, attachment.getUnlocalizedName());
+					registerModelAttachment(attachment, attachment.getUnlocalizedName(),
+							new HMGPackAssetResolver(file.getParentFile().getParentFile()));
 			}
 		} catch (IOException error) {
 			System.err.println("[HMG] Unable to reload attachment settings from " + file.getPath()

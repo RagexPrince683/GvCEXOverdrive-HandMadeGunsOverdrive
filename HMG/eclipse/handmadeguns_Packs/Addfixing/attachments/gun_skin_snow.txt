@@ -1,0 +1,16 @@
+// Universal sample: this same item can be applied to every unified HMG gun.
+// Inventory icon: textures/items/AR_sample.png
+// The overlay is resolved from the same pack model-texture directory as ObjTexture.
+Texture,items/skins/snow.png
+Stack,64
+Name,Snow Tint Skin
+GunSkin,true
+SkinTexture,skins/snow.png
+GunSkinItem,ar_sample_skinsnow
+
+Recipe1,aa 
+Recipe2,bb 
+Recipe3,   
+ItemA,minecraft,snow
+ItemB,minecraft,dirt
+addNewRecipe,HandmadeGuns,ar_sample_skinsnow,1

@@ -1,4 +1,4 @@
-Texture,BP_sample1
+Texture,items/BP_sample1.png
 Dont_Be_Inside_Root_Chest
 BPItemStack,5
 BPItems,SG_sample,SGF_sample,AMR_sample,RR_sample,LMG_sample

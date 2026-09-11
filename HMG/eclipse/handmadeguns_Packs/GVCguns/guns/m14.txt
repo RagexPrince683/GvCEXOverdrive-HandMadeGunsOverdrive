@@ -24,7 +24,7 @@ ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,false,true
 
-Texture,m1c
+Texture,items/m1c.png
 GunSound,handmadeguns.M14,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -70,7 +70,7 @@ SprintingRotation,20f,60f,0f
 
 SoundSpeed,1f
 
-ScopeTexture,scope_m110.png,scope_m110.png,scope_m110.png
+ScopeTexture,misc/scope_m110.png,misc/scope_m110.png,misc/scope_m110.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,7.62mm sr magazine

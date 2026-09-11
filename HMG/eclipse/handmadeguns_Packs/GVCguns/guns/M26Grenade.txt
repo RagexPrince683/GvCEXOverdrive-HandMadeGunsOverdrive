@@ -16,7 +16,7 @@ ZoomRenderTypeTxture,false,false,false
 Explosion,8
 BlockDestory,false
 damagerange,10
-Texture,M26
+Texture,items/M26.png
 GunSound,handmadeguns.grenade,handmadeguns.null
 GunSoundReload,handmadeguns.null
 CanObj,true
@@ -67,7 +67,7 @@ Mat22Rotation,0f,0f,-90f
 //0307
 BulletGravity,0.8f
 
-ScopeTexture,acog.png,acog.png,scope.png
+ScopeTexture,misc/acog.png,misc/acog.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,null

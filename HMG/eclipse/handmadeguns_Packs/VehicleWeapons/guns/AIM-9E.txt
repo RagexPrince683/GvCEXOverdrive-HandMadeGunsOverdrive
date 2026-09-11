@@ -12,7 +12,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,2.5f
 BlockDestory,true
-Texture,AIM-9E
+Texture,items/AIM-9E.png
 ObjModel,AIM-9.mqo
 ObjTexture,AIM-9.png
 ModelScala,5f

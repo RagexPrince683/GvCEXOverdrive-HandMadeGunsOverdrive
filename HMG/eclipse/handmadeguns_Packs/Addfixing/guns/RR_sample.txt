@@ -14,11 +14,11 @@ ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,true,true
 Explosion,3.5f
 BlockDestory,false
-Texture,RR_sample
+Texture,items/RR_sample.png
 GunSound,handmadeguns.fire,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
-ObjModel,rpg7.obj
+ObjModel,rpg7.mqo
 ObjTexture,rpg7.png
 ModelScala,0.5f
 
@@ -42,7 +42,7 @@ BulletNameALL,byfrou01_Rocket
 //0307
 BulletGravity,0.02f
 
-ScopeTexture,rr.png,reddot.png,rr.png
+ScopeTexture,misc/rr.png,misc/reddot.png,misc/rr.png
 RenderCross,false
 Induction_precision,0.25
 Acceleration,0.01

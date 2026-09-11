@@ -13,7 +13,7 @@ ZoomRenderTypeTxture,false,false,false
 Explosion,0.5f
 damagerange,2
 BlockDestory,false
-Texture,bazooka
+Texture,items/bazooka.png
 GunSound,handmadeguns.panzershrek,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -45,7 +45,7 @@ ModelArmOffsetR,0.3f,0.3f,0.5f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,-0.2f,0.2f,-0.2f
 
-ScopeTexture,rr.png,rr.png,scope.png
+ScopeTexture,misc/rr.png,misc/rr.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

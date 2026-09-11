@@ -11,7 +11,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,2.5f
 BlockDestory,true
-Texture,UB-32
+Texture,items/UB-32.png
 ObjModel,UB-32.mqo
 ObjTexture,UB-32.png
 ModelScala,0.5f

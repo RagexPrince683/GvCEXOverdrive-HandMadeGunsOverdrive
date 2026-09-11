@@ -1,5 +1,5 @@
 attachRestriction,true
-Texture,ussrgacha
+Texture,items/ussrgacha.png
 BPItemStack,6
 BPItems,Mosin,ppsh41,DP28Œy‹@ŠÖe,PTRS1941,TT-33,SVT-40
 

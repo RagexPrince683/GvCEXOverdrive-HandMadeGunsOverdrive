@@ -463,6 +463,8 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		float scala = this.modelscala;
 		gunitem.checkTags(gunstack);
 		nbt = gunstack.getTagCompound();
+		boolean currentReloadState = handmadeguns.client.animation.AnimationClient.reloadState(
+				partsRender_gun, nbt.getBoolean("IsReloading"));
 		partsRender_gun.gunSkinTexture = HMGGunSkinTextures.available(HMGGunSkinRegistry.appliedTexture(gunstack));
 		partsRender_gun.renderGunSkinOverlay = false;
 		items[0] = null;
@@ -496,6 +498,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				break;
 			case EQUIPPED_FIRST_PERSON: // first
 			{
+				final boolean blockbenchPresentation = model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel;
 				for (pass = 0; pass < 2; pass++)
 				{
 					partsRender_gun.pass = pass;
@@ -677,11 +680,17 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 
 					//boolean isreloading = this.getbooleanfromnbt("IsReloading");
 					//ununused?
-					updateADSProgress(firstPerson_ADSState, firstPerson_SprintState, firstPerson_ReloadState);
+					// Both imported-model passes must consume the same presentation pose.
+					if (pass == 0 || !(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel))
+						updateADSProgress(firstPerson_ADSState, firstPerson_SprintState, currentReloadState);
 					float adsBlend = getADSBlend(adsTransition);
 					float sprintBlend = getADSBlend(sprintTransition);
-					float reloadBlend = getADSBlend(reloadTransition);
-					if (firstPerson_ReloadState)
+					if (blockbenchPresentation)
+					{
+						// TaCZ models author their first-person placement with view nodes.
+						setUpGunPos_blockbench();
+					}
+					else if (currentReloadState)
 					{
 						if (reloadTransition > 0.0F)
 							setUpGunPos_equipe(0);
@@ -704,7 +713,10 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 						setUpGunPos_equipe(0);
 
 					GL11.glScalef(this.modelscala, this.modelscala, this.modelscala);
-					rendering_situation(gunstack, entity);
+					if (blockbenchPresentation)
+						((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model)
+								.applyFirstPersonPosition(currentReloadState ? 0 : adsBlend, partsRender_gun.gunPartsScale);
+					rendering_situation(gunstack, entity, currentReloadState);
 
 					GL11.glPopMatrix();
 					isfirstperson = false;
@@ -721,7 +733,14 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				Minecraft.getMinecraft().renderEngine.bindTexture(guntexture);
 				GL11.glPushMatrix();
 				GL11.glScalef(1f / 2f, 1f / 2f, 1f / 2f);
-				if (entity instanceof EntityPlayer) {
+				boolean blockbenchPresentation = model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel;
+				if (entity instanceof EntityPlayer && blockbenchPresentation) {
+					glMatrixForRenderBlockbenchEntityPlayer();
+					GL11.glScalef(scala, scala, scala);
+					GL11.glScalef(gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale);
+					((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model)
+							.applyThirdPersonPosition(partsRender_gun.gunPartsScale);
+				} else if (entity instanceof EntityPlayer) {
 					this.glMatrixForRenderInEntityPlayer(-0.75f);
 					GL11.glScalef(scala, scala, scala);
 				} else {
@@ -732,8 +751,9 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				//todo: add a way to move the gun forwards or backwards in third person so the player is
 				// at least holding the grip in third person pov,
 				// or just translate the first person pov so that it scales properly
-				GL11.glScalef(gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale);
-				rendering_situation(gunstack,entity);
+				if (!(entity instanceof EntityPlayer && blockbenchPresentation))
+					GL11.glScalef(gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale);
+				rendering_situation(gunstack,entity, currentReloadState);
 				GL11.glPopMatrix();
 				break;
 			}
@@ -746,7 +766,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				GL11.glPushMatrix();
 				HMGDroppedGunRenderHelper.applyGroundTransform(data);
 				GL11.glScalef(0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1), 0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1), 0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1));
-				rendering_situation(gunstack,null);
+				rendering_situation(gunstack,null, currentReloadState);
 				GL11.glPopMatrix();
 				smoothing = HandmadeGunsCore.smooth;
 				break;
@@ -770,6 +790,11 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		GL11.glRotatef(180f, 1.0F, 0.0F, 0.0F);
 		GL11.glRotatef(180f, 0.0F, 0.0F, 1.0F);
 		GL11.glTranslatef(modelPosX, modelPosY, modelPosZ + 1.4f);// -0.2F//-0.7,0.7,0
+	}
+
+	private void setUpGunPos_blockbench() {
+		GL11.glRotatef(180f, 1.0F, 0.0F, 0.0F);
+		GL11.glRotatef(180f, 0.0F, 0.0F, 1.0F);
 	}
 
 	public void setUpGunPos_equipe_sprint(float reco, float interPole) {
@@ -884,6 +909,16 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		GL11.glRotatef(thirdmodelRotationX, 1.0F, 0.0F, 0.0F);
 		GL11.glRotatef(thirdmodelRotationZ, 0.0F, 0.0F, 1.0F);
 		GL11.glTranslatef(0.2F + thirdmodelPosX, -1.75F + thirdmodelPosY, -0.8f + reco + thirdmodelPosZ);
+	}
+
+	private void glMatrixForRenderBlockbenchEntityPlayer() {
+		// RenderPlayer has already moved to the arm and Forge has applied its 3-D
+		// equipped-item helper. Retain HMG's fixed hand-origin bridge, then let the
+		// authored thirdperson_hand inverse supply the model-relative placement.
+		GL11.glRotatef(110F, 1.0F, 0.0F, 0.0F);
+		GL11.glRotatef(-20F, 0.0F, 1.0F, 0.0F);
+		GL11.glRotatef(135F, 0.0F, 0.0F, 1.0F);
+		GL11.glTranslatef(0.2F, -1.75F, -1.55F);
 	}
 
 	public ResourceLocation getEntityTexture(AbstractClientPlayer p_110775_1_)
@@ -1048,8 +1083,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		return colorBuffer;
 	}
 
-	public void rendering_situation(ItemStack gunstack,Entity entity){
-		boolean isreloading = this.getbooleanfromnbt("IsReloading");
+	public void rendering_situation(ItemStack gunstack,Entity entity, boolean isreloading){
 		int remainbullets = gunitem.remain_Bullet(gunstack);
 		if (nbt == null) gunitem.checkTags(gunstack);
 		boolean recoiled = this.getbooleanfromnbt("Recoiled");
@@ -1089,10 +1123,16 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 			recoiled = true;
 		}
 
-		if (isreloading) {
+		boolean importedReloadOwner = handmadeguns.client.animation.AnimationClient.ownsReload(partsRender_gun);
+		if (isreloading && (!(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+				|| !importedReloadOwner)) {
 			float reloadprogress = this.getintfromnbt("RloadTime") + smoothing;
 			if(reloadprogress + smoothing >= gunitem.reloadTime(gunstack)-1)reloadprogress = gunitem.reloadTime(gunstack);
 			partsRender_gun.partSidentification(new GunState[]{GunState.Reload}, (float) reloadprogress, remainbullets);
+		} else if (isreloading) {
+			// Imported animations own the visual reload pose. The neutral HMG state
+			// only drives traversal; AnimationClient overlays reload on ACTION.
+			partsRender_gun.partSidentification(new GunState[]{GunState.Default}, 0.0F, remainbullets);
 		} else if ((entity != HMG_proxy.getEntityPlayerInstance() && HandmadeGunsCore.Key_ADS(entity)) || firstPerson_ADSState || prevADSState) { //new gun rendering when ADS
 			GunState[] state = new GunState[2];
 			state[1] = GunState.ADS;

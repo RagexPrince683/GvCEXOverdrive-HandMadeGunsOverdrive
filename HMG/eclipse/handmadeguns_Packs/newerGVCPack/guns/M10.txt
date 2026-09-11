@@ -21,7 +21,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,M10
+Texture,items/M10.png
 GunSound,handmadeguns.mac10,handmadeguns.supu
 GunSoundLV,164,130
 GunSoundReload,handmadeguns.reload
@@ -63,7 +63,7 @@ SprintingPoint,0.0f,-0.0f,-0.1f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 Magazine,0,HandmadeGuns,bullet_hg_9mm32rnd

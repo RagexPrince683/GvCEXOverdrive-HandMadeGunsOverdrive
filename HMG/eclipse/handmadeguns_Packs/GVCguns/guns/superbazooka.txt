@@ -11,13 +11,13 @@ ZoomRenderType,false,false,false
 ZoomRenderTypeTxture,true,true,true
 InventoryScale,4
 
-ScopeTexture,scope_smaw.png,scope_smaw.png,scope_smaw.png
+ScopeTexture,misc/scope_smaw.png,misc/scope_smaw.png,misc/scope_smaw.png
 RenderCross,false
 
 Explosion,0.5f
 damagerange,2
 BlockDestory,false
-Texture,bazooka
+Texture,items/bazooka.png
 GunSound,handmadeguns.m20a1,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -51,7 +51,7 @@ ModelArmOffsetL,0.2f,0.5f,-0.2f
 SprintingPoint,0.5f,-0.3f,0.5f
 SprintingRotation,20f,60f,5f
 
-ScopeTexture,rr.png,rr.png,scope.png
+ScopeTexture,misc/rr.png,misc/rr.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

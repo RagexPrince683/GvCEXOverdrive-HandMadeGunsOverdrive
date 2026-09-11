@@ -26,7 +26,7 @@ ZoomRender,true
 ZoomRenderType,false,true,false
 ZoomRenderTypeTxture,true,false,true
 
-Texture,SVD
+Texture,items/SVD.png
 GunSound,handmadeguns.SVD,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -65,7 +65,7 @@ SprintingRotation,20f,60f,5f
 
 SoundSpeed,1f
 
-ScopeTexture,scope_svd.png,scope_svd.png,scope_svd.png
+ScopeTexture,misc/scope_svd.png,misc/scope_svd.png,misc/scope_svd.png
 RenderCross,false
 
 Magazine,0,HandmadeGuns,7.62mm magazine

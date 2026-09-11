@@ -11,7 +11,7 @@ Zoom,4.0f,4.0f,8.0f
 ZoomRender,true
 ZoomRenderType,false,false,false
 ZoomRenderTypeTxture,true,true,true
-Texture,SR_sample
+Texture,items/SR_sample.png
 GunSound,handmadeguns.HeavyRifle,handmadeguns.fire
 GunSoundReload,handmadeguns.reload
 GunSoundCooking,handmadeguns.cooking
@@ -183,7 +183,7 @@ CockingTime,20
 //0307
 BulletGravity,0.0295f
 
-ScopeTexture,scope.png,scope.png,scope.png
+ScopeTexture,misc/scope.png,misc/scope.png,misc/scope.png
 RenderCross,false
 UnderBarrelWeapon,0
 RightType,0

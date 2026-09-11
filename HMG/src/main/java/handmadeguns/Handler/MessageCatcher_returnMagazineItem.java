@@ -4,52 +4,49 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import handmadeguns.entity.PlacedGunEntity;
+import handmadeguns.HMGPacketHandler;
+import handmadeguns.animation.ReloadAnimationBridge;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
+import handmadeguns.network.HMGServerTaskQueue;
+import handmadeguns.network.PacketReloadAnimation;
 import handmadeguns.network.PacketreturnMgazineItem;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-
-import static handmadeguns.HandmadeGunsCore.HMG_proxy;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MessageCatcher_returnMagazineItem implements IMessageHandler<PacketreturnMgazineItem, IMessage> {
+    private static final AtomicInteger RELOAD_EVENT_IDS = new AtomicInteger();
+
     @Override
-    public IMessage onMessage(PacketreturnMgazineItem message, MessageContext ctx) {
-        World world;
-//        System.out.println("debug");
-        if(ctx.side.isServer()) {
-            world = ctx.getServerHandler().playerEntity.worldObj;
-        }else{
-            world = HMG_proxy.getCilentWorld();
-        }
-        try {
-            if(world != null){
-                Entity shooter = world.getEntityByID(message.entityid);
-                if(shooter instanceof EntityPlayer && ((EntityLivingBase) shooter).getHeldItem() != null) {
-                    Item gunitem = ((EntityLivingBase) shooter).getHeldItem().getItem();
-                    ItemStack itemStack = ((EntityLivingBase) shooter).getHeldItem();
-                    if(gunitem instanceof HMGItem_Unified_Guns){
-                        HMGItem_Unified_Guns unifiedGun = (HMGItem_Unified_Guns) gunitem;
-                        unifiedGun.startReloadFromKey(itemStack, world, shooter);
-                    }
-                }else if(shooter != null && shooter.ridingEntity instanceof PlacedGunEntity){
-                    HMGItem_Unified_Guns gunitem = ((PlacedGunEntity) shooter.ridingEntity).gunItem;
-                    ItemStack itemStack = ((PlacedGunEntity) shooter.ridingEntity).gunStack;
-                    if(gunitem != null && itemStack != null){
-                        gunitem.startReloadFromKey(itemStack, world, shooter);
-                    }
-                }
-            }
-//        bullet = message.bullet.setdata(bullet);
-//        System.out.println("bullet "+ bullet);
-        }catch (ClassCastException e) {
-            e.printStackTrace();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+    public IMessage onMessage(final PacketreturnMgazineItem message, MessageContext ctx) {
+        final EntityPlayerMP sender = ctx.getServerHandler().playerEntity;
+        HMGServerTaskQueue.enqueue(new Runnable() {
+            @Override public void run() { handleReload(message.entityid, sender); }
+        });
         return null;
+    }
+
+    private static void handleReload(int requestedEntityId, EntityPlayerMP player) {
+        if (player == null || player.worldObj == null || player.getEntityId() != requestedEntityId) return;
+        ItemStack itemStack = player.getHeldItem();
+        if (itemStack != null && itemStack.getItem() instanceof HMGItem_Unified_Guns) {
+            HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)itemStack.getItem();
+            gun.checkTags(itemStack);
+            boolean wasReloading = itemStack.getTagCompound().getBoolean("IsReloading");
+            boolean empty = gun.remain_Bullet(itemStack) == 0;
+            boolean accepted = gun.startReloadFromKey(itemStack, player.worldObj, player)
+                    && !wasReloading && itemStack.getTagCompound().getBoolean("IsReloading");
+            ReloadAnimationBridge.StartEvent event = ReloadAnimationBridge.acceptedEvent(accepted,
+                    RELOAD_EVENT_IDS.incrementAndGet(), player.inventory.currentItem,
+                    Item.getIdFromItem(itemStack.getItem()), empty);
+            if (event != null) HMGPacketHandler.INSTANCE.sendTo(new PacketReloadAnimation(event), player);
+            return;
+        }
+        if (player.ridingEntity instanceof PlacedGunEntity) {
+            PlacedGunEntity placed = (PlacedGunEntity)player.ridingEntity;
+            if (placed.gunItem != null && placed.gunStack != null)
+                placed.gunItem.startReloadFromKey(placed.gunStack, player.worldObj, player);
+        }
     }
 }

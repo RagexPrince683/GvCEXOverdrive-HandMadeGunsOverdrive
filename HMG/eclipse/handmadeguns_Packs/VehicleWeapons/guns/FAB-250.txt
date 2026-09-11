@@ -10,7 +10,7 @@ isOneuse,true
 MaxstackSize,16
 Explosion,6f
 BlockDestory,true
-Texture,FAB-250
+Texture,items/FAB-250.png
 ObjModel,FAB-250.mqo
 ObjTexture,FAB-250.png
 ModelScala,0.5f

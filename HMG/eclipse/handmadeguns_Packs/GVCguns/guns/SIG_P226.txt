@@ -22,7 +22,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,P226
+Texture,items/P226.png
 GunSound,handmadeguns.p226,handmadeguns.firehg
 GunSoundLV,159,126
 GunSoundReload,handmadeguns.reload
@@ -72,7 +72,7 @@ SprintingRotation,-30f,0f,0f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,bullet_hg_9mm10sig

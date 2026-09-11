@@ -21,7 +21,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,M9
+Texture,items/M9.png
 GunSound,handmadeguns.beretta,handmadeguns.supu
 GunSoundLV,160,134
 GunSoundReload,handmadeguns.reload
@@ -60,7 +60,7 @@ SprintingPoint,0.0f,-0.4f,-0.1f
 
 SoundSpeed,1f
 
-ScopeTexture,null.png,null.png,scope.png
+ScopeTexture,null.png,null.png,misc/scope.png
 RenderCross,false
 
 //Magazine,0,HandmadeGuns,bullet_hg_hmgber

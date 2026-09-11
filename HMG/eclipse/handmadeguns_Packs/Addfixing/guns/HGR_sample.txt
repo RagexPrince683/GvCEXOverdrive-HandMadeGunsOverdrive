@@ -15,7 +15,7 @@ BounceLimit,45
 ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
-Texture,HG_sample
+Texture,items/HG_sample.png
 GunSound,handmadeguns.firehg,handmadeguns.supu
 GunSoundReload,handmadeguns.reload
 CanObj,true
@@ -52,7 +52,7 @@ Mat2,false
 CartridgeType,2
 SoundSpeed,0.9f
 
-ScopeTexture,hg.png,hgred.png,scope.png
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_hmg

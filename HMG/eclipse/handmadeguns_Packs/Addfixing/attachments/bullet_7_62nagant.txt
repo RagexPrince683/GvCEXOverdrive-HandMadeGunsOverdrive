@@ -1,0 +1,16 @@
+Texture,items/762rbullet.png
+Stack,16
+Name,7.62x38mmR Bullet
+//BulletRound,7
+BulletRound,1
+
+Tabname,HMG_Ammo
+
+CustomMagazine,7.6238mmR bullet
+
+Recipe1,aa 
+Recipe2,bb 
+Recipe3,   
+ItemA,HandmadeGuns,copperIngot
+ItemB,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,7.6238mmR bullet,8

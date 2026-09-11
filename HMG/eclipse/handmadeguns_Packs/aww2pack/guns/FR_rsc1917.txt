@@ -11,7 +11,7 @@ Zoom,2.0f,4.0f,8.0f
 ZoomRender,true
 ZoomRenderType,true,true,false
 ZoomRenderTypeTxture,false,true,true
-Texture,rsc1917
+Texture,items/rsc1917.png
 SoundSpeed,1.2f
 GunSound,handmadeguns.rsc1917,handmadeguns.supu
 GunSoundReload,handmadeguns.reload

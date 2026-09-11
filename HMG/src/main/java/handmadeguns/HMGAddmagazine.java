@@ -4,6 +4,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import handmadeguns.items.HMGItemBullet_with_Internal_Bullet;
 import handmadeguns.client.render.HMGRenderItemCustom;
+import handmadeguns.pack.HMGPackAssetResolver;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.model.IModelCustom;
@@ -15,6 +16,7 @@ import java.util.List;
 public class HMGAddmagazine {
     public static List Magazines = new ArrayList();
     public static void load(boolean isClient, File file1) throws IOException {
+        HMGPackAssetResolver resolver = new HMGPackAssetResolver(file1.getParentFile().getParentFile());
         String Name = "";
         String UIName = "";
         int stacksize = 0;
@@ -92,7 +94,7 @@ public class HMGAddmagazine {
                     if(data[0].equals("Objmodel")){
                         objmodel =data[1];
                     }
-                    if (data[0].equals("ObjTexture")) {
+                    if (data[0].equals("ObjTexture") || data[0].equals("ModelTexture")) {
                         objtexture = data[1];
                     }
 
@@ -103,7 +105,8 @@ public class HMGAddmagazine {
                         UIName = data[1];
                     }
                     if(data[0].equals("Texture")){
-                        texture = data[1];
+                        try { texture = resolver.itemTextureName(data[1]); }
+                        catch (FileNotFoundException missing) { texture = data[1]; }
                     }
                     if(data[0].equals("END")){
                         HMGItemBullet_with_Internal_Bullet newmagazine = new HMGItemBullet_with_Internal_Bullet();
@@ -130,8 +133,8 @@ public class HMGAddmagazine {
                         }
                         System.out.println("" + Name);
                         if(canobj && isClient) {
-                            IModelCustom attach = HMGGunMaker.getCachedModel("handmadeguns:textures/model/" + objmodel);
-                            ResourceLocation attachtexture = HMGGunMaker.getCachedResourceLocation("handmadeguns:textures/model/" + objtexture);
+                            IModelCustom attach = HMGGunMaker.getCachedModel(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel));
+                            ResourceLocation attachtexture = HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture));
                             MinecraftForgeClient.registerItemRenderer(newmagazine, new HMGRenderItemCustom(attach, attachtexture));
                         }
                         GameRegistry.registerItem(newmagazine, Name);

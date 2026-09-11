@@ -9,7 +9,7 @@ public final class AnimationController {
     public enum Layer { BASE, ACTION, ADDITIVE }
     private final AnimationDefinition definition;
     private final EnumMap<Layer, AnimationPlayback> layers = new EnumMap<Layer, AnimationPlayback>(Layer.class);
-    private AnimationPose legacy = AnimationPose.EMPTY, lastPose = AnimationPose.EMPTY, transitionFrom;
+    private AnimationPose legacy = AnimationPose.EMPTY, transitionFrom;
     private double clock = Double.NaN, transitionElapsed, transitionDuration;
     private long generation;
 
@@ -30,7 +30,7 @@ public final class AnimationController {
         return true;
     }
 
-    /** Explicit owner cancellation (e.g. authoritative reload ended) bypasses request priority. */
+    /** Explicit owner invalidation bypasses request priority. Natural one-shot completion needs no stop. */
     public void stop(Layer layer) {
         AnimationPlayback old = layers.get(layer);
         if (old != null) { beginTransition(old.clip.fadeOut); layers.remove(layer); }
@@ -46,7 +46,9 @@ public final class AnimationController {
     public boolean transitioning() { return transitionFrom != null; }
 
     private void beginTransition(double duration) {
-        transitionFrom = duration == 0 ? null : lastPose;
+        // Evaluate before changing layers. Each pose is immutable, so subsequent
+        // samples cannot change this source (including back-to-back requests).
+        transitionFrom = duration == 0 ? null : compose();
         transitionDuration = duration;
         transitionElapsed = 0;
     }
@@ -65,7 +67,6 @@ public final class AnimationController {
             for (AnimationPlayback playback : layers.values()) playback.advance(step, sink);
             transitionElapsed += step;
             if (transitionFrom != null && transitionElapsed >= transitionDuration) transitionFrom = null;
-            lastPose = compose();
             boolean completed = false;
             double fade = 0;
             for (AnimationPlayback playback : layers.values()) if (playback.finished()) {
@@ -86,8 +87,7 @@ public final class AnimationController {
     /** Captures the actual blended pose, including the legacy baseline, for the next interruption. */
     public AnimationPose sample(AnimationPose legacyPose) {
         legacy = legacyPose;
-        lastPose = compose();
-        return lastPose;
+        return compose();
     }
 
     private AnimationPose compose() {
