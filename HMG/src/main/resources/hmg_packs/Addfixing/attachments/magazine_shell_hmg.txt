@@ -1,0 +1,18 @@
+Texture,items/bullet_shell.png
+Stack,16
+BulletRound,1
+Tabname,HMG_Ammo
+BulletPower,8
+BulletSpeed,7.3f
+BlletSpread,2.2f
+bulletFuse,16
+ShotGun_Pellet,9
+Name,12 Gauge Buckshot Shell
+Magazine,bullet_shell_hmg
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_shell_hmg,8

@@ -1,0 +1,178 @@
+BulletPower,15
+BulletSpeed,16
+BulletGravity,0.485
+
+
+BlletSpread,0.0f
+ADS_Spread_coefficient,0.0
+BlletSpreadDiffusion,10,0,1.8,0.2,3,0.6
+Cycle,2
+
+Motion,0.88
+
+Recoil,8
+Recoil_sneaking,5
+
+ReloadTime,50
+
+RemainingBullet,10
+
+Attacking,4.0f
+Zoom,4.0f,1.0f,4.0f
+
+SimpleADSOffsetY,0.9295,0.950,0.950
+SimpleADSOffsetX,0,0,0
+
+ZoomRender,true
+ZoomRenderType,false,true,false
+ZoomRenderTypeTxture,true,false,true
+
+Texture,items/M110.png
+GunSound,handmadeguns.AR10,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CanObj,true
+ObjModel,M110.mqo
+ObjTexture,M110.png
+ModelScala,0.5f
+InworldScale,1.65f
+CustomFlash,arrow,1
+Bursts,1,0
+//Rates,1,1
+attachRestriction,true
+allowattach,attachmenttest
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+
+attachmentlocation1 = 0, 1.1, 1.65
+
+opticshift1,0,0.1,-0.9
+
+ModelEquipped,-0.3f,0.8f,-0.85f
+ModelHigh,0.99F,0.99F,0.99F
+ModelWidthX,0.6945f,0.6945f,0.6945f
+ModelWidthZ,0.5f,0.5f,0.5f
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+
+ModelArm,true
+ModelArmRotationR,-1.57f,0f,-1.57f
+ModelArmOffsetR,0.4f,0.3577f,0.1f
+ModelArmRotationL,-0.0f,-2.0f,2.0f
+ModelArmOffsetL,0.3f,0.6f,-0.65f
+
+SprintingPoint,0.3f,0.0f,0.5f
+SprintingRotation,20f,60f,5f
+
+SoundSpeed,0.9f
+//none of this shit makes any goddamn sense
+
+//GET OUT GET OUT GET OUT
+//GunSoundLV,180,180
+//me when i do nothing as a variable
+//GunSoundLV,1,5
+
+ScopeTexture,misc/scope_m110.png,misc/scope_m110.png,misc/scope_m110.png
+RenderCross,false
+
+//Magazine,0,HandmadeGuns,7.62mm sr magazine
+MultiMagazine,HandmadeGuns:7.62mm sr magazine,HandmadeGuns:7.62mm sr20 magazine
+
+
+MagazineSG,0,HandmadeGuns,bullet_shell_hmg
+MagazineGL,0,HandmadeGuns,bullet_rr_hmg
+
+//ReloadMotion
+//{
+//0,     0f , 0f , 0f,-0.3f,0.3f , 0f  ,0f,0f , 0f , 0.2f,1f,1.10f   , 0f  ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 2f,-2f,0f , 0f,0f,0f , 0f,0f,40f
+//1,     10f, 0f , 0f,-0.3f,0.3f , 0f  ,0f,0f , 0f , 0.2f,0.8f,1.10f , 0f  ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f,-1f,0f , 0f,0f,0f , 0f,0f,40f
+//2,     20f, 0f , 0f,-0.3f,0.3f , -20f,0f,0f , 0f , 0.2f,0.8f,1.10f , 0f  ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f,-1f,0f , 0f,0f,0f , 0f,0f,40f
+//3,     40f, 0f , 0f,-0.3f,0.3f , -20f,0f,0f , 0f , 0.2f,0.3f,1.10f , 0.7f,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f, 0f,0f , 0f,0f,0f , 0f,0f,0f
+//4,     50f, 0f , 0f,-0.3f,0.3f , 0f  ,0f,0f , 1f , 0f  ,0f  ,0f    , 0f ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f, 0f,0f , 0f,0f,0f , 0f,0f,0f
+//}
+
+AddParts,Base_Sys
+	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+	RenderOnNormal
+	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+	AddYawInfoKey,-360,0,0,0,0,-360,0        ,360,0,0,0,0,360,0
+
+	AddChildParts,mat1
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+			SetAttachmentAttach1
+			AddReloadMotionKey,0 ,0,0,0,0,0,0,            10 ,0,0,0,0,0,0
+			AddReloadMotionKey,10 ,0,0,0,0,0,0,           30,0,0,0,15,0,30
+			AddReloadMotionKey,30,0,0,0,15,0,30,          70,0,0,0,15,0,30
+			AddReloadMotionKey,70,0,0,0,15,0,30,          75,0,0,0,0,0,0
+			AddPitchInfoKey,-360,0,0,0,-360,0,0        ,360,0,0,0,360,0,0
+
+			AddChildParts,Larm
+				AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+				AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+				RenderOnNormal
+				AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+				AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+				AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+				AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+				
+				AddReloadMotionKey,0,0,0,0,0,0,0,            5,0,0,0,0,0,0
+				AddReloadMotionKey,5,0,0,0,0,0,0,            30,0,-2,-2.4,0,10,0
+				AddReloadMotionKey,30,0,-2,-2.4,0,10,0,         60,0,0,-2.4,0,10,0
+				
+				AddReloadMotionKey,60,0,0,-2.4,0,10,0,    64,0,0,0,0,0,0
+				AddReloadMotionKey,64,0,0,0,0,0,0,     75,0,0,0,0,0,0
+			BackParts
+			AddChildParts,Rarm
+				AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+				AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+				RenderOnNormal
+				AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+				AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+				AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+				AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+				AddReloadMotionKey,0, 0   ,0  ,0   ,0  ,0  ,0  ,    64,0   ,0  ,0   ,0,0,0
+				AddReloadMotionKey,64,0   ,0  ,0   ,0  ,0  ,0  ,    67,-0.3,1.3,0   ,0,30,0
+				AddReloadMotionKey,67,-0.3,1.3,0   ,0  ,30 ,0  ,    69,-0.3,1.3,-1  ,0,30,0
+				AddReloadMotionKey,69,-0.3,1.3,-1  ,0  ,30 ,0  ,    71,-0.3,1.3,0   ,0,30,0
+				AddReloadMotionKey,71,-0.3,1.3,0   ,0  ,30 ,0  ,    75,0   ,0  ,0   ,0,0,0
+			BackParts
+
+			AddChildParts,twenty
+				SetAsNormalParts
+				AddReloadMotionKey,0,0,0,0,0,0,0,		   5,0,-5,-1,0,0,0
+				AddReloadMotionKey,5,false,		  10
+				AddReloadMotionKey,30,0,-2,-0.5,0,0,0,	  40,0,0,0,0,0,0
+				AddReloadMotionKey,40,0,0,0,0,0,0,		  75,0,0,0,0,0,0
+				NeedDraw_Current_Magazine_ID_List,false,true
+			BackParts
+
+			AddChildParts,mat3
+				SetAsNormalParts
+				AddReloadMotionKey,0,0,0,0,0,0,0,		   5,0,-5,-1,0,0,0
+				AddReloadMotionKey,5,false,		  10
+				AddReloadMotionKey,30,0,-2,-0.5,0,0,0,	  40,0,0,0,0,0,0
+				AddReloadMotionKey,40,0,0,0,0,0,0,		  75,0,0,0,0,0,0
+				NeedDraw_Current_Magazine_ID_List,true,false
+			BackParts
+
+			AddChildParts,regsight
+				SetAsNormalParts
+				removeifattachpresent1
+			BackParts
+	BackParts
+
+BackParts
+
+Tabname,HMG_GVCGuns
+Name,M110 SASS
+GunSoundLV,165,1
+SR,M110

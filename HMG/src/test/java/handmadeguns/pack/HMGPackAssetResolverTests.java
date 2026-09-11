@@ -1,12 +1,16 @@
 package handmadeguns.pack;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 public final class HMGPackAssetResolverTests {
     private static int checks;
@@ -79,6 +83,9 @@ public final class HMGPackAssetResolverTests {
             check(Files.isRegularFile(pack.resolve("assets/handmadeguns/textures/items/icon.png")), "explicit item texture was not staged");
             check(Files.isRegularFile(pack.resolve("assets/handmadeguns/textures/misc/scope.png")), "explicit misc texture was not staged");
 
+			testBundledDirectoryLocation(temporary);
+			testBundledJarLocations(temporary);
+
             System.out.println("HMG pack resolver tests passed: " + checks);
         } finally {
             Files.walk(temporary).sorted(Comparator.reverseOrder()).forEach(path -> {
@@ -87,6 +94,35 @@ public final class HMGPackAssetResolverTests {
             });
         }
     }
+
+	private static void testBundledDirectoryLocation(Path temporary) throws Exception {
+		Path codeRoot = Files.createDirectories(temporary.resolve("directory-code-source"));
+		write(codeRoot.resolve("hmg_packs/DirectoryPack/guns/test.txt"), "directory");
+		Path cache = Files.createDirectories(temporary.resolve("directory-cache"));
+		equal(1, HMGBundledPackSource.materializeFromLocation(codeRoot.toUri().toURL(), cache.toFile()));
+		equal("directory", new String(Files.readAllBytes(cache.resolve("DirectoryPack/guns/test.txt")), StandardCharsets.UTF_8));
+	}
+
+	private static void testBundledJarLocations(Path temporary) throws Exception {
+		Path archive = temporary.resolve("bundled-packs.jar");
+		JarOutputStream output = new JarOutputStream(new FileOutputStream(archive.toFile()));
+		try {
+			output.putNextEntry(new JarEntry("hmg_packs/JarPack/guns/test.txt"));
+			output.write("jar".getBytes(StandardCharsets.UTF_8));
+			output.closeEntry();
+		} finally {
+			output.close();
+		}
+
+		Path fileCache = Files.createDirectories(temporary.resolve("file-jar-cache"));
+		equal(1, HMGBundledPackSource.materializeFromLocation(archive.toUri().toURL(), fileCache.toFile()));
+		equal("jar", new String(Files.readAllBytes(fileCache.resolve("JarPack/guns/test.txt")), StandardCharsets.UTF_8));
+
+		Path opaqueCache = Files.createDirectories(temporary.resolve("opaque-jar-cache"));
+		URL opaqueJar = new URL("jar:" + archive.toUri().toURL().toExternalForm() + "!/");
+		equal(1, HMGBundledPackSource.materializeFromLocation(opaqueJar, opaqueCache.toFile()));
+		equal("jar", new String(Files.readAllBytes(opaqueCache.resolve("JarPack/guns/test.txt")), StandardCharsets.UTF_8));
+	}
 
     private static void write(Path path, String value) throws IOException {
         Files.createDirectories(path.getParent());

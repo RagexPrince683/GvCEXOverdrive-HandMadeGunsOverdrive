@@ -626,6 +626,19 @@ public class HMGAddAttachment
 						}
 
 						if (newitem != null) {
+							// Definitions are loaded in source order. Reconfigure an existing
+							// compatible item so an external pack can intentionally override a
+							// bundled magazine/attachment without attempting a second registry entry.
+							Item registered = GameRegistry.findItem("HandmadeGuns", GunName);
+							if (registered != null) {
+								if (!registered.getClass().equals(newitem.getClass())) {
+									System.err.println("[HMG] Ignoring incompatible item override for " + GunName);
+									continue;
+								}
+								newitem = registered;
+								newitem.setMaxStackSize(kazu).setTextureName("handmadeguns:" + texture);
+								LanguageRegistry.instance().addNameForObject(newitem, "en_US", Namegun != null ? Namegun : GunName);
+							}
 							if (newitem instanceof HMGItemAttachmentBase) pendingAttachments.add((HMGItemAttachmentBase)newitem);
 							try {
 								if (canobj && isClient && !(newitem instanceof HMGItemAttachmentBase)) {
@@ -693,7 +706,7 @@ public class HMGAddAttachment
 											HMGGunMaker.damageCof, HMGGunMaker.speedCof, spreadOverride, pelletOverride, fuseOverride, bullettype);
 								}
 							}
-							GameRegistry.registerItem(newitem, GunName);
+							if (registered == null) GameRegistry.registerItem(newitem, GunName);
 							if (newitem instanceof HMGItemGunSkin)
 								HMGGunSkinRegistry.register((HMGItemGunSkin)newitem);
 						}

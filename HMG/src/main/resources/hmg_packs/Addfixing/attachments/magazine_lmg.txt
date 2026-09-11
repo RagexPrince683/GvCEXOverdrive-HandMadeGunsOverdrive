@@ -1,0 +1,19 @@
+Texture,items/bullet_lmg.png
+Stack,1
+Tabname,HMG_Ammo
+Name,Generic LMG bullet box
+Magazine,bullet_lmg_hmg
+
+//Recipe1,aaa
+//Recipe2,ddd
+//Recipe3,cc 
+//ItemA,minecraft,iron_ingot
+//ItemB,minecraft,iron_ingot
+//ItemC,minecraft,emerald
+//ItemD,minecraft,gunpowder
+//ItemE,minecraft,gunpowder
+//ItemF,minecraft,gunpowder
+//ItemG,null
+//ItemH,null
+//ItemI,null
+//addNewRecipe,HandmadeGuns,bullet_lmg_hmg,1

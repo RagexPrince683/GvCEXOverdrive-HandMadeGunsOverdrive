@@ -1,0 +1,182 @@
+attachRestriction,true
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+BulletPower,15
+BulletSpeed,17.0f
+BulletSpread,1.0f
+Recoil,2.5d
+//todo 5rnd stripper clip ver
+//ReloadTime,50
+ReloadTime,9
+RemainingBullet,6
+Attacking,4.0f
+Zoom,2.0f,2.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Texture,items/m1917.png
+GunSound,handmadeguns.enfieldm1917,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+GunSoundCooking,handmadeguns.a_cock
+CanObj,true
+ObjModel,m1917.mqo
+ObjTexture,paret.png
+ModelScala,0.5f
+InworldScale,1.8f
+ModelEquipped,-0.7f,0.7f,-0.3f
+ModelHigh,1.41f,0.85f,0.85f
+SimpleADSOffsetX,0,0,0
+ModelWidthZ,0.0f,0.0f,0.0f
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+ModelArm,true
+ModelArmRotationR,-1.57f,0f,-1.57f
+ModelArmOffsetR,0.35f,0.5f,0.6f
+ModelArmRotationL,-0.0f,-2.3f,2.0f
+ModelArmOffsetL,0.1f,0.7f,-0.2f
+
+Motion,0.95
+
+DropMagazine,false
+
+Mat25Point,0.0f,0.571f,1.2f
+Mat25Rotation,0f,0f,-90f
+CockingTime,20
+
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
+RenderCross,false
+Automatic,false
+Magazine,0,HandmadeGuns,7.62x63mm bullet
+MagazineItemCount,6
+PerShellReload,true
+Tabname,HMG_WW2Guns
+
+AddParts,mat1
+	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+	RenderOnNormal
+	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+	AddReloadMotionKey,0,0,0,0,0,0,0,			5,0,0,0,0,0,0
+	AddReloadMotionKey,5,0,0,0,0,0,0,			15,0,0,0,-15,0,-10
+	AddReloadMotionKey,15,0,0,0,-15,0,-10,		80,0,0,0,-15,0,-10
+	AddReloadMotionKey,80,0,0,0,-15,0,-10,		90,0,0,0,0,0,0
+
+
+
+	AddChildParts,mat5
+		SetAsNormalParts
+		attachpart
+		scope
+	BackParts
+	AddChildParts,SYS_BAYONETBASE
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		attachpart
+		swordbase
+	BackParts
+
+	AddChildParts,Larm
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+	BackParts
+
+
+
+
+
+	AddChildParts,mat25
+		AddPartsRotationCenterAndRotationAmount,0.0f,0.571f,1.2f,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+		//コチE��ングモーション
+		AddCockMotionKey,0,0,0,0,0,0,0,		2,0,0,0,0,0,0
+		//ボルトを左に回して
+		AddCockMotionKey,2,0,0,0,0,0,0,		4,0,0,0,0,0,-90
+		//引いて
+		AddCockMotionKey,4,0,0,0,0,0,-90,		9,0,0,-0.9,0,0,-90
+		//排莢して
+		AddCockMotionKey,9,0,0,-0.9,0,0,-90,	11,0,0,-0.9,0,0,-90
+		//戻して
+		AddCockMotionKey,11,0,0,-0.9,0,0,-90,	16,0,0,0,0,0,-90
+		//戻ぁE
+		AddCockMotionKey,16,0,0,0,0,0,-90,	18,0,0,0,0,0,0
+
+		AddCockMotionKey,18,0,0,0,0,0,0,		20,0,0,0,0,0,0
+
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,		4,0,0,0,0,0,0
+		//ボルトを左に回して
+		AddReloadMotionKey,4,0,0,0,0,0,0,		8,0,0,0,0,0,-90
+		//引いて
+		AddReloadMotionKey,8,0,0,0,0,0,-90,		13,0,0,-0.9,0,0,-90
+
+		AddReloadMotionKey,35,0,0,-0.9,0,0,-90,			40,0,0,-0.9,0,0,-90
+		AddReloadMotionKey,40,0,0,-0.9,0,0,-90,		45,0,0,-0.9,0,0,-90
+		AddReloadMotionKey,45,0,0,-0.9,0,0,-90,		50,0,0,-0.9,0,0,-90
+		AddReloadMotionKey,50,0,0,-0.9,0,0,-90,		55,0,0,-0.9,0,0,-90
+		AddReloadMotionKey,55,0,0,-0.9,0,0,-90,		60,0,0,-0.9,0,0,-90
+		AddReloadMotionKey,60,0,0,-0.9,0,0,-90,		75,0,0,0,0,0,-90
+		AddReloadMotionKey,75,0,0,0,0,0,-90,		80,0,0,0,0,0,0
+		AddReloadMotionKey,80,0,0,0,0,0,0,		90,0,0,0,0,0,0
+
+		AddChildParts,Rarm
+			AddPartsRotationCenterAndRotationAmount,0.4f,0.4f,0.5f,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+			AddCockMotionKey,0,0,0,0,0,0,0,		2,-0.4,0.8,0,0,0,0
+			AddCockMotionKey,2,-0.4,0.8,0,0,0,0,	18,-0.4,0.8,0,0,0,0
+			AddCockMotionKey,18,-0.4,0.8,0,0,0,0,	20,0,0,0,0,0,0
+
+			//the motion of putting one bullet into the gun:
+			AddReloadMotionKey,0,0,0,0,0,0,0,		4,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,4,-0.4,0.8,0,0,0,0,	13,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,13,-0.4,0.8,0,0,0,0,	15,-0.4,0,0,0,0,0
+			AddReloadMotionKey,15,-0.4,0,0,0,0,0,	20,2,0,0,0,0,0
+			AddReloadMotionKey,20,2,0,0,0,0,0,		27,-0.4,0,0,0,0,0
+			AddReloadMotionKey,27,-0.4,0,0,0,0,0,		30,-0.4,1,1.5,-30,0,0
+			AddReloadMotionKey,30,-0.4,1,1.5,-30,0,0,	36,0.2,1,1.5,-30,0,0
+			AddReloadMotionKey,36,0.2,1,1.5,-30,0,0,	38,-0.4,0.8,1.5,0,0,0
+			AddReloadMotionKey,38,-0.4,0.8,1.5,0,0,0,	40,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,40,-0.4,0.8,0,0,0,0,	47,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,47,-0.4,0.8,0,0,0,0,	50,0,0,0,0,0,0,0
+
+			//2nd
+			AddReloadMotionKey,50,0,0,0,0,0,0,		52,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,52,-0.4,0.8,0,0,0,0,	55,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,55,-0.4,0.8,0,0,0,0,	57,-0.4,0,0,0,0,0
+			AddReloadMotionKey,57,-0.4,0,0,0,0,0,	58,2,0,0,0,0,0
+			AddReloadMotionKey,58,2,0,0,0,0,0,		60,-0.4,0,0,0,0,0
+			AddReloadMotionKey,60,-0.4,0,0,0,0,0,		65,-0.4,1,1.5,-30,0,0
+			AddReloadMotionKey,65,-0.4,1,1.5,-30,0,0,	68,0.2,1,1.5,-30,0,0
+			AddReloadMotionKey,68,0.2,1,1.5,-30,0,0,	70,-0.4,0.8,1.5,0,0,0
+			AddReloadMotionKey,70,-0.4,0.8,1.5,0,0,0,	75,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,75,-0.4,0.8,0,0,0,0,	70,-0.4,0.8,0,0,0,0
+			AddReloadMotionKey,70,-0.4,0.8,0,0,0,0,	80,0,0,0,0,0,0,0
+
+		BackParts
+	BackParts
+
+GunSoundLV,165,1
+SR,M1917 Enfield
+Name,M1917 Enfield

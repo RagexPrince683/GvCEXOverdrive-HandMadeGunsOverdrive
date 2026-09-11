@@ -1,0 +1,14 @@
+Texture,items/bullet_sub_at.png
+Stack,1
+Name,Hollowpoint Rounds
+BulletAT,Bullet_AT
+//addRecipe,Bullet_AT,1,ab0,de0,000,265,266,0,266,289,0,0,0,0
+
+
+Recipe1,aaa
+Recipe2,cbc
+Recipe3,   
+ItemA,HandmadeGuns,copperIngot
+ItemB,minecraft,gunpowder
+ItemC,HandmadeGuns,steelIngot
+addNewRecipe,HandmadeGuns,Bullet_AT,1

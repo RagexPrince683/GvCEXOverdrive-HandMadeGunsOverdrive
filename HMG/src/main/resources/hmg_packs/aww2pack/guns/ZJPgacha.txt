@@ -1,0 +1,21 @@
+attachRestriction,true
+Texture,items/jpgacha.png
+BPItemStack,6
+BPItems,Type38,Type4Auto,Type14,Type99LMG,ROTA_Cannon,Type100MP
+
+Name,Japanese Kit
+BP,Japan_Gatcha
+
+//Recipe1,ab 
+//Recipe2,de 
+//Recipe3,gh 
+//ItemA,HandmadeGuns,gunpyo
+//ItemB,HandmadeGuns,gunpyo
+//ItemC,null
+//ItemD,HandmadeGuns,gunpyo
+//ItemE,HandmadeGuns,gunpyo
+//ItemF,null
+//ItemG,HandmadeGuns,gunpyo
+//ItemH,HandmadeGuns,gunpyo
+//ItemI,null
+//addNewRecipe,HandmadeGuns,Japan_Gatcha,1

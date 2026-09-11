@@ -397,7 +397,7 @@ public class HMGGunMaker {
 							case "GunScript_PathType": {
 								gunInfo.userenderscript = true;
 								type[1] = type[1].replace('\n', File.separatorChar);
-								FileReader sc = new FileReader(new File(HMG_proxy.ProxyFile(),type[1])); // ファイルを開く
+								FileReader sc = new FileReader(resolvePackScriptFile(file1, type[1])); // ファイルを開く
 								gunInfo.renderscript = gunInfo.script = gunInfo.script_withGUI = doScript(sc);
 								currentScript = gunInfo.renderscript;
 								currentScriptFile = sc;
@@ -1984,6 +1984,20 @@ public class HMGGunMaker {
 	
 	private static String sourceName(File sourceFile) {
 		return sourceFile != null ? sourceFile.getPath() : "<unknown>";
+	}
+
+	/** Keeps legacy pack-relative script paths valid when their source is bundled. */
+	private static File resolvePackScriptFile(File sourceFile, String configuredPath) throws IOException {
+		File legacyPath = new File(HMG_proxy.ProxyFile(), configuredPath);
+		if (legacyPath.isFile()) return legacyPath;
+		File packRoot = HandmadeGunsCore.gunPackRoot(sourceFile);
+		String normalized = configuredPath.replace('\\', '/');
+		String prefix = "handmadeguns_Packs/" + packRoot.getName() + "/";
+		if (normalized.startsWith(prefix)) {
+			File bundledPath = new File(packRoot, normalized.substring(prefix.length())).getCanonicalFile();
+			if (bundledPath.toPath().startsWith(packRoot.toPath()) && bundledPath.isFile()) return bundledPath;
+		}
+		return legacyPath;
 	}
 
 	private static String resolveItemTexture(File sourceFile, String reference) {

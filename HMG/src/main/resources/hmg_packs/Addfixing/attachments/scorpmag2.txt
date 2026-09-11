@@ -1,0 +1,14 @@
+Texture,items/bullet_hg_9mm15sig.png
+Stack,2
+Tabname,HMG_Ammo
+BulletRound,10
+Name,10 Rnd .32 ACP Magazine
+Magazine,scorpmag2
+Recipe1,a  
+Recipe2,b  
+Recipe3,c  
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,scorpmag2,2
+

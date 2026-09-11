@@ -1,0 +1,116 @@
+BulletPower,40
+BulletSpeed,6
+BulletGravity,0.485
+bulletFuse,1000000
+BlletSpreadDiffusion,1,1,0,0,0,0
+BlletSpread,4f
+ReloadTime,30
+RemainingBullet,1
+Attacking,0.0f
+Zoom,1.0f,1,1
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Cycle,4
+Texture,items/L16Mortar.png
+GunSound,handmadeguns.mortareighty,handmadeguns.mortareighty
+SoundSpeed,1f
+GunSoundReload,handmadeguns.null
+CanObj,true
+ObjModel,L16_81mm_mortar.mqo
+ObjTexture,L16_81mm_mortar.png
+BulletNameALL,81mmMortarShell
+ModelScala,1
+SimpleADSOffsetY,5,5,5
+ModelWidthX,5.06835,5.06835,5.06835
+SimpleADSOffsetZ,5,5,5
+ModelEquipped,-0.7F,-1.8,2.5
+OnEntity_PlayerPosOffset,0,0,0
+OnEntity_Yoffset,0
+Tabname,HMG_GVCGuns
+SprintingPoint,0.0f,-2.0f,0.0f
+Motion,0.01
+
+CustomFlash,CannonMuzzleFlash,1
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
+RenderCross,false
+UnderBarrelWeapon,0
+RightType,0
+Canfix,true
+FixAsEntity,true
+NeedFix,true
+UserOnBarrel,true
+Magazine,0,HandmadeGuns,81mmShell
+MagazineItemCount,1
+Cartridge,false
+DropMagazine,false
+guntype,2
+Explosion,8
+damagerange,16
+BlockDestory,false
+ModelArm,false
+OnEntity_BarrelPoint,0,0,0
+OnEntity_RotationPitchPoint,0,0,0
+Turretanglelimit,-45	,-87,360,-360
+ElevationOffsets,     -84 ,-80 , -75,-70 ,-60 ,-45
+elevationOffsets_info,50m ,90m , 130m,170m,250m,330m
+
+attachRestriction,true
+
+//パーツ追加開始
+
+AddParts,$body
+    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    RenderOnNormal
+    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    AddChildParts,$part0
+        AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+        AddYawInfoKey,-360,0,0,0,0,-360,0        ,360,0,0,0,0,360,0
+        AddPitchInfoKey,-360,0,0,0,-315,0,0        ,360,0,0,0,405,0,0
+
+        AddChildParts,$part0_0
+            AddPartsRotationCenterAndRotationAmount,0,4.1686,4.8362,0,0,0
+            RenderOnNormal
+            AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+            AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+            AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+            AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            AddPitchInfoKey,-360,0,0,0,630,0,0        ,360,0,0,0,-810,0,0
+
+            AddChildParts,$part0_1
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+        BackParts
+    BackParts
+
+
+
+
+Name,L16 Mortar
+restrictTurretMoveSpeed,4,4
+TurretHP,20
+GL,L16 Mortar
+
+//not sure what to do with this considering mcheli has mortars already too
+
+//Recipe1,  a
+//Recipe2, aa
+//Recipe3, bc
+//ItemA,minecraft,iron_ingot
+//ItemB,minecraft,iron_block
+//ItemC,minecraft,emerald
+//addNewRecipe,HandmadeGuns,L16 Mortar,1

@@ -1,0 +1,5 @@
+Texture,items/bullet_sub_dart.png
+Stack,1
+Name,Flechette Rounds
+BulletDart,Bullet_Dart
+addRecipe,Bullet_Dart,2,ab0,de0,000,331,339,0,339,289,0,0,0,0

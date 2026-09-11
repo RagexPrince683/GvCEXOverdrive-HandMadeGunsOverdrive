@@ -23,6 +23,7 @@ import littleMaidMobX.LMM_EntityLittleMaid;
 import littleMaidMobX.LMM_IEntityLittleMaidAvatarBase;
 import net.minecraft.block.Block;
 import net.minecraft.command.IEntitySelector;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -77,6 +78,15 @@ public class HMGItem_Unified_Guns extends Item {
 	public GunTemp guntemp = new GunTemp();
 	public FireTemp firetemp;
 	public HMGItem_Unified_Guns(){
+	}
+
+	/** Creative-tab stacks carry a real, full magazine state before the first tick. */
+	@Override
+	public void getSubItems(Item item, CreativeTabs tab, List stacks) {
+		ItemStack stack = new ItemStack(item, 1, 0);
+		checkTags(stack);
+		initializeInfiniteAmmo(stack);
+		stacks.add(stack);
 	}
 
 	//oh my god this class is fucking spaghetti hell
@@ -307,6 +317,9 @@ public class HMGItem_Unified_Guns extends Item {
 //					world.func_147451_t(xTile, yTile, zTile + 1);
 				}
 				checkTags(itemstack);
+				if (!world.isRemote && handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity)) {
+					initializeInfiniteAmmo(itemstack);
+				}
 				NBTTagCompound nbt = itemstack.getTagCompound();
 
 
@@ -1536,7 +1549,30 @@ public class HMGItem_Unified_Guns extends Item {
 		ltags.setInteger("Reload", 0x0000);
 		ltags.setBoolean("SeekerOpened",true);
 		ltags.setTag("Items", new NBTTagList());
+		ltags.setBoolean("HMGInfiniteAmmoInitialized", false);
 		return false;
+	}
+
+	/**
+	 * Creates the normal loaded-magazine NBT once for an infinite-ammo owner.
+	 * Firing still damages those stacks; only the normal reload commit supplies a
+	 * fresh marked magazine later.
+	 */
+	private void initializeInfiniteAmmo(ItemStack gunStack) {
+		checkTags(gunStack);
+		NBTTagCompound nbt = gunStack.getTagCompound();
+		if (nbt.getBoolean("HMGInfiniteAmmoInitialized")) return;
+		Item selectedMagazine = get_selectingMagazine(gunStack);
+		if (selectedMagazine != null) {
+			ItemStack[] magazines = new ItemStack[gunInfo.magazineItemCount];
+			for (int slot = 0; slot < magazines.length; slot++) {
+				magazines[slot] = handmadeguns.Util.HMGAmmoPolicy.suppliedMagazine(selectedMagazine);
+			}
+			set_loadedMagazineStack(gunStack, magazines);
+		}
+		if (!currentMagzine_has_roundOption(gunStack)) gunStack.setItemDamage(0);
+		nbt.setInteger("getcurrentMagazine", nbt.getInteger("get_selectingMagazine"));
+		nbt.setBoolean("HMGInfiniteAmmoInitialized", true);
 	}
 	protected boolean cycleBolt(ItemStack pItemstack) {
 		NBTTagCompound lnbt = pItemstack.getTagCompound();
@@ -2713,7 +2749,11 @@ public class HMGItem_Unified_Guns extends Item {
 //                            System.out.println("debug" + returnmagazineCount);
 			ItemStack[] itemStacks =  this.get_loadedMagazineStack(gunstack);
 			for(int i= 0;i<returnmagazineCount;i++) {
-				if(itemStacks[i] != null && !handmadeguns.Util.HMGAmmoPolicy.isSupplied(itemStacks[i])) {
+				if (itemStacks[i] == null || handmadeguns.Util.HMGAmmoPolicy.isSupplied(itemStacks[i])) {
+					// Virtual magazines never become inventory items or ejected entities.
+					continue;
+				}
+				{
 					if (gunInfo.dropMagEntity && HandmadeGunsCore.cfg_canEjectCartridge) {
 						HMGEntityBulletCartridge var8;
 						String magmodel = currentMagazine_magazineModel(gunstack);
@@ -2727,15 +2767,6 @@ public class HMGItem_Unified_Guns extends Item {
 					} else {
 						shooter.worldObj.spawnEntityInWorld(new EntityItem(shooter.worldObj, shooter.posX, shooter.posY, shooter.posZ, itemStacks[i]));
 					}
-				}else if(gunInfo.dropMagEntity && HandmadeGunsCore.cfg_canEjectCartridge){
-					HMGEntityBulletCartridge var8;
-					String magmodel = currentMagazine_magazineModel(gunstack);
-					if (magmodel == null) {
-						var8 = new HMGEntityBulletCartridge(shooter.worldObj, shooter, gunInfo.magType);
-					} else {
-						var8 = new HMGEntityBulletCartridge(shooter.worldObj, shooter, -1, magmodel);
-					}
-					shooter.worldObj.spawnEntityInWorld(var8);
 				}
 			}
 			this.detach_LoadedMagazine(gunstack);

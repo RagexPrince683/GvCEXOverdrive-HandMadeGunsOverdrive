@@ -1,0 +1,199 @@
+BulletPower,8
+BulletSpeed,5.7f
+BlletSpread,2.2f
+BlletSpreadDiffusion,2,0,1,0.5,4,0.5
+BulletGravity,0.485
+Class,1
+Recoil,20
+Recoil_sneaking,12
+ReloadTime,40
+RemainingBullet,2
+Attacking,6.0f
+Zoom,1.0f,2.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Texture,items/SG_sample.png
+GunSound,handmadeguns.m1900,null
+GunSoundReload,handmadeguns.reload
+//GunSoundCooking,handmadeguns.cooking
+CanObj,true
+ObjModel,m1900.mqo
+ObjTexture,m1900.png
+ModelScala,0.5f
+InworldScale,1.8f
+bulletFuse,16
+Bursts,1
+Rates,0
+
+Motion,0.95
+
+attachRestriction,true
+//allowattach,Bullet_Dart
+//allowattach,Bullet_Frag
+
+ModelEquipped,-0.5f,-0.45f,-0f
+SimpleADSOffsetX,0,0,0
+SimpleADSOffsetY,0.8,0.8,0.8
+SimpleADSOffsetZ,-0.2,-0.2,-0.2
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+
+SprintingPoint,0.2f,0.3f,-1.0f
+
+ModelArm,true
+ModelArmRotationR,-1.57f,-0.0f,-1.57f
+ModelArmOffsetR,0.35f,0.25f,0.0f
+ModelArmRotationL,-0.0f,-2.5f,2.0f
+ModelArmOffsetL,0.1f,0.3f,-0.8f
+
+Mat22,true
+Mat22Point,0.0f,1.5f,2.0f
+Mat22Rotation,90f,0f,0f
+Mat25Point,0.0f,0.3f,5.0f
+Mat25Rotation,0f,0f,0f
+//CockingTime,20
+ShotGun_Pellet,9
+
+AddParts,Sys_Zero_in
+	SetAsNormalParts
+	AddPartsRotationCenterAndRotationAmount,0,1.6798,5.8886,0,0,0
+
+	AddChildParts,Larm
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+			AddReloadMotionKey,0,0,0,0,0,0,0,            5,0,0,0,0,0,0
+			AddReloadMotionKey,5,0,0,0,0,0,0,            10,0,-2,-1,0,0,0
+			AddReloadMotionKey,10,0,-2,-1,0,0,0,         30,0,0,-1,0,0,0
+
+			AddReloadMotionKey,30,0,0   ,-1  ,0,0, 0,    38,0,1.25,0.2,0,0,90
+			AddReloadMotionKey,38,0,1.25,0.2,0,0,90,    41,0,1.25,0.2,0,0,90
+			AddReloadMotionKey,41,0,1.25,0.2,0,0,90,    45,0,1.25,0.2,0,0,90
+			AddReloadMotionKey,45,0,1.25,0.2,0,0,90,    50,0,0   ,0   ,0,0,0
+
+			AddReloadMotionKey,50,0,0   ,-1  ,0,0, 0,    55,0,1.25,0.2,0,0,90
+			AddReloadMotionKey,60,0,1.25,0.2,0,0,90,    65,0,1.25,0.2,0,0,90
+			AddReloadMotionKey,70,0,1.25,0.2,0,0,90,    75,0,1.25,0.2,0,0,90
+			AddReloadMotionKey,75,0,1.25,0.2,0,0,90,    80,0,0   ,0   ,0,0,0
+
+		BackParts
+		AddChildParts,Rarm
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+			AddReloadMotionKey,0,0,0,0,0,0,0,            80,0,0,0,0,0,0
+		BackParts
+
+		AddChildParts,mat22
+			AddPartsRotationCenterAndRotationAmount,0,1.41,2.17,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+	
+			AddReloadMotionKey,0,0,0,0,0,0,0,			5,0,0,0,0,0,0
+			AddReloadMotionKey,5,0,0,0,0,0,0,			15,0,0,0,40,0,0
+			AddReloadMotionKey,12,0,0,0,40,0,0,			65,0,0,0,40,0,0
+			AddReloadMotionKey,65,0,0,0,40,0,0,			75,0,0,0,0,0,0
+			//AddReloadMotionKey,75,0,0,0,0,0,0,			75,0,0,0,0,0,0
+			AddReloadMotionKey,75,0,0,0,0,0,0,			80,0,0,0,0,0,0
+	
+		BackParts
+
+	AddChildParts,mat1
+		SetAsNormalParts
+
+		
+	BackParts
+
+	AddChildParts,mat32
+       		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+       		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+       		RenderOnNormal
+       		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+       		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+       		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+       		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+       		AddReloadMotionKey,0,0,0,0,0,0,0,			5,0,0,0,0,0,0
+		AddReloadMotionKey,5,0,0,0,0,0,0,			15,0,0,0,0,0,0
+		AddReloadMotionKey,12,0,0,0,0,0,0,			65,0,0,0,0,0,0
+		AddReloadMotionKey,65,0,0,0,0,0,0,			75,0,0,0,0,0,0
+		//AddReloadMotionKey,75,0,0,0,0,0,0,			75,0,0,0,0,0,0
+		AddReloadMotionKey,75,0,0,0,0,0,0,			80,0,0,0,0,0,0
+       		underOnly_not
+    	BackParts
+
+	AddChildParts,mat3
+        	AddPartsRotationCenterAndRotationAmount,0,1.41,2.17,0,0,0
+        	RenderOnNormal
+        	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		//NeedDraw_Current_Magazine_ID_List,true
+		//AddReloadMotionKey,0 ,0,0,0,0,0,0,            5 ,0,0,0,0,0,0
+		//AddReloadMotionKey,5 ,0,0,0,0,0,0,            15,0,0,0,0,0,0
+		//AddReloadMotionKey,15,0,0,0,0,0,0,          30,0,0,0,0,0,0
+		//AddReloadMotionKey,30,0,0,0,0,0,0,          35,0,0,0,0,0,0
+		//AddReloadMotionKey,35,0,0,0,0,0,0,          45,0,0,0,0,0,0
+		//AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
+		//AddReloadMotionKey,55,0,0,0,0,0,0,          75,0,0,0,0,0,0
+		//AddReloadMotionKey,80 ,0,0,0,0,0,0,            80 ,0,0,0,0,0,0
+
+        	AddReloadMotionKey,0,0,0,0,0,0,0,			5,0,0,0,0,0,0
+		AddReloadMotionKey,5,0,0,0,0,0,0,			15,0,0,0,40,0,0
+		AddReloadMotionKey,12,0,0,0,40,0,0,			60,0,0,0,40,0,0
+		
+		AddReloadMotionKey,65,0,0,0,40,0,0,			75,0,0,0,0,0,0
+		
+		
+		AddReloadMotionKey,75,0,0,0,0,0,0,			80,0,0,0,0,0,0	
+	BackParts
+
+BackParts
+
+
+
+Mat25,true
+//CockedLeftHand,true
+//ALLCocked,true
+MagazineItemCount,2
+PerShellReload,true
+
+CartridgeType,3
+DropMagazine,false
+MagCount,1
+MagType,3
+Cartridge,true
+
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
+RenderCross,false
+RightType,1
+Automatic,false
+//Magazine,0,HandmadeGuns,bullet_shell_hmg
+
+MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_bird6
+//slugs not recommended
+
+Tabname,HMG_GVCGuns
+guntype,1
+GunSoundLV,161,1
+Unified_guns,Remington Model 1900
+
+//addRecipe,M870,1,abc,def,000,265,265,280,280,265,280,280,280,280
+//AR,M870
+

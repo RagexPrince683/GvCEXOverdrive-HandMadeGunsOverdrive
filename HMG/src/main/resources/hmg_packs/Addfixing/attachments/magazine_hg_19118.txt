@@ -1,0 +1,13 @@
+Texture,items/bullet_hg1911.png
+Stack,4
+BulletRound,8
+Tabname,HMG_Ammo
+Name,8 Rnd .45 ACP Box Magazine
+Magazine,bullet_hg_hmg19118
+Recipe1,aa 
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_hg_hmg19118,3

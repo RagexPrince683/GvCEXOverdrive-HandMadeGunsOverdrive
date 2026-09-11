@@ -1,0 +1,123 @@
+attachRestriction,true
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+BulletPower,15
+BulletSpeed,16.8f
+BulletSpread,0.5f
+Recoil,5.0d
+ReloadTime,50
+RemainingBullet,8
+Attacking,5.0f
+Zoom,1.4f,4.0f,8.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+
+Motion,0.93
+
+Cartridge,true
+Texture,items/m1garand.png
+SoundSpeed,1.2f
+GunSound,handmadeguns.garand308,handmadeguns.supu
+GunSoundReload,handmadeguns.a_clip
+GunSoundCooking,handmadeguns.a_cock
+CanObj,true
+ObjModel,M1garand.mqo
+ObjTexture,a_pallete1.png
+ModelScala,0.5f
+InworldScale,1.8f
+ModelEquipped,-0.3f,0.7f,-0.3f
+ModelHigh,1.27f,1.27f,1.27f
+SimpleADSOffsetX,0,0,0
+ModelWidthZ,0.0f,0.0f,0.0f
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+ModelArm,true
+ModelArmRotationR,-1.57f,0f,-1.57f
+ModelArmOffsetR,0.38f,0.5f,0.5f
+ModelArmRotationL,-0.0f,-2.3f,2.0f
+ModelArmOffsetL,0.2f,0.6f,-0.2f
+
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
+RenderCross,false
+Automatic,true
+Magazine,0,HandmadeGuns,308win bulletclip
+MagazineItemCount,1
+Tabname,HMG_WW2Guns
+
+AddParts,mat1
+	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+	RenderOnNormal
+	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+	AddReloadMotionKey,0,0,0,0,0,0,0,		5,0,0,0,0,0,0
+	AddReloadMotionKey,5,0,0,0,0,0,0,		15,0,0,0,0,0,30
+	AddReloadMotionKey,15,0,0,0,0,0,30,		30,0,0,0,0,0,30
+	AddReloadMotionKey,30,0,0,0,0,0,30,		35,0,0,0,0,0,0
+	AddReloadMotionKey,35,0,0,0,0,0,0,		45,0,0,0,0,0,0
+	AddReloadMotionKey,45,0,0,0,0,0,0,		50,0,0,0,0,0,0
+
+	AddChildParts,Larm
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+		AddReloadMotionKey,0 ,0  ,0  ,0   ,		0,0,0,	10,0.5,-4,-1.5,	0,0,0
+
+		AddReloadMotionKey,10,0.5,-4,-1.5,		0,0,0,	20,0  ,1.5,-1.5,	0,0,0
+		AddReloadMotionKey,20,0  ,1.5,-1.5,		0,0,0,	24,0  ,0.5,-1.5,	0,0,0
+		AddReloadMotionKey,24,0  ,0.5,-1.5,		0,0,0,	28,0  ,0.5,-1.5,	0,0,0
+		AddReloadMotionKey,28,0  ,0.5,-1.5,		0,0,0,	32,0  ,0  ,0   ,	0,0,0
+		AddReloadMotionKey,32,0,0,0,0,0,0,	50,0,0,0,0,0,0
+	BackParts
+	AddChildParts,Rarm
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,			34,0,0,0,0,0,0
+		AddReloadMotionKey,34,0,0,0,0,0,0,		38,-0.5,0.75,1,0,0,0
+		AddReloadMotionKey,38,-0.5,0.75,1,0,0,0,	41,-0.5,0.75,0.4,0,0,0
+		AddReloadMotionKey,41,-0.5,0.75,0.4,0,0,0,	45,-0.5,0.75,1,0,0,0
+		AddReloadMotionKey,45,-0.5,0.75,1,0,0,0,	48,0,0,0,0,0,0
+		AddReloadMotionKey,48,0,0,0,0,0,0,		50,0,0,0,0,0,0
+	BackParts
+	AddChildParts,mat9
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+	BackParts
+	AddChildParts,mat2
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		AddRecoilMotionKey,0,0,0,0,0,0,0,		5,0,0,-0.6,0,0,0
+		AddRecoilMotionKey,5,0,0,-0.6,0,0,0,		10,0,0,0,0,0,0
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,		38,0,0,0,0,0,0
+		AddReloadMotionKey,38,0,0,0,0,0,0,		41,0,0,-0.6,0,0,0
+		AddReloadMotionKey,41,0,0,-0.6,0,0,0,		45,0,0,0,0,0,0
+		AddReloadMotionKey,45,0,0,0,0,0,0,		50,0,0,0,0,0,0
+	BackParts
+
+GunSoundLV,165,1
+SR,M1 Garand (.308 Win)
+Name,M1 Garand (.308 Win)

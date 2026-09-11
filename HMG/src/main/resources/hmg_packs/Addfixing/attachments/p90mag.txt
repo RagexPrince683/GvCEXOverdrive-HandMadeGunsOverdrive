@@ -1,0 +1,16 @@
+Texture,items/p90mag.png
+Stack,1
+BulletRound,50
+Name,50 Rnd FN 5.7x28mm Detachable Box Magazine
+
+Tabname,HMG_Ammo
+
+CustomMagazine,p90mag
+
+Recipe1,aa 
+Recipe2,bba
+Recipe3,cca
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,p90mag,1

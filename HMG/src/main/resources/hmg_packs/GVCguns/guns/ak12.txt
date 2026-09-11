@@ -1,0 +1,205 @@
+BulletPower,8
+BulletSpeed,18
+BulletGravity,0.485
+
+BlletSpread,0.1f
+ADS_Spread_coefficient,0.1
+BlletSpreadDiffusion,3,0,0.9,0.2,3,0.4
+
+
+Recoil,3
+Recoil_sneaking,1.35
+
+ReloadTime,50
+
+RemainingBullet,30
+
+Attacking,6.0f
+Zoom,1.0f,1.0f,4.0f
+
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+
+Texture,items/AK74.png
+GunSound,handmadeguns.AK12,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CanObj,true
+ObjModel,ak12.mqo
+ObjTexture,ak12.png
+ModelScala,0.5f
+InworldScale,1.8f
+CustomFlash,arrow,1
+Bursts,-1,2,1,0
+Rates,1.713,1.713,1.713,1.713
+Cycle,1.9
+
+ElevationOffsets,	 0,-0.3,-0.6,-0.9,-1.35,-1.7,-2.2
+elevationOffsets_info,0,20m ,40m ,60m ,80m ,100m , 120m
+
+attachRestriction,true
+allowattach,attachmenttest
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+//allowattach,reddot
+//allowattach,scope
+//allowattach,byfrou01_Bayonet
+
+attachmentlocation1 = 0, 1.3, 1.65
+
+opticshift1,0,0.047,0
+
+//ModelEquipped,-0.7f,0.7f,-0.4f
+
+ModelEquipped,-0.3f,0.6f,-0.65f
+
+SimpleADSOffsetY,0.71715,0.862,0.85f
+SimpleADSOffsetX,-0,0,0
+
+SimpleADSOffsetZ,0.3,0.3,0.3
+
+//ModelWidthZ,0,0,0
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+
+ModelArm,true
+ModelArmRotationR,-1.07f,-0.63f,-1.57f
+ModelArmOffsetR,-0.12f,0.32f,0.2f
+ModelArmRotationL,-0.0f,-2.4f,2.0f
+ModelArmOffsetL,0.13f,0.31f,-0.3f
+
+
+//SprintingPoint,0.8f,0.0f,0.5f
+
+SprintingPoint,0.3f,0.0f,0.5f
+SprintingRotation,20f,60f,5f
+
+SoundSpeed,1f
+
+ScopeTexture,null.png,null.png,misc/scope_svd.png
+RenderCross,false
+
+//Magazine,0,HandmadeGuns,5.45mm magazine
+MultiMagazine,HandmadeGuns:5.45mm magazine,HandmadeGuns:5.45mm long magazine,HandmadeGuns:5.45mm casket magazine
+MagazineSG,0,HandmadeGuns,bullet_shell_hmg
+MagazineGL,0,HandmadeGuns,bullet_rr_hmg
+UseUnderGun'smodel,true
+UnderGunRotation,0,0,0
+UnderGunOffset,0f,0.6555f,5.5f
+
+AddParts,mat1
+	SetAsNormalParts
+	SetAttachmentAttach1
+	AddReloadMotionKey,0 ,0,0,0,0,0,0,		5 ,0,0,0,0,0,0
+	AddReloadMotionKey,5 ,0,0,0,0,0,0,		15,0,0,0,15,0,30
+	AddReloadMotionKey,15,0,0,0,15,0,30,		30,0,0,0,15,0,30
+	AddReloadMotionKey,30,0,0,0,15,0,30,		35,0,0,0,-15,-20,-80
+	AddReloadMotionKey,35,0,0,0,-15,-20,-80,	45,0,0,0,-15,-20,-80
+	AddReloadMotionKey,45,0,0,0,-15,-20,-80,	50,0,0,0,0,0,0
+	
+	AddChildParts,HandGuard
+		SetAsNormalParts
+	BackParts
+	AddChildParts,NormalWoodStock
+		SetAsNormalParts
+	BackParts
+	AddChildParts,barrelNormal
+		SetAsNormalParts
+	BackParts
+	AddChildParts,dustCover
+		SetAsNormalParts
+	BackParts
+	AddChildParts,Selector
+		SetAsNormalParts
+		AddPartsRotationCenterAndRotationAmount,0,0.8354,0.0678,0,0,0
+		
+		AddSomeMotion,0,	0,0,0,	0,0,0,		1,	0,0,0,	10,0,0,	1
+		AddSomeMotion,1,	0,0,0,	10,0,0,		2,	0,0,0,	12,0,0,	1
+		AddSomeMotion,2,	0,0,0,	12,0,0,		3,	0,0,0,	12,0,0,	1
+	BackParts
+
+	AddChildParts,Larm
+		SetAsNormalParts
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,			5,0,0,0,0,0,0
+		AddReloadMotionKey,5,0,0,0,0,0,0,			10,0,-2,-1,0,0,0
+		AddReloadMotionKey,10,0,-2,-1,0,0,0,		 30,0,0,-1,0,0,0
+
+		AddReloadMotionKey,30,0  ,0   ,-1,	0,0, 0,	38,0.2,1.4,-1,0,0,90
+		AddReloadMotionKey,38,0.2,1.4,-1,	0,0,90,	41,0.2,1.4,-2,	0,0,90
+		AddReloadMotionKey,41,0.2,1.4,-2,	0,0,90,	45,0.2,1.4,-1,	0,0,90
+		AddReloadMotionKey,45,0.2,1.4,-1,	0,0,90,	50,0,0,0		,0,0,0
+	BackParts
+	AddChildParts,Rarm
+		SetAsNormalParts
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,			50,0,0,0,0,0,0
+	BackParts
+	AddChildParts,mat4
+		SetAsNormalParts
+		attachpart
+		dot
+		reticleAndPlate
+	BackParts
+	AddChildParts,mat41
+		SetAsNormalParts
+		attachpart
+		dot
+	BackParts
+	AddChildParts,mat5
+		SetAsNormalParts
+		attachpart
+		scope
+	BackParts
+	AddChildParts,SYS_BAYONETBASE
+		SetAsNormalParts
+		attachpart
+		swordbase
+	BackParts
+	AddChildParts,mat3
+		SetAsNormalParts
+		NeedDraw_Current_Magazine_ID_List,true,false,false
+		AddReloadMotionKey,0,0,0,0,0,0,0,		   5,0,-5,-1,0,0,0
+		AddReloadMotionKey,5,false,		  10
+		AddReloadMotionKey,10,0,-2,-0.5,0,0,0,	  30,0,0,0,0,0,0
+		AddReloadMotionKey,30,0,0,0,0,0,0,		  50,0,0,0,0,0,0
+	BackParts
+	AddChildParts,LongMag
+		SetAsNormalParts
+	
+		AddReloadMotionKey,0,0,0,0,0,0,0,		   5,0,-5,-1,0,0,0
+		AddReloadMotionKey,5,false,		  10
+		AddReloadMotionKey,30,0,-2,-0.5,0,0,0,	  40,0,0,0,0,0,0
+		AddReloadMotionKey,40,0,0,0,0,0,0,		  75,0,0,0,0,0,0
+		NeedDraw_Current_Magazine_ID_List,false,true,false
+	BackParts
+	AddChildParts,Casket
+		SetAsNormalParts
+	
+		AddReloadMotionKey,0,0,0,0,0,0,0,		   5,0,-5,-1,0,0,0
+		AddReloadMotionKey,5,false,		  10
+		AddReloadMotionKey,30,0,-2,-0.5,0,0,0,	  40,0,0,0,0,0,0
+		AddReloadMotionKey,40,0,0,0,0,0,0,		  75,0,0,0,0,0,0
+		NeedDraw_Current_Magazine_ID_List,false,false,true
+	BackParts
+	AddChildParts,Bolt
+		SetAsNormalParts
+		AddRecoilMotionKey,0,0,0,0,0,0,0,		   5,0,0,-1.3,0,0,0
+		AddRecoilMotionKey,5,0,0,-1.30,0,0,0,	   10,0,0,0,0,0,0
+		AddRecoilMotionKey,10,0,0,0,0,0,0,	   12,0,0,0,0,0,0
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,		   38,0,0,0,0,0,0
+		AddReloadMotionKey,38,0,0,0,0,0,0,		  41,0,0,-1.30,0,0,0
+		AddReloadMotionKey,41,0,0,-1.30,0,0,0,	   45,0,0,0,0,0,0
+		AddReloadMotionKey,45,0,0,0,0,0,0,		  50,0,0,0,0,0,0
+	BackParts
+
+
+
+Tabname,HMG_GVCGuns
+Name,AK-12
+GunSoundLV,165,1
+AR,AK12
+
+//addRecipe,AR_sample,1,abc,0ef,000,265,265,265,280,265,280,280,280,280

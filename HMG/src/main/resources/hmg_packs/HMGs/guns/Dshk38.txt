@@ -1,0 +1,343 @@
+BulletPower,26
+BulletSpeed,8.6
+BulletGravity,0.485
+BlletSpread,12.5F
+ADS_Spread_coefficient,0.2
+BlletSpreadDiffusion,5,0,1.5,0.1,2,0.7
+Motion,0.1
+
+
+ElevationOffsets,     0,-0.4,-0.9,-1.3,-1.8,-2.2,-2.7,-3.2
+elevationOffsets_info,0,40m ,60m ,80m ,100m,120m,140m,160m
+sightOffset_zeroIn_setUp,8
+sightOffset_zeroIn_add,0,   0,0,0
+sightOffset_zeroIn_add,1,   0,-0.01148445,0
+sightOffset_zeroIn_add,2,   0,-0.0256844482,0
+sightOffset_zeroIn_add,3,   0,-0.03709810098,0
+sightOffset_zeroIn_add,4,   0,-0.05136255914,0
+sightOffset_zeroIn_add,5,   0,-0.06277136154,0
+sightOffset_zeroIn_add,6,   0,-0.07702799714,0
+sightOffset_zeroIn_add,7,   0,-0.09127876675,0
+
+SprintingPoint,0.0f,0f,0.2f
+SprintingRotation,-10f,0f,10f
+
+Recoil,5
+ReloadTime,150
+RemainingBullet,50
+Attacking,2.0f
+Zoom,1.0f,2.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Cycle,2
+Texture,items/Dshk38.png
+GunSound,handmadeguns.dshk,handmadeguns.dshk
+SoundSpeed,1f
+GunSoundReload,handmadeguns.reload
+CanObj,true
+ObjModel,DSHK38.mqo
+ObjTexture,DSHK.png
+ModelScala,0.5
+InworldScale,1.8f
+ModelHigh,0.35,-0.0087,0.35
+SimpleADSOffsetZ,3,3,3
+ModelEquipped,-0.5F,0.35,3.0
+Tabname,HMG_GVCGuns
+
+CustomFlash,CannonMuzzleFlash,3
+ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png
+RenderCross,false
+UnderBarrelWeapon,0
+RightType,0
+Canfix,true
+NeedFix,true
+FixAsEntity,true
+Magazine,0,HandmadeGuns,12.7mmx108mmBox
+ModelArm,true
+OnEntity_BarrelPoint,0,0.168,0.9
+OnEntity_RotationPitchPoint,0,0.11593,-0.12688
+Turretanglelimit,24,-85,360,-360
+
+attachRestriction,true
+allowattach,reddot
+allowattach,Bullet_AP
+
+OnEntity_Yoffset,1.5
+
+//繝代・繝・ｿｽ蜉髢句ｧ・
+
+AddParts,SYS_ALL_Base
+    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    RenderOnNormal
+    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    AddChildParts,Tripod
+        AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+        turretbase
+    BackParts
+
+    AddChildParts,Base
+        AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+        AddYawInfoKey,-360,0,0,0,0,-360,0        ,360,0,0,0,0,360,0
+
+        AddChildParts,MainBody
+            //繝代・繝・ｒ蝗櫁ｻ｢縺輔○繧倶ｸｭ蠢・→縲√ョ繝輔か繝ｫ繝医〒蝗櫁ｻ｢縺輔○繧句ｴ蜷医・險ｭ螳・
+            AddPartsRotationCenterAndRotationAmount,0,1.1593,-1.2688,0,0,0
+            //騾壼ｸｸ譎ゅ↓謠冗判縺吶ｋ縺・
+            RenderOnNormal
+            //ADS荳ｭ縺ｫ縺ｩ縺ｮ縺上ｉ縺・ｧｻ蜍輔☆繧九°縺ｨ縲√←縺ｮ縺上ｉ縺・屓霆｢縺吶ｋ縺・
+            AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+            //繝ｪ繧ｳ繧､繝ｫ荳ｭ縺ｫ縺ｩ縺ｮ縺上ｉ縺・ｧｻ蜍輔☆繧九°縺ｨ縲√←縺ｮ縺上ｉ縺・屓霆｢縺吶ｋ縺・Stg44縺ｮ謗定爾蜿｣闢九￥繧峨＞縺励°逕ｨ騾斐′諤昴＞縺､縺九↑縺・ゅ〒繧ゅ％繧後ｒ譖ｸ縺九↑縺・→縺昴ｂ縺昴ｂ謠冗判縺輔ｌ縺ｪ縺・
+            AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+            //繧ｳ繝・く繝ｳ繧ｰ荳ｭ縺ｫ(RY
+            AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+            //繝ｪ繝ｭ繝ｼ・・RY
+            AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            AddPitchInfoKey,-360,0,0,0,-360,0,0        ,360,0,0,0,360,0,0
+
+
+//			AddSomeMotion,0,0,0,0     ,0       ,0,0,      0,0,0,0     ,0       ,0,0,   0
+//			AddSomeMotion,0,0,0,0     ,-0.4    ,0,0,      1,0,0,0     ,-0.4    ,0,0,   0
+//			AddSomeMotion,1,0,0,0     ,-0.9    ,0,0,      2,0,0,0     ,-0.9    ,0,0,   0
+//			AddSomeMotion,2,0,0,0     ,-1.3    ,0,0,      3,0,0,0     ,-1.3    ,0,0,   0
+//			AddSomeMotion,3,0,0,0     ,-1.8    ,0,0,      4,0,0,0     ,-1.8    ,0,0,   0
+//			AddSomeMotion,4,0,0,0     ,-2.2    ,0,0,      5,0,0,0     ,-2.2    ,0,0,   0
+//			AddSomeMotion,5,0,0,0     ,-2.7    ,0,0,      6,0,0,0     ,-2.7    ,0,0,   0
+//			AddSomeMotion,6,0,0,0     ,-3.2    ,0,0,      7,0,0,0     ,-3.2    ,0,0,   0
+
+            //繝ｬ繧ｷ繝ｼ繝舌・
+            AddChildParts,Receiver
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                //繝ｪ繧ｳ繧､繝ｫ繝｢繝ｼ繧ｷ繝ｧ繝ｳ 10繧ｭ繝ｼ
+                //220蜑埼ｲ
+                AddRecoilMotionKey,0,0,0,0,0,0,0,           4,0,0,2.20,0,0,0
+                //荳迸ｬ菫昴▲縺ｦ
+                AddRecoilMotionKey,4,0,0,2.20,0,0,0,         6,0,0,2.20,0,0,0
+                //謌ｻ縺・
+                AddRecoilMotionKey,6,0,0,2.20,0,0,0,         10,0,0,0,0,0,0
+
+
+                AddReloadMotionKey,0,0,0,2.20,0,0,0,           130,0,0,2.20,0,0,0
+                AddReloadMotionKey,130,0,0,2.20,0,0,0,        150,0,0,0,0,0,0
+
+                AddChildParts,cartridge_Lever
+                    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+
+                    AddReloadMotionKey,0,false,           130
+                    AddReloadMotionKey,130,0,0,0,0,0,0,        150,0,0,0,0,0,0
+                BackParts
+            BackParts
+            //繝ｭ繝ｼ繝繝ｼ繝ｭ繝ｼ繝ｫ
+            AddChildParts,Loader
+                AddPartsRotationCenterAndRotationAmount,0,2.1957,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                //繝ｪ繧ｳ繧､繝ｫ繝｢繝ｼ繧ｷ繝ｧ繝ｳ 10繧ｭ繝ｼ
+                //蠕・ｩ・
+                AddRecoilMotionKey,0,0,0,0,0,0,0,           4,0,0,0,0,0,0
+                //45蠎ｦ蝗櫁ｻ｢
+                AddRecoilMotionKey,0,0,0,0,0,0,0,           4,0,0,0,0,0,45
+                AddRecoilMotionKey,4,0,0,0,0,0,45,         10,0,0,0,0,0,45
+                AddRecoilMotionKey,10,0,0,0,0,0,45,         20,0,0,0,0,0,45
+            BackParts
+            AddChildParts,Level
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+            AddChildParts,Barrel
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+            AddChildParts,Stock
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+            AddChildParts,Triggers
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+            AddChildParts,frontSight
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+
+                //繝√ぉ繝ｳ繝舌・闢・
+            AddChildParts,Dustcover
+                AddPartsRotationCenterAndRotationAmount,0,2.08f,-1.52f,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                //繝ｪ繝ｭ繝ｼ繝峨Δ繝ｼ繧ｷ繝ｧ繝ｳ
+                //髢区叛迥ｶ諷九〒菫晄戟縺輔ｌ繧・
+                AddReloadMotionKey,0,0,0,0,0,0,0,           10,0,0,0,0,0,0
+                AddReloadMotionKey,10,0,0,0,0,0,0,           25,0,0,0,90,0,0
+                AddReloadMotionKey,25,0,0,0,90,0,0,         125,0,0,0,90,0,0
+                AddReloadMotionKey,125,0,0,0,90,0,0,        140,0,0,0,0,0,0
+                AddReloadMotionKey,140,0,0,0,0,0,0,        150,0,0,0,0,0,0
+                AddChildParts,Larm
+                    AddPartsRotationCenterAndRotationAmount,0.21,0.8,2.5,0,0,0
+                    RenderOnNormal
+                    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                    AddReloadMotionKey,0,0,0,0,0,0,0,           10,0,0.8,-2.4,0,0,0
+                    AddReloadMotionKey,10,0,0.8,-2.4,0,0,0,          25,0,0.8,-2.4,-90,0,0
+                    AddReloadMotionKey,25,false,125
+                    AddReloadMotionKey,125,0,0.8,-2.4,-90,0,0,        140,0,0.8,-2.4,0,0,0
+                    AddReloadMotionKey,140,0,0.8,-2.4,0,0,0,        150,0,0,0,0,0,0
+                BackParts
+            BackParts
+
+            //繝弱・繝槭Ν繧ｵ繧､繝・
+            AddChildParts,RearSightBase
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+            BackParts
+            AddChildParts,RearSightLadder
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                attachpart
+                sight
+
+                AddChildParts,RearSight
+                    AddPartsRotationCenterAndRotationAmount,0,1.50f,2f,0,0,0
+                    RenderOnNormal
+                    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+					AddSomeMotion,0,0,0         ,0  ,0,0,0,   0,0,0         ,0  ,0,0,0,      0
+					AddSomeMotion,0,0,0.07650879,0  ,0,0,0,   1,0,0.07650879,0  ,0,0,0,   0
+					AddSomeMotion,1,0,0.17215616,0  ,0,0,0,   2,0,0.17215616,0  ,0,0,0,   0
+					AddSomeMotion,2,0,0.24869223,0  ,0,0,0,   3,0,0.24869223,0  ,0,0,0,   0
+					AddSomeMotion,3,0,0.34439730,0  ,0,0,0,   4,0,0.34439730,0  ,0,0,0,   0
+					AddSomeMotion,4,0,0.42099847,0  ,0,0,0,   5,0,0.42099847,0  ,0,0,0,   0
+					AddSomeMotion,5,0,0.51680860,0  ,0,0,0,   6,0,0.51680860,0  ,0,0,0,   0
+					AddSomeMotion,6,0,0.61269763,0  ,0,0,0,   7,0,0.61269763,0  ,0,0,0,   0
+                BackParts
+            BackParts
+            AddChildParts,AASight
+                AddPartsRotationCenterAndRotationAmount,0,1.50f,2f,0,0,0
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                attachpart
+                dot
+            BackParts
+            //蠑ｾ邂ｱ
+            AddChildParts,AmmoBox
+                AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+                //竊薙％繧後ｒ蜑翫ｋ縺ｨ謠冗判縺輔ｌ縺ｪ縺上↑繧九ゅ′縺励°縺怜ｭ舌ヱ繝ｼ繝・↓繧ょｽｱ髻ｿ縺悟・繧九・縺ｧ豕ｨ諢・
+                RenderOnNormal
+                AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                //繝ｪ繝ｭ繝ｼ繝峨Δ繝ｼ繧ｷ繝ｧ繝ｳ
+                AddReloadMotionKey,25,false,        40
+                AddReloadMotionKey,40,2,-1,0,0,0,0,            65,0,0.4,0,0,0,0
+                AddReloadMotionKey,65,0,0.4,0,0,0,0,          70,0,0,0,0,0,0
+                AddReloadMotionKey,70,0,0,0,0,0,0,          150,0,0,0,0,0,0
+
+                AddChildParts,Ammos
+                    AddPartsRotationCenterAndRotationAmount,0.78,1.80f,-3.32f,0,0,0
+                    RenderOnNormal
+                    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+                    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+                    //繝ｪ繝ｭ繝ｼ繝峨Δ繝ｼ繧ｷ繝ｧ繝ｳ
+                    AddReloadMotionKey,25,0,0,0,0,0,-40,          70,0,0,0,0,0,-40
+                    AddReloadMotionKey,70,0,0,0,0,0,-40,          110,0,0,0,0,0,0
+                    AddReloadMotionKey,110,0,0,0,0,0,0,          150,0,0,0,0,0,0
+                BackParts
+
+                //蠑ｾ蟶ｯ
+            //    AddChildParts,obj3
+            //        AddPartsRotationCenterAndRotationAmount,0.233,1.28,0,0,0,0
+            //        RenderOnNormal
+            //        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+            //        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+            //        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+            //        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+GunSoundLV,172,1
+            //        //蠑ｾ縺ｨ縺励※謠冗判縺吶ｋ縺九←縺・°縺ｨ縲∵緒逕ｻ縺吶ｋ譛螟ｧ蠑ｾ謨ｰ
+            //        Isbullet,true,13
+            //        AddPartsRenderAsBulletInf,0,0,0,0,0,0
+            //        AddBulletPositions,0,-0.3  ,0      ,0,0,0,90        ,4,0.1    ,0      ,0,0,0,90
+            //        AddBulletPositions,4,0.1   ,0      ,0,0,0,90        ,5,0.2    ,-0.03  ,0,0,0,45
+            //        AddBulletPositions,5,0.2   ,-0.03  ,0,0,0,45        ,6,0.26   ,-0.14  ,0,0,0,22.5
+            //        AddBulletPositions,6,0.26  ,-0.14  ,0,0,0,22.5      ,7,0.288  ,-0.25  ,0,0,0,0
+            //        AddBulletPositions,7,0.288 ,-0.25  ,0,0,0,0         ,13,0.288 ,-0.85  ,0,0,0,0
+            //    BackParts
+            BackParts
+        BackParts
+    BackParts
+
+BulletNameALL,12_7mmBullet_Green
+BulletNameCart,12_7mmCart
+BulletNameMAG,DSHKBulletBox
+
+Name,Heavy Machine Gun Dshk-38
+LMG,Dshk38
+
+
+

@@ -1,0 +1,5 @@
+Texture,items/BP_sample.png
+BPItemStack,4
+BPItems,SVD,AK74,AK74,PKM
+
+BP,BP_sample

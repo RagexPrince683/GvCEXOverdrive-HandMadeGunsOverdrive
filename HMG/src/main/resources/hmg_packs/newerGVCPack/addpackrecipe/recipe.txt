@@ -1,0 +1,11 @@
+//AddSmallRecipe
+//Slot1,{modid}:{itemname}
+//Slot2,{modid}:{itemname}:{metadata}
+//Slot4,{modid}:{itemname}
+//CraftItem,{modid}:{itemname}:{metadata}:{craftnum}
+//
+//AddShapelessRecipe
+//Slot1,{modid}:{itemname}
+//Slot2,{modid}:{itemname}:{metadata}
+//Slot3,{modid}:{itemname}
+//CraftItem,{modid}:{itemname}:{metadata}:{craftnum}

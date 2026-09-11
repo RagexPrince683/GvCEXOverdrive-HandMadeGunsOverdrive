@@ -5,6 +5,7 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
 import handmadeguns.items.HMGItemBullet_with_Internal_Bullet;
 import handmadeguns.client.render.HMGRenderItemCustom;
 import handmadeguns.pack.HMGPackAssetResolver;
+import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.model.IModelCustom;
@@ -110,6 +111,14 @@ public class HMGAddmagazine {
                     }
                     if(data[0].equals("END")){
                         HMGItemBullet_with_Internal_Bullet newmagazine = new HMGItemBullet_with_Internal_Bullet();
+						Item registered = GameRegistry.findItem("HandmadeGuns", Name);
+						if (registered != null) {
+							if (!(registered instanceof HMGItemBullet_with_Internal_Bullet)) {
+								System.err.println("[HMG] Ignoring incompatible magazine override for " + Name);
+								continue;
+							}
+							newmagazine = (HMGItemBullet_with_Internal_Bullet) registered;
+						}
                         newmagazine.setMaxStackSize(stacksize);
                         newmagazine.setMaxDamage(round);
                         newmagazine.setTextureName("handmadeguns:"+texture);
@@ -137,7 +146,7 @@ public class HMGAddmagazine {
                             ResourceLocation attachtexture = HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture));
                             MinecraftForgeClient.registerItemRenderer(newmagazine, new HMGRenderItemCustom(attach, attachtexture));
                         }
-                        GameRegistry.registerItem(newmagazine, Name);
+						if (registered == null) GameRegistry.registerItem(newmagazine, Name);
                     }
                 }
             }

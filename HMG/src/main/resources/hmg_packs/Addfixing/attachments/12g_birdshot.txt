@@ -1,0 +1,9 @@
+Texture,bullet_shell_hmg
+Stack,64
+Name,12 gauge birdshot
+BulletRound,1
+BulletPower,2
+BulletSpeed,4
+BulletSpread,3.24
+ShotGun_Pellet,24
+CustomMagazine,12g_birdshot

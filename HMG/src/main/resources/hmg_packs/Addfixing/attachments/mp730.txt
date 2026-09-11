@@ -1,0 +1,13 @@
+Texture,items/mp730.png
+Stack,3
+Tabname,HMG_Ammo
+BulletRound,30
+Name,30 Rnd HK 4.6x30mm Magazine
+Magazine,mp730
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,mp730,3

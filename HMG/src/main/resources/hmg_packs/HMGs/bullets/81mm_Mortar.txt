@@ -1,0 +1,9 @@
+FlyingSoundName,bombdrops
+FlyingSoundLV,4
+FlyingSoundSP,1
+FlyingSoundmaxdist,1024
+FlyingSound_BulletMinSpeed,0.5
+ObjModel,81mmMortarShell.mqo
+ObjTexture,81mmMortarShell.png
+Objscale,5
+Name,81mmMortarShell

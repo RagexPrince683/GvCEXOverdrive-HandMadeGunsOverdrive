@@ -1,0 +1,15 @@
+Texture,items/bullet_lmg.png
+Stack,1
+Name,200 Rnd .30-06 (7.62x63mm) Box
+BulletRound,200
+
+Tabname,HMG_Ammo
+
+CustomMagazine,7.62x63mmbox
+Recipe1,aab
+Recipe2,ccc
+Recipe3,bbb
+ItemA,HandmadeGuns,copperBlock
+ItemB,HandmadeGuns,steelIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,7.62x63mmbox,1

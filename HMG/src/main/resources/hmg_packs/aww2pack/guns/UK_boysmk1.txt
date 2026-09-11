@@ -1,0 +1,211 @@
+attachRestriction,true
+allowattach,Bullet_AP
+
+BulletPower,25
+//max 25 for mk2 but 18mm isnt enough to murder someone
+BulletSpeed,15.0f
+BlletSpread,1.4f
+BlletSpreadDiffusion,15,0,14,0.2,4,0.2
+Recoil,80.0d
+ReloadTime,80
+RemainingBullet,5
+Attacking,4.0f
+Motion,0.1d
+Zoom,1.8f,2.0f,16.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Texture,items/boysmk1.png
+GunSound,handmadeguns.boysat,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+GunSoundCooking,handmadeguns.cooking
+CanObj,true
+ObjModel,boysmk1.mqo
+ObjTexture,a_pallete.png
+ModelScala,0.5f
+InworldScale,1.8f
+
+ModelEquipped,-0.7f,0.7f,-0.2f
+ModelHigh,1.19f,0.85f,0.85f
+SimpleADSOffsetX,0,0,0
+SimpleADSOffsetY,0.61,0.61,0.61
+SimpleADSOffsetZ,0.0,0.0,0.0
+SprintingPoint,0.5f,-0.3f,0.5f
+//ModelWidthZ,-1.0f,0.0f,0.0f
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+
+ModelArm,true
+ModelArmRotationR,-1.57f,0f,-1.57f
+ModelArmOffsetR,0.2f,0.3f,0.5f
+ModelArmRotationL,-0.0f,-2.3f,2.0f
+ModelArmOffsetL,0.1f,0.4f,0.2f
+
+ScopeTexture,misc/scope.png,misc/reddot.png,misc/scope.png
+RenderCross,false
+RightType,1
+Automatic,false
+Magazine,0,HandmadeGuns,12.7mm Magazineboys
+CockingTime,40
+
+Tabname,HMG_WW2Guns
+
+
+AddParts,mat1
+	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+	RenderOnNormal
+	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+	AddCockMotionKey,0,0,0,0,0,0,0,		10,1,0,1,0,30,0
+	AddCockMotionKey,10,1,0,1,0,30,0,	30,1,0,1,0,30,0
+	AddCockMotionKey,30,1,0,1,0,30,0,	40,0,0,0,0,0,0
+
+	AddReloadMotionKey,0,0,0,0,0,0,0,		10,1,0,1,0,30,-10
+	AddReloadMotionKey,10,1,0,1,0,30,-10,		50,1,0,1,0,30,-10
+	AddReloadMotionKey,50,1,0,1,0,30,-10,		60,0,0,0,0,0,0
+
+	AddChildParts,SYS_BAYONETBASE
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		attachpart
+		swordbase
+	BackParts
+	AddChildParts,mat4
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		attachpart
+		dot
+	BackParts
+	AddChildParts,mat4_re
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		attachpart
+		dot
+	BackParts
+	AddChildParts,mat5
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		attachpart
+		scope
+	BackParts
+	AddChildParts,SYS_BAYONETBASE
+		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+		attachpart
+		swordbase
+	BackParts
+
+
+
+
+
+	AddChildParts,mat3
+		AddPartsRotationCenterAndRotationAmount,0,0,0.0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,	12,0,0,0,0,0,0
+		AddReloadMotionKey,12,0,0,0,0,0,0,	13,0,0.2,0,0,0,0
+		AddReloadMotionKey,13,0,0.2,0,0,0,0,	22,4,-2,0,0,0,0
+		AddReloadMotionKey,22,false,				24
+		AddReloadMotionKey,24,4,-2,0,0,0,0,	32,0,0.5,0,0,0,0
+		AddReloadMotionKey,32,0,0.5,0,0,0,0,	35,0,0,0,0,0,0
+		AddReloadMotionKey,35,0,0,0,0,0,0,	60,0,0,0,0,0,0
+
+
+		AddChildParts,Larm
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+			AddReloadMotionKey,0,0,0,0,0,0,0,		10,0,0,0,0,0,0
+			AddReloadMotionKey,10,0,0,0,0,0,0,		12,0,1,-2,0,0,0
+			AddReloadMotionKey,12,0,1,-2,0,0,0,		35,0,1,-2,0,0,0
+			AddReloadMotionKey,35,0,1,-2,0,0,0,		37,0,0,0,0,0,0
+			AddReloadMotionKey,37,0,0,0,0,0,0,		60,0,0,0,0,0,0
+		BackParts
+	BackParts
+	AddChildParts,mat2
+		AddPartsRotationCenterAndRotationAmount,-0.2144,0.9397,0,0,0,0
+		RenderOnNormal
+		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+		//コチE��ングモーション
+		AddCockMotionKey,0,0,0,0,0,0,0,		1,0,0,0,0,0,0
+		//ボルトを左に回して
+		AddCockMotionKey,1,0,0,0,0,0,0,		5,0,0,0,0,0,-90
+		//引いて
+		AddCockMotionKey,5,0,0,0,0,0,-90,		15,0,0,-1.6,0,0,-90
+		//排莢して
+		AddCockMotionKey,15,0,0,-1.6,0,0,-90,	20,0,0,-1.6,0,0,-90
+		//戻して
+		AddCockMotionKey,20,0,0,-1.6,0,0,-90,	31,0,0,0,0,0,-90
+		//戻ぁE
+		AddCockMotionKey,31,0,0,0,0,0,-90,	35,0,0,0,0,0,0
+
+		AddCockMotionKey,35,0,0,0,0,0,0,		40,0,0,0,0,0,0
+
+
+		AddReloadMotionKey,0,0,0,0,0,0,0,		1,0,0,0,0,0,0
+		AddReloadMotionKey,1,0,0,0,0,0,0,		5,0,0,0,0,0,-90
+		AddReloadMotionKey,5,0,0,0,0,0,-90,		15,0,0,-1.6,0,0,-90
+		AddReloadMotionKey,15,0,0,-1.6,0,0,-90,		40,0,0,-1.6,0,0,-90
+		AddReloadMotionKey,40,0,0,-1.6,0,0,-90,		51,0,0,0,0,0,-90
+		AddReloadMotionKey,51,0,0,0,0,0,-90,		55,0,0,0,0,0,0
+		AddReloadMotionKey,55,0,0,0,0,0,0,		60,0,0,0,0,0,0
+
+		AddChildParts,Rarm
+			AddPartsRotationCenterAndRotationAmount,0,0.7,0,0,0,0
+			RenderOnNormal
+			AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+			AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+			AddCockMotionKey,0,0,0,0,0,0,0,			1,-0.2,0.8,-0.7,0,0,0
+			AddCockMotionKey,1,-0.2,0.8,-0.7,0,0,0,		35,-0.2,0.8,-0.7,0,0,0
+			AddCockMotionKey,35,-0.2,0.8,-0.7,0,0,0,	40,0,0,0,0,0,0
+
+			AddReloadMotionKey,0,0,0,0,		0,0,0,	1,-0.2,0.8,-0.7,	0,0,0
+			AddReloadMotionKey,1,-0.2,0.8,-0.7,	0,0,0,	15,-0.2,0.8,-0.7,	0,0,0
+			AddReloadMotionKey,15,-0.2,0.8,-0.7,	0,0,0,	18,0,0.4,1.6,		0,0,90
+			AddReloadMotionKey,18,0,0.4,1.6,	0,0,90,	35,0,0.4,1.6,		0,0,90
+			AddReloadMotionKey,35,0,0.4,1.6,	0,0,90,	40,-0.2,0.8,-0.7,	0,0,0
+			AddReloadMotionKey,40,-0.2,0.8,-0.7,	0,0,0,	55,-0.2,0.8,-0.7,	0,0,0
+			AddReloadMotionKey,55,-0.2,0.8,-0.7,	0,0,0,	60,0,0,0,		0,0,0
+		BackParts
+	BackParts
+
+GunSoundLV,172,1
+AMR,Boys Anti-Tank Rifle Mk 1
+Name,Boys Anti-Tank Rifle Mk 1

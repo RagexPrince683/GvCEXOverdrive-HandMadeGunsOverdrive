@@ -1,0 +1,5 @@
+Texture,bullet_7.5cm_KwK_40_Ammo
+Stack,64
+Tabname,VehicleWeapons
+Name,7.5cm KwK 40 Ammo
+Magazine,7.5cm_KwK_40_Ammo

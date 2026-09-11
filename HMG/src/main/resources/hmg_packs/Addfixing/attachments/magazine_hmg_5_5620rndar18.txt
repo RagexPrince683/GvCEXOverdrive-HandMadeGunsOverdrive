@@ -1,0 +1,17 @@
+Texture,items/556bullet20.png
+Stack,3
+BulletRound,20
+Name,20 Rnd 5.56x45mm AR-18 Magazine
+//Magazine,5.56mm magazine
+
+Tabname,HMG_Ammo
+
+CustomMagazine,5.56mm magazine20ar18
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,5.56mm magazine20ar18,3

@@ -1,0 +1,127 @@
+attachRestriction,true
+BulletPower,6
+BulletSpeed,6.4f
+BlletSpread,3.0f
+Recoil,1.0d
+ReloadTime,30
+RemainingBullet,8
+Attacking,2.0f
+Zoom,1.0f,2.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,true
+ZoomRenderTypeTxture,false,false,false
+Texture,items/p38.png
+GunSound,handmadeguns.p38,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CanObj,true
+ObjModel,p38.obj
+ObjTexture,a_pallete1.png
+ModelScala,0.8f
+InworldScale,1.8f
+
+ModelEquipped,-0.7f,0.8f,-0.35f
+ModelHigh,1.36f,1.20f,1.20f
+ModelWidthX,0.694f,0.694f,0.694f
+ModelWidthZ,1.2f,1.2f,1.2f
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+
+SimpleADSOffsetX,0,0,0
+SimpleADSOffsetZ,0.8,0.8,0.8
+SimpleADSOffsetY,0.65,0.65,0.65
+
+ModelArm,true
+ModelArmRotationR,-1.57f,0f,-1.57f
+ModelArmOffsetR,0.38f,0.3f,0.2f
+ModelArmRotationL,-0.0f,-2.3f,2.0f
+ModelArmOffsetL,0.3f,0.5f,0.2f
+
+SprintingPoint,0.5f,0.0f,-0.2f
+SprintingRotation,-40f,0f,0f
+
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
+RenderCross,false
+RightType,0
+Magazine,0,HandmadeGuns,bullet_hg_hmgp38
+Tabname,HMG_WW2Guns
+
+AddParts,mat1
+    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    RenderOnNormal
+    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    AddReloadMotionKey,0,0,0,0,0,0,0,             5,0,0,0,0,0,0
+    AddReloadMotionKey,5,0,0,0,0,0,0,             10,0,0,0,-15,0,45
+    AddReloadMotionKey,10,0,0,0,-15,0,45,            25,0,0,0,-15,0,45
+    AddReloadMotionKey,25,0,0,0,-15,0,45,           30,0,0,0,0,0,0
+
+    AddChildParts,Larm
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	RenderOnNormal
+    	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    	AddReloadMotionKey,0,0,0,0,0,0,0,            5,0,0,0,0,0,0
+    	AddReloadMotionKey,5,0,0,0,0,0,0,            10,0,-2,-1,0,0,0
+    	AddReloadMotionKey,10,0,-2,-1,0,0,0,            15,0,-0.5,0,0,0,0
+
+    	AddReloadMotionKey,15,0,-0.5,0,0,0,0,           17,0,-0.5,0,0,0,0
+    	AddReloadMotionKey,17,0,-0.5,0,0,0,0,           20,0,0.75,-0.5,0,0,0
+    	AddReloadMotionKey,20,0,0.75,-0.5,0,0,0,           22,0,0.75,-0.9,0,0,0
+    	AddReloadMotionKey,22,0,0.75,-0.9,0,0,0,           24,0,0.75,-0.5,0,0,0
+    	AddReloadMotionKey,24,0,0.75,-0.5,0,0,0,           30,0,0,0,0,0,0
+    BackParts
+    AddChildParts,Rarm
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	RenderOnNormal
+    	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    	AddReloadMotionKey,0,0,0,0,0,0,0,            5,0,0,0,0,0,0
+    	AddReloadMotionKey,5,0,0,0,0,0,0,            25,0,0,0,0,0,0
+    	AddReloadMotionKey,25,0,0,0,0,0,0,           30,0,0,0,0,0,0
+    BackParts
+
+
+
+
+    AddChildParts,mat3
+        AddPartsRotationCenterAndRotationAmount,0,0,0.0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+    BackParts
+
+    AddChildParts,mat2
+        AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+        AddRecoilMotionKey,0,0,0,0,0,0,0,           5,0,0,-0.4,0,0,0
+        AddRecoilMotionKey,5,0,0,-0.40,0,0,0,       10,0,0,0,0,0,0
+        AddRecoilMotionKey,10,0,0,-0.40,0,0,0,       12,0,0,0,0,0,0
+
+        AddReloadMotionKey,0,0,0,0,0,0,0,        1,0,0,-0.4,0,0,0
+        AddReloadMotionKey,1,0,0,-0.4,0,0,0,        20,0,0,-0.4,0,0,0
+        AddReloadMotionKey,20,0,0,-0.4,0,0,0,       22,0,0,-0.4,0,0,0
+        AddReloadMotionKey,22,0,0,-0.4,0,0,0,       24,0,0,0,0,0,0
+        AddReloadMotionKey,24,0,0,0,0,0,0,          30,0,0,0,0,0,0
+    BackParts
+GunSoundLV,160,1
+HG,Walther P-38
+Name,Walther P-38

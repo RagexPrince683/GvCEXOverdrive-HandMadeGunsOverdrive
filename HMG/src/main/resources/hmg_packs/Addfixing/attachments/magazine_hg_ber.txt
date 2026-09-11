@@ -1,0 +1,13 @@
+Texture,items/bullet_hgber.png
+Stack,4
+Tabname,HMG_Ammo
+BulletRound,10
+Name,Limited 10 Rnd 9x19mm Parabellum Beretta Magazine
+Magazine,bullet_hg_hmgber
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,bullet_hg_hmgber,4

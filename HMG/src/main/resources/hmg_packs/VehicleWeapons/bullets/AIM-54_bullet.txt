@@ -1,0 +1,17 @@
+ObjModel,AIM-54.mqo
+ObjTexture,AIM-54.png
+Objscale,10
+FlyingSoundName,rocketFlying
+FlyingSoundLV,16
+FlyingSoundSP,1.4
+FlyingSoundmaxdist,128
+FlyingSound_BulletMinSpeed,0
+SmokeGlow,true
+EnableTrail,true
+TrailProbability,1
+TrailLength,600
+animationspeed,600
+TrailWidth,1
+Trailtexture,Vapour
+TrailGlow,false
+Name,AIM-54AAM

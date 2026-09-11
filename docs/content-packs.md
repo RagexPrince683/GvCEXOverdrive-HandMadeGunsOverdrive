@@ -8,6 +8,18 @@ Unified guns can instead use `BlockbenchModel,name.bbmodel` to import geometry, 
 
 ## Supported Pack Roots
 
+HMG Overdrive's maintained packs are included in the main mod JAR. At startup they
+are exposed through a private `handmadeguns_builtin/` cache solely because the
+legacy parsers consume files; that cache is regenerated from the JAR and is not an
+addon location. Installing the HMG JAR alone therefore includes the official guns,
+definitions, models, animations, textures, sounds, tabs, scripts, and recipes.
+
+Filesystem packs still load after the bundled baseline. A matching gun, compatible
+magazine/attachment, bullet identifier, or resource path in `handmadeguns_Packs/`
+intentionally overrides the bundled version; otherwise it adds content normally.
+The existing filesystem reload commands continue to reload those external packs and
+do not treat the bundled cache as editable content.
+
 Preferred path:
 
 ```text

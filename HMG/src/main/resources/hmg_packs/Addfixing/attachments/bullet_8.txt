@@ -1,0 +1,15 @@
+Texture,items/8bullet.png
+Stack,64
+Name,8mm Bullet
+BulletRound,1
+
+Tabname,HMG_Ammo
+
+CustomMagazine,8mm bullet
+
+//Recipe1,a  
+//Recipe2,b  
+//Recipe3,   
+//ItemA,minecraft,iron_ingot
+//ItemB,minecraft,gunpowder
+//addNewRecipe,HandmadeGuns,8mm bullet,5

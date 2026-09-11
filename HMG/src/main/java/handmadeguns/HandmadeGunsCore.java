@@ -38,6 +38,7 @@ import handmadeguns.gunsmithing.GunSmithTableTileEntity;
 import handmadeguns.items.*;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import handmadeguns.pack.HMGPackAssetResolver;
+import handmadeguns.pack.HMGBundledPackSource;
 import handmadeguns.network.HMGServerTaskQueue;
 import handmadeguns.world.HGWorldGen;
 import handmadeguns.world.HGWorldGenConfig;
@@ -326,6 +327,15 @@ public class HandmadeGunsCore {
 		FMLCommonHandler.instance().bus().register(this);
 		FMLCommonHandler.instance().bus().register(HMGServerTaskQueue.INSTANCE);
 		HMG_proxy.setuprender();
+		File bundledPackdir = null;
+		try {
+			bundledPackdir = HMGBundledPackSource.materialize(HMG_proxy.ProxyFile());
+			readPackResource(bundledPackdir, pEvent.getSide().isClient());
+			readPack(bundledPackdir, pEvent.getSide().isClient());
+			loadPackScripts(bundledPackdir, pEvent);
+		} catch (IOException failure) {
+			throw new RuntimeException("Cannot load bundled HMG Overdrive content", failure);
+		}
 		File packdir_normal = new File(HMG_proxy.ProxyFile(), "handmadeguns_Packs");
 		packdir_normal.mkdirs();
 		readPackResource(packdir_normal,pEvent.getSide().isClient());
@@ -409,6 +419,35 @@ public class HandmadeGunsCore {
 
 
 	}
+	/** Loads bundled scripts through the same pre-init contract as filesystem packs. */
+	private void loadPackScripts(File packdir, FMLPreInitializationEvent event) {
+		File[] packs = packdir.listFiles();
+		if (packs == null) return;
+		Arrays.sort(packs, FILE_NAME_COMPARATOR);
+		for (File pack : packs) {
+			if (!isHMGPack(pack)) continue;
+			for (String directory : new String[]{"addscripts", "scripts"}) {
+				File[] files = new File(pack, directory).listFiles();
+				if (files == null) continue;
+				Arrays.sort(files, FILE_NAME_COMPARATOR);
+				for (File scriptFile : files) {
+					if (!scriptFile.isFile()) continue;
+					try {
+						ScriptEngine script = SCRIPT_ENGINE_MANAGER.getEngineByName("js");
+						if (script == null) throw new IOException("No JavaScript engine is available");
+						if (script.toString().contains("Nashorn")) script.eval("load(\"nashorn:mozilla_compat.js\");");
+						script.eval(new FileReader(scriptFile));
+						try { ((Invocable) script).invokeFunction("preInit", event); }
+						catch (NoSuchMethodException ignored) { }
+						scripts.add((Invocable) script);
+					} catch (Exception failure) {
+						throw new RuntimeException("Script exec error: " + scriptFile, failure);
+					}
+				}
+			}
+		}
+	}
+
 	public void readPackResource(File packdir,boolean isClient){
 		long startNanos = System.nanoTime();
 		int copiedResources = 0;
@@ -465,7 +504,7 @@ public class HandmadeGunsCore {
 		try {
 			File instance = HMG_proxy.ProxyFile().getCanonicalFile();
 			File absolute = pack.getAbsoluteFile().toPath().normalize().toFile();
-			for (String directory : new String[]{"handmadeguns_Packs", "mods/handmadeguns/addgun"}) {
+			for (String directory : new String[]{HMGBundledPackSource.CACHE_DIRECTORY, "handmadeguns_Packs", "mods/handmadeguns/addgun"}) {
 				File root = new File(instance, directory);
 				if (absolute.getParentFile().equals(root)
 						&& root.getCanonicalFile().equals(root)
@@ -666,6 +705,11 @@ public class HandmadeGunsCore {
 		HGMetalBlocks.registerRecipes();
 		HGGunRecipes.init();
 		DeferredHMGRecipes.registerAll();
+		try {
+			readPackRecipe(HMGBundledPackSource.materialize(HMG_proxy.ProxyFile()));
+		} catch (IOException failure) {
+			throw new RuntimeException("Cannot load bundled HMG Overdrive recipes", failure);
+		}
 		readPackRecipe(new File(HMG_proxy.ProxyFile(), "handmadeguns_Packs"));
 		readPackRecipe(new File(HMG_proxy.ProxyFile(), "mods/handmadeguns/addgun"));
 		// Removal must precede application so a gun crafted with its currently applied skin removes it.

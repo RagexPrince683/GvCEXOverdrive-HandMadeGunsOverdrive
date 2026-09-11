@@ -1,0 +1,3 @@
+name,HMG_WW2Guns
+Icon,HandmadeGuns:Gewehr 98 (7.92x57mm Mauser)
+End

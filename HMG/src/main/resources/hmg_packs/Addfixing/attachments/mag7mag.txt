@@ -1,0 +1,17 @@
+Texture,items/bullet_hg_9mm15sig.png
+Stack,2
+BulletRound,5
+Tabname,HMG_Ammo
+Name,5 Rnd Mag-7 12 Gauge Buckshot Box Magazine
+Magazine,mag7mag
+
+//TEMPLATE
+
+Recipe1,   
+Recipe2,bb 
+Recipe3,cc 
+//ItemA,HandmadeGuns,7.62mm magazine 30Round
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,mag7mag,2
+

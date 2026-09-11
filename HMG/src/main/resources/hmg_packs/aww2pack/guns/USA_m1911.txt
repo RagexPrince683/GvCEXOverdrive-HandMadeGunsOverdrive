@@ -1,0 +1,133 @@
+attachRestriction,true
+BulletPower,7
+BulletSpeed,5.0f
+BlletSpread,1.0f
+Recoil,7d
+Recoil_sneaking,4
+ReloadTime,30
+RemainingBullet,7
+Attacking,2.0f
+Zoom,1.0f,2.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,true
+ZoomRenderTypeTxture,false,false,false
+Texture,items/m1911.png
+GunSound,handmadeguns.1911,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CanObj,true
+ObjModel,m1911.obj
+ObjTexture,a_pallete1.png
+ModelScala,0.5f
+InworldScale,2f
+
+ModelEquipped,-0.7f,0.7f,-0.2f
+ModelHigh,1.36f,1.20f,1.20f
+SimpleADSOffsetX,0,0,0
+SimpleADSOffsetZ,0.7,0.7,0.7
+SimpleADSOffsetY,0.43,0.43,0.43
+//ModelWidthZ,1.2f,1.2f,1.2f
+ModelRotationX,180f,180f,180f
+ModelRotationY,45f,45f,45
+ModelRotationZ,180f,180f,180f
+
+ModelArm,true
+ModelArmRotationR,-1.57f,0f,-1.57f
+ModelArmOffsetR,0.38F,0.28F,0.45F
+ModelArmRotationL,-0.0f,-2.3f,2.0f
+ModelArmOffsetL,0.1f,0.53F,0.18F
+
+SprintingPoint,0.5f,-0.4f,-0.1f
+SprintingRotation,-40f,0f,0f
+
+ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
+RenderCross,false
+RightType,0
+MultiMagazine,HandmadeGuns:bullet_hg_hmg19117,HandmadeGuns:bullet_hg_hmg19118
+
+//Magazine,0,HandmadeGuns:bullet_hg_hmg19117
+//todo
+
+
+//HandmadeGuns:bullet_hg_hmg19118,HandmadeGuns:bullet_hg_hmg19119,HandmadeGuns:bullet_hg_hmg191110,HandmadeGuns:bullet_hg_hmg191112
+
+Tabname,HMG_WW2Guns
+
+AddParts,mat1
+    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    RenderOnNormal
+    AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    AddReloadMotionKey,0,0,0,0,0,0,0,             5,0,0,0,0,0,0
+    AddReloadMotionKey,5,0,0,0,0,0,0,             10,0,0,0,-15,0,45
+    AddReloadMotionKey,10,0,0,0,-15,0,45,            25,0,0,0,-15,0,45
+    AddReloadMotionKey,25,0,0,0,-15,0,45,           30,0,0,0,0,0,0
+
+    AddChildParts,Larm
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	RenderOnNormal
+    	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    	AddReloadMotionKey,0,0,0,0,0,0,0,            5,0,0,0,0,0,0
+    	AddReloadMotionKey,5,0,0,0,0,0,0,            10,0,-2,-1,0,0,0
+    	AddReloadMotionKey,10,0,-2,-1,0,0,0,            15,0,-0.5,0,0,0,0
+
+    	AddReloadMotionKey,15,0,-0.5,0,0,0,0,           17,0,-0.5,0,0,0,0
+    	AddReloadMotionKey,17,0,-0.5,0,0,0,0,           20,0,0.75,-0.5,0,0,0
+    	AddReloadMotionKey,20,0,0.75,-0.5,0,0,0,           22,0,0.75,-0.9,0,0,0
+    	AddReloadMotionKey,22,0,0.75,-0.9,0,0,0,           24,0,0.75,-0.5,0,0,0
+    	AddReloadMotionKey,24,0,0.75,-0.5,0,0,0,           30,0,0,0,0,0,0
+    BackParts
+    AddChildParts,Rarm
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+    	RenderOnNormal
+    	AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+    	AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+
+    	AddReloadMotionKey,0,0,0,0,0,0,0,            5,0,0,0,0,0,0
+    	AddReloadMotionKey,5,0,0,0,0,0,0,            25,0,0,0,0,0,0
+    	AddReloadMotionKey,25,0,0,0,0,0,0,           30,0,0,0,0,0,0
+    BackParts
+
+
+
+
+    AddChildParts,mat3
+        AddPartsRotationCenterAndRotationAmount,0,0,0.0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+    BackParts
+
+    AddChildParts,mat2
+        AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+        RenderOnNormal
+        AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+        AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+        AddRecoilMotionKey,0,0,0,0,0,0,0,           5,0,0,-0.4,0,0,0
+        AddRecoilMotionKey,5,0,0,-0.40,0,0,0,       10,0,0,0,0,0,0
+        AddRecoilMotionKey,10,0,0,-0.40,0,0,0,       12,0,0,0,0,0,0
+
+        AddReloadMotionKey,0,0,0,0,0,0,0,        1,0,0,-0.4,0,0,0
+        AddReloadMotionKey,1,0,0,-0.4,0,0,0,        20,0,0,-0.4,0,0,0
+        AddReloadMotionKey,20,0,0,-0.4,0,0,0,       22,0,0,-0.4,0,0,0
+        AddReloadMotionKey,22,0,0,-0.4,0,0,0,       24,0,0,0,0,0,0
+        AddReloadMotionKey,24,0,0,0,0,0,0,          30,0,0,0,0,0,0
+    BackParts
+GunSoundLV,164,1
+HG,WW2 M1911
+Name,WW2 M1911

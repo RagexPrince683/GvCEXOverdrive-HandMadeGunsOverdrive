@@ -1,0 +1,18 @@
+Texture,items/223bulletclip.png
+Stack,1
+Name,4 Rnd .308 Winchester Clip
+BulletRound,4
+
+Tabname,HMG_Ammo
+
+CustomMagazine,308 Remington clip
+
+Recipe1,a  
+Recipe2,bb 
+Recipe3,cc 
+ItemA,HandmadeGuns,steelIngot
+ItemB,HandmadeGuns,copperIngot
+ItemC,minecraft,gunpowder
+addNewRecipe,HandmadeGuns,308 Remington clip,1
+
+

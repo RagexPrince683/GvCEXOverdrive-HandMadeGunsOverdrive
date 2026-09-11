@@ -1,0 +1,17 @@
+Texture,items/bullet_shell_slug.png
+Stack,16
+BulletRound,1
+Tabname,HMG_Ammo
+BulletPower,31
+BlletSpread,0.2f
+ShotGun_Pellet,1
+candoorbreach,true
+Name,12 Gauge Slug Shotshell
+Magazine,bullet_shell_slug
+Recipe1,aaa
+Recipe2,bbb
+Recipe3,c  
+ItemA,HandmadeGuns,copperIngot
+ItemB,minecraft,gunpowder
+ItemC,HandmadeGuns,steelIngot
+addNewRecipe,HandmadeGuns,bullet_shell_slug,8

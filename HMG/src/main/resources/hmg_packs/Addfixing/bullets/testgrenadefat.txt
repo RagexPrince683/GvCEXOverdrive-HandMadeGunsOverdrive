@@ -1,0 +1,3 @@
+ObjModel,atgrenadescale.mqo
+ObjTexture,atgrenade.png
+Name,atgrenade

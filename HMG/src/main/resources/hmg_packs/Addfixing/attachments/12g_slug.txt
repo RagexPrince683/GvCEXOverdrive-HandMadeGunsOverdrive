@@ -1,0 +1,10 @@
+Texture,bullet_shell_hmg
+Stack,64
+Name,12 gauge slug
+BulletRound,1
+BulletPower,14
+BulletSpeed,5
+BulletSpread,0.015
+ShotGun_Pellet,1
+candoorbreach,true
+CustomMagazine,12g_slug
