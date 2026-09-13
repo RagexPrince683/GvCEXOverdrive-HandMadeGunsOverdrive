@@ -1,45 +1,63 @@
-# Handmade Guns Command Reference
+# Handmade Guns Overdrive Command Reference
 
-HMG registers the following server commands.
+HMG registers server commands for players and administrators plus development reload commands on the Forge client command handler.
 
-## `/reloadSettings`
-
-| Property | Value |
-| --- | --- |
-| Class | `handmadeguns.command.HMG_CommandReloadparm` |
-| Permission level | `0` |
-| Usage string | Source returns `null` |
-| Registration | Server command; also registered with Forge client command handler |
-
-Reloads gun definition files from `handmadeguns_Packs`, then calls the HMG proxy model setup. It is useful during pack development, but a full restart is still recommended for release/server validation because not every resource, recipe, registry, or server/client state is guaranteed to behave like a clean startup.
+| Command | Availability | Permission | Purpose |
+| --- | --- | ---: | --- |
+| `/hmgmanual` | Server | 0 | Report optional Field Manual integration status |
+| `/hmg infiniteammo [true\|false]` | Server | 2 | Toggle or set the global infinite-ammunition policy |
+| `/reloadSettings` | Server and client | 0 | Reload external gun and attachment settings after invalidating reloadable model caches |
+| `/reloadsettingsnomodel` | Server and client | 0 | Reload external gun and attachment settings while retaining the current model caches |
+| `/reloadsetonlyhelditem` | Client only | 0 | Reload the model for the local player's held HMG item |
 
 ## `/hmgmanual`
 
-| Property | Value |
-| --- | --- |
-| Class | `handmadeguns.command.HMG_CommandManual` |
-| Permission level | `0` |
-| Usage string | `/hmgmanual` |
-| Registration | Server command |
-
-Reports the optional HMG Field Manual state:
+Reports one of the following optional Guide-API Field Manual states:
 
 - Disabled by `GuideBook.enableHMGGuideBook=false`.
-- Guide-API missing.
-- Registered successfully.
+- Guide-API is missing.
+- The manual registered successfully.
 - Registration failed.
-- Registration pending.
-
-## Permissions
-
-The legacy reload/manual commands return permission level `0` in source. On public servers, use your server wrapper, permissions plugin, or command-filtering tooling if you do not want all players to run them.
+- Registration is still pending.
 
 ## `/hmg infiniteammo [true|false]`
 
-Server-only command, permission level **2** (operator/admin or console). `/hmg infiniteammo` toggles infinite ammo for **all players**. `/hmg infiniteammo true` enables it and `/hmg infiniteammo false` disables it explicitly. Creative always grants infinite ammo, even when the global setting is false.
+This is a server-only administrator command with permission level **2**.
 
-The setting applies across dimensions to current players and future logins. It defaults to false and persists with the saved world's overworld gamerule `hmgInfiniteAmmo`, using Minecraft's existing save lifecycle. There is no client packet for changing it. Old per-player `PlayerPersisted.HMGInfiniteAmmo` flags are no longer consulted; disabling the global setting restores normal consumption for every non-Creative player.
+- `/hmg infiniteammo` toggles the current global setting.
+- `/hmg infiniteammo true` enables it explicitly.
+- `/hmg infiniteammo false` disables it explicitly.
 
-Infinite ammo supplies the selected ammunition at normal reload completion without taking reserve ammunition or magazines from inventory. Loaded rounds still deplete: magazine capacity, per-shell timing/interruption, chambering, bolt state, rate of fire, recoil, projectiles and sounds retain their existing paths. Reload restrictions still apply. No reserve stack is required. Disabling the override restores consumption on subsequent reloads; already loaded rounds are retained. Weapon durability and consumption of disposable weapon items are not bypassed.
+The setting applies to all players across dimensions and to future logins. It defaults to false and persists in the world's overworld gamerule `hmgInfiniteAmmo`. Creative players always receive infinite ammunition regardless of this setting.
 
-Supplied loaded magazine stacks carry `HMGInfiniteSupply` solely to prevent them becoming collectible duplicates on ejection (including after disabling the override or transferring the gun). This marker is not an entitlement. Existing real magazines still use their normal return path. Hand-filling a custom magazine also respects the infinite-ammo policy.
+Infinite ammo supplies the selected ammunition through the normal reload flow without consuming reserves. Loaded rounds still deplete, and magazine capacity, per-shell timing, interruption, chambering, bolt state, recoil, projectiles, sounds, and weapon durability keep their normal behavior.
+
+Virtual supplied magazines carry `HMGInfiniteSupply` so they cannot become collectible duplicates when removed or ejected. That marker is not an entitlement and does not make a transferred weapon permanently infinite.
+
+## External-Pack Reload Commands
+
+These commands operate on filesystem packs under `handmadeguns_Packs/`. They do not make the generated `handmadeguns_builtin/` cache an editable pack source.
+
+### `/reloadSettings`
+
+Invalidates reloadable model resources, rereads registered external gun and attachment settings, rebuilds the model setup, and synchronizes the reloaded server weapon-mobility policy where applicable.
+
+Use this after changing an external gun model, Blockbench project, model texture, animation definition, or render settings.
+
+### `/reloadsettingsnomodel`
+
+Rereads registered external gun and attachment settings without first invalidating the current model caches. Use it for settings that do not require a model resource replacement, such as inventory scale or offset tuning.
+
+### `/reloadsetonlyhelditem`
+
+This client-only development command reloads the model for the local player's currently held item. It reports an error when the sender is not a player, nothing is held, or the item has no reloadable HMG model.
+
+## Reload Boundaries
+
+The reload commands are development conveniences, not a complete replacement for a clean restart. They do not promise to rebuild every registry entry, pack recipe, script, creative tab, sound registration, or client/server state exactly as startup would.
+
+Use a full client and server restart before release validation or after structural pack changes.
+
+## Permissions
+
+`/reloadSettings`, `/reloadsettingsnomodel`, and `/hmgmanual` return permission level `0` in source. On a public server, restrict the reload commands with a command filter, permissions layer, or server wrapper if ordinary players should not invoke them.

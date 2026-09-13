@@ -1,65 +1,106 @@
 # Getting Started with Handmade Guns Overdrive
 
-This guide introduces the actively maintained `HMG/` module: Handmade Guns Overdrive.
+This guide covers installation and first use of the actively maintained `HMG/` module.
 
-## 1. Install HMG
+## Install HMG
 
-Install on both client and server:
+Install the following on both the client and server:
 
 1. Minecraft 1.7.10.
 2. Forge 10.13.4.1614.
-3. Handmade Guns Overdrive (`HandmadeGuns`).
-4. Any content packs required by your world or server.
-5. Optional: Guide-API if you want the HMG Field Manual item.
+3. The same Handmade Guns Overdrive release JAR.
+
+The release JAR includes the maintained official HMG content and a vecmath runtime fallback. You do not need a separate official asset archive or vecmath JAR.
 
 Start the game once to generate `config/HandmadeGuns.cfg`.
 
-## 2. Review Controls
+### Optional external packs
 
-HMG registers key bindings under the `HandmadeGuns` category. Defaults found in source include:
+Additional and server-specific packs belong in:
+
+```text
+<instance>/handmadeguns_Packs/<PackName>/
+```
+
+Install gameplay definitions on both sides and keep server-required pack versions synchronized. External packs load after the bundled content, allowing compatible definitions and resources to add to or override the bundled baseline.
+
+The generated `handmadeguns_builtin/` directory is a private runtime cache. Do not install packs there or edit it.
+
+## Review Controls
+
+HMG registers its bindings under the `HandmadeGuns` category. Several legacy defaults overlap, so review them before playing seriously.
 
 | Action | Default |
 | --- | --- |
-| Reload Magazine | `R` |
-| Fire AttachedGun | `F` |
-| ADS_Key | mouse button `-100` / left-click style binding in the legacy key system; with `cfg_Swap_Fire_And_ADS_Keys=true`, it defaults to mouse button `-99` / right-click style binding. |
-| Gun Prepare Modification Key | Left Alt |
+| Reload magazine | `R` |
+| Fire attached gun | `F` |
+| ADS | Legacy mouse binding; affected by `cfg_Swap_Fire_And_ADS_Keys` |
+| Prepare gun modification | Left Alt |
 | Attachment GUI | `X` |
-| Change Magazine Type | `B` |
-| Fix Gun | `H` |
-| Gun Settings Modification | unbound |
-| Zero in: Increase | `Y` |
-| Zero in: Reset | `H` |
-| Zero in: Decrease | `N` |
-| Seeker Open/Close | `C` |
-| Cycle Selector | `F` |
-| Pickup HMG Gun | `P`; right click also picks up a targeted dropped gun |
+| Change magazine type | `B` |
+| Fix gun | `H` |
+| Gun settings modification | Unbound |
+| Increase zero | `Y` |
+| Reset zero | `H` |
+| Decrease zero | `N` |
+| Seeker open/close | `C` |
+| Cycle selector | `F` |
+| Inspect | Unbound |
+| Pick up HMG gun | `P`; targeted right click also works |
 
-Because several defaults overlap, review and rebind keys before playing seriously.
+## First-Use Workflow
 
-## 3. Learn the Core Items
+1. Open a Creative test world or connect with the server's required packs installed.
+2. Confirm that HMG's creative tabs contain guns, magazines, ammunition, attachments, and crafting components.
+3. Select a gun and verify its accepted ammunition and attachments in the tooltip.
+4. Review reload, ADS, fire-selector, magazine-switching, and attachment controls.
+5. If testing native Blockbench content, check first person, ADS, third person, inventory, firing, and both tactical and empty reloads.
 
-HMG adds:
+Creative-tab unified guns begin with a normally loaded magazine. Shots still consume the loaded rounds; Creative or the global administrator override supplies ammunition during reload without creating collectible virtual magazines.
 
-- **Gun Smithing Table** for the GUI crafting system.
-- **Crafting materials** such as Polymer, Steel Ingot, Copper Ingot, Aluminum Ingot, and Iron-Carbon Alloy.
-- **Gun parts** such as firing pins, trigger assemblies, receivers, bolt assemblies, barrel kits, AR parts, feed modules, launcher components, stock/optic mounts, and wood furniture.
-- **Gun racks / item holders** for displaying or storing guns.
-- **Pack-defined guns, magazines, bullets, and attachments** loaded from content packs.
+## Survival and Crafting
 
-## 4. First Survival Workflow
+HMG includes the Gun Smithing Table, crafting materials, metal ores, gun parts, and pack-defined recipes. A typical pack can require you to:
 
-1. Mine or acquire metals and standard vanilla materials.
-2. Craft Polymer from slime ball + reeds.
-3. Use HMG metal and part recipes to make receiver/barrel/assembly components.
-4. Craft or obtain a Gun Smithing Table.
-5. Use the table or pack recipes to craft compatible guns, magazines, ammunition, and attachments.
-6. Match ammunition to the gun's content-pack definition.
+1. Gather vanilla and HMG materials.
+2. Craft receivers, barrels, firing components, furniture, or other required parts.
+3. Use the Gun Smithing Table or ordinary recipes supplied by the active pack.
+4. Craft a compatible gun, magazine, ammunition, and attachments.
 
-## 5. Optional Manual Pickup
+Exact progression is pack-defined. See [Content packs](content-packs.md) for the data layout and recipe system.
 
-Manual gun pickup is enabled by default, so dropped HMG guns are not picked up just by walking over them. Look at the dropped gun and press `Pickup HMG Gun`, default `P`, or right click. A prompt above the hotbar shows the current pickup binding and targeted gun. Servers can require line of sight and can set the pickup range.
+## Dropped-Gun Pickup
 
-## 6. Use the Field Manual When Available
+Manual gun pickup is enabled by default. Walking over a dropped HMG gun does not collect it. Look at the gun and press the pickup binding, default `P`, or right click it within the configured range.
 
-If Guide-API is installed and `GuideBook.enableHMGGuideBook=true`, HMG registers an in-game Field Manual. Run `/hmgmanual` to confirm whether the manual is enabled, missing Guide-API, registered, failed, or pending.
+Servers control the allowed distance, line-of-sight requirement, and whether the rule applies only to guns. See [Configuration reference](configuration-reference.md#manualgunpickup).
+
+## Optional Field Manual
+
+Guide-API is optional. When it is installed and `GuideBook.enableHMGGuideBook=true`, HMG registers an in-game Field Manual. Run `/hmgmanual` to see whether the integration is disabled, missing, registered, failed, or still pending.
+
+## Troubleshooting
+
+### Guns, magazines, or assets are missing
+
+Confirm that the required external pack is an immediate child of `handmadeguns_Packs/` and is installed on both sides. Check the log for rejected paths, missing resources, incompatible identifier collisions, or parse failures.
+
+### A gun will not fire
+
+Confirm that the gun has compatible ammunition or a compatible loaded magazine, is not broken, and is not blocked by its setup, sprint, reload, or bolt state. Review the fire-selector, reload, magazine-type, gun-fixing, and attachment bindings.
+
+### Explosions are damaging terrain
+
+Set `Gun.cfg_blockdestroy=false` in `HandmadeGuns.cfg` where server terrain protection takes priority. Individual projectile behavior can still have additional limits described by its pack definition.
+
+### Dropped guns do not pick up automatically
+
+This is the default manual-pickup policy. Target the gun and use the pickup key or right click it, or set `ManualGunPickup.enableManualGunPickup=false` to restore normal walk-over pickup for affected HMG items.
+
+## Next Steps
+
+- Players: [Command reference](command-reference.md)
+- Server owners: [Server administration](server-administration.md)
+- Pack creators: [Content packs](content-packs.md)
+- Blockbench and animation creators: [Animation and Blockbench authoring](animation-authoring.md)
+- Problems or unsupported behavior: [Known limitations](known-limitations.md)
