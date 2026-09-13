@@ -50,7 +50,7 @@ other renderer, and requires no Angelica-specific dependency.
 ### Client and Server Requirements
 
 - Install Handmade Guns Overdrive on **both the client and server**. The mod registers gameplay items, blocks, entities, GUIs, sounds, networking, and content-pack resources.
-- Release jars carry HMG's vecmath runtime fallback and load it only when the Forge classloader does not already provide `javax.vecmath`; a separate vecmath jar is not required on a dedicated server.
+- Release jars carry HMG's vecmath runtime fallback and attach it directly to HMG's existing Forge `LaunchClassLoader` during coremod initialization when `javax.vecmath` is absent. The availability check uses a class resource lookup to avoid LaunchWrapper's failed-class cache; client and dedicated-server startup do not depend on the thread context or system classloader. A separate vecmath jar is not required.
 - Clients and servers should use matching HMG config and content packs. Mismatched gun, magazine, bullet, or attachment definitions can cause missing items, unusable weapons, or disconnects.
 - Client-only render options still belong in the generated config, but gameplay-affecting options should be treated as server policy.
 

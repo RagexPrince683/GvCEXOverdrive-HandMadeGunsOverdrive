@@ -5,12 +5,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import net.minecraft.launchwrapper.LaunchClassLoader;
 
 /** Uses Forge's existing ASM runtime; no Mixin or Combatives dependency. */
 @IFMLLoadingPlugin.MCVersion("1.7.10")
@@ -36,13 +34,17 @@ public final class HMGJumpCorePlugin implements IFMLLoadingPlugin {
     @Override
     public String getAccessTransformerClass() { return null; }
 
-    private static void ensureVecmath(Map<String, Object> data) {
+    private static synchronized void ensureVecmath(Map<String, Object> data) {
         ClassLoader loader = HMGJumpCorePlugin.class.getClassLoader();
-        try {
-            Class.forName("javax.vecmath.Vector3d", false, loader);
+        // A failed load poisons LaunchClassLoader.invalidClasses, even after addURL.
+        // Resource lookup does not populate that cache. Use HMG's defining loader
+        // on both launch paths, never the context/system loader or a child loader.
+        if (loader.getResource("javax/vecmath/Vector3d.class") != null) {
+            verifyVecmath(loader);
             return;
-        } catch (ClassNotFoundException missing) {
-            // The release jar carries a private fallback for environments without vecmath.
+        }
+        if (!(loader instanceof LaunchClassLoader)) {
+            throw new IllegalStateException("HMG cannot attach bundled vecmath: its defining loader is not LaunchClassLoader");
         }
 
         Object location = data.get("coremodLocation");
@@ -68,18 +70,26 @@ public final class HMGJumpCorePlugin implements IFMLLoadingPlugin {
                 }
             }
 
-            if (!(loader instanceof URLClassLoader)) {
-                throw new IllegalStateException("HMG requires a URL-capable Forge classloader for bundled vecmath");
+            try (JarFile library = new JarFile(extracted)) {
+                if (library.getJarEntry("javax/vecmath/Vector3d.class") == null) {
+                    throw new IOException("Bundled vecmath jar does not contain javax/vecmath/Vector3d.class");
+                }
             }
-            Method addUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            addUrl.setAccessible(true);
-            addUrl.invoke(loader, extracted.toURI().toURL());
-            Class.forName("javax.vecmath.Vector3d", false, loader);
+            ((LaunchClassLoader) loader).addURL(extracted.toURI().toURL());
+            verifyVecmath(loader);
         } catch (Exception failure) {
             if (extracted != null) {
                 extracted.delete();
             }
-            throw new IllegalStateException("HMG could not load its bundled vecmath runtime", failure);
+            throw new IllegalStateException("HMG could not extract or attach META-INF/libraries/vecmath-1.5.2.jar to its Forge classloader", failure);
+        }
+    }
+
+    private static void verifyVecmath(ClassLoader loader) {
+        try {
+            Class.forName("javax.vecmath.Vector3d", false, loader);
+        } catch (ClassNotFoundException | LinkageError failure) {
+            throw new IllegalStateException("HMG's vecmath runtime is corrupt or inaccessible to its Forge classloader", failure);
         }
     }
 }
