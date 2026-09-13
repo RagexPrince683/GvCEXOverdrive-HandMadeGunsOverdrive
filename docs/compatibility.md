@@ -1,5 +1,15 @@
 # Compatibility Notes
 
+This document records maintained cross-mod and rendering behavior. These integrations are optional unless a server or pack explicitly depends on the other mod.
+
+## Angelica and Celeritas rendering
+
+HMG parses models during Forge initialization but creates model display lists, VBOs, and Blockbench texture uploads lazily on the first normal render. This avoids issuing rendering or texture-manager work before Angelica has entered a managed render frame or before Minecraft has constructed its texture manager.
+
+OBJ and MQO display-list compilation uses model-local Tessellators instead of the global renderer singleton. Inventory, NEI, held, and world-gun rendering therefore does not interrupt a Tessellator drawing session owned by Angelica/Celeritas or another renderer.
+
+The VBO renderer scopes and restores the caller's client-array state, array-buffer binding, and matrix mode. This applies to normal HMG rendering as well as compatibility renderers such as NEI. The behavior does not require a hard Angelica dependency, and disabling `Render.enableVBOModelRendering` retains the legacy display-list fallback.
+
 ## Combatives camera and aim recoil
 
 ### Authoritative point of aim

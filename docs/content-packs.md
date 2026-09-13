@@ -4,9 +4,35 @@ HMG is pack-driven. Content packs can add guns, magazines, bullets, attachments,
 
 Optional named JSON animations can drive the existing HMG gun parts without replacing OBJ/MQO models. See [Animation authoring](animation-authoring.md) for `Animations,name.json`, units, transitions, events, the example asset, and legacy compatibility.
 
-Unified guns can instead use `BlockbenchModel,name.bbmodel` to import geometry, bone parts, embedded PNG textures and animations directly from a Blockbench project. No OBJ export, `AddParts` declarations or separate animation JSON is needed. The checked-in `GVCguns/guns/AKM_Blockbench.txt` and `GVCguns/models/cod4_ak.bbmodel` provide a complete AK example. See [direct Blockbench importing](animation-authoring.md#direct-blockbench-projects) for the supported formats, TaCZ action aliases and limitations.
+Unified guns can instead use `BlockbenchModel,name.bbmodel` to import geometry, bone parts, embedded PNG textures and animations directly from a Blockbench project. No OBJ export, `AddParts` declarations or separate animation JSON is needed. The checked-in `GVCguns/guns/AKM_Blockbench.txt` and `GVCguns/models/cod4_ak.bbmodel` provide a complete AK example. See [native Blockbench importing](animation-authoring.md#native-blockbench-projects) for the supported formats, TaCZ action aliases and limitations.
 
-## Supported Pack Roots
+## Quick Start
+
+Create an immediate child directory beneath `handmadeguns_Packs/`, add at least a `guns/` directory, and keep every referenced asset inside that same pack:
+
+```text
+handmadeguns_Packs/MyPack/
+  guns/my_rifle.txt
+  models/my_rifle.bbmodel
+```
+
+Inside the normal gun TXT definition, select the native project before the final `Unified_guns,...` line:
+
+```text
+BlockbenchModel,my_rifle.bbmodel
+```
+
+The `.bbmodel` file supplies presentation geometry and animations. The TXT definition remains the authority for weapon gameplay, ammunition, timing, attachments, and balance.
+
+## Pack Sources and Precedence
+
+| Order | Source | Purpose |
+| ---: | --- | --- |
+| 1 | Bundled `hmg_packs/` resources materialized to `handmadeguns_builtin/` | Read-only official baseline shipped inside the JAR |
+| 2 | `handmadeguns_Packs/<PackName>/` | Maintained external pack and override location |
+| 3 | `mods/handmadeguns/addgun/<PackName>/` | Legacy compatibility location |
+
+Later compatible definitions and resources can replace earlier ones. Incompatible identifier collisions are rejected rather than silently replacing a different item type.
 
 HMG Overdrive's maintained packs are included in the main mod JAR. At startup they
 are exposed through a private `handmadeguns_builtin/` cache solely because the
@@ -20,7 +46,7 @@ intentionally overrides the bundled version; otherwise it adds content normally.
 The existing filesystem reload commands continue to reload those external packs and
 do not treat the bundled cache as editable content.
 
-Preferred path:
+Preferred external path:
 
 ```text
 handmadeguns_Packs/<PackName>/

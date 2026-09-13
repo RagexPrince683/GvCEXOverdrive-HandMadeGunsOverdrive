@@ -1,8 +1,17 @@
-# Optional named animations (Phase A)
+# Animation and Blockbench Authoring
 
-Minecraft Forge 1.7.10 / Java 8. This adds a clip/controller layer over HMG's existing rigid gun parts. OBJ/MQO and Phase A JSON remain supported. Direct Blockbench importing creates parts and clips for the same runtime and uses the existing VBO/display-list mesh renderer. Gun gameplay is unchanged.
+HMG-Overdrive supports two animation-authoring workflows on Minecraft Forge 1.7.10 and Java 8. Both use the same client-side clip/controller runtime and leave gun gameplay under the existing HMG TXT and server logic.
 
-## Direct Blockbench projects
+## Choose a Workflow
+
+| Workflow | Use it when | Gun directive |
+| --- | --- | --- |
+| Native Blockbench project | The `.bbmodel` contains the gun geometry, bones, embedded texture, positioning nodes, and animations | `BlockbenchModel,name.bbmodel` |
+| Named animation JSON | An existing OBJ/MQO gun already has HMG parts and needs additional rigid-part clips | `Animations,name.json` |
+
+Native Blockbench importing creates HMG parts and clips directly from the project. No OBJ/MQO export, `AddParts` declarations, or separate animation JSON is required. Named JSON adds clips to existing HMG parts and does not create geometry or hierarchy.
+
+## Native Blockbench Projects
 
 For a unified gun, place the native project inside the pack and add this before `Unified_guns,...`:
 
@@ -20,7 +29,7 @@ Supported input is `.bbmodel` format 4.x/5.x with `bedrock`, `bedrock_old`, or `
 
 Project parsing and PNG decoding occur during HMG pack loading, but embedded textures are uploaded lazily on the first item render. Forge 1.7.10 invokes mod pre-initialization before Minecraft constructs its texture manager, so model construction must remain free of texture-manager and OpenGL work.
 
-Declared animation lengths remain authoritative: keys after the end remain available as interpolation control points, without extending action duration. `once`, `loop` and `hold` map to Phase A playback; a zero-duration loop becomes a constant hold pose. Sound/particle/timeline keys become `blockbench_sound`, `blockbench_particle`, or `blockbench_timeline` presentation events with their data-point JSON as payload. Effect keys beyond the declared duration are not dispatched. The importer does not execute scripts or open author-machine sound paths.
+Declared animation lengths remain authoritative: keys after the end remain available as interpolation control points, without extending action duration. `once`, `loop` and `hold` map to the shared animation runtime; a zero-duration loop becomes a constant hold pose. Sound/particle/timeline keys become `blockbench_sound`, `blockbench_particle`, or `blockbench_timeline` presentation events with their data-point JSON as payload. Effect keys beyond the declared duration are not dispatched. The importer does not execute scripts or open author-machine sound paths.
 
 For imported rigs, `Gunparts_offsetScale` scales geometry, bone offsets and animated translations together, without multiplying the scale again at each hierarchy level. `ModelScala` remains the outer model scale. Legacy OBJ/MQO scaling is unchanged.
 
@@ -66,15 +75,15 @@ The four root groups are `camera`, `root`, `views` and `positioning`. Under `roo
 
 The AK uses position/rotation/scale channels, linear/Catmull–Rom interpolation, 79 split keys, and sound markers. Seventeen individual components are newline-only zero expressions. Some cubic control keys extend past the declared duration. There are no Bezier/easing, global-rotation or quaternion-interpolation channels in this fixture. TaCZ's reference `default_state_machine.lua`, `ak47_state_machine.lua`, `BedrockAnimatedModel`, `BedrockGunModel` and hand functional renderers establish the action and marker conventions; the AK's `reload_dry` additionally needs the alias above.
 
-### Current limits
+### Blockbench Limits
 
-Mesh/armature/billboard geometry, cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions are rejected with diagnostics. Animation controllers/Lua, particle playback, external sound playback, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows Phase A layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the project import instead of silently producing a partial weapon.
+Mesh/armature/billboard geometry, cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions are rejected with diagnostics. Animation controllers/Lua, particle playback, external sound playback, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the project import instead of silently producing a partial weapon.
 
 Compilation and CPU audits do not prove visual acceptance. First-person fire/reload/inspect comparisons, UV orientation, player arms, hidden magazine variants, inventory/third-person views, resource reload, VBO/display-list/Angelica rendering and dedicated-server startup still require runtime validation.
 
-Validation performed on the reference AK: Java 8 compilation and the existing 74 Phase A checks passed. An in-memory numerical comparison of 31,260 component samples across 154 channels against the reference keyframe sampler agreed within 1.14e-13; all 14 declared durations were preserved. Independent ZYX matrix calculations checked all 99 parent links and 8,048 vertices/UVs across 2,012 imported textured faces, with maximum position error 2.97e-8 HMG units. These checks produced no additional repository test infrastructure.
+The original reference-AK implementation audit passed Java 8 compilation and its then-current 74 animation checks. An in-memory numerical comparison of 31,260 component samples across 154 channels against the reference keyframe sampler agreed within 1.14e-13; all 14 declared durations were preserved. Independent ZYX matrix calculations checked all 99 parent links and 8,048 vertices/UVs across 2,012 imported textured faces, with maximum position error 2.97e-8 HMG units. Later playback and reload work expanded the same suite; see the [changelog](../CHANGELOG.md) for the historical check counts.
 
-## Setup
+## Named Animation JSON for OBJ/MQO Guns
 
 Put a UTF-8 JSON file inside your content pack:
 
@@ -94,7 +103,7 @@ The directive is case-sensitive and uses the existing comma syntax (not `=`). Pa
 
 No directive means the original animation path, unchanged. Missing files, invalid JSON, unsupported versions, or unknown parts disable the new definition for that gun and log a diagnostic; other guns continue loading. Remove the directive and reload to return to legacy playback.
 
-## First moving bolt
+### Minimal Moving-Bolt Example
 
 The gun must already declare an HMG part named `bolt` using its existing part definitions. JSON does not create mesh groups or part hierarchy. Use the part's `partsname`, not the gun/item name. See the existing `AddParts`/`AddChildParts` definitions in your pack. Names are case-sensitive; multiple HMG instances with the same part name receive the same local track. The part's existing state visibility, attachment conditions, magazine conditions, pivot and parent remain in effect.
 
@@ -134,7 +143,7 @@ Place them before gun registration. Do not duplicate parts that your gun already
 
 The [complete example](examples/animations/foundation.json) includes `idle`, `fire`, `reload`, and `inspect`, bolt and magazine tracks, fades, and presentation markers. It is an opt-in development example, not installed on any production gun. Copy it into a test pack with matching part names (or rename its tracks). Its displacement scale and 2.4-second reload are illustrative; choose values and durations appropriate to your gun.
 
-## Format version 1
+### Format Version 1
 
 | Field | Meaning / default |
 | --- | --- |
@@ -153,7 +162,7 @@ The [complete example](examples/animations/foundation.json) includes `idle`, `fi
 
 Unknown fields are ignored, allowing author metadata and future optional extensions. Required fields and known optional fields must have valid types. JSON comments, trailing commas, duplicate object keys, NaN, infinity, and numeric strings are not accepted. Keyframe/event indices in diagnostics are zero-based. Simultaneous event times are valid and preserve array order.
 
-## Coordinates and interpolation
+### Coordinates and Interpolation
 
 - **Time:** seconds of client simulation time, derived from completed client ticks plus Minecraft render partial ticks at 20 ticks/second. No 60-FPS assumption. Pausing an integrated game pauses the animation clock. Server/world simulation stalls are not replaced with wall-clock animation time.
 - **Position:** existing HMG part-local model units, multiplied by the existing `gunPartsScale`. There is no automatic pixels-to-blocks or Blockbench conversion. `+X/+Y/+Z` are the same mesh-local axes used by legacy HMG motion, transformed by the parent and the existing model/world/first-person matrices. Mirrored model setup can change their apparent screen direction.
@@ -165,7 +174,9 @@ Unknown fields are ignored, allowing author metadata and future optional extensi
 
 Legacy TXT time scales, recoil frames, cock/reload tick units, angle wrapping choices, render flags and motion interval boundaries are not reinterpreted. `LegacyMotionAdapter` calls the existing evaluators, copies their shared scratch output immediately, and contributes transforms to the same pose mixer. Guns without JSON bypass that adapter entirely.
 
-## Playback and transitions
+## Runtime Behavior and Extension API
+
+### Playback and Transitions
 
 Each instance has BASE, ACTION and ADDITIVE layers. BASE and ACTION replace the channels of named tracks; ADDITIVE adds six transform components to the result. Absent tracks inherit the lower layer or the current legacy transform. These are rigid-part offsets, not skeletal animation masks.
 
@@ -190,7 +201,7 @@ The inspect key is **unbound by default**, configurable under HandmadeGuns in Co
 
 `holster`, `bolt`, `cock`, `inspect_empty`, and arbitrary custom clips can also be requested through the client API. Automatic holster-before-unequip scheduling is not added: vanilla can stop rendering the stack immediately on a switch.
 
-## Presentation events and extension API
+### Presentation Events
 
 `HMGAnimationEvent` is posted on the **client Forge event bus**, with stack, owner (when an entity exists), render context, source, clip, marker name/data, generation and loop cycle. Consumers must filter context: a preview/other-player instance is distinct from first person. No default consumer spawns casings, sounds, particles, muzzle flashes or changes visibility in this foundation. Subscribe to supply such presentation behavior. This avoids duplicating HMG's existing effects.
 
@@ -207,9 +218,9 @@ AnimationClient.request(stack, owner, IItemRenderer.ItemRenderType.EQUIPPED_FIRS
 
 This returns whether a request was queued, not whether its later priority check succeeds. It is consumed on the next eligible root render, and rechecked against current gun reload/cock/shot state. Use the common `AnimationController` API for direct playback operations in a separately owned presentation context. Both APIs must be called on their owning thread; the HMG client integration runs on the client thread.
 
-Ordinary requests for the already-active clip are idempotent. The overload with a final `boolean restart` explicitly retriggers a discrete action; automatic shots retain that behavior. A transition captures the evaluated immutable pose before changing layers, including back-to-back requests without a render in between. ADS is still a presentation transition rather than an automatically requested Phase A clip. Imported models use that progress to blend `idle_view` to `iron_view`; both Blockbench render passes consume the same value.
+Ordinary requests for the already-active clip are idempotent. The overload with a final `boolean restart` explicitly retriggers a discrete action; automatic shots retain that behavior. A transition captures the evaluated immutable pose before changing layers, including back-to-back requests without a render in between. ADS is a presentation transition rather than an automatically requested named clip. Imported models use that progress to blend `idle_view` to `iron_view`; both Blockbench render passes consume the same value.
 
-## Ownership, reload and limitations
+### Ownership, Reload, and Limitations
 
 Definitions and keyframes are shared immutable data. Playback is a weak stack-keyed client registry, further distinguished by owner, render context and under-gun slot path. No elapsed time, event cursor or controller is stored in a model or item definition. GUI preview copies use the real stack plus GUI identity; nested under-guns use the parent stack/path because their stacks are reconstructed from NBT. Mounted render calls supply their owner identity. Scopes restore their predecessor in `finally`, so nested rendering does not replace the outer animation scope.
 
