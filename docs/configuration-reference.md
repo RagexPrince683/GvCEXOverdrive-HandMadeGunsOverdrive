@@ -1,6 +1,10 @@
 # Handmade Guns Overdrive Configuration Reference
 
-## Per-ammunition door breaching
+This reference covers two related configuration surfaces: directives authored inside content packs and the generated `config/HandmadeGuns.cfg` file. For pack roots and basic layouts, start with [Content packs](content-packs.md).
+
+## Content-pack directives
+
+### Per-ammunition door breaching
 
 `CustomMagazine` ammunition can opt a projectile into close-range wooden-door breaching:
 
@@ -10,7 +14,7 @@ candoorbreach,true
 
 The lowercase key defaults to `false` when omitted. An enabled projectile opens a wooden door only when it directly impacts the door no more than three blocks from its firing origin. Iron and other metal doors are never opened. Because the value belongs to the ammunition item, a gun can alternate between ordinary buckshot and door-breaching slugs without changing its gun configuration.
 
-## Content-pack attachment models
+### Attachment models and placement
 
 Attachment TXT files may opt into a real model item/rendered attachment with:
 
@@ -193,9 +197,11 @@ magnification independently of `ZoomRender`, `ZoomRenderType`, and
 channel value of `1.0` therefore intentionally means no magnification; invalid,
 non-positive, NaN, or infinite magnification values safely resolve to `1.0`.
 
+## Generated configuration
+
 The active config file is generated from the `HandmadeGuns` mod id, usually as `config/HandmadeGuns.cfg`. Defaults below are read directly from `HMG/src/main/java/handmadeguns/HandmadeGunsCore.java`.
 
-## `Gun`
+### `Gun`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
@@ -213,7 +219,7 @@ The active config file is generated from the `HandmadeGuns` mod id, usually as `
 | `cfg_KnockBack` | double | `0.05` | Default horizontal knockback coefficient. |
 | `cfg_KnockBackY` | double | `0.01` | Default vertical knockback coefficient. |
 
-## `Render`
+### `Render`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
@@ -224,14 +230,14 @@ The active config file is generated from the `HandmadeGuns` mod id, usually as `
 | `enableVBOModelRendering` | boolean | `true` | Client-side: uses OpenGL VBOs for HMG OBJ model groups when possible. HMG scopes and restores the caller's array-buffer, client-array pointer/enable, and matrix-mode state around each model draw, including under fixed-function compatibility renderers. Disable to force legacy display-list rendering. |
 | `cfg_Flash` | boolean | `true` | Enables flash render effects. |
 
-## `Cartridge`
+### `Cartridge`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `cfg_canEjectCartridge` | boolean | `true` | Enables ejected cartridge entities/effects. |
 | `cfg_Cartridgetime` | integer | `200` | Cartridge lifetime/fuse value in ticks. |
 
-## `ManualGunPickup`
+### `ManualGunPickup`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
@@ -241,13 +247,13 @@ The active config file is generated from the `HandmadeGuns` mod id, usually as `
 | `manualGunPickupOnlyGuns` | boolean | `true` | Restricts manual pickup to HMG gun items. If false, other HandmadeGuns items may also use it; non-HMG items are not affected. |
 | `enableGunGroundPhysicsRender` | boolean | `false` | Client-side: renders supported dropped HMG guns with a flatter physical-looking ground orientation. |
 
-## `GuideBook`
+### `GuideBook`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `enableHMGGuideBook` | boolean | `true` | Enables optional Guide-API HMG Field Manual registration. HMG still loads without Guide-API. |
 
-## `Compatibility`
+### `Compatibility`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
@@ -261,13 +267,13 @@ The active config file is generated from the `HandmadeGuns` mod id, usually as `
 | `combativesAimRecoilMaxYaw` | double | `5.0` | Maximum controller-owned horizontal aim recoil, in degrees. |
 | `enableCombativesRecoilDebug` | boolean | `false` | Client-side: enables verbose HMG-to-Combatives recoil diagnostics, including submitted visual impulse channels, timings, stacking mode, acceptance, fallback, weapon-state reset logs, aim-recoil pending/applied/recovered state, detected mouse deltas, and ownership. Leave disabled during normal gameplay. |
 
-## `Logging`
+### `Logging`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `enableDebugLogging` | boolean | `false` | Enables verbose HMG startup and content-pack diagnostics, including per-pack resource confirmations, registration timing summaries, script confirmations, per-file gun parse timings, and recipe success messages. Errors, warnings, and concise content-pack registration-complete summaries still log when this is disabled. |
 
-## `LMM`
+### `LMM`
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
