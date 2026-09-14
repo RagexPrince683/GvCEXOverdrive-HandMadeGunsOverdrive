@@ -83,11 +83,13 @@ public class HMGGunMaker {
 		int parsedLines = 0;
 		int modelRegistrations = 0;
 		GunInfo gunInfo = new GunInfo();
-		String animationPath = null;
+		List<String> animationPaths = new ArrayList<String>();
 		String blockbenchPath = null;
+		String bedrockPath = null;
 		String  GunName = null;
 		String  displayNamegun = null;
 		String  objtexture;
+		boolean modelTextureConfigured = false;
 		String  objmodel;
 		float   modelhigh = 0;
 		float   modelhighr = 0;
@@ -335,8 +337,11 @@ public class HMGGunMaker {
 								gunInfo.canobj = true;
 								break;
 							case "Animations":
-								animationPath = type.length == 2 ? type[1] : null;
-								if (animationPath == null) System.err.println("[HMG Animation] " + file1 + " | Expected Animations,animations/name.json");
+								animationPaths.clear();
+								for (int animationIndex=1;animationIndex<type.length;animationIndex++)
+									if (!type[animationIndex].isEmpty()) animationPaths.add(type[animationIndex]);
+								if (animationPaths.isEmpty()) System.err.println("[HMG Animation] " + file1
+										+ " | Expected Animations,animations/local.animation.json[,animations/shared.animation.json]");
 								break;
 							case "attachmentlocation":
 								parseAttachmentLocation(gunInfo, type, file1, 0);
@@ -413,11 +418,20 @@ public class HMGGunMaker {
 								if (type.length != 2 || !type[1].endsWith(".bbmodel"))
 									throw new IllegalArgumentException("Expected BlockbenchModel,models/name.bbmodel in " + file1);
 								blockbenchPath = type[1];
+								bedrockPath = null;
+								gunInfo.canobj = true;
+								break;
+							case "BedrockModel":
+								if (type.length != 2 || !type[1].toLowerCase().endsWith(".json"))
+									throw new IllegalArgumentException("Expected BedrockModel,models/name_geo.json in " + file1);
+								bedrockPath = type[1];
+								blockbenchPath = null;
 								gunInfo.canobj = true;
 								break;
 							case "ObjTexture":
 							case "ModelTexture":
 								objtexture = type[1];
+								modelTextureConfigured = true;
 								break;
 							case "ModelEquipped":
 								nox = parseFloat(type[1]) - 0.694f;
@@ -1033,6 +1047,14 @@ public class HMGGunMaker {
 										gunobj = imported; guntexture = imported.texture(); partslist = imported.parts;
 										recordReloadableModel(newgun, file1, "blockbench:" + blockbenchPath);
 										for (String warning : project.warnings) System.err.println("[HMG Blockbench] " + project.file + " | " + warning);
+									} else if (bedrockPath != null) {
+										if (!modelTextureConfigured) throw new IllegalArgumentException("BedrockModel requires ModelTexture in " + file1);
+										handmadeguns.client.modelLoader.blockbench.BlockbenchProject project =
+												handmadeguns.client.modelLoader.blockbench.BedrockGeometryLoader.load(file1, bedrockPath, objtexture);
+										handmadeguns.client.modelLoader.blockbench.BlockbenchModel imported = new handmadeguns.client.modelLoader.blockbench.BlockbenchModel(project);
+										gunobj = imported; guntexture = imported.texture(); partslist = imported.parts;
+										recordReloadableModel(newgun, file1, "bedrock:" + bedrockPath);
+										for (String warning : project.warnings) System.err.println("[HMG Bedrock] " + project.file + " | " + warning);
 									} else {
 										String modelResource = assetResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, objmodel);
 										String textureResource = assetResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture);
@@ -1042,7 +1064,7 @@ public class HMGGunMaker {
 									}
 									modelRegistrations++;
 									boolean useLegacyInventoryScale = false;
-									if(partslist.isEmpty() && blockbenchPath == null) {
+									if(partslist.isEmpty() && blockbenchPath == null && bedrockPath == null) {
 										partslist = createLegacyCompatibleParts(mat22, mat22posx, mat22posy, mat22posz, mat22rotex, mat22rotey, mat22rotez, mat25, mat25posx, mat25posy, mat25posz, mat25rotex, mat25rotey, mat25rotez, mat31posx, mat31posy, mat31posz, mat31rotex, mat31rotey, mat31rotez, mat32posx, mat32posy, mat32posz, mat32rotex, mat32rotey, mat32rotez, remat31, remat3, cockleft, alljump);
 										useLegacyInventoryScale = true;
 									}
@@ -1067,7 +1089,7 @@ public class HMGGunMaker {
 											((HMGRenderItemGun_U_NEW)gunrender).setSprintOffsetAndRotation(spposx, spposy, spposz, sprotex, sprotey, sprotez);
 											
 											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.partslist = partslist;
-											handmadeguns.client.animation.AnimationResources.bind(((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun, file1, animationPath);
+											handmadeguns.client.animation.AnimationResources.bind(((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun, file1, animationPaths);
 											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.hasAttachmentAnchor = attachmentAnchor != null;
 										for (int attachmentSlot = 1; attachmentSlot <= 5; attachmentSlot++) ((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.hasNumberedAttachmentAnchor[attachmentSlot] = attachmentAnchors[attachmentSlot] != null;
 											((HMGRenderItemGun_U_NEW)gunrender).partsRender_gun.gunPartsScale = gunPartsScale;
@@ -1101,7 +1123,7 @@ public class HMGGunMaker {
 											renderItemGun_u_new.setSprintOffsetAndRotation(spposx, spposy, spposz, sprotex, sprotey, sprotez);
 											
 											renderItemGun_u_new.partsRender_gun.partslist = partslist;
-											handmadeguns.client.animation.AnimationResources.bind(renderItemGun_u_new.partsRender_gun, file1, animationPath);
+											handmadeguns.client.animation.AnimationResources.bind(renderItemGun_u_new.partsRender_gun, file1, animationPaths);
 											renderItemGun_u_new.partsRender_gun.hasAttachmentAnchor = attachmentAnchor != null;
 										for (int attachmentSlot = 1; attachmentSlot <= 5; attachmentSlot++) renderItemGun_u_new.partsRender_gun.hasNumberedAttachmentAnchor[attachmentSlot] = attachmentAnchors[attachmentSlot] != null;
 											renderItemGun_u_new.partsRender_gun.gunPartsScale = gunPartsScale;
@@ -1406,7 +1428,7 @@ public class HMGGunMaker {
 
 		// Never call the global invalidation path: this command owns only these resources.
 		for (String path : new ArrayList<String>(modelPaths)) {
-			if (path.startsWith("blockbench:")) continue; // External project is reread by the pack reparse below.
+			if (path.startsWith("blockbench:") || path.startsWith("bedrock:")) continue; // Imported source is reread by the pack reparse below.
 			ResourceLocation resource = getCachedResourceLocation(path);
 			invalidateCachedModel(path);
 			HMGObjModelLoader.invalidateModel(resource);

@@ -9,6 +9,7 @@ import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -261,6 +262,7 @@ public final class AnimationClient {
             if (!reload && cock == 0 && !shot) entry.play(entry.requestLayer, entry.request, entry.requestRestart);
             entry.request = null;
         }
+        updateLocomotion(scope, entry, states, tag, reload, cock);
         entry.initialized = true; entry.cock = cock; entry.recoil = recoil;
         entry.bolt = bolt; entry.ammunition = ammunition;
         // Zero-time markers fire now, once; repeated GL passes neither advance nor re-dispatch.
@@ -268,6 +270,34 @@ public final class AnimationClient {
         entry.observeReloadCompletion();
         entry.pose = entry.controller.sample(legacy);
         for (HMGAnimationEvent marker : markers) MinecraftForge.EVENT_BUS.post(marker);
+    }
+
+    private static void updateLocomotion(Scope scope, Entry entry, GunState[] states,
+                                         NBTTagCompound tag, boolean reload, int cock) {
+        boolean equipped = scope.context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON
+                || scope.context == IItemRenderer.ItemRenderType.EQUIPPED;
+        EntityLivingBase entity = scope.owner instanceof EntityLivingBase ? (EntityLivingBase)scope.owner : null;
+        boolean aiming = false;
+        for (GunState state : states) if (state == GunState.ADS) { aiming = true; break; }
+        double horizontal = entity == null ? 0 : entity.motionX * entity.motionX + entity.motionZ * entity.motionZ;
+        boolean moving = entity != null && (Math.abs(entity.moveForward) > 0.01F
+                || Math.abs(entity.moveStrafing) > 0.01F || horizontal > 0.0001);
+        LocomotionAnimationBridge.Direction direction = LocomotionAnimationBridge.Direction.FORWARD;
+        if (entity != null && entity.moveForward < -0.01F)
+            direction = LocomotionAnimationBridge.Direction.BACKWARD;
+        else if (entity != null && Math.abs(entity.moveStrafing) > Math.abs(entity.moveForward))
+            direction = LocomotionAnimationBridge.Direction.SIDEWAY;
+        boolean triggered = tag != null && tag.getBoolean("IsTriggered");
+        boolean sprinting = entity != null && entity.isSprinting() && !reload && cock == 0 && !triggered;
+        LocomotionAnimationBridge.Request request = entry.locomotion.update(
+                new LocomotionAnimationBridge.Input(equipped && !reload && cock == 0
+                        && entry.controller.current(AnimationController.Layer.ACTION) == null, moving, sprinting,
+                        entity != null && entity.onGround, aiming, direction),
+                entry.definition.clips.keySet(), entry.controller.current(AnimationController.Layer.MOVEMENT));
+        if (request == null) return;
+        if (request.stop) entry.controller.stop(AnimationController.Layer.MOVEMENT);
+        else entry.controller.play(AnimationController.Layer.MOVEMENT, request.clip,
+                request.restart, 1, request.loop);
     }
 
     private static boolean authoritativeReload(Scope scope, boolean fallback) {
@@ -320,6 +350,7 @@ public final class AnimationClient {
         double lastSeen = seconds, preparedAt = Double.NaN, reloadPlaybackEndedAt = Double.NaN;
         AnimationPose pose = AnimationPose.EMPTY;
         final ReloadAnimationBridge.State reloadBridge = new ReloadAnimationBridge.State();
+        final LocomotionAnimationBridge.State locomotion = new LocomotionAnimationBridge.State();
         boolean initialized, recoil, requestRestart;
         int cock, bolt, ammunition;
         ReloadAnimationBridge.Request reloadRequest;

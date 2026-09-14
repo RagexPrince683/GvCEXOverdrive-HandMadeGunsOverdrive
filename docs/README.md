@@ -17,8 +17,9 @@ These guides document the actively maintained `HMG/` module in the GvCEXOverdriv
 ## Content-Pack Authors
 
 1. [Content packs](content-packs.md) — learn pack roots, source precedence, clean asset layout, definition folders, recipes, attachments, and skins.
-2. [Animation and Blockbench authoring](animation-authoring.md) — import native `.bbmodel` projects or add named animation JSON to OBJ/MQO guns.
-3. [Configuration reference](configuration-reference.md#content-pack-directives) — use advanced ammunition, attachment-model, placement, inventory-rendering, and ADS directives.
+2. [Animation and imported-model authoring](animation-authoring.md) — import native `.bbmodel` projects or exported Bedrock cube geometry, and add named animation JSON to HMG parts.
+3. [TaCZ asset compatibility audit](tacz-asset-compatibility-audit.md) — review the official/add-on rig, marker, texture, action, and locomotion contract and current distribution-format limits.
+4. [Configuration reference](configuration-reference.md#content-pack-directives) — use advanced ammunition, attachment-model, placement, inventory-rendering, and ADS directives.
 
 ## Developers
 

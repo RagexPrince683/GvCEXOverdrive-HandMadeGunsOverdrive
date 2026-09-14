@@ -1,6 +1,9 @@
 package handmadeguns.animation;
 
 import handmadeguns.client.modelLoader.blockbench.BlockbenchProject;
+import handmadeguns.client.modelLoader.blockbench.BedrockAnimationLoader;
+import handmadeguns.client.modelLoader.blockbench.BedrockGeometryLoader;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
@@ -10,7 +13,7 @@ public final class AnimationTests {
     private static final AnimationLoader LOADER = new AnimationLoader();
 
     public static void main(String[] args) throws Exception {
-        parsing(); evaluation(); transitions(); events(); isolationAndClock(); reloadBridge();
+        parsing(); bedrockParsing(); bedrockGeometry(); evaluation(); transitions(); locomotion(); events(); isolationAndClock(); reloadBridge(); legacyReloadRegression();
         if (args.length > 0) {
             AnimationDefinition example = LOADER.load(new File(args[0]));
             example.validateParts(new LinkedHashSet<String>(Arrays.asList("bolt", "magazine")));
@@ -20,7 +23,7 @@ public final class AnimationTests {
             check(LOADER.load(new File(args[0])) != example, "cache invalidation");
         }
         if (args.length > 1) blockbenchReload(new File(args[1]));
-        System.out.println("HMG animation: " + checks + " checks passed (parser, evaluator, controller, events, isolation, reload bridge).");
+        System.out.println("HMG animation: " + checks + " checks passed (HMG/Bedrock parsers, evaluator, layers, locomotion, events, isolation, reload bridge).");
     }
 
     private static void blockbenchReload(File file) throws Exception {
@@ -40,6 +43,30 @@ public final class AnimationTests {
         check(Math.abs(pose.x)+Math.abs(pose.y)+Math.abs(pose.z)+Math.abs(pose.rx)+Math.abs(pose.ry)+Math.abs(pose.rz)>0,
                 "TaCZ reload contributes rendered root pose");
         near(controller.progress(AnimationController.Layer.ACTION),.5/2.6,"TaCZ reload clock advances");
+        File packs = new File(file.getParentFile().getParentFile(), "src/main/resources/hmg_packs");
+        for (String name : Arrays.asList("RPK", "AKS74U")) {
+            File gun = new File(packs,"GVCguns/guns/" + name + ".txt");
+            boolean movingReload = false, importedDirective = false;
+            for (String line : java.nio.file.Files.readAllLines(gun.toPath(), java.nio.charset.Charset.forName("Shift_JIS"))) {
+                line = line.trim();
+                importedDirective |= line.startsWith("Animations,") || line.startsWith("BedrockModel,");
+                if (!line.startsWith("AddReloadMotionKey,")) continue;
+                String[] fields = line.split(",");
+                if (fields.length != 15) continue;
+                float[] values = new float[14];
+                for (int i=0;i<14;i++) values[i] = Float.parseFloat(fields[i+1].trim());
+                handmadeguns.client.render.HMGGunParts_Motion motion = new handmadeguns.client.render.HMGGunParts_Motion();
+                motion.set(values[0],values[1],values[2],values[3],values[4],values[5],values[6],
+                        values[7],values[8],values[9],values[10],values[11],values[12],values[13]);
+                handmadeguns.client.render.HMGGunParts_Motion_PosAndRotation sample = motion.posAndRotation((values[0]+values[7])/2);
+                near(sample.rotationX,(values[4]+values[11])/2,name + " authored reload X interpolation");
+                near(sample.rotationZ,(values[6]+values[13])/2,name + " authored reload Z interpolation");
+                movingReload |= sample.rotationX != 0 || sample.rotationZ != 0 || sample.posY != 0;
+            }
+            check(!importedDirective, name + " stays on legacy animation path");
+            // RPK uses the legacy compatible-parts generator; AKS has explicit authored keys.
+            if ("AKS74U".equals(name)) check(movingReload,"AKS authored reload produces a non-neutral pose without Minecraft");
+        }
     }
 
     private static AnimationDefinition parse(String clips) throws IOException {
@@ -73,6 +100,65 @@ public final class AnimationTests {
         expectFailure(() -> valid.clips.clear(), null);
         expectFailure(() -> valid.requireClip("custom").tracks.clear(), null);
         expectFailure(() -> new AnimationPose.Transform(Float.NaN, 0, 0, 0, 0, 0), "Non-finite");
+    }
+
+    private static void bedrockParsing() throws Exception {
+        String json = "{\"format_version\":\"1.8.0\",\"animations\":{" +
+                "\"static_idle\":{\"loop\":true,\"bones\":{\"root\":{\"position\":[1,2,3]}}}," +
+                "\"idle\":{\"loop\":true,\"animation_length\":1,\"bones\":{\"constraint\":{\"rotation\":[1,2,3]}}}," +
+                "\"walk_forward\":{\"loop\":true,\"bones\":{\"root\":{\"position\":{\"0.0\":[0,0,0],\"0.5\":{\"pre\":[2,0,0],\"post\":[3,0,0],\"lerp_mode\":\"catmullrom\"}}}},\"sound_effects\":{\"0.25\":{\"effect\":\"step\"}}}," +
+                "\"shoot\":{\"animation_length\":0.2,\"bones\":{\"bolt\":{\"scale\":0.5}}}}}";
+        AnimationDefinition parsed = new BedrockAnimationLoader().parse(new StringReader(json), "bedrock-test");
+        check(parsed.clips.containsKey("movement_idle"), "authored Bedrock movement idle alias");
+        check(parsed.clips.containsKey("fire"), "Bedrock shoot alias");
+        check(parsed.requireClip("static_idle").loop == AnimationClip.Loop.HOLD,
+                "zero-duration Bedrock loop holds");
+        near(parsed.requireClip("walk_forward").duration,.5,"Bedrock missing duration inferred from keys");
+        near(parsed.requireClip("walk_forward").events.get(0).time,.25,"Bedrock presentation event retained");
+        AnimationPose.Transform root = parsed.requireClip("walk_forward").tracks.get("root").sample(.5);
+        near(root.x,-2 * 3.0/16.0,"Bedrock split-key arrival uses Blockbench conversion");
+        near(parsed.requireClip("shoot").tracks.get("bolt").sample(0).sx,.5,"Bedrock scalar scale");
+        Set<String> ignored = new LinkedHashSet<String>();
+        AnimationDefinition filtered = BedrockAnimationLoader.retainKnownParts(parsed,
+                new LinkedHashSet<String>(Arrays.asList("root", "bolt")), ignored);
+        check(ignored.contains("constraint") && !filtered.partNames.contains("constraint"),
+                "optional Bedrock tracks absent from selected geometry are ignored");
+        expectFailure(() -> new BedrockAnimationLoader().parse(new StringReader(
+                "{\"animations\":{\"x\":{\"bones\":{\"root\":{\"position\":[\"query.x\",0,0]}}}}}"), "bad"),
+                "Unsupported Bedrock/Molang");
+    }
+
+    private static void bedrockGeometry() throws Exception {
+        String json = "{\"format_version\":\"1.12.0\",\"minecraft:geometry\":[{"
+                + "\"description\":{\"identifier\":\"geometry.test\",\"texture_width\":64,\"texture_height\":32},"
+                + "\"bones\":["
+                + "{\"name\":\"root\",\"pivot\":[1,2,3],\"rotation\":[10,20,30],\"mirror\":true,\"cubes\":["
+                + "{\"origin\":[0,0,0],\"size\":[2,4,6],\"inflate\":0.5,\"uv\":[4,8]},"
+                + "{\"origin\":[2,2,2],\"size\":[-1,1,1],\"uv\":[0,0]}]},"
+                + "{\"name\":\"child\",\"parent\":\"root\",\"pivot\":[2,4,6],\"cubes\":["
+                + "{\"origin\":[1,2,3],\"size\":[2,2,2],\"pivot\":[2,3,4],\"rotation\":[0,45,0],\"uv\":{"
+                + "\"north\":{\"uv\":[1,2],\"uv_size\":[3,4]},\"down\":{\"uv\":[8,9],\"uv_size\":[-2,-3]}}}]},"
+                + "{\"name\":\"idle_view\",\"parent\":\"root\",\"pivot\":[0,12,4]}]}]}";
+        BlockbenchProject project = BedrockGeometryLoader.parse(new StringReader(json),
+                new BufferedImage(64,32,BufferedImage.TYPE_INT_ARGB), new File("synthetic.geo.json"), "test.png");
+        check(project.nodes.size() == 3 && project.roots.size() == 1, "Bedrock hierarchy imported");
+        BlockbenchProject.Node root = project.nodes.get("root"), child = project.nodes.get("child");
+        check(child.parent == root && root.children.contains(child), "Bedrock parent link");
+        near(root.origin[0],-1,"Bedrock pivot converted to project space");
+        near(root.origin[1],-22,"Bedrock root uses TaCZ 24-pixel Y origin");
+        near(root.rotation[2],30,"Bedrock rest rotation");
+        check(root.faces.size() == 12 && child.faces.size() == 2, "Bedrock box/per-face/negative-size cubes");
+        near(project.textures.get(0).width,64,"Bedrock texture width");
+        near(project.textures.get(0).height,32,"Bedrock texture height");
+        near(root.faces.get(0).uv[0][0],18.0/64.0,"Bedrock inherited mirror box U");
+        near(root.faces.get(0).uv[0][1],14.0/32.0,"Bedrock box V");
+        near(root.faces.get(0).vertices[0][0],-0.28125,"Bedrock mirrored inflate/position X");
+        near(root.faces.get(0).vertices[0][1],-0.46875,"Bedrock inflate/position Y");
+        near(root.faces.get(0).vertices[0][2],0.65625,"Bedrock inflate/position Z");
+        expectFailure(() -> BedrockGeometryLoader.parse(new StringReader(json.replace(
+                "\"pivot\":[1,2,3]", "\"pivot\":[1,2,3],\"poly_mesh\":{}")),
+                new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB), new File("bad.geo.json"), "bad.png"),
+                "Unsupported Bedrock poly_mesh");
     }
 
     private static void evaluation() {
@@ -152,6 +238,64 @@ public final class AnimationTests {
         states.advanceTo(2.25,null);
         near(states.sample(baseline(0)).get("bolt").x,10,"reversal reaches destination");
         check(!states.transitioning(),"reversal releases source");
+
+        AnimationController layered = new AnimationController(definition(
+                clip("base",10,0,0,true), clip("move",2,0,0,true),
+                clip("action",20,0,0,true), clip("kick",3,0,0,true)));
+        layered.advanceTo(0,null);
+        layered.play(AnimationController.Layer.BASE,"base");
+        layered.play(AnimationController.Layer.MOVEMENT,"move");
+        near(layered.sample(baseline(0)).get("bolt").x,12,"movement adds to static base");
+        layered.play(AnimationController.Layer.ACTION,"action");
+        layered.play(AnimationController.Layer.ADDITIVE,"kick");
+        near(layered.sample(baseline(0)).get("bolt").x,23,"action overrides movement before additive fire");
+    }
+
+    private static void locomotion() {
+        Set<String> clips = new LinkedHashSet<String>(Arrays.asList("movement_idle", "walk_forward",
+                "walk_backward", "walk_sideway", "walk_aiming", "run_start", "run", "run_hold", "run_end"));
+        LocomotionAnimationBridge.State state = new LocomotionAnimationBridge.State();
+        LocomotionAnimationBridge.Request request = state.update(locomotion(true,false,false,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD), clips, null);
+        check(request != null && "movement_idle".equals(request.clip) && request.loop == AnimationClip.Loop.LOOP,
+                "idle movement layer");
+        request = state.update(locomotion(true,true,false,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD), clips, "movement_idle");
+        check(request != null && "walk_forward".equals(request.clip), "walk forward");
+        request = state.update(locomotion(true,true,true,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD), clips, "walk_forward");
+        check(request != null && "run_start".equals(request.clip) && request.restart
+                && request.loop == AnimationClip.Loop.ONCE, "sprint entrance");
+        check(state.update(locomotion(true,true,true,true,false, LocomotionAnimationBridge.Direction.FORWARD),
+                clips, "run_start") == null, "sprint entrance not restarted");
+        request = state.update(locomotion(true,true,true,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD), clips, null);
+        check(request != null && "run".equals(request.clip) && request.loop == AnimationClip.Loop.LOOP,
+                "sprint loop after entrance");
+        request = state.update(locomotion(true,true,true,false,false,
+                LocomotionAnimationBridge.Direction.FORWARD), clips, "run");
+        check(request != null && "run_hold".equals(request.clip), "airborne sprint hold");
+        request = state.update(locomotion(true,true,false,true,false,
+                LocomotionAnimationBridge.Direction.BACKWARD), clips, "run_hold");
+        check(request != null && "run_end".equals(request.clip) && request.loop == AnimationClip.Loop.ONCE,
+                "sprint exit");
+        check(state.update(locomotion(true,true,false,true,false, LocomotionAnimationBridge.Direction.BACKWARD),
+                clips, "run_end") == null, "sprint exit not interrupted");
+        request = state.update(locomotion(true,true,false,true,false,
+                LocomotionAnimationBridge.Direction.BACKWARD), clips, null);
+        check(request != null && "walk_backward".equals(request.clip), "backward walk after sprint exit");
+        request = state.update(locomotion(true,true,false,true,true,
+                LocomotionAnimationBridge.Direction.SIDEWAY), clips, "walk_backward");
+        check(request != null && "walk_aiming".equals(request.clip), "ADS walk");
+        request = state.update(locomotion(false,false,false,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD), clips, "walk_aiming");
+        check(request != null && request.stop, "non-equipped context stops locomotion");
+    }
+
+    private static LocomotionAnimationBridge.Input locomotion(boolean equipped, boolean moving, boolean sprinting,
+                                                               boolean onGround, boolean aiming,
+                                                               LocomotionAnimationBridge.Direction direction) {
+        return new LocomotionAnimationBridge.Input(equipped,moving,sprinting,onGround,aiming,direction);
     }
 
     private static AnimationClip eventClip(AnimationClip.Loop loop) {
@@ -292,6 +436,74 @@ public final class AnimationTests {
         request = fallback.accept(new ReloadAnimationBridge.StartEvent(8, 2, 100, true),
                 2, 100, Collections.singleton("reload"));
         check(request != null && "reload".equals(request.clip), "reload alias remains the variant fallback");
+    }
+
+    private static void legacyReloadRegression() throws Exception {
+        AnimationDefinition local = definition(clip("reload",20,1,5,true));
+        AnimationDefinition defaults = definition(clip("reload_empty",99,0,0,true),
+                clip("reload_tactical",98,0,0,true), clip("walk_forward",2,0,0,true));
+        AnimationDefinition merged = local.withFallback(defaults);
+        check(!merged.clips.containsKey("reload_empty") && !merged.clips.containsKey("reload_tactical"),
+                "shared reload variants cannot take selection away from local HMG reload");
+        check(merged.requireClip("reload") == local.requireClip("reload"), "local reload retains ownership");
+        check(merged.clips.containsKey("walk_forward") && !local.clips.containsKey("walk_forward"),
+                "missing-clip merge does not mutate local source");
+        check(defaults.clips.containsKey("reload_empty"), "shared source is not mutated");
+        for (boolean empty : new boolean[]{false,true}) {
+            ReloadAnimationBridge.Request request = new ReloadAnimationBridge.State().accept(
+                    new ReloadAnimationBridge.StartEvent(1,0,10,empty),0,10,merged.clips.keySet());
+            check(request != null && "reload".equals(request.clip), "original HMG reload selected for empty=" + empty);
+        }
+        AnimationDefinition legacyNames = parse("\"reload_dry\":{\"duration\":1}");
+        check(!legacyNames.clips.containsKey("reload_empty"), "legacy HMG names are not globally aliased");
+
+        AnimationController controller = new AnimationController(merged);
+        controller.sample(baseline(0)); controller.advanceTo(0,null);
+        controller.play(AnimationController.Layer.ACTION,"reload");
+        controller.advanceTo(.25,null);
+        near(controller.sample(baseline(0)).get("bolt").x,5,"reload fade begins normally");
+        controller.play(AnimationController.Layer.MOVEMENT,"walk_forward");
+        near(controller.sample(baseline(0)).get("bolt").x,5,"movement start preserves reload fade");
+        controller.advanceTo(.5,null);
+        controller.stop(AnimationController.Layer.MOVEMENT);
+        near(controller.sample(baseline(0)).get("bolt").x,10,"movement stop preserves reload fade");
+
+        AnimationClip sparse = new AnimationClip("reload",1,AnimationClip.Loop.HOLD,
+                Collections.singletonMap("magazine",new AnimationTrack(Collections.singletonList(key(0,20)))),
+                Collections.<AnimationEvent>emptyList(),0,0,5,true);
+        AnimationController layers = new AnimationController(definition(sparse,clip("walk",5,0,0,true),clip("fire",2,0,0,true)));
+        layers.play(AnimationController.Layer.MOVEMENT,"walk");
+        layers.play(AnimationController.Layer.ACTION,"reload");
+        near(layers.sample(baseline(7)).get("bolt").x,7,"sparse reload suppresses movement on omitted bones");
+        layers.play(AnimationController.Layer.ADDITIVE,"fire");
+        near(layers.sample(baseline(7)).get("bolt").x,9,"additive fire remains after action");
+
+        String json = "{\"animations\":{\"reload\":{\"animation_length\":1,\"bones\":{\"root\":{\"position\":[1,2,3],\"rotation\":[10,20,30]}}}}}";
+        AnimationDefinition nativeClip = new BedrockAnimationLoader(true).parse(new StringReader(json),"native");
+        AnimationDefinition projectClip = new BedrockAnimationLoader().parse(new StringReader(json),"project");
+        AnimationPose.Transform pose = nativeClip.requireClip("reload").tracks.get("root").sample(0);
+        near(pose.x,3.0/16,"native Bedrock translation X"); near(pose.y,-6.0/16,"native Bedrock translation Y");
+        near(pose.rx,10,"native Bedrock rotation X"); near(pose.ry,20,"native Bedrock rotation Y");
+        near(projectClip.requireClip("reload").tracks.get("root").sample(0).x,-3.0/16,
+                "existing bbmodel fallback coordinate convention unchanged");
+        java.nio.file.Path temporary = java.nio.file.Files.createTempDirectory("hmg-animation-ownership-");
+        try {
+            File a = java.nio.file.Files.createDirectories(temporary.resolve("a")).resolve("reload.animation.json").toFile();
+            File b = java.nio.file.Files.createDirectories(temporary.resolve("b")).resolve("reload.animation.json").toFile();
+            java.nio.file.Files.write(a.toPath(),json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            java.nio.file.Files.write(b.toPath(),json.replace("[1,2,3]","[4,5,6]").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            BedrockAnimationLoader cache = new BedrockAnimationLoader(true);
+            AnimationDefinition first = cache.load(a), second = cache.load(b);
+            check(first != second,"same-named animation files in different packs have independent cache entries");
+            check(cache.load(new File(a.getParentFile(),"./reload.animation.json")) == first,"canonical animation identity");
+            check(BedrockAnimationLoader.retainKnownParts(first,Collections.<String>emptySet(),new HashSet<String>()).partNames.isEmpty()
+                    && first.partNames.contains("root"),"per-gun track filtering cannot mutate cached animation");
+        } finally {
+            try (java.util.stream.Stream<java.nio.file.Path> paths = java.nio.file.Files.walk(temporary)) {
+                for (java.nio.file.Path path : (Iterable<java.nio.file.Path>)paths.sorted(Comparator.reverseOrder())::iterator)
+                    java.nio.file.Files.delete(path);
+            }
+        }
     }
 
     private static AnimationClip onceClip(String name, double duration) {

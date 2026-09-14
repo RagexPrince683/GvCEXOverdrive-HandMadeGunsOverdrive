@@ -21,6 +21,8 @@ public final class HMGPackAssetResolverTests {
             Path pack = Files.createDirectory(temporary.resolve("ActivePack"));
             Path otherPack = Files.createDirectory(temporary.resolve("OtherPack"));
             write(pack.resolve("models/akm.mqo"), "new");
+            write(pack.resolve("models/akm_geo.json"), "{}");
+            write(pack.resolve("models/akm.bbmodel"), "{}");
             write(pack.resolve("textures/models/akm.png"), "model png");
             write(pack.resolve("textures/items/icon.png"), "item png");
             write(pack.resolve("textures/items/dotted.name.png"), "dotted item png");
@@ -32,6 +34,8 @@ public final class HMGPackAssetResolverTests {
             write(pack.resolve("assets/handmadeguns/textures/models/akm.mqo"), "legacy duplicate");
             write(pack.resolve("assets/handmadeguns/textures/models/legacy.obj"), "legacy");
             write(pack.resolve("assets/handmadeguns/textures/model/legacy.png"), "legacy texture");
+            write(pack.resolve("assets/handmadeguns/textures/model/akm_geo.json"), "{}");
+            write(pack.resolve("assets/handmadeguns/textures/model/akm.bbmodel"), "{}");
             write(pack.resolve("assets/handmadeguns/textures/items/legacy_icon.png"), "legacy item texture");
             write(pack.resolve("assets/handmadeguns/textures/misc/legacy_scope.png"), "legacy misc texture");
             write(otherPack.resolve("models/foreign.obj"), "foreign");
@@ -39,6 +43,7 @@ public final class HMGPackAssetResolverTests {
             HMGPackAssetResolver resolver = new HMGPackAssetResolver(pack.toFile());
             same(pack.resolve("models/akm.mqo"), resolver.resolve(HMGPackAssetResolver.Type.MODEL, "akm.mqo"));
             same(pack.resolve("models/akm.mqo"), resolver.resolve(HMGPackAssetResolver.Type.MODEL, "models/akm.mqo"));
+            same(pack.resolve("models/akm_geo.json"), resolver.resolve(HMGPackAssetResolver.Type.BEDROCK_MODEL, "akm_geo.json"));
             same(pack.resolve("textures/models/akm.png"), resolver.resolve(HMGPackAssetResolver.Type.MODEL_TEXTURE, "akm"));
             same(pack.resolve("textures/models/akm.png"), resolver.resolve(HMGPackAssetResolver.Type.MODEL_TEXTURE, "models/akm"));
             same(pack.resolve("textures/items/dotted.name.png"), resolver.resolve(HMGPackAssetResolver.Type.ITEM_TEXTURE, "items/dotted.name"));
@@ -54,14 +59,27 @@ public final class HMGPackAssetResolverTests {
                     resolver.resolve(HMGPackAssetResolver.Type.MISC_TEXTURE, "legacy_scope.png"));
             equal("handmadeguns:textures/model/akm.mqo",
                     resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, "akm.mqo"));
-            equal("handmadeguns:textures/model/akm.png",
-                    resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, "akm.png"));
+            String scopedTexture = resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, "akm.png");
+            check(scopedTexture.startsWith("handmadeguns:textures/hmg_packs/") && scopedTexture.endsWith("/models/akm.png"),
+                    "typed model textures are pack-scoped");
             equal("handmadeguns:textures/items/icon.png",
                     resolver.resourceLocation(HMGPackAssetResolver.Type.ITEM_TEXTURE, "items/icon.png"));
             equal("handmadeguns:textures/misc/scope.png",
                     resolver.resourceLocation(HMGPackAssetResolver.Type.MISC_TEXTURE, "misc/scope.png"));
             equal("icon", resolver.itemTextureName("items/icon.png"));
             rejectedItemTexture(resolver, "akm.png");
+
+            Path packed = Files.createDirectory(temporary.resolve("PackedTaCZ"));
+            write(packed.resolve("recursion/taczpack.dat"), "opaque");
+            check(HMGPackAssetResolver.hasUnsupportedPackedPayload(packed.toFile()),
+                    "packed TaCZ payload detection");
+            try {
+                new HMGPackAssetResolver(packed.toFile());
+                throw new AssertionError("Expected taczpack.dat rejection");
+            } catch (IOException expected) {
+                check(expected.getMessage().contains("Unsupported packed/obfuscated TaCZ payload"),
+                        "packed TaCZ diagnostic");
+            }
 
             List<File> attachments = resolver.listDefinitions(HMGPackAssetResolver.Type.ATTACHMENT_DEFINITION);
             equal(2, attachments.size());
@@ -73,15 +91,30 @@ public final class HMGPackAssetResolverTests {
             rejected(resolver, HMGPackAssetResolver.Type.MODEL, "foreign.obj");
             rejected(resolver, HMGPackAssetResolver.Type.MODEL, "othermod:models/foreign.obj");
 
+            write(pack.resolve("assets/handmadeguns/textures/model/akm.png"), "model png");
             int staged = resolver.stageResources();
             check(staged >= 3, "expected typed clean resources to be staged");
             check(Files.isRegularFile(pack.resolve("assets/handmadeguns/textures/model/akm.mqo")), "model was not staged");
+            check(!Files.exists(pack.resolve("assets/handmadeguns/textures/model/akm_geo.json")), "Bedrock source leaked into global model resources");
+            check(!Files.exists(pack.resolve("assets/handmadeguns/textures/model/akm.bbmodel")), "bbmodel source leaked into global model resources");
             equal("new", new String(Files.readAllBytes(pack.resolve("assets/handmadeguns/textures/model/akm.mqo")), StandardCharsets.UTF_8));
-            check(Files.isRegularFile(pack.resolve("assets/handmadeguns/textures/model/akm.png")), "model texture was not staged");
+            check(Files.isRegularFile(pack.resolve("assets/" + scopedTexture.replace(':','/'))), "scoped model texture was not staged");
+            check(!Files.exists(pack.resolve("assets/handmadeguns/textures/model/akm.png")), "old global texture mirror was not retired");
             check(!Files.exists(pack.resolve("assets/handmadeguns/textures/items/akm.png")), "model texture was staged as an item texture");
             check(!Files.exists(pack.resolve("assets/handmadeguns/textures/misc/akm.png")), "model texture was staged as a misc texture");
             check(Files.isRegularFile(pack.resolve("assets/handmadeguns/textures/items/icon.png")), "explicit item texture was not staged");
             check(Files.isRegularFile(pack.resolve("assets/handmadeguns/textures/misc/scope.png")), "explicit misc texture was not staged");
+
+            write(otherPack.resolve("textures/akm.png"), "legacy RPK texture");
+            HMGPackAssetResolver legacyResolver = new HMGPackAssetResolver(otherPack.toFile());
+            equal("handmadeguns:textures/model/akm.png", legacyResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE,"akm.png"));
+            legacyResolver.stageResources();
+            equal("legacy RPK texture", new String(Files.readAllBytes(otherPack.resolve("assets/handmadeguns/textures/model/akm.png")), StandardCharsets.UTF_8));
+            write(otherPack.resolve("textures/models/akm.png"), "other import");
+            check(!scopedTexture.equals(legacyResolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE,"akm.png")),
+                    "same filename in two imported packs cannot share texture cache key");
+            legacyResolver.stageResources();
+            equal("legacy RPK texture", new String(Files.readAllBytes(otherPack.resolve("assets/handmadeguns/textures/model/akm.png")), StandardCharsets.UTF_8));
 
 			testBundledDirectoryLocation(temporary);
 			testBundledJarLocations(temporary);

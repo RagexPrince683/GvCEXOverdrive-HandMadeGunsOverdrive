@@ -4,6 +4,20 @@ This reference covers two related configuration surfaces: directives authored in
 
 ## Content-pack directives
 
+### Imported gun models and animation sources
+
+Unified gun definitions can select either native Blockbench projects or exported Bedrock cube geometry:
+
+```text
+BlockbenchModel,my_rifle.bbmodel
+
+BedrockModel,my_rifle_geo.json
+ModelTexture,my_rifle.png
+Animations,my_rifle.animation.json,rifle_default.animation.json
+```
+
+Use only one model directive. `BedrockModel` requires the external model PNG selected by `ModelTexture`. `Animations` entries are ordered from highest to lowest precedence: embedded `.bbmodel` clips win first, then a weapon-local file, while later shared files supply only missing clip names. Geometry and animation references remain pack-local. See [animation and imported-model authoring](animation-authoring.md) for the supported Bedrock subset and locomotion mapping.
+
 ### Per-ammunition door breaching
 
 `CustomMagazine` ammunition can opt a projectile into close-range wooden-door breaching:

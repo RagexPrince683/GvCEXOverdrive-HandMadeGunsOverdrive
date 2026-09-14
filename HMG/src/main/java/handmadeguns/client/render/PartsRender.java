@@ -81,7 +81,9 @@ public abstract class PartsRender {
 		if (parts instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part) {
 			handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part bone =
 					(handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part)parts;
-			handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.apply(bone.localOrigin, bone.restRotation, OffsetAndRotation, gunPartsScale);
+			if (bone.bedrock)
+				handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.applyBedrock(bone.localOrigin, bone.restRotation, OffsetAndRotation, gunPartsScale);
+			else handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.apply(bone.localOrigin, bone.restRotation, OffsetAndRotation, gunPartsScale);
 		} else {
 			transformParts(rotationCenterAndRotation,parts.getRenderinfDefault_offset(),parts);
 			if(OffsetAndRotation != null)transformParts(rotationCenterAndRotation,OffsetAndRotation,parts);

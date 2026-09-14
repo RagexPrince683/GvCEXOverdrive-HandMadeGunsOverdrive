@@ -451,11 +451,18 @@ public class HandmadeGunsCore {
 	public void readPackResource(File packdir,boolean isClient){
 		long startNanos = System.nanoTime();
 		int copiedResources = 0;
+		Set<File> rejectedPacks = new HashSet<File>();
 		File[] packlist = packdir.listFiles();
 		if(packlist == null)return;
 		Arrays.sort(packlist, FILE_NAME_COMPARATOR);
 		for (File apack : packlist) {
 			if (isHMGPack(apack)) {
+				if (HMGPackAssetResolver.hasUnsupportedPackedPayload(apack)) {
+					rejectedPacks.add(apack);
+					System.err.println("[HMG] Skipping content pack " + apack + ": "
+							+ HMGPackAssetResolver.UNSUPPORTED_PACKED_PAYLOAD);
+					continue;
+				}
 				try {
 					HMGPackAssetResolver resolver = new HMGPackAssetResolver(apack);
 					copiedResources += resolver.stageResources();
@@ -470,7 +477,7 @@ public class HandmadeGunsCore {
 
 		for (File file : packlist)
 		{
-			if (isHMGPack(file))
+			if (isHMGPack(file) && !rejectedPacks.contains(file))
 			{
 				try
 				{
@@ -549,6 +556,13 @@ public class HandmadeGunsCore {
 			Arrays.sort(packlist);
 			for (File apack : packlist) {
 				if (isHMGPack(apack)) {
+					HMGPackAssetResolver resolver;
+					try {
+						resolver = new HMGPackAssetResolver(apack);
+					} catch (IOException failure) {
+						System.err.println("[HMG] Skipping content pack " + apack + ": " + failure.getMessage());
+						continue;
+					}
 					configurePackCoefficients(apack);
 					File direTab = new File(apack, "addTab");
 					File[] filetab = direTab.listFiles();
@@ -563,13 +577,6 @@ public class HandmadeGunsCore {
 								HMGAddTabs.load(isClient, filetab[ii]);
 							}
 						}
-					}
-					HMGPackAssetResolver resolver;
-					try {
-						resolver = new HMGPackAssetResolver(apack);
-					} catch (IOException failure) {
-						System.err.println("[HMG] Cannot resolve content pack " + apack + ": " + failure.getMessage());
-						continue;
 					}
 					Debug("[AmmoDebug] Pack=%s damageCof=%s speedCof=%s before attachment load", apack.getName(), HMGGunMaker.damageCof, HMGGunMaker.speedCof);
 					try {

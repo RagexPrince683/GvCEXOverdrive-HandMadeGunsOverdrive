@@ -26,6 +26,12 @@ public final class BlockbenchProject {
             visible = bool(json, "visibility", true) && bool(json, "export", true);
             this.parent = parent;
         }
+        Node(String uuid, String name, double[] origin, double[] rotation, Node parent) {
+            if (uuid == null) throw new IllegalArgumentException("Bone without identifier");
+            this.uuid = uuid; this.name = name == null ? uuid : name;
+            this.origin = origin.clone(); this.rotation = rotation.clone();
+            visible = true; this.parent = parent;
+        }
     }
     public static final class Face {
         public final int texture;
@@ -42,6 +48,7 @@ public final class BlockbenchProject {
         }
     }
     public final File file;
+    public final boolean bedrock;
     public final Map<String, Node> nodes = new LinkedHashMap<String, Node>();
     public final List<Node> roots = new ArrayList<Node>();
     public final List<Texture> textures = new ArrayList<Texture>();
@@ -70,7 +77,19 @@ public final class BlockbenchProject {
             throw new IOException("[HMG Blockbench] " + gunFile + " | " + reference + " | " + failure.getMessage(),failure);
         }
     }
+    /** Empty common-runtime project populated by an alternate, directly inspectable geometry source. */
+    static BlockbenchProject geometry(File file) throws IOException {
+        return new BlockbenchProject(file);
+    }
+    private BlockbenchProject(File file) throws IOException {
+        bedrock = true;
+        this.file = file.getCanonicalFile();
+        boxUV = false;
+        animations = null;
+    }
+    void recordCube() { cubes++; }
     public BlockbenchProject(File file, File packRoot) throws IOException {
+        bedrock = false;
         this.file = file.getCanonicalFile();
         JsonObject json;
         try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
@@ -318,7 +337,8 @@ public final class BlockbenchProject {
         for (Node root : roots) auditNode(out, root, "");
         for (Texture texture : textures) out.println("texture " + texture.name + " " + texture.image.getWidth() + "x" + texture.image.getHeight()
                 + " UV=" + texture.width + "x" + texture.height);
-        for (AnimationClip clip : animations.clips.values()) {
+        for (AnimationClip clip : animations == null
+                ? Collections.<AnimationClip>emptyList() : animations.clips.values()) {
             Set<AnimationChannel.Interpolation> modes = new LinkedHashSet<AnimationChannel.Interpolation>();
             int position=0, rotation=0, scale=0, split=0;
             for (AnimationTrack track : clip.tracks.values()) {

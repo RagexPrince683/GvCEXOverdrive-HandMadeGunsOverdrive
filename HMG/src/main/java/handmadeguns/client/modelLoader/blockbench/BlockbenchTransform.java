@@ -171,6 +171,19 @@ public final class BlockbenchTransform {
         GL11.glRotatef(rest[2]+rz,0,0,1); GL11.glRotatef(rest[1]+ry,0,1,0); GL11.glRotatef(rest[0]+rx,1,0,0);
         GL11.glScalef(sx,sy,sz);
     }
+
+    /** Exported TaCZ bones compose rest ZYX with animation ZYX, rather than adding Euler angles. */
+    public static void applyBedrock(float[] origin, float[] rest,
+                                   handmadeguns.client.render.HMGGunParts_Motion_PosAndRotation pose, float units) {
+        GL11.glTranslatef((origin[0] + (pose == null ? 0 : pose.posX))*units,
+                (origin[1] + (pose == null ? 0 : pose.posY))*units,
+                (origin[2] + (pose == null ? 0 : pose.posZ))*units);
+        GL11.glRotatef(rest[2],0,0,1); GL11.glRotatef(rest[1],0,1,0); GL11.glRotatef(rest[0],1,0,0);
+        if (pose != null) {
+            GL11.glRotatef(pose.rotationZ,0,0,1); GL11.glRotatef(pose.rotationY,0,1,0); GL11.glRotatef(pose.rotationX,1,0,0);
+            GL11.glScalef(pose.scaleX,pose.scaleY,pose.scaleZ);
+        }
+    }
     /** TaCZ uses a whole-player hand-render frame, not a shoulder-centered mesh.
      * Vanilla 1.7's right/left shoulders are (-/+5,2,0) pixels; their wrist
      * centers are (-/+6,12,0). Rz(180) maps those to (+/-6,-12,0) in this

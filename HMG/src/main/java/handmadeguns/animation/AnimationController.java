@@ -6,7 +6,7 @@ import java.util.Map;
 
 /** Small client-independent pose mixer. Call advanceTo once per clock value, sample as often as needed. */
 public final class AnimationController {
-    public enum Layer { BASE, ACTION, ADDITIVE }
+    public enum Layer { BASE, MOVEMENT, ACTION, ADDITIVE }
     private final AnimationDefinition definition;
     private final EnumMap<Layer, AnimationPlayback> layers = new EnumMap<Layer, AnimationPlayback>(Layer.class);
     private AnimationPose legacy = AnimationPose.EMPTY, transitionFrom;
@@ -25,7 +25,7 @@ public final class AnimationController {
             if (!old.clip.interruptible || clip.priority < old.clip.priority) return false;
         }
         AnimationPlayback next = new AnimationPlayback(clip, ++generation, direction, loop == null ? clip.loop : loop);
-        beginTransition(clip.fadeIn);
+        if (layer != Layer.MOVEMENT || !layers.containsKey(Layer.ACTION)) beginTransition(clip.fadeIn);
         layers.put(layer, next);
         return true;
     }
@@ -33,7 +33,10 @@ public final class AnimationController {
     /** Explicit owner invalidation bypasses request priority. Natural one-shot completion needs no stop. */
     public void stop(Layer layer) {
         AnimationPlayback old = layers.get(layer);
-        if (old != null) { beginTransition(old.clip.fadeOut); layers.remove(layer); }
+        if (old != null) {
+            if (layer != Layer.MOVEMENT || !layers.containsKey(Layer.ACTION)) beginTransition(old.clip.fadeOut);
+            layers.remove(layer);
+        }
     }
 
     public boolean active(String name) {
@@ -69,11 +72,16 @@ public final class AnimationController {
             if (transitionFrom != null && transitionElapsed >= transitionDuration) transitionFrom = null;
             boolean completed = false;
             double fade = 0;
-            for (AnimationPlayback playback : layers.values()) if (playback.finished()) {
-                completed = true; fade = Math.max(fade, playback.clip.fadeOut);
+            boolean visibleCompletion = false;
+            for (Map.Entry<Layer, AnimationPlayback> entry : layers.entrySet()) if (entry.getValue().finished()) {
+                completed = true;
+                if (entry.getKey() != Layer.MOVEMENT || !layers.containsKey(Layer.ACTION)) {
+                    visibleCompletion = true;
+                    fade = Math.max(fade, entry.getValue().clip.fadeOut);
+                }
             }
             if (completed) {
-                beginTransition(fade);
+                if (visibleCompletion) beginTransition(fade);
                 for (Layer layer : Layer.values()) {
                     AnimationPlayback playback = layers.get(layer);
                     if (playback != null && playback.finished()) layers.remove(layer);
@@ -93,10 +101,12 @@ public final class AnimationController {
     private AnimationPose compose() {
         Map<String, AnimationPose.Transform> result = new LinkedHashMap<String, AnimationPose.Transform>(legacy.parts);
         for (Map.Entry<Layer, AnimationPlayback> entry : layers.entrySet()) {
+            // Actions own the whole pose, including channels/bones omitted by a sparse clip.
+            if (entry.getKey() == Layer.MOVEMENT && layers.containsKey(Layer.ACTION)) continue;
             AnimationPlayback playback = entry.getValue();
             for (Map.Entry<String, AnimationTrack> track : playback.clip.tracks.entrySet()) {
                 AnimationPose.Transform value = track.getValue().sample(playback.time());
-                if (entry.getKey() == Layer.ADDITIVE) {
+                if (entry.getKey() == Layer.MOVEMENT || entry.getKey() == Layer.ADDITIVE) {
                     AnimationPose.Transform base = result.get(track.getKey());
                     if (base != null) value = base.add(value);
                 } else value = track.getValue().overlay(result.get(track.getKey()), value);

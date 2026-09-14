@@ -1,4 +1,4 @@
-# Animation and Blockbench Authoring
+# Animation and Imported-Model Authoring
 
 HMG-Overdrive supports two animation-authoring workflows on Minecraft Forge 1.7.10 and Java 8. Both use the same client-side clip/controller runtime and leave gun gameplay under the existing HMG TXT and server logic.
 
@@ -7,9 +7,27 @@ HMG-Overdrive supports two animation-authoring workflows on Minecraft Forge 1.7.
 | Workflow | Use it when | Gun directive |
 | --- | --- | --- |
 | Native Blockbench project | The `.bbmodel` contains the gun geometry, bones, embedded texture, positioning nodes, and animations | `BlockbenchModel,name.bbmodel` |
+| Exported Bedrock geometry | An unchanged TaCZ `geo_models/*.json` and PNG provide the cube rig and external animation files provide actions/movement | `BedrockModel,name_geo.json` plus `ModelTexture` and `Animations` |
+| Imported model plus Bedrock animation fallback | A model/local animation provides the rig/actions and an unchanged shared TaCZ file provides missing movement clips | An imported model plus ordered `Animations` sources |
 | Named animation JSON | An existing OBJ/MQO gun already has HMG parts and needs additional rigid-part clips | `Animations,name.json` |
 
-Native Blockbench importing creates HMG parts and clips directly from the project. No OBJ/MQO export, `AddParts` declarations, or separate animation JSON is required. Named JSON adds clips to existing HMG parts and does not create geometry or hierarchy.
+Native Blockbench importing creates HMG parts and clips directly from the project. No OBJ/MQO export or `AddParts` declarations are required. When both directives are present, embedded project clips win by name and the external definition supplies only missing clips. Files ending in `.animation.json` use the Bedrock animation reader; other external files use HMG's named JSON format. External animation files never create geometry or hierarchy.
+
+## Native Exported Bedrock Geometry
+
+HMG can feed an unchanged exported TaCZ geometry file into the same hierarchy, part renderer, positioning, hand, and animation runtime as a `.bbmodel`. A normal HMG gun definition supplies gameplay and names its geometry, texture, weapon-local animation, then shared movement fallback:
+
+```text
+BedrockModel,ak47_geo.json
+ModelTexture,ak47.png
+Animations,ak47.animation.json,rifle_default.animation.json
+```
+
+References use the normal typed `models/`, `textures/models/`, and `animations/` pack folders; their directory prefixes may be included or omitted. `ModelTexture` is required because exported geometry does not embed its PNG. `Animations` is ordered from highest to lowest precedence. A weapon-local action therefore wins, and later rifle/pistol defaults fill only missing clip names. A `.bbmodel` project's embedded clips remain higher priority than every listed external source.
+
+The reader accepts the audited TaCZ Bedrock geometry versions 1.12.0 and 1.21.0 with exactly one `minecraft:geometry` entry. It supports nested cube-based bones, pivots/rest rotations, bone/cube mirror, negative or positive cube dimensions, cube inflate, box UVs, per-face UV/UV-size rectangles, and the authored texture dimensions. Marker-only and explicitly unnamed bones remain in the hierarchy. Per-face mirror follows TaCZ's own renderer behavior: the flag is retained as a diagnostic but does not reverse those faces. Box UV dimensions use TaCZ's integer truncation behavior.
+
+`idle_view`/`camera`, `iron_view`, `thirdperson_hand`, `lefthand_pos`, and `righthand_pos` receive the same generic treatment described below. Magazine, slide, bolt, trigger, hand, and ammunition branches are ordinary animated parts. The loader does not infer attachment selection, bullet visibility, shell/muzzle gameplay, or any other TaCZ state machine from their names.
 
 ## Native Blockbench Projects
 
@@ -19,7 +37,7 @@ For a unified gun, place the native project inside the pack and add this before 
 BlockbenchModel,models/ak.bbmodel
 ```
 
-The path is relative to the pack root, not `assets/handmadeguns/textures/model`. Both supported pack root layouts work. The directive enables model rendering; it takes precedence over `ObjModel`/`ObjTexture`. A later `CanObj,false` can disable rendering. Embedded animations take precedence over `Animations` JSON if both are present, with a diagnostic. Existing OBJ/MQO guns without this directive retain their behavior.
+The path is relative to the pack root, not `assets/handmadeguns/textures/model`. Both supported pack root layouts work. The directive enables model rendering; it takes precedence over `ObjModel`/`ObjTexture`. A later `CanObj,false` can disable rendering. Embedded animations take precedence by clip name when `Animations` is also present. If the external fallback is missing or invalid, the embedded project animations remain available. Existing OBJ/MQO guns without this directive retain their behavior.
 
 No `AddParts` declarations or exported meshes are required. Outliner groups become `HMGGunParts`; `partsname` is the authored name, and `animationId`/embedded tracks use the persistent bone UUID. Duplicate names do not merge embedded tracks. Root cubes get a synthetic part using their element UUID. HMG's normal action detection, per-instance playback isolation, cancellation, inspect key, presentation events and direct animation API are reused.
 
@@ -33,7 +51,7 @@ Declared animation lengths remain authoritative: keys after the end remain avail
 
 For imported rigs, `Gunparts_offsetScale` scales geometry, bone offsets and animated translations together, without multiplying the scale again at each hierarchy level. `ModelScala` remains the outer model scale. Legacy OBJ/MQO scaling is unchanged.
 
-HMG's presentation frame is separate from imported model space. A single outer X half-turn maps the TaCZ model frame into the legacy HMG display basis at root traversal. Equipped first/third person, dropped items, inventory/GUI and nested gun traversal use that same boundary; child bones never apply it again. The `3/16` import units are unaffected. Equipped Blockbench models additionally use TaCZ positioning nodes when present: first person aligns `idle_view` and blends its rigid inverse transform toward `iron_view` for ADS, while player-held third person applies HMG's fixed 1.7 hand-origin bridge and then aligns `thirdperson_hand` to that origin. These paths bypass legacy `ModelEquipped`, `ModelHigh`, `SimpleADSOffset*`, `SprintingPoint`, `SprintingRotation` and configured third-person model placement; those settings remain active for OBJ/MQO guns. Blockbench guns remain at their authored idle presentation while sprinting. If `iron_view` is absent, ADS holds the idle view. `camera` is the idle fallback when `idle_view` is absent.
+HMG's presentation frame is separate from imported model space. A single outer X half-turn maps the TaCZ model frame into the legacy HMG display basis at root traversal. Equipped first/third person, dropped items, inventory/GUI and nested gun traversal use that same boundary; child bones never apply it again. The exported-Bedrock boundary also applies TaCZ's 24-pixel root Y origin, Y-down cube coordinates, box/per-face UV order, mirror winding, and separate rest-plus-animation rotations. Native `.bbmodel` projects keep their existing transform conversion. The `3/16` import units are unaffected. Equipped Blockbench models additionally use TaCZ positioning nodes when present: first person aligns `idle_view` and blends its rigid inverse transform toward `iron_view` for ADS, while player-held third person applies HMG's fixed 1.7 hand-origin bridge and then aligns `thirdperson_hand` to that origin. These paths bypass legacy `ModelEquipped`, `ModelHigh`, `SimpleADSOffset*`, `SprintingPoint`, `SprintingRotation` and configured third-person model placement; those settings remain active for OBJ/MQO guns. If `iron_view` is absent, ADS holds the idle view. `camera` is the idle fallback when `idle_view` is absent.
 
 TaCZ hand functional renderers use the player-model frame, not a wrist-centered `ModelRenderer`. Vanilla 1.7.10 shoulders are at `[-5,2,0]` (right) and `[5,2,0]` (left); the arm boxes reach wrist centers `[-6,12,0]` and `[6,12,0]`. The local Z half-turn maps these into the authored locator frame, retaining the shoulder/pivot compensation. The shared presentation correction then rotates both the gun and those arms together. Do not add a second wrist translation or copy locator Euler angles into the arm: the hierarchy already supplies that orientation.
 
@@ -47,6 +65,37 @@ Authored animation names are retained for `AnimationClient.request`. Missing HMG
 | `reload` | `reload_tactical`, otherwise `reload_empty` | Once |
 
 Names already matching `draw`, `reload_tactical`, `reload_empty`, `bolt`, `cock`, `inspect` and `inspect_empty` use the existing action hooks. No bolt/cock animation is invented when the project has none. Direct `shoot` playback keeps its authored loop; only the `fire` alias overrides it, matching TaCZ's shot-triggered `PLAY_ONCE_STOP` convention. HMG's existing additive fire layer remains in use. Authoritative reload timing still comes from the gun TXT/server; an accepted manual reload sends a presentation-only start event to its owning client, and the visual ACTION then runs to the imported clip's natural completion independently of gameplay completion.
+
+### Generic locomotion clips
+
+Equipped imported guns use a dedicated `MOVEMENT` layer between static `BASE` pose and overriding `ACTION` clips. Ordinary fire remains the final additive layer. While any ACTION is active, movement playback is stopped and contributes no channels, including bones omitted by a sparse action clip. Starting, stopping, or completing movement therefore cannot replace an action transition snapshot. It changes presentation only; movement speed, sprint permission, stamina, aiming authority, and server gameplay remain HMG/Vanilla-owned.
+
+The following names are selected without a pack script:
+
+| State | Preferred TaCZ names | Accepted generic aliases |
+| --- | --- | --- |
+| Standing | external `idle`, exposed internally as `movement_idle` | `locomotion_idle` |
+| Forward walk | `walk_forward` | `walking_forward`, `walk`, `walking` |
+| Backward walk | `walk_backward` | `walking_backward` |
+| Sideways walk | `walk_sideway` | `walk_sideways`, `walking_sideway`, `walking_sideways` |
+| ADS walk | `walk_aiming` | `walking_aiming`, `walk_ads`, `walking_ads` |
+| Sprint entrance | `run_start` | `sprint_start`, `sprinting_start` |
+| Sprint loop | `run` | `sprint`, `sprinting` |
+| Airborne sprint hold | `run_hold` | `sprint_hold`, `sprinting_hold`; falls back to the sprint loop |
+| Sprint exit | `run_end` | `sprint_end`, `sprinting_end` |
+
+`run_start` and `run_end` play once; moving/walking/holding clips loop. A transition clip is allowed to finish before the next movement state starts, so it is not restarted by every render pass. ADS selects the aiming walk and suppresses sprint presentation. Reload, cocking, and a held trigger also suppress sprint selection, while their existing action/fire layers retain precedence. Missing direction-specific clips fall back to forward walk; missing locomotion stops only the movement layer.
+
+Declared durations, key times, translation/rotation/scale channels, split keys, linear/step/Catmull–Rom interpolation, and sound/particle markers are retained when numeric. HMG advances the cycle using its tick-stable animation clock. TaCZ's Lua option to phase-lock cycles to accumulated walk distance is deliberately not imported, so footfall phase may differ even though the authored clip speed and curve are unchanged.
+
+A Bedrock animation fallback may be referenced unchanged, for example:
+
+```text
+BlockbenchModel,models/ak.bbmodel
+Animations,animations/rifle_default.animation.json
+```
+
+For exported geometry, list local then shared animation sources as shown in the Bedrock example above. HMG accepts the Bedrock top-level `animations` object and numeric position, rotation, scale, keyed `pre`/`post`, loop, duration, sound, and particle data. It rejects Molang expressions rather than guessing their runtime values. Tracks for optional bones absent from the selected geometry are ignored with a diagnostic, matching TaCZ's reusable animation-file behavior; every remaining track must resolve. An external authored `idle` is exposed as `movement_idle` only when that same file contains locomotion, preventing a shared default idle from replacing the weapon's `static_idle`/`idle` base action.
 
 With `ModelArm,true`, TaCZ `lefthand_pos`/`righthand_pos` placeholders drive Minecraft 1.7 player arms in first person under the complete imported bone transform. The locator frame follows TaCZ's local 180-degree Z arm rotation, and the arm mesh receives the same Blockbench-to-HMG size normalization as the gun. Authored locators take precedence over `ModelArmOffset*`/`ModelArmRotation*`; if either locator is absent or hidden, that hand falls back to the existing legacy arm settings. `ModelArm,false` suppresses imported locator arms. Legacy OBJ/MQO arm behavior is unchanged. The 1.7 arm mesh/skin layout differs from modern slim arms. Other TaCZ marker groups retain their names, UUIDs and transforms but do not automatically configure HMG attachments, camera recoil, shell/muzzle effects, ammunition visibility or extended-magazine selection. `static_auto`, `static_semi`, `switch_auto`, `switch_semi` and extended-inspect names are callable, but TaCZ Lua state machines are not imported. Camera/constraint animation never changes authoritative aiming or movement.
 
@@ -75,9 +124,9 @@ The four root groups are `camera`, `root`, `views` and `positioning`. Under `roo
 
 The AK uses position/rotation/scale channels, linear/Catmull–Rom interpolation, 79 split keys, and sound markers. Seventeen individual components are newline-only zero expressions. Some cubic control keys extend past the declared duration. There are no Bezier/easing, global-rotation or quaternion-interpolation channels in this fixture. TaCZ's reference `default_state_machine.lua`, `ak47_state_machine.lua`, `BedrockAnimatedModel`, `BedrockGunModel` and hand functional renderers establish the action and marker conventions; the AK's `reload_dry` additionally needs the alias above.
 
-### Blockbench Limits
+### Imported-Model Limits
 
-Mesh/armature/billboard geometry, cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions are rejected with diagnostics. Animation controllers/Lua, particle playback, external sound playback, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the project import instead of silently producing a partial weapon.
+Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple geometry entries, and geometry versions outside the audited 1.12.0/1.21.0 pair are rejected. glTF, mesh/armature/billboard geometry, `.bbmodel` cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions remain unsupported. Animation controllers/Lua, particle playback, external sound playback, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the import instead of silently producing a partial weapon.
 
 Compilation and CPU audits do not prove visual acceptance. First-person fire/reload/inspect comparisons, UV orientation, player arms, hidden magazine variants, inventory/third-person views, resource reload, VBO/display-list/Angelica rendering and dedicated-server startup still require runtime validation.
 
@@ -178,7 +227,7 @@ Legacy TXT time scales, recoil frames, cock/reload tick units, angle wrapping ch
 
 ### Playback and Transitions
 
-Each instance has BASE, ACTION and ADDITIVE layers. BASE and ACTION replace the channels of named tracks; ADDITIVE adds six transform components to the result. Absent tracks inherit the lower layer or the current legacy transform. These are rigid-part offsets, not skeletal animation masks.
+Each instance has BASE, MOVEMENT, ACTION and ADDITIVE layers. BASE and ACTION replace the channels of named tracks; MOVEMENT and ADDITIVE add transform components. ACTION suppresses the complete MOVEMENT layer for its lifetime, so absent action tracks inherit BASE or the current legacy transform. These are rigid-part offsets, not skeletal animation masks.
 
 The mixer uses one final-pose crossfade envelope. A new request captures the current composite pose, including any unfinished fade. It blends toward the incoming layers over `transition.in`; normal completion or explicit stop fades toward the remaining layers/legacy pose over `transition.out`. The incoming clip clock runs during its fade. Successive requests in one frame capture the same last evaluated pose. This preserves an interrupted inspect pose rather than jumping through idle. Changing only the legacy baseline with no active transition retains legacy timing; the framework does not globally smooth old TXT states.
 
@@ -207,7 +256,7 @@ The inspect key is **unbound by default**, configurable under HandmadeGuns in Co
 
 Events do not load ammunition, fire the weapon, change inventory, or mutate authoritative world state. Names such as `mag_in`, `sound`, `muzzle`, or `custom` are labels, not built-in gameplay commands.
 
-Forward playback delivers markers in `(previousTime, currentTime]`, including every marker skipped over by a slow frame. The initial endpoint is emitted once when playback first advances (including a zero-second advance). Repeat delivers the end marker followed by the next cycle's zero marker; these are distinct author markers. Reverse playback uses descending timestamps and stable order for simultaneous markers. Restart creates a new generation. Stopping/interruption discards future markers from the old cursor; a fading snapshot never emits old events. Multiple render passes at the same clock value do not re-emit markers. Ordering between independent layers is BASE, ACTION, ADDITIVE, not a global timestamp merge.
+Forward playback delivers markers in `(previousTime, currentTime]`, including every marker skipped over by a slow frame. The initial endpoint is emitted once when playback first advances (including a zero-second advance). Repeat delivers the end marker followed by the next cycle's zero marker; these are distinct author markers. Reverse playback uses descending timestamps and stable order for simultaneous markers. Restart creates a new generation. Stopping/interruption discards future markers from the old cursor; a fading snapshot never emits old events. Multiple render passes at the same clock value do not re-emit markers. Ordering between independent layers is BASE, MOVEMENT, ACTION, ADDITIVE, not a global timestamp merge.
 
 Client extensions can queue a named clip with:
 
@@ -228,7 +277,7 @@ The clock advances once at render-tick START; root evaluation is idempotent at t
 
 JSON is cached by canonical path, including cached failures. Existing explicit model/pack reload workflows invalidate animation resources. A general resource reload also refreshes these CPU-only assets without deleting any GL objects. Edited/missing assets are retried on reload, not once per frame. Replaced definitions cause fresh instance state; this intentionally cancels old events/transitions. Logs identify file, clip, part, keyframe/event and field where available. A bad referenced part disables the file for that gun rather than partially applying an uncertain animation.
 
-The runtime representation (`AnimationDefinition`, `AnimationClip`, `AnimationTrack`, `AnimationKeyframe`, `AnimationEvent`, `AnimationPose`) is independent of JSON. The Blockbench importer produces those same objects. **This is not a full Blockbench/Bedrock/glTF importer.** No third-person full-body system, model replacement, gameplay recoil, magazine/chamber redesign, ballistics, optics or networking redesign is included.
+The runtime representation (`AnimationDefinition`, `AnimationClip`, `AnimationTrack`, `AnimationKeyframe`, `AnimationEvent`, `AnimationPose`) is independent of JSON. Both model importers produce the same HMG parts and animation objects. **This is not a full Blockbench/Bedrock/glTF or TaCZ runtime.** No third-person full-body system, model replacement, gameplay recoil, magazine/chamber redesign, ballistics, optics or networking redesign is included.
 
 Automatic fire and cock requests still rely on already observable render/NBT state. Several shots between observations cannot be reconstructed reliably. Reload is the exception: accepted manual reload commands carry a presentation event identifier and captured variant to the owning client. Event exactly-once semantics apply to each started playback, not to a network guarantee of one clip per server shot.
 

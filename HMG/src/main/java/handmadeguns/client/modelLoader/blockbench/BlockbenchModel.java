@@ -28,8 +28,10 @@ public final class BlockbenchModel implements IModelCustom_HMG {
     public static final class Part extends HMGGunParts {
         public final float[] localOrigin, restRotation;
         public final boolean visible;
-        Part(BlockbenchProject.Node node) {
+        public final boolean bedrock;
+        Part(BlockbenchProject.Node node, boolean bedrock) {
             super(node.name);
+            this.bedrock = bedrock;
             animationId = node.uuid;
             localOrigin = BlockbenchTransform.point(node.origin, node.parent == null ? new double[3] : node.parent.origin);
             restRotation = BlockbenchTransform.rotation(node.rotation);
@@ -47,7 +49,7 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         for (BlockbenchProject.Node node : project.roots) parts.add(part(node, null));
     }
     private Part part(BlockbenchProject.Node node, Part parent) {
-        Part part = new Part(node); part.mother = parent;
+        Part part = new Part(node, project.bedrock); part.mother = parent;
         part.partsID = byId.size(); byId.put(node.uuid,part);
         List<Part> names = byName.get(node.name);
         if (names == null) { names = new ArrayList<Part>(); byName.put(node.name,names); }

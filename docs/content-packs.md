@@ -6,6 +6,8 @@ Optional named JSON animations can drive the existing HMG gun parts without repl
 
 Unified guns can instead use `BlockbenchModel,name.bbmodel` to import geometry, bone parts, embedded PNG textures and animations directly from a Blockbench project. No OBJ export, `AddParts` declarations or separate animation JSON is needed. The checked-in `GVCguns/guns/AKM_Blockbench.txt` and `GVCguns/models/cod4_ak.bbmodel` provide a complete AK example. See [native Blockbench importing](animation-authoring.md#native-blockbench-projects) for the supported formats, TaCZ action aliases and limitations.
 
+Unchanged exported TaCZ cube geometry can use `BedrockModel,name_geo.json` with a required `ModelTexture` and one or more ordered `Animations` files. The first animation file is normally weapon-local; later shared rifle/pistol defaults only fill missing clips. This feeds the same HMG part, positioning, hand, and animation runtime as a native Blockbench project. See [native exported Bedrock geometry](animation-authoring.md#native-exported-bedrock-geometry).
+
 ## Quick Start
 
 Create an immediate child directory beneath `handmadeguns_Packs/`, add at least a `guns/` directory, and keep every referenced asset inside that same pack:
@@ -68,6 +70,7 @@ handmadeguns_Packs/
     models/
       akm.mqo
       cod4_ak.bbmodel
+      ak47_geo.json
     textures/
       models/akm.png
       items/akm_icon.png
@@ -97,7 +100,7 @@ ScopeTexture,null.png,null.png,scope.png
 Animations,akm.json
 ```
 
-`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `Texture` selects an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence.
+`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `Texture` selects an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence. Exported cube geometry uses `BedrockModel,ak47_geo.json` plus `ModelTexture,ak47.png`. `Animations,ak47.animation.json,rifle_default.animation.json` merges sources left-to-right without replacing an earlier clip.
 
 Authors may include the logical directory explicitly (`Model,models/akm.mqo`, `ModelTexture,textures/models/akm.png`, `Texture,textures/items/akm_icon.png`, or `Animations,animations/akm.json`). Short references are preferred because the directive determines the category. Absolute paths, `..` traversal, and canonical or symbolic-link escapes are rejected. HMG does not recursively search the Minecraft instance, resource packs, Flan packs, or neighboring HMG packs.
 
@@ -128,8 +131,8 @@ Third-party or older packs may continue using `attachment/`, `addmodel/`, `addte
 | `attachments/` | Recommended attachment definitions parsed by `HMGAddAttachment`; legacy `attachment/` remains a fallback. |
 | `addpackrecipe/` | Recipes parsed directly into the canonical Gun Smithing Table registry (and exposed to NEI without a vanilla crafting copy). |
 | `addTab/` | Creative-tab definitions. |
-| `models/` | Recommended OBJ, MQO, and Blockbench project location. |
-| `textures/models/` | PNG and source-texture location for OBJ, MQO, Blockbench, and skin rendering. |
+| `models/` | Recommended OBJ, MQO, Blockbench project, and exported Bedrock geometry location. |
+| `textures/models/` | PNG and source-texture location for OBJ, MQO, Blockbench, Bedrock geometry, and skin rendering. |
 | `textures/items/` | PNG location for inventory and hotbar item icons. |
 | `textures/misc/` | PNG location for scopes, reticles, overlays, and other non-model textures. |
 | `animations/` | Optional external animation JSON files. |

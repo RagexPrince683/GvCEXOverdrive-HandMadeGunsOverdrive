@@ -25,6 +25,22 @@ public final class AnimationDefinition {
         return clip;
     }
 
+    /** A local reload family owns reload selection, not just one exact clip spelling. */
+    public AnimationDefinition withFallback(AnimationDefinition fallback) {
+        Map<String, AnimationClip> merged = new LinkedHashMap<String, AnimationClip>(clips);
+        boolean localReload = false;
+        for (String name : clips.keySet()) if (isReload(name)) localReload = true;
+        for (Map.Entry<String, AnimationClip> entry : fallback.clips.entrySet())
+            if (!merged.containsKey(entry.getKey()) && !(localReload && isReload(entry.getKey())))
+                merged.put(entry.getKey(), entry.getValue());
+        return new AnimationDefinition(source + " + fallback " + fallback.source, merged);
+    }
+
+    private static boolean isReload(String name) {
+        return "reload".equals(name) || "reload_empty".equals(name)
+                || "reload_dry".equals(name) || "reload_tactical".equals(name);
+    }
+
     public void validateParts(Set<String> knownParts) {
         for (AnimationClip clip : clips.values()) for (String part : clip.tracks.keySet())
             if (!knownParts.contains(part)) throw new IllegalArgumentException("[HMG Animation] " + source

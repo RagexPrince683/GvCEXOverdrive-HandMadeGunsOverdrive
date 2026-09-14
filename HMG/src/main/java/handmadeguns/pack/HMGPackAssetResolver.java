@@ -17,6 +17,8 @@ import java.util.TreeMap;
 
 /** Deterministic asset lookup rooted in one active HMG content pack. */
 public final class HMGPackAssetResolver {
+    public static final String UNSUPPORTED_PACKED_PAYLOAD = "Unsupported packed/obfuscated TaCZ payload: "
+            + "taczpack.dat; HMG imports only directly readable assets";
     public enum Type {
         GUN_DEFINITION("guns"),
         MODEL("models", "addmodel", "assets/handmadeguns/textures/model", "assets/handmadeguns/textures/models"),
@@ -28,6 +30,7 @@ public final class HMGPackAssetResolver {
         /** Reticles, scope overlays, and other non-model textures. */
         MISC_TEXTURE("textures/misc", "addsighttex", "assets/handmadeguns/textures/misc"),
         BLOCKBENCH_MODEL("models", "addmodel", "assets/handmadeguns/textures/model", "assets/handmadeguns/textures/models"),
+        BEDROCK_MODEL("models", "addmodel", "assets/handmadeguns/textures/model", "assets/handmadeguns/textures/models"),
         ANIMATION("animations"),
         SOUND("sounds", "addsounds", "assets/handmadeguns/sounds"),
         ATTACHMENT_DEFINITION("attachments", "attachment"),
@@ -56,7 +59,13 @@ public final class HMGPackAssetResolver {
         if (packRoot == null) throw new IOException("Missing HMG pack root");
         this.packRoot = packRoot.getCanonicalFile();
         if (!this.packRoot.isDirectory()) throw new IOException("HMG pack root is not a directory: " + packRoot);
+        if (hasUnsupportedPackedPayload(this.packRoot)) throw new IOException(UNSUPPORTED_PACKED_PAYLOAD);
         this.packPath = this.packRoot.toPath();
+    }
+
+    public static boolean hasUnsupportedPackedPayload(File packRoot) {
+        return packRoot != null && (new File(new File(packRoot, "recursion"), "taczpack.dat").isFile()
+                || new File(packRoot, "taczpack.dat").isFile());
     }
 
     public File getPackRoot() {
@@ -105,7 +114,8 @@ public final class HMGPackAssetResolver {
         String assetsPrefix = "assets/handmadeguns/";
         if (relative.startsWith(assetsPrefix)) return "handmadeguns:" + relative.substring(assetsPrefix.length());
         if (relative.startsWith("models/")) return "handmadeguns:textures/model/" + relative.substring("models/".length());
-        if (relative.startsWith("textures/models/")) return "handmadeguns:textures/model/" + relative.substring("textures/models/".length());
+        if (relative.startsWith("textures/models/")) return "handmadeguns:" + scopedModelTextures()
+                + "/" + relative.substring("textures/models/".length());
         if (relative.startsWith("textures/items/")) return "handmadeguns:textures/items/" + relative.substring("textures/items/".length());
         if (relative.startsWith("textures/misc/")) return "handmadeguns:textures/misc/" + relative.substring("textures/misc/".length());
         if (relative.startsWith("textures/")) return "handmadeguns:textures/model/" + relative.substring("textures/".length());
@@ -141,13 +151,79 @@ public final class HMGPackAssetResolver {
         copied += stageTree("addtexture", "assets/handmadeguns/textures/items");
         copied += stageTree("addsighttex", "assets/handmadeguns/textures/misc");
         copied += stageTree("addsounds", "assets/handmadeguns/sounds");
-        copied += stageTree("models", "assets/handmadeguns/textures/model");
+        copied += stageLegacyModelResources();
         copied += stageLegacyCleanModelTextureTree();
-        copied += stageTree("textures/models", "assets/handmadeguns/textures/model");
+        copied += stageScopedModelTextures();
         copied += stageTree("textures/items", "assets/handmadeguns/textures/items");
         copied += stageTree("textures/misc", "assets/handmadeguns/textures/misc");
         copied += stageTree("sounds", "assets/handmadeguns/sounds");
         return copied;
+    }
+
+    /** Typed model textures have pack ownership; legacy flat resource addresses stay unchanged. */
+    private String scopedModelTextures() {
+        String identity = java.util.UUID.nameUUIDFromBytes(packRoot.getPath().getBytes(
+                java.nio.charset.StandardCharsets.UTF_8)).toString();
+        return "textures/hmg_packs/" + identity + "/models";
+    }
+
+    private int stageScopedModelTextures() throws IOException {
+        File source = inside(new File(packRoot, "textures/models"), "textures/models");
+        if (!source.isDirectory()) return 0;
+        removeOldTextureMirrors(source, inside(new File(packRoot, "assets/handmadeguns/textures/model"),
+                "assets/handmadeguns/textures/model"));
+        return stageTree("textures/models", "assets/handmadeguns/" + scopedModelTextures());
+    }
+
+    /** Direct project/Bedrock import sources are file-owned and never enter the global model namespace. */
+    private int stageLegacyModelResources() throws IOException {
+        File source = inside(new File(packRoot, "models"), "models");
+        if (!source.isDirectory()) return 0;
+        return stageModelDirectory(source, inside(new File(packRoot, "assets/handmadeguns/textures/model"),
+                "assets/handmadeguns/textures/model"));
+    }
+
+    private int stageModelDirectory(File source, File target) throws IOException {
+        File[] entries = source.listFiles();
+        if (entries == null) return 0;
+        int copied = 0;
+        for (File entry : entries) {
+            File safeSource = inside(entry, entry.getPath());
+            File safeTarget = inside(new File(target, entry.getName()), entry.getName());
+            if (safeSource.isDirectory()) copied += stageModelDirectory(safeSource, safeTarget);
+            else if (safeSource.isFile()) {
+                String name = safeSource.getName().toLowerCase(Locale.ROOT);
+                if (name.endsWith(".bbmodel") || name.endsWith(".json")) {
+                    if (safeTarget.isFile() && sameContents(safeSource, safeTarget)) Files.delete(safeTarget.toPath());
+                    continue;
+                }
+                File parent = safeTarget.getParentFile();
+                if (!parent.isDirectory() && !parent.mkdirs() && !parent.isDirectory())
+                    throw new IOException("Cannot create HMG resource directory: " + parent);
+                Files.copy(safeSource.toPath(), safeTarget.toPath(), StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES);
+                copied++;
+            }
+        }
+        return copied;
+    }
+
+    /** Retire only byte-identical generated mirrors from the earlier unscoped staging path. */
+    private void removeOldTextureMirrors(File source, File oldTarget) throws IOException {
+        File[] entries = source.listFiles();
+        if (entries == null) return;
+        for (File entry : entries) {
+            File safeSource = inside(entry, entry.getPath());
+            File safeTarget = inside(new File(oldTarget, entry.getName()), entry.getName());
+            if (safeSource.isDirectory()) removeOldTextureMirrors(safeSource, safeTarget);
+            else if (safeTarget.isFile() && sameContents(safeSource, safeTarget))
+                Files.delete(safeTarget.toPath());
+        }
+    }
+
+    private static boolean sameContents(File first, File second) throws IOException {
+        return first.length() == second.length()
+                && java.util.Arrays.equals(Files.readAllBytes(first.toPath()), Files.readAllBytes(second.toPath()));
     }
 
     private void addDefinitionDirectory(TreeMap<String, File> files, String directory) throws IOException {

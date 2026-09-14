@@ -128,6 +128,11 @@ public final class HMGRepositoryPackAssetTests {
                     validateReference(packName, key, values[i].trim(), resolver, HMGPackAssetResolver.Type.MISC_TEXTURE, false);
             } else if (key.equals("SkinTexture")) {
                 validateReference(packName, key, values[1].trim(), resolver, HMGPackAssetResolver.Type.MODEL_TEXTURE, false);
+            } else if (key.equals("Animations")) {
+                for (int i = 1; i < values.length; i++)
+                    validateReference(packName, key, values[i].trim(), resolver, HMGPackAssetResolver.Type.ANIMATION, false);
+            } else if (key.equals("BedrockModel")) {
+                validateReference(packName, key, values[1].trim(), resolver, HMGPackAssetResolver.Type.BEDROCK_MODEL, false);
             } else if (key.equals("ObjModel") || key.equals("BlockbenchModel")
                     || (key.equals("Model") && !values[1].trim().equalsIgnoreCase("true")
                     && !values[1].trim().equalsIgnoreCase("false"))) {
