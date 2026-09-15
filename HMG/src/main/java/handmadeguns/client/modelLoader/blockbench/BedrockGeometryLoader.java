@@ -12,6 +12,8 @@ import java.util.*;
 /** Reads the audited cube-only TaCZ Bedrock geometry subset into the native Blockbench runtime model. */
 public final class BedrockGeometryLoader {
     private static final String[] SIDES = {"east", "west", "up", "down", "south", "north"};
+    // FaceUVsItem.getFace maps Java directions to the exported Bedrock face names.
+    private static final String[] PER_FACE_SIDES = {"west", "east", "down", "up", "south", "north"};
     // TaCZ BedrockCubePerFace vertex order in Java cube coordinates (Y points down).
     private static final int[][] CORNERS = {{5,1,3,7},{0,4,6,2},{3,2,6,7},{5,4,0,1},{4,5,7,6},{1,0,2,3}};
 
@@ -149,7 +151,7 @@ public final class BedrockGeometryLoader {
         // TaCZ's reference renderer intentionally does not apply cube/bone mirror to per-face UV cubes.
         if (mirror) project.warnings.add("Per-face cube mirror follows TaCZ behavior and is not applied: " + node.name);
         for (int side=0;side<SIDES.length;side++) {
-            JsonObject face = faces.getAsJsonObject(SIDES[side]);
+            JsonObject face = faces.getAsJsonObject(PER_FACE_SIDES[side]);
             if (face == null) continue;
             double[] start = vector(face, "uv", 2, Double.NaN);
             double[] extent = vector(face, "uv_size", 2, Double.NaN);
@@ -188,9 +190,9 @@ public final class BedrockGeometryLoader {
                 point[axis] = (corner & (1 << axis)) == 0 ? from[axis]-inflate : to[axis]+inflate;
             vertices[i] = BlockbenchTransform.point(BlockbenchTransform.rotate(projectPosition(point),
                     projectPosition(pivot), projectRotation(rotation)), node.origin);
-            // Coordinate conversion reverses the Y corner order. Keep TaCZ's UV bound
-            // to the same physical vertex instead of reversing the UV ring a second time.
-            int uvIndex = 3 - index;
+            // Reorder the vertex/UV pair together. Y-bound conversion changes positions,
+            // not the UV assigned by BedrockPolygon to that Java corner.
+            int uvIndex = index;
             coords[i][0] = (float)(uvCorners[uvIndex][0] / texture.width);
             coords[i][1] = (float)(uvCorners[uvIndex][1] / texture.height);
         }

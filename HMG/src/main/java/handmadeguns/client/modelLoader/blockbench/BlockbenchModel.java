@@ -153,11 +153,9 @@ public final class BlockbenchModel implements IModelCustom_HMG {
     }
     /** TaCZ third-person item placement aligns this authored node with the hand origin. */
     public void applyThirdPersonPosition(float units) {
-        // TaCZ's default gun display scales third-person locator translations by 0.6.
-        // HMG's ModelScala/InworldScale continue to own the model's rendered size.
-        if (project.bedrock)
-            BlockbenchTransform.applyThirdPersonPositioning(path("thirdperson_hand"), units * 0.6f);
-        else BlockbenchTransform.applyPositioning(path("thirdperson_hand"), null, 0, units);
+        // TaCZ applies its display scale to BOTH the inverse locator and geometry.
+        // Here the outer HMG ModelScala/InworldScale already scale both uniformly.
+        BlockbenchTransform.applyPositioning(path("thirdperson_hand"), null, 0, units);
     }
     /** Native Bedrock GUI previews use the authored fixed-item origin. */
     public void applyInventoryPosition(float units) {

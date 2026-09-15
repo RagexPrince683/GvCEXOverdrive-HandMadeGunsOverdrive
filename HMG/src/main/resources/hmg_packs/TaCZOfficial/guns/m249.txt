@@ -1,0 +1,112 @@
+// HMG M249 gameplay with unchanged official TaCZ m249 presentation assets.
+// Source: Official TaCZ / Serene Wave Studio / Timeless Squad. See CREDITS.txt and LICENSE.txt.
+BulletPower,8
+BulletSpeed,18
+BulletGravity,0.485
+
+BlletSpread,0.3F
+ADS_Spread_coefficient,0.1
+BlletSpreadDiffusion,6,0,1.5,0.1,2,0.7
+Cycle,1.5
+
+Motion,0.75
+
+Recoil,3
+Recoil_sneaking,2.5
+
+ReloadTime,119
+
+RemainingBullet,100
+
+Attacking,6.0f
+Zoom,1.0f,1.0f,4.0f
+
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+
+Texture,items/M249.png
+GunSound,handmadeguns.m249,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CustomFlash,arrow,1
+Bursts,-1,-1,-1,-1
+Rates,1.411,1.262,1.043,1.62
+
+attachRestriction,true
+allowattach,attachmenttest
+
+attachmentlocation1 = 0, 2, 1
+
+opticshift1,0,-0.088,0
+//allowattach,reddot
+//allowattach,scope
+//todo acog
+allowattach,Bullet_AP
+//allowattach,Bullet_AT
+
+Canfix,true
+FixAsEntity,true
+OnEntity_PlayerPosOffset,0,0,3
+
+//ModelEquipped,-0.7f,0.7f,0.0f
+SimpleADSOffsetY,1.075,1.075,1.075
+
+OnEntity_PlayerPosOffset,0,0,3
+
+OnEntity_Yoffset,0.195
+OnEntity_RotationPitchPoint,0,-0.195,0.46
+OnEntity_BarrelPoint,0,0.145,0.6
+
+//ModelArmOffsetR,0.4f,0.3f,0.5f
+//ModelArmRotationL,-0.0f,-2.3f,2.0f
+//ModelArmOffsetL,0.1f,0.3f,-1.2f
+
+
+//SprintingPoint,0.5f,0.0f,0.5f
+
+SoundSpeed,0.95f
+
+ScopeTexture,null.png,null.png,misc/scope.png
+RenderCross,false
+
+//Magazine,0,HandmadeGuns,bullet_lmg_hmg_5_56
+MultiMagazine,HandmadeGuns:bullet_lmg_hmg_5_56,HandmadeGuns:5.56mm magazine
+MagazineSG,0,HandmadeGuns,bullet_shell_hmg
+MagazineGL,0,HandmadeGuns,bullet_rr_hmg
+
+
+
+//AddChildParts,SYS_CMAG_Branch
+//		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+//		AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
+//		RenderOnNormal
+//		AddPartsOnADSOffsetAndRotation,0,0,0,0,0,0
+//		AddPartsOnRecoilOffsetAndRotation,0,0,0,0,0,0
+//		AddPartsOnCockOffsetAndRotation,0,0,0,0,0,0
+//		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
+//		NeedDraw_Current_Magazine_ID_List,false,true
+
+
+
+
+
+
+
+
+
+
+
+
+BulletNameALL,byfrou01_PinkTracer
+GunSoundLV,165,1
+
+BedrockModel,m249_geo.json
+ModelTexture,m249.png
+Animations,m249.animation.json,rifle_default.animation.json
+ModelScala,0.5f
+InworldScale,1.8f
+ModelArm,true
+Tabname,HMG_Bedrock_TaCZ
+
+Name,TaCZ M249
+LMG,TaCZOfficial_M249

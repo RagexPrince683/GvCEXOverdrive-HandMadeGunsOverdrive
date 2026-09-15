@@ -419,7 +419,7 @@ public class HMGItem_Unified_Guns extends Item {
 							}
 							if (!gunInfo.isOneuse && HMG_proxy.ReloadKey_isPressed()) {
 								HMGPacketHandler.INSTANCE.sendToServer(new PacketreturnMgazineItem(entity.getEntityId()));
-								nbt.setInteger("RloadTime", 0);
+								// Only an accepted reload starts the timer; holding the key must not rewind it.
 							}
 							if(((EntityPlayer) entity).inventory.getStackInSlot(i) != null && ((EntityPlayer) entity).inventory.getStackInSlot(i).getItem() instanceof HMGItem_Unified_Guns) {
 								if (HMG_proxy.AttachmentKey_isPressed()) {
@@ -562,7 +562,7 @@ public class HMGItem_Unified_Guns extends Item {
 					if(world.isRemote && entity.riddenByEntity != null && entity.riddenByEntity == HMG_proxy.getEntityPlayerInstance()){
 						if (!gunInfo.isOneuse && HMG_proxy.ReloadKey_isPressed()) {
 							HMGPacketHandler.INSTANCE.sendToServer(new PacketreturnMgazineItem(entity.riddenByEntity.getEntityId()));
-							nbt.setInteger("RloadTime", 0);
+							// The accepted server reload owns timer initialization.
 						}
 						{
 

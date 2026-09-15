@@ -1,10 +1,23 @@
 package handmadeguns.animation;
 
 import java.util.Set;
+import net.minecraft.nbt.NBTTagCompound;
 
-/** Dependency-free reload presentation state shared by the packet bridge and animation tests. */
+/** Client-independent reload presentation state shared by the packet bridge and renderer. */
 public final class ReloadAnimationBridge {
     private ReloadAnimationBridge() { }
+
+    /** Select both legacy reload fields together; never copy presentation state into a cached stack. */
+    public static NBTTagCompound legacyTag(NBTTagCompound cached, NBTTagCompound live,
+                                           boolean localFirstPerson, boolean sameItem) {
+        return localFirstPerson && sameItem && live != null ? live : cached;
+    }
+
+    /** Legacy motion keys are in ticks, including the original final-frame snap. */
+    public static float legacyProgress(NBTTagCompound tag, float partialTick, int duration) {
+        float progress = tag.getInteger("RloadTime") + partialTick;
+        return progress + partialTick >= duration - 1 ? duration : progress;
+    }
 
     public static final class StartEvent {
         public final int eventId;

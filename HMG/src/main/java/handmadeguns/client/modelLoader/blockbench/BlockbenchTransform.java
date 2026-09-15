@@ -18,6 +18,7 @@ import java.util.List;
 public final class BlockbenchTransform {
     private static final double HMG_UNITS_PER_PIXEL = 3.0 / 16.0;
     private static final float HMG_MODEL_NORMALIZATION = 3.0f;
+    private static final float[] BEDROCK_PLAYER_HAND_FRAME = bedrockPlayerHandMatrix();
     private static final ThreadLocal<FloatBuffer> MATRIX = new ThreadLocal<FloatBuffer>() {
         @Override protected FloatBuffer initialValue() { return BufferUtils.createFloatBuffer(16); }
     };
@@ -64,14 +65,26 @@ public final class BlockbenchTransform {
         applyMatrix(translation(positioned[12], positioned[13], positioned[14]));
     }
 
-    /** Forge 1.7's equipped-item hand frame has the opposite depth convention to TaCZ. */
-    public static void applyThirdPersonPositioning(List<BlockbenchModel.Part> path, float units) {
-        if (path == null || path.isEmpty()) return;
-        float[] selected = inversePath(path, units);
-        float[] q = rotationX(180);
-        float[] positioned = multiply(multiply(q, selected), q);
-        positioned[14] = -positioned[14];
-        applyMatrix(positioned);
+    /** Undo RenderPlayer's BLOCK_3D and Forge's EQUIPPED_BLOCK transforms, then
+     * place the locator at the palm (-1,10,0 pixels relative to the right shoulder).
+     * Keep the inherited 0.375 * 0.5 size, but do not let it scale the hand anchor.
+     * The later presentationFrame turns Rx(-90) into Rx(90): muzzle -Z points
+     * down the arm (+Y), model +X remains arm +X. Arm postRender stays upstream.
+     */
+    public static float[] bedrockPlayerHandMatrix() {
+        float[] matrix = scale(2,2,2); // inverse HMG's initial half scale
+        matrix = multiply(matrix, translation(.5f,.5f,.5f)); // inverse EQUIPPED_BLOCK
+        matrix = multiply(matrix, scale(-8f/3,-8f/3,8f/3));
+        matrix = multiply(matrix, rotationY(-45));
+        matrix = multiply(matrix, rotationX(-20));
+        matrix = multiply(matrix, translation(.0625f,-.625f,.25f));
+        matrix = multiply(matrix, translation(-.0625f,.625f,0));
+        matrix = multiply(matrix, rotationX(-90));
+        return multiply(matrix, scale(.1875f,.1875f,.1875f));
+    }
+
+    public static void bedrockPlayerHandFrame() {
+        applyMatrix(BEDROCK_PLAYER_HAND_FRAME);
     }
 
     private static void applyMatrix(float[] matrix) {
@@ -99,6 +112,9 @@ public final class BlockbenchTransform {
     }
     private static float[] translation(float x,float y,float z) {
         float[] matrix=identity(); matrix[12]=x; matrix[13]=y; matrix[14]=z; return matrix;
+    }
+    private static float[] scale(float x,float y,float z) {
+        float[] matrix=identity(); matrix[0]=x; matrix[5]=y; matrix[10]=z; return matrix;
     }
     private static float[] rotationX(float degrees) {
         float[] matrix=identity(); double angle=Math.toRadians(degrees); float c=(float)Math.cos(angle),s=(float)Math.sin(angle);

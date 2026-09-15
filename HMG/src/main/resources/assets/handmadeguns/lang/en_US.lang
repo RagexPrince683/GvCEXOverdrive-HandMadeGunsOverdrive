@@ -3,6 +3,8 @@
 # ========================
 itemGroup.HMGCrafting=HMG Crafting
 itemGroup.HMG_Ores=HMG Ores
+itemGroup.HMG_Blockbench=HMG Blockbench
+itemGroup.HMG_Bedrock_TaCZ=HMG Bedrock / TaCZ
 
 # ========================
 # Base Materials / Ingots

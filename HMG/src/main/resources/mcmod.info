@@ -2,7 +2,7 @@
   {
     "modid": "HandmadeGuns",
     "name": "HandMadeGunsOverdrive",
-    "description": "Realistic gun mod for Minecraft 1.7.10, designed with MCHeli Overdrive in mind.\n\nCredits:\n\nOriginal mod & base models: SCOPE_MG36\nAK-47, KORD, M2HB: nicoemon2\nPistolet Makarova: YouwoSugokusuki\nRPG-7, Su-57, F-5A: _ryoma489_\nHMGO contributors: RagexPrince683, Zealot\nHMG Reborn models: KILL-D0ZER\nBMP-1, T-90, WZ-10 (unused), TOYOTA: SHCshanghaigani\nType 74: VISTA_analog\nMiG-29: 999tyousoku\nMiG-31, 2K22: Crni",
+    "description": "Realistic gun mod for Minecraft 1.7.10, designed with MCHeli Overdrive in mind.\n\nCredits:\n\nOriginal mod & base models: SCOPE_MG36\nAK-47, KORD, M2HB: nicoemon2\nPistolet Makarova: YouwoSugokusuki\nRPG-7, Su-57, F-5A: _ryoma489_\nHMGO contributors: RagexPrince683, Zealot\nHMG Reborn models: KILL-D0ZER\nBMP-1, T-90, WZ-10 (unused), TOYOTA: SHCshanghaigani\nType 74: VISTA_analog\nMiG-29: 999tyousoku\nMiG-31, 2K22: Crni\n\nAdditional unchanged model/animation assets are used under their respective licenses from TaCZ / Serene Wave Studio and credited TaCZ community gunpacks. See bundled CREDITS and LICENSE files for full attribution. No endorsement is implied.",
     "version": "${version}",
     "mcversion": "1.7.10",
     "url": "https://github.com/RagexPrince683/GvCEXOverdrive/",

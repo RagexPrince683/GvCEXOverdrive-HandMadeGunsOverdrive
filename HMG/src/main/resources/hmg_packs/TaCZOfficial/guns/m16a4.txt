@@ -1,0 +1,84 @@
+// HMG M16A4 gameplay with unchanged official TaCZ m16a4 presentation assets.
+// Source: Official TaCZ / Serene Wave Studio / Timeless Squad. See CREDITS.txt and LICENSE.txt.
+BulletPower,8
+BulletSpeed,19
+BulletGravity,0.485
+
+BlletSpread,0.0F
+ADS_Spread_coefficient,0.0F
+BlletSpreadDiffusion,5,0,1.8,0.2,3,0.6
+ElevationOffsets,     0,-0.12,-0.35,-0.6,-0.9,-1.35,-1.6,-2.2
+elevationOffsets_info,0,20m  ,40m ,60m ,80m ,120m ,150m,180m
+Cycle,1.5
+
+Recoil,3
+Recoil_sneaking,1.8
+
+Motion,0.95
+
+ReloadTime,47
+
+RemainingBullet,30
+
+Attacking,4.0f
+Zoom,1.0f,1.0f,4.0f
+
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+
+Texture,items/M16A4.png
+GunSound,handmadeguns.m16,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CustomFlash,arrow,1
+Bursts,1,3,0
+Rates,1.5,1.5,1.5,1.5
+
+attachRestriction,true
+allowattach,reddot
+allowattach,scope
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+
+SimpleADSOffsetY,0.9295,0.950,0.950
+
+
+
+SoundSpeed,1f
+
+ScopeTexture,null.png,null.png,misc/scope.png
+RenderCross,false
+
+MultiMagazine,HandmadeGuns:5.56mm magazine,HandmadeGuns:bullet_lmg_hmg_CMag,HandmadeGuns:5.56mm magazine20,HandmadeGuns:5.56mm magazine90
+//ReloadMotion
+//{
+//0,     0f , 0f , 0f,-0.3f,0.3f , 0f  ,0f,0f , 0f , 0.2f,1f,1.10f   , 0f  ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 2f,-2f,0f , 0f,0f,0f , 0f,0f,40f
+//1,     10f, 0f , 0f,-0.3f,0.3f , 0f  ,0f,0f , 0f , 0.2f,0.8f,1.10f , 0f  ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f,-1f,0f , 0f,0f,0f , 0f,0f,40f
+//2,     20f, 0f , 0f,-0.3f,0.3f , -20f,0f,0f , 0f , 0.2f,0.8f,1.10f , 0f  ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f,-1f,0f , 0f,0f,0f , 0f,0f,40f
+//3,     40f, 0f , 0f,-0.3f,0.3f , -20f,0f,0f , 0f , 0.2f,0.3f,1.10f , 0.7f,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f, 0f,0f , 0f,0f,0f , 0f,0f,0f
+//4,     50f, 0f , 0f,-0.3f,0.3f , 0f  ,0f,0f , 1f , 0f  ,0f  ,0f    , 0f ,0f,0f , 0f,0f,0f , 0f,0f,0f , 0f , 0f, 0f,0f , 0f,0f,0f , 0f,0f,0f
+//}
+
+
+
+
+
+
+
+
+
+
+GunSoundLV,165,1
+
+//addRecipe,AR_sample,1,abc,0ef,000,265,265,265,280,265,280,280,280,280
+
+BedrockModel,m16a4_geo.json
+ModelTexture,m16a4.png
+Animations,m16a4.animation.json,rifle_default.animation.json
+ModelScala,0.5f
+InworldScale,1.8f
+ModelArm,true
+Tabname,HMG_Bedrock_TaCZ
+
+Name,TaCZ M16A4
+AR,TaCZOfficial_M16A4

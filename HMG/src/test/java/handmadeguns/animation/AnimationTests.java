@@ -3,17 +3,23 @@ package handmadeguns.animation;
 import handmadeguns.client.modelLoader.blockbench.BlockbenchProject;
 import handmadeguns.client.modelLoader.blockbench.BedrockAnimationLoader;
 import handmadeguns.client.modelLoader.blockbench.BedrockGeometryLoader;
+import handmadeguns.client.modelLoader.blockbench.BlockbenchModel;
+import handmadeguns.client.modelLoader.blockbench.BlockbenchTransform;
+import net.minecraft.nbt.NBTTagCompound;
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Point3d;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
-/** Dependency-free regression entry point: Gradle animationTest, or Java 8 + Minecraft's Gson. */
+/** CPU-only regression entry point: Gradle animationTest on the existing Java 8 classpath. */
 public final class AnimationTests {
     private static int checks;
     private static final AnimationLoader LOADER = new AnimationLoader();
 
     public static void main(String[] args) throws Exception {
         parsing(); bedrockParsing(); bedrockGeometry(); evaluation(); transitions(); locomotion(); events(); isolationAndClock(); reloadBridge(); legacyReloadRegression();
+        legacyRendererState(); bedrockFaceOrientation(); thirdPersonTransform();
         if (args.length > 0) {
             AnimationDefinition example = LOADER.load(new File(args[0]));
             example.validateParts(new LinkedHashSet<String>(Arrays.asList("bolt", "magazine")));
@@ -85,6 +91,184 @@ public final class AnimationTests {
                 "attachment-free Glock renders only its standard magazine");
         check(ak.nodes.get("fixed").visible && ak.nodes.get("thirdperson_hand").visible,
                 "Bedrock item-positioning nodes remain available");
+        // The first three unrotated stock cubes have symmetric X bounds in both assets.
+        // Compare the same rendered surface (not reflected authored corner labels):
+        // TaCZ's face-name lookup and .bbmodel's X conversion put east on rendered -X.
+        // The native root's 24-pixel Y offset cancels against its bone origin below.
+        BlockbenchProject.Node projectWood = null;
+        for (BlockbenchProject.Node node : project.nodes.values())
+            if ("wood".equals(node.name) && !node.faces.isEmpty()) { projectWood = node; break; }
+        BlockbenchProject.Node nativeWood = ak.nodes.get("wood");
+        check(projectWood != null, "known-good AK wood reference exists");
+        for (int face=0;face<8;face++) {
+            BlockbenchProject.Face reference = projectWood.faces.get(face);
+            for (int corner=0;corner<4;corner++) {
+                float[] p = reference.vertices[corner];
+                double x = p[0] - projectWood.origin[0]*3/16 + nativeWood.origin[0]*3/16;
+                double y = p[1] - projectWood.origin[1]*3/16 + 4.5 + nativeWood.origin[1]*3/16;
+                double z = p[2] + projectWood.origin[2]*3/16 - nativeWood.origin[2]*3/16;
+                check(hasCorner(nativeWood.faces.subList(0,8), x,y,z,
+                        reference.uv[corner][0],reference.uv[corner][1]),
+                        "AK stock face " + face + " corner " + corner + " matches known-good bbmodel");
+            }
+        }
+    }
+
+    private static void legacyRendererState() {
+        NBTTagCompound cached = new NBTTagCompound(), live = new NBTTagCompound();
+        live.setBoolean("IsReloading", true);
+        handmadeguns.client.render.HMGGunParts_Motion motion = new handmadeguns.client.render.HMGGunParts_Motion();
+        motion.set(0,0,0,0,0,0,0, 20,0,-2,0,60,0,0);
+        handmadeguns.client.render.HMGGunParts_Motions motions = new handmadeguns.client.render.HMGGunParts_Motions();
+        motions.addmotion(motion); motions.init();
+        for (int tick : new int[]{0,1,5,10,18,19,20}) {
+            // Input is the live tick advanced by gunProcess/proceedreload, not packet initialization.
+            live.setInteger("RloadTime",tick);
+            NBTTagCompound state = ReloadAnimationBridge.legacyTag(cached,live,true,true);
+            check(state.getBoolean("IsReloading"), "live reload enters legacy renderer branch at tick " + tick);
+            float progress = ReloadAnimationBridge.legacyProgress(state,.25f,20);
+            near(progress,tick >= 19 ? 20 : tick+.25,"legacy renderer tick/partial interpolation");
+            handmadeguns.client.render.HMGGunParts_Motion key = motions.getmotionobject(progress);
+            check(key == motion,"renderer progress selects a legacy motion key");
+            near(key.posAndRotation(progress).rotationX,progress*3,"renderer progress produces reload transform");
+            near(ReloadAnimationBridge.legacyProgress(state,.25f,20),progress,"second render pass cannot advance timer");
+        }
+        check(!cached.getBoolean("IsReloading") && cached.getInteger("RloadTime") == 0,
+                "presentation does not mutate cached stack");
+        NBTTagCompound replacement = (NBTTagCompound)live.copy();
+        replacement.setInteger("RloadTime",11);
+        near(ReloadAnimationBridge.legacyProgress(ReloadAnimationBridge.legacyTag(cached,replacement,true,true),.5f,20),
+                11.5,"same-item stack replacement supplies the live renderer clock");
+        replacement.setBoolean("IsReloading",false); replacement.setInteger("RloadTime",0);
+        check(!ReloadAnimationBridge.legacyTag(live,replacement,true,true).getBoolean("IsReloading"),
+                "completion or interruption releases stale cached reload");
+        check(ReloadAnimationBridge.legacyTag(cached,live,false,true) == cached,"GUI/third-person/under-gun state isolated");
+        check(ReloadAnimationBridge.legacyTag(cached,live,true,false) == cached,"different held item cannot drive cached gun");
+        check(ReloadAnimationBridge.legacyTag(cached,null,true,true) == cached,"unequip preserves caller fallback");
+    }
+
+    private static BlockbenchProject cubeProject(String cube) throws IOException {
+        return BedrockGeometryLoader.parse(new StringReader("{\"format_version\":\"1.12.0\",\"minecraft:geometry\":[{"
+                + "\"description\":{\"texture_width\":64,\"texture_height\":32},"
+                + "\"bones\":[{\"name\":\"root\",\"pivot\":[0,24,0],\"cubes\":["+cube+"]}]}]}"),
+                new BufferedImage(128,64,BufferedImage.TYPE_INT_ARGB),new File("face-orientation.geo.json"),"atlas.png");
+    }
+
+    private static boolean hasCorner(List<BlockbenchProject.Face> faces, double x,double y,double z,double u,double v) {
+        for (BlockbenchProject.Face face : faces) for (int i=0;i<4;i++)
+            if (Math.abs(face.vertices[i][0]-x)<1e-5 && Math.abs(face.vertices[i][1]-y)<1e-5
+                    && Math.abs(face.vertices[i][2]-z)<1e-5 && Math.abs(face.uv[i][0]-u)<1e-6
+                    && Math.abs(face.uv[i][1]-v)<1e-6) return true;
+        return false;
+    }
+
+    private static void bedrockFaceOrientation() throws Exception {
+        String[] sides = {"east","west","up","down","south","north"};
+        // Exported physical corners at UV top-left, top-right, bottom-right, bottom-left.
+        // Written independently of the loader's Java-direction rings (x=bit0, y=bit1, z=bit2).
+        int[][] corners = {{6,2,0,4},{3,7,5,1},{6,7,3,2},{0,1,5,4},{7,6,4,5},{2,3,1,0}};
+        int[] faceOrder = {1,0,3,2,4,5};
+        for (boolean box : new boolean[]{false,true}) for (boolean mirror : new boolean[]{false,true})
+            for (boolean negative : new boolean[]{false,true}) {
+                double x = negative ? -2 : 2, y = negative ? -4 : 4, z = negative ? -6 : 6;
+                double[][] rectangles = box ? new double[][]{
+                        {0,z,z,z+y},{z+x,z,2*z+x,z+y},{z,0,z+x,z},{z+x,z,z+2*x,0},
+                        {2*z+x,z,2*z+2*x,z+y},{z,z,z+x,z+y}}
+                        : new double[6][4];
+                StringBuilder uv = new StringBuilder("{");
+                for (int side=0;side<6;side++) {
+                    if (!box) rectangles[side] = new double[]{side*9+1,side*3+1,side*9+6,side*3+(negative ? -1 : 3)};
+                    double[] r = rectangles[side];
+                    if (side>0) uv.append(',');
+                    uv.append('"').append(sides[side]).append("\":{\"uv\":[").append(r[0]).append(',').append(r[1])
+                            .append("],\"uv_size\":[").append(r[2]-r[0]).append(',').append(r[3]-r[1]).append("]}");
+                }
+                uv.append('}');
+                BlockbenchProject parsed = cubeProject("{\"origin\":[0,0,0],\"size\":["+x+","+y+","+z
+                        +"],\"mirror\":"+mirror+",\"uv\":"+(box ? "[0,0]" : uv.toString())+"}");
+                List<BlockbenchProject.Face> faces = parsed.nodes.get("root").faces;
+                for (int side=0;side<6;side++) {
+                    double[] r = rectangles[side];
+                    double[][] coords = {{r[0],r[1]},{r[2],r[1]},{r[2],r[3]},{r[0],r[3]}};
+                    for (int c=0;c<4;c++) {
+                        int corner = corners[side][c];
+                        double px = (corner&1)==0 ? 0 : x;
+                        if (box && mirror) px = x-px;
+                        double py = (corner&2)==0 ? 0 : y, pz = (corner&4)==0 ? 0 : z;
+                        check(hasCorner(Collections.singletonList(faces.get(faceOrder[side])),px*3/16,(24-py)*3/16,pz*3/16,
+                                coords[c][0]/64,coords[c][1]/32),
+                                sides[side]+" atlas corner "+c+" box="+box+" mirror="+mirror+" negative="+negative);
+                    }
+                    if (!negative) {
+                        BlockbenchProject.Face f = faces.get(faceOrder[side]);
+                        // Mesh emits 0,3,2,1; test the actual outgoing winding, not the saved ring.
+                        double ax=f.vertices[3][0]-f.vertices[0][0], ay=f.vertices[3][1]-f.vertices[0][1], az=f.vertices[3][2]-f.vertices[0][2];
+                        double bx=f.vertices[2][0]-f.vertices[0][0], by=f.vertices[2][1]-f.vertices[0][1], bz=f.vertices[2][2]-f.vertices[0][2];
+                        double[] normal = {ay*bz-az*by,az*bx-ax*bz,ax*by-ay*bx};
+                        int axis=side/2; double sign=side%2==0 ? -1 : 1;
+                        if (side>=4) sign=-sign;
+                        if (box && mirror && axis==0) sign=-sign;
+                        check(normal[axis]*sign>0,"outgoing "+sides[side]+" winding box="+box+" mirror="+mirror);
+                    }
+                }
+            }
+    }
+
+    private static Matrix4d matrix(float[] columnMajor) {
+        Matrix4d value=new Matrix4d();
+        for(int r=0;r<4;r++) for(int c=0;c<4;c++) value.setElement(r,c,columnMajor[c*4+r]);
+        return value;
+    }
+    private static Matrix4d transform(double x,double y,double z,double rx,double ry,double rz,double sx,double sy,double sz) {
+        Matrix4d value=new Matrix4d(); value.setIdentity(); value.m03=x; value.m13=y; value.m23=z;
+        Matrix4d r=new Matrix4d(); r.rotZ(Math.toRadians(rz)); value.mul(r);
+        r.rotY(Math.toRadians(ry)); value.mul(r); r.rotX(Math.toRadians(rx)); value.mul(r);
+        r.setIdentity(); r.m00=sx; r.m11=sy; r.m22=sz; value.mul(r); return value;
+    }
+    private static void thirdPersonTransform() throws Exception {
+        // Independently compose the inspected 1.7 RenderPlayer -> Forge -> HMG call chain.
+        Matrix4d upstream=transform(-.0625,.625,-.25,20,0,0,1,1,1);
+        upstream.mul(transform(0,0,0,0,45,0,-.375,-.375,.375));
+        upstream.mul(transform(-.5,-.5,-.5,0,0,0,.5,.5,.5));
+        Matrix4d bridge=matrix(BlockbenchTransform.bedrockPlayerHandMatrix());
+        Matrix4d q=transform(0,0,0,180,0,0,1,1,1);
+        Matrix4d result=new Matrix4d(upstream); result.mul(bridge); result.mul(q);
+        Matrix4d expected=transform(-.0625,.625,0,90,0,0,.1875,.1875,.1875);
+        check(result.epsilonEquals(expected,1e-6),"Bedrock hand frame cancels Forge transforms and points muzzle down arm");
+
+        // AKS74U uses these default third-person offsets. Its AK74.mqo barrelShort
+        // vertices extend along +Z (373..459 MQO units); TaCZ's muzzle is -Z.
+        Matrix4d legacy=new Matrix4d(upstream);
+        legacy.mul(transform(0,0,0,110,0,0,1,1,1));
+        legacy.mul(transform(0,0,0,0,-20,0,1,1,1));
+        legacy.mul(transform(0,0,0,0,0,135,1,1,1));
+        legacy.mul(transform(.2,-1.75,-1.55,0,0,0,1,1,1));
+        check(legacy.m12>0,"AKS74U legacy barrel +Z points down arm like TaCZ -Z");
+        near(Math.sqrt(legacy.m02*legacy.m02+legacy.m12*legacy.m12+legacy.m22*legacy.m22),.1875,
+                "Bedrock preserves existing HMG third-person size magnitude");
+
+        BlockbenchProject parsed=BedrockGeometryLoader.parse(new StringReader("{\"format_version\":\"1.12.0\",\"minecraft:geometry\":[{"
+                +"\"description\":{\"texture_width\":64,\"texture_height\":32},\"bones\":["
+                +"{\"name\":\"root\",\"pivot\":[1,8,6],\"rotation\":[10,20,30]},"
+                +"{\"name\":\"thirdperson_hand\",\"parent\":\"root\",\"pivot\":[2,7,5],\"rotation\":[-15,25,5]}]}]}"),
+                new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB),new File("hand.geo.json"),"atlas.png");
+        java.lang.reflect.Constructor<BlockbenchModel.Part> ctor=BlockbenchModel.Part.class.getDeclaredConstructor(BlockbenchProject.Node.class,boolean.class);
+        ctor.setAccessible(true);
+        List<BlockbenchModel.Part> path=new ArrayList<BlockbenchModel.Part>();
+        for(BlockbenchProject.Node n:parsed.nodes.values()) path.add(ctor.newInstance(n,true));
+        java.lang.reflect.Method inverse=BlockbenchTransform.class.getDeclaredMethod("inversePath",List.class,float.class);
+        inverse.setAccessible(true);
+        for(float units:new float[]{.5f,1,2}) {
+            Matrix4d forward=new Matrix4d(); forward.setIdentity();
+            for(BlockbenchModel.Part p:path) forward.mul(transform(p.localOrigin[0]*units,p.localOrigin[1]*units,p.localOrigin[2]*units,
+                    p.restRotation[0],p.restRotation[1],p.restRotation[2],1,1,1));
+            Matrix4d inv=matrix((float[])inverse.invoke(null,path,units));
+            Matrix4d aligned=new Matrix4d(upstream); aligned.mul(bridge);
+            aligned.mul(q); aligned.mul(inv); aligned.mul(forward);
+            check(aligned.epsilonEquals(expected,1e-6),"nested rotated locator cancels all axes at units="+units);
+            Point3d palm=new Point3d(); aligned.transform(palm);
+            near(palm.x,-.0625,"locator palm X"); near(palm.y,.625,"locator palm down-arm Y"); near(palm.z,0,"locator palm depth");
+        }
     }
 
     private static AnimationDefinition parse(String clips) throws IOException {
@@ -174,25 +358,25 @@ public final class AnimationTests {
         near(project.textures.get(0).width,64,"Bedrock texture width");
         near(project.textures.get(0).height,32,"Bedrock texture height");
         near(root.faces.get(0).uv[0][0],18.0/64.0,"Bedrock inherited mirror box U");
-        near(root.faces.get(0).uv[0][1],18.0/32.0,"Bedrock mirrored box V follows its physical vertex");
+        near(root.faces.get(0).uv[0][1],14.0/32.0,"Bedrock mirrored box V follows its physical vertex");
         near(root.faces.get(0).uv[1][0],12.0/64.0,"Bedrock mirrored box opposite U");
-        near(root.faces.get(0).uv[1][1],18.0/32.0,"Bedrock mirrored box opposite V");
+        near(root.faces.get(0).uv[1][1],14.0/32.0,"Bedrock mirrored box opposite V");
         near(root.faces.get(0).vertices[0][0],-0.28125,"Bedrock mirrored inflate/position X");
         near(root.faces.get(0).vertices[0][1],-0.46875,"Bedrock inflate/position Y");
         near(root.faces.get(0).vertices[0][2],0.65625,"Bedrock inflate/position Z");
         BlockbenchProject.Face negativeBox = root.faces.get(6);
         near(negativeBox.uv[0][0],1.0/64.0,"Bedrock non-mirrored negative-size box U");
-        near(negativeBox.uv[0][1],1.0/32.0,"Bedrock non-mirrored negative-size box V");
+        near(negativeBox.uv[0][1],2.0/32.0,"Bedrock non-mirrored negative-size box V");
         near(negativeBox.vertices[0][0],0,"Bedrock negative dimension retains TaCZ endpoint order");
         BlockbenchProject.Face down = child.faces.get(0), north = child.faces.get(1);
         near(north.uv[0][0],4.0/64.0,"Bedrock north per-face U follows TaCZ vertex order");
-        near(north.uv[0][1],2.0/32.0,"Bedrock north per-face V follows TaCZ vertex order");
+        near(north.uv[0][1],6.0/32.0,"Bedrock north per-face V follows TaCZ vertex order");
         near(north.uv[3][0],4.0/64.0,"Bedrock north final U corner");
-        near(north.uv[3][1],6.0/32.0,"Bedrock north final V corner");
+        near(north.uv[3][1],2.0/32.0,"Bedrock north final V corner");
         near(down.uv[0][0],6.0/64.0,"Bedrock negative UV extent U");
-        near(down.uv[0][1],9.0/32.0,"Bedrock negative UV extent V");
+        near(down.uv[0][1],6.0/32.0,"Bedrock negative UV extent V");
         near(down.uv[3][0],6.0/64.0,"Bedrock negative UV final U corner");
-        near(down.uv[3][1],6.0/32.0,"Bedrock negative UV final V corner");
+        near(down.uv[3][1],9.0/32.0,"Bedrock negative UV final V corner");
         expectFailure(() -> BedrockGeometryLoader.parse(new StringReader(json.replace(
                 "\"pivot\":[1,2,3]", "\"pivot\":[1,2,3],\"poly_mesh\":{}")),
                 new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB), new File("bad.geo.json"), "bad.png"),

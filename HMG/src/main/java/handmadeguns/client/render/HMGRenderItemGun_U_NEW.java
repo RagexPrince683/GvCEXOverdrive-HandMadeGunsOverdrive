@@ -414,6 +414,9 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				GL11.glColor4f(1f, 1f, 1f, 1f);
 
 				// Inventory orientation
+				if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel
+						&& ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).project.bedrock)
+					GL11.glTranslatef(8.0F, 0, 0); // GUI pixels, before any model angle or scale.
 				GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
 				GL11.glTranslatef(9.5F, 0.5F, 5.5F);
 				// Apply author displacement before scaling so InventoryScale cannot magnify it.
@@ -470,8 +473,14 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		float scala = this.modelscala;
 		gunitem.checkTags(gunstack);
 		nbt = gunstack.getTagCompound();
+		ItemStack live = Minecraft.getMinecraft().thePlayer == null ? null : Minecraft.getMinecraft().thePlayer.getHeldItem();
+		boolean localFirstPerson = type == ItemRenderType.EQUIPPED_FIRST_PERSON && !isUnder && !isPlacedGun
+				&& data != null && data.length > 1 && data[1] == Minecraft.getMinecraft().thePlayer;
+		NBTTagCompound reloadTag = handmadeguns.animation.ReloadAnimationBridge.legacyTag(nbt,
+				live == null ? null : live.getTagCompound(), localFirstPerson,
+				live != null && live.getItem() == gunstack.getItem());
 		boolean currentReloadState = handmadeguns.client.animation.AnimationClient.reloadState(
-				partsRender_gun, nbt.getBoolean("IsReloading"));
+				partsRender_gun, reloadTag.getBoolean("IsReloading"));
 		partsRender_gun.gunSkinTexture = HMGGunSkinTextures.available(HMGGunSkinRegistry.appliedTexture(gunstack));
 		partsRender_gun.renderGunSkinOverlay = false;
 		items[0] = null;
@@ -723,7 +732,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 					if (blockbenchPresentation)
 						((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model)
 								.applyFirstPersonPosition(currentReloadState ? 0 : adsBlend, partsRender_gun.gunPartsScale);
-					rendering_situation(gunstack, entity, currentReloadState);
+					rendering_situation(gunstack, entity, currentReloadState, reloadTag);
 
 					GL11.glPopMatrix();
 					isfirstperson = false;
@@ -922,6 +931,10 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	}
 
 	private void glMatrixForRenderBlockbenchEntityPlayer() {
+		if (((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).project.bedrock) {
+			handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.bedrockPlayerHandFrame();
+			return;
+		}
 		// RenderPlayer has already moved to the arm and Forge has applied its 3-D
 		// equipped-item helper. Retain HMG's fixed hand-origin bridge, then let the
 		// authored thirdperson_hand inverse supply the model-relative placement.
@@ -1094,6 +1107,9 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	}
 
 	public void rendering_situation(ItemStack gunstack,Entity entity, boolean isreloading){
+		rendering_situation(gunstack, entity, isreloading, nbt);
+	}
+	private void rendering_situation(ItemStack gunstack,Entity entity, boolean isreloading, NBTTagCompound reloadTag){
 		int remainbullets = gunitem.remain_Bullet(gunstack);
 		if (nbt == null) gunitem.checkTags(gunstack);
 		boolean recoiled = this.getbooleanfromnbt("Recoiled");
@@ -1136,8 +1152,8 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		boolean importedReloadOwner = handmadeguns.client.animation.AnimationClient.ownsReload(partsRender_gun);
 		if (isreloading && (!(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
 				|| !importedReloadOwner)) {
-			float reloadprogress = this.getintfromnbt("RloadTime") + smoothing;
-			if(reloadprogress + smoothing >= gunitem.reloadTime(gunstack)-1)reloadprogress = gunitem.reloadTime(gunstack);
+			float reloadprogress = handmadeguns.animation.ReloadAnimationBridge.legacyProgress(
+					reloadTag, smoothing, gunitem.reloadTime(gunstack));
 			partsRender_gun.partSidentification(new GunState[]{GunState.Reload}, (float) reloadprogress, remainbullets);
 		} else if (isreloading) {
 			// Imported animations own the visual reload pose. The neutral HMG state

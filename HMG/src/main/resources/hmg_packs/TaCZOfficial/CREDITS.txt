@@ -1,0 +1,16 @@
+Official TaCZ presentation assets
+=================================
+
+Source: Timeless and Classics Zero (TaCZ), including its bundled default gun pack.
+Project: Serene Wave Studio / Timeless Squad.
+
+Credited contributors identified by the upstream project and supplied source inventory:
+286799714; TartaricAcid; F1zeiL; xjqsh; ClumsyAlien; NekoCrane; Receke;
+Pos_2333; Argon4W; Exopandora; 3TUSK.
+
+HMG-Overdrive uses byte-for-byte copies of the selected geometry, texture, and
+animation resources. HMG gameplay definitions, ballistics, magazines, attachments,
+fire sounds, and authority remain HMG-owned. Inclusion does not imply endorsement
+of HMG-Overdrive by TaCZ or any contributor.
+
+The upstream README.txt and LICENSE.txt are retained beside this notice.
