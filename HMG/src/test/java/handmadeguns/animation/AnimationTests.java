@@ -67,6 +67,24 @@ public final class AnimationTests {
             // RPK uses the legacy compatible-parts generator; AKS has explicit authored keys.
             if ("AKS74U".equals(name)) check(movingReload,"AKS authored reload produces a non-neutral pose without Minecraft");
         }
+        File compatibility = new File(packs, "TaCZCompatibility");
+        BlockbenchProject ak = BedrockGeometryLoader.load(
+                new File(compatibility, "models/ak47_geo.json"),
+                new File(compatibility, "textures/models/ak47.png"));
+        BlockbenchProject glock = BedrockGeometryLoader.load(
+                new File(compatibility, "models/glock_17_geo.json"),
+                new File(compatibility, "textures/models/glock_17.png"));
+        check(!ak.nodes.get("mount").visible && ak.nodes.get("rail2").parent == ak.nodes.get("mount"),
+                "attachment-free AK hides the mount and its sight-rail subtree");
+        check(!ak.nodes.get("additional_magazine").visible && !glock.nodes.get("additional_magazine").visible,
+                "animation-only additional magazines are hidden in the base state");
+        check(glock.nodes.get("mag_standard").visible
+                        && !glock.nodes.get("mag_extended_1").visible
+                        && !glock.nodes.get("mag_extended_2").visible
+                        && !glock.nodes.get("mag_extended_3").visible,
+                "attachment-free Glock renders only its standard magazine");
+        check(ak.nodes.get("fixed").visible && ak.nodes.get("thirdperson_hand").visible,
+                "Bedrock item-positioning nodes remain available");
     }
 
     private static AnimationDefinition parse(String clips) throws IOException {
@@ -134,16 +152,21 @@ public final class AnimationTests {
                 + "\"bones\":["
                 + "{\"name\":\"root\",\"pivot\":[1,2,3],\"rotation\":[10,20,30],\"mirror\":true,\"cubes\":["
                 + "{\"origin\":[0,0,0],\"size\":[2,4,6],\"inflate\":0.5,\"uv\":[4,8]},"
-                + "{\"origin\":[2,2,2],\"size\":[-1,1,1],\"uv\":[0,0]}]},"
+                + "{\"origin\":[2,2,2],\"size\":[-1,1,1],\"mirror\":false,\"uv\":[0,0]}]},"
                 + "{\"name\":\"child\",\"parent\":\"root\",\"pivot\":[2,4,6],\"cubes\":["
                 + "{\"origin\":[1,2,3],\"size\":[2,2,2],\"pivot\":[2,3,4],\"rotation\":[0,45,0],\"uv\":{"
                 + "\"north\":{\"uv\":[1,2],\"uv_size\":[3,4]},\"down\":{\"uv\":[8,9],\"uv_size\":[-2,-3]}}}]},"
-                + "{\"name\":\"idle_view\",\"parent\":\"root\",\"pivot\":[0,12,4]}]}]}";
+                + "{\"name\":\"idle_view\",\"parent\":\"root\",\"pivot\":[0,12,4]},"
+                + "{\"name\":\"mount\",\"parent\":\"root\"},"
+                + "{\"name\":\"attachment_adapter\",\"parent\":\"root\"},"
+                + "{\"name\":\"adapter_child\",\"parent\":\"attachment_adapter\"}]}]}";
         BlockbenchProject project = BedrockGeometryLoader.parse(new StringReader(json),
                 new BufferedImage(64,32,BufferedImage.TYPE_INT_ARGB), new File("synthetic.geo.json"), "test.png");
-        check(project.nodes.size() == 3 && project.roots.size() == 1, "Bedrock hierarchy imported");
+        check(project.nodes.size() == 6 && project.roots.size() == 1, "Bedrock hierarchy imported");
         BlockbenchProject.Node root = project.nodes.get("root"), child = project.nodes.get("child");
         check(child.parent == root && root.children.contains(child), "Bedrock parent link");
+        check(!project.nodes.get("mount").visible && !project.nodes.get("adapter_child").visible,
+                "Bedrock base state hides conditional mount and adapter geometry");
         near(root.origin[0],-1,"Bedrock pivot converted to project space");
         near(root.origin[1],-22,"Bedrock root uses TaCZ 24-pixel Y origin");
         near(root.rotation[2],30,"Bedrock rest rotation");
@@ -151,10 +174,25 @@ public final class AnimationTests {
         near(project.textures.get(0).width,64,"Bedrock texture width");
         near(project.textures.get(0).height,32,"Bedrock texture height");
         near(root.faces.get(0).uv[0][0],18.0/64.0,"Bedrock inherited mirror box U");
-        near(root.faces.get(0).uv[0][1],14.0/32.0,"Bedrock box V");
+        near(root.faces.get(0).uv[0][1],18.0/32.0,"Bedrock mirrored box V follows its physical vertex");
+        near(root.faces.get(0).uv[1][0],12.0/64.0,"Bedrock mirrored box opposite U");
+        near(root.faces.get(0).uv[1][1],18.0/32.0,"Bedrock mirrored box opposite V");
         near(root.faces.get(0).vertices[0][0],-0.28125,"Bedrock mirrored inflate/position X");
         near(root.faces.get(0).vertices[0][1],-0.46875,"Bedrock inflate/position Y");
         near(root.faces.get(0).vertices[0][2],0.65625,"Bedrock inflate/position Z");
+        BlockbenchProject.Face negativeBox = root.faces.get(6);
+        near(negativeBox.uv[0][0],1.0/64.0,"Bedrock non-mirrored negative-size box U");
+        near(negativeBox.uv[0][1],1.0/32.0,"Bedrock non-mirrored negative-size box V");
+        near(negativeBox.vertices[0][0],0,"Bedrock negative dimension retains TaCZ endpoint order");
+        BlockbenchProject.Face down = child.faces.get(0), north = child.faces.get(1);
+        near(north.uv[0][0],4.0/64.0,"Bedrock north per-face U follows TaCZ vertex order");
+        near(north.uv[0][1],2.0/32.0,"Bedrock north per-face V follows TaCZ vertex order");
+        near(north.uv[3][0],4.0/64.0,"Bedrock north final U corner");
+        near(north.uv[3][1],6.0/32.0,"Bedrock north final V corner");
+        near(down.uv[0][0],6.0/64.0,"Bedrock negative UV extent U");
+        near(down.uv[0][1],9.0/32.0,"Bedrock negative UV extent V");
+        near(down.uv[3][0],6.0/64.0,"Bedrock negative UV final U corner");
+        near(down.uv[3][1],6.0/32.0,"Bedrock negative UV final V corner");
         expectFailure(() -> BedrockGeometryLoader.parse(new StringReader(json.replace(
                 "\"pivot\":[1,2,3]", "\"pivot\":[1,2,3],\"poly_mesh\":{}")),
                 new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB), new File("bad.geo.json"), "bad.png"),
@@ -414,6 +452,11 @@ public final class AnimationTests {
         check(!empty.ownsAction(), "explicit invalidation releases ACTION owner");
 
         ReloadAnimationBridge.State rejected = new ReloadAnimationBridge.State();
+        check(ReloadAnimationBridge.matches(new ReloadAnimationBridge.StartEvent(3, 2, 100, false), 2, 100),
+                "accepted reload identity also routes to the legacy presentation timer");
+        check(!ReloadAnimationBridge.matches(new ReloadAnimationBridge.StartEvent(3, 1, 100, false), 2, 100)
+                        && !ReloadAnimationBridge.matches(new ReloadAnimationBridge.StartEvent(3, 2, 101, false), 2, 100),
+                "legacy reload routing rejects another slot or gun");
         check(rejected.accept(ReloadAnimationBridge.acceptedEvent(false, 3, 2, 100, false),
                 2, 100, variants) == null, "rejected reload emits no animation event");
         check(rejected.accept(new ReloadAnimationBridge.StartEvent(4, 1, 100, false),

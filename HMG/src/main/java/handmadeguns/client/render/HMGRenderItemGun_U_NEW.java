@@ -324,6 +324,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 
 	static Object[] datas;
 	int pass = 0;
+	private boolean inventoryPreview;
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack gunstack, Object... data) {
 		if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
@@ -428,9 +429,15 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				RenderHelper.enableStandardItemLighting();
 				GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 
-				// *** CRITICAL ***
-				// Call the NORMAL gun renderer ONCE
-				rendering(ItemRenderType.ENTITY, previewStack, data);
+				// Call the normal gun renderer once while retaining the GUI context for
+				// native Bedrock's authored fixed-item origin.
+				boolean previousInventoryPreview = inventoryPreview;
+				inventoryPreview = true;
+				try {
+					rendering(ItemRenderType.ENTITY, previewStack, data);
+				} finally {
+					inventoryPreview = previousInventoryPreview;
+				}
 
 				GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 				RenderHelper.disableStandardItemLighting();
@@ -766,6 +773,9 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				GL11.glPushMatrix();
 				HMGDroppedGunRenderHelper.applyGroundTransform(data);
 				GL11.glScalef(0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1), 0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1), 0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1));
+				if (inventoryPreview && model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+					((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model)
+							.applyInventoryPosition(partsRender_gun.gunPartsScale);
 				rendering_situation(gunstack,null, currentReloadState);
 				GL11.glPopMatrix();
 				smoothing = HandmadeGunsCore.smooth;

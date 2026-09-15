@@ -95,7 +95,8 @@ public final class BedrockGeometryLoader {
         BlockbenchProject.Node parent = parentName.isEmpty() ? null
                 : build(parentName, definitions, project, visiting, depth + 1);
         BlockbenchProject.Node node = new BlockbenchProject.Node(name, name,
-                projectPosition(vector(json, "pivot", 3, 0)), projectRotation(vector(json, "rotation", 3, 0)), parent);
+                projectPosition(vector(json, "pivot", 3, 0)), projectRotation(vector(json, "rotation", 3, 0)), parent,
+                baseVisible(name, parent));
         if (name.isEmpty()) project.warnings.add("Unnamed Bedrock bone retained with an empty part identifier");
         project.nodes.put(name, node);
         if (parent == null) project.roots.add(node); else parent.children.add(node);
@@ -106,6 +107,17 @@ public final class BedrockGeometryLoader {
         if ("camera".equals(name) || "constraint".equals(name))
             project.warnings.add("TaCZ camera/constraint bones are retained as parts; their animated camera effects are not applied");
         return node;
+    }
+
+    /** TaCZ's ordinary, attachment-free gun state. Dynamic attachment selection remains HMG-owned. */
+    private static boolean baseVisible(String name, BlockbenchProject.Node parent) {
+        if (parent != null && "attachment_adapter".equals(parent.name)) return false;
+        return !("mount".equals(name) || "sight_folded".equals(name)
+                || "mag_extended_1".equals(name) || "mag_extended_2".equals(name)
+                || "mag_extended_3".equals(name) || "additional_magazine".equals(name)
+                || "handguard_tactical".equals(name) || "muzzle_pos".equals(name)
+                || "stock_pos".equals(name) || "grip_pos".equals(name)
+                || "laser_pos".equals(name) || "extended_mag_pos".equals(name));
     }
 
     private static void cube(JsonObject cube, BlockbenchProject.Node node, boolean boneMirror,
@@ -176,8 +188,11 @@ public final class BedrockGeometryLoader {
                 point[axis] = (corner & (1 << axis)) == 0 ? from[axis]-inflate : to[axis]+inflate;
             vertices[i] = BlockbenchTransform.point(BlockbenchTransform.rotate(projectPosition(point),
                     projectPosition(pivot), projectRotation(rotation)), node.origin);
-            coords[i][0] = (float)(uvCorners[index][0] / texture.width);
-            coords[i][1] = (float)(uvCorners[index][1] / texture.height);
+            // Coordinate conversion reverses the Y corner order. Keep TaCZ's UV bound
+            // to the same physical vertex instead of reversing the UV ring a second time.
+            int uvIndex = 3 - index;
+            coords[i][0] = (float)(uvCorners[uvIndex][0] / texture.width);
+            coords[i][1] = (float)(uvCorners[uvIndex][1] / texture.height);
         }
         node.faces.add(new BlockbenchProject.Face(0, vertices, coords));
     }

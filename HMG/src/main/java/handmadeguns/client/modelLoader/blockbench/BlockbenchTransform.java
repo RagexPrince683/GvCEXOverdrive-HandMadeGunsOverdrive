@@ -52,6 +52,29 @@ public final class BlockbenchTransform {
         // (Q * node^-1 * Q^-1) * Q * model = Q * node^-1 * model.
         float[] q = rotationX(180);
         float[] matrix = multiply(multiply(q, selected), q);
+        applyMatrix(matrix);
+    }
+
+    /** HMG's GUI supplies its standard preview angle; TaCZ fixed nodes supply the anchor only. */
+    public static void applyPositioningTranslation(List<BlockbenchModel.Part> path, float units) {
+        if (path == null || path.isEmpty()) return;
+        float[] selected = inversePath(path, units);
+        float[] q = rotationX(180);
+        float[] positioned = multiply(multiply(q, selected), q);
+        applyMatrix(translation(positioned[12], positioned[13], positioned[14]));
+    }
+
+    /** Forge 1.7's equipped-item hand frame has the opposite depth convention to TaCZ. */
+    public static void applyThirdPersonPositioning(List<BlockbenchModel.Part> path, float units) {
+        if (path == null || path.isEmpty()) return;
+        float[] selected = inversePath(path, units);
+        float[] q = rotationX(180);
+        float[] positioned = multiply(multiply(q, selected), q);
+        positioned[14] = -positioned[14];
+        applyMatrix(positioned);
+    }
+
+    private static void applyMatrix(float[] matrix) {
         FloatBuffer buffer = MATRIX.get();
         buffer.clear(); buffer.put(matrix); buffer.flip();
         GL11.glMultMatrix(buffer);

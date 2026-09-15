@@ -40,9 +40,12 @@ Other widespread markers include `positioning`, `fixed`, `ground`, `refit_view`,
 - `idle_view`, falling back to `camera`, for first-person hip placement.
 - `iron_view` for first-person ADS placement.
 - `thirdperson_hand` for the player-held third-person origin.
+- `fixed` for HMG's 3D inventory and creative-tab preview origin.
 - `lefthand_pos` and `righthand_pos` for first-person player arms when `ModelArm` is enabled.
 
-The remaining markers retain their hierarchy and transforms as ordinary bones. They are not automatically wired to HMG muzzle effects, optics, shell spawning, or attachment selection because those are already owned by HMG definitions and gameplay. This avoids importing a second, competing state system.
+The exported geometry does not encode its base visibility by itself. TaCZ applies that state in `BedrockGunModel`: an attachment-free gun hides `mount`, `sight_folded`, `mag_extended_1` through `mag_extended_3`, `additional_magazine`, `handguard_tactical`, non-scope attachment-position geometry, and every child of `attachment_adapter`. HMG applies this same generic base state during Bedrock import. For example, the AK's `rail2` is a child of `mount`, and the Glock's standard and extended magazines are mutually exclusive. Dynamic attachment selection is still owned by HMG rather than importing TaCZ's attachment controller.
+
+The remaining markers retain their hierarchy and transforms as ordinary bones. They are not automatically wired to HMG muzzle effects, optics, shell spawning, or dynamic attachment selection because those are already owned by HMG definitions and gameplay. This avoids importing a second, competing state system.
 
 Readable exported models are cube-based Bedrock geometry using nested bones, pivots/rest rotations, per-face or box UVs, mirror, frequent cube `inflate`, and authored texture dimensions. A broader loader pass parsed all 813 geometry files in the five readable trees with zero failures: official 264, SX 114, ClassicRCCRP 284, Continental 53, and WaT 98. That pass also found recurring negative cube dimensions and one explicitly unnamed bone; both are accepted because TaCZ's renderer accepts them. No readable target required `poly_mesh`, texture meshes, locator objects, or bone bindings. Textures are ordinary PNGs selected explicitly by the HMG gun definition.
 
@@ -123,6 +126,8 @@ All 57 displays have a complete readable ordinary-presentation set after their d
 - Ordered missing-clip merge: a `.bbmodel` project's embedded actions or a first weapon-local animation file wins, while later shared defaults supply omitted movement names.
 - Optional absent Bedrock animation tracks are ignored with a diagnostic; remaining tracks stay strict.
 - `BedrockModel` and explicit `ModelTexture` gun directives, plus initial ordinary HMG definitions for the unchanged official AK-47 and Glock 17 assets.
+- Native Bedrock base-state visibility; authored `fixed` GUI centering and fixed-context scale under HMG's existing inventory angle; and TaCZ's default third-person locator factor with Forge 1.7 hand-depth conversion. Native `.bbmodel` presentation remains unchanged.
+- TaCZ-compatible Bedrock UV-to-vertex binding for box/per-face cubes, mirror, inflate, negative dimensions and declared texture resolution. Geometry and texture assets remain unchanged.
 - A format-level rejection for root or `recursion/taczpack.dat` payloads.
 - Failure isolation: a bad external fallback logs a diagnostic but no longer discards valid embedded project animations.
 
@@ -133,10 +138,10 @@ The following are not necessary for ordinary weapon presentation and were delibe
 - TaCZ Lua/state-machine execution, timers, and queries.
 - Under-barrel/GP-25/M320-specific firing, selection, ammunition, and networking.
 - Pack-specific fire selectors, inspect variants, tactical-rush logic, or custom run scripts.
-- Automatic attachment/refit selection, extended-magazine state, bullet visibility, optics, laser, muzzle, shell, and camera-constraint logic.
+- Dynamic attachment/refit selection, non-default extended-magazine state, bullet visibility, optics, laser, muzzle, shell, and camera-constraint logic.
 - Ballistics, recoil authority, movement rules, stamina, inventory, reload gameplay, or server authority changes.
 - Decoding, unpacking, reverse-engineering, or importing Warzone's private `taczpack.dat` payload.
 
 Still unsupported are glTF, Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple-geometry files, versions outside the audited 1.12.0/1.21.0 pair, nonnumeric Molang, global/quaternion interpolation, and script-driven animation expressions. `walk_aiming_2` is retained and directly callable but is not guessed as a universal state because only the pistol default exposes it and the condition belongs to TaCZ's script. Per-shell/per-round weapons may have usable specialized clip names even when the conservative standard-family check above reports no reload; HMG does not infer their gameplay sequence.
 
-Runtime work remains: visually accept the representative AK-47/Glock 17 in first/third person, ADS, directional movement, run transitions, action interruption, hands, UVs, hidden variants, GUI/dropped views, and optional renderer paths in Minecraft 1.7.10. After that gate, additional source-complete weapons can receive ordinary HMG definitions in batches; exceptions above should not be silently promoted.
+Manual runtime validation has confirmed representative AK-47/Glock 17 first-person rendering, actions, locomotion transitions, skin compatibility, base visibility filtering and GUI centering. Remaining acceptance includes the corrected GUI angle/scale, AK UV presentation, third-person forward placement, legacy reload playback, dropped views and optional renderer paths in Minecraft 1.7.10. After that gate, additional source-complete weapons can receive ordinary HMG definitions in batches; exceptions above should not be silently promoted.

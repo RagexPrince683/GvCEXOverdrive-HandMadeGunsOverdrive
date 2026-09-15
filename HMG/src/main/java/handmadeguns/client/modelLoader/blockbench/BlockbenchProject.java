@@ -27,10 +27,13 @@ public final class BlockbenchProject {
             this.parent = parent;
         }
         Node(String uuid, String name, double[] origin, double[] rotation, Node parent) {
+            this(uuid, name, origin, rotation, parent, true);
+        }
+        Node(String uuid, String name, double[] origin, double[] rotation, Node parent, boolean visible) {
             if (uuid == null) throw new IllegalArgumentException("Bone without identifier");
             this.uuid = uuid; this.name = name == null ? uuid : name;
             this.origin = origin.clone(); this.rotation = rotation.clone();
-            visible = true; this.parent = parent;
+            this.visible = visible; this.parent = parent;
         }
     }
     public static final class Face {

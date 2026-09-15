@@ -24,6 +24,11 @@ public final class ReloadAnimationBridge {
         return accepted ? new StartEvent(eventId, slot, itemId, empty) : null;
     }
 
+    /** Shared identity gate for imported ACTION requests and legacy presentation state. */
+    public static boolean matches(StartEvent event, int currentSlot, int currentItemId) {
+        return event != null && event.slot == currentSlot && event.itemId == currentItemId;
+    }
+
     public static final class Request {
         public final String clip;
         public final AnimationController.Layer layer;
@@ -46,8 +51,7 @@ public final class ReloadAnimationBridge {
 
         /** Returns the one clip request represented by this event, or null when it must be ignored. */
         public Request accept(StartEvent event, int currentSlot, int currentItemId, Set<String> availableClips) {
-            if (event == null || event.eventId == lastEventId
-                    || event.slot != currentSlot || event.itemId != currentItemId) return null;
+            if (!matches(event, currentSlot, currentItemId) || event.eventId == lastEventId) return null;
             lastEventId = event.eventId;
             String preferred = event.empty ? "reload_empty" : "reload_tactical";
             String selected = availableClips.contains(preferred) ? preferred

@@ -24,6 +24,7 @@ import java.util.*;
 public final class AnimationClient {
     public static final KeyBinding INSPECT = new KeyBinding("Inspect HMG animation", Keyboard.KEY_NONE, "HandmadeGuns");
     private static final Map<ItemStack, List<Entry>> INSTANCES = new WeakHashMap<ItemStack, List<Entry>>();
+    private static final Map<ItemStack, Integer> LEGACY_RELOAD_EVENTS = new WeakHashMap<ItemStack, Integer>();
     private static final ThreadLocal<Scope> ACTIVE = new ThreadLocal<Scope>();
     private static Object world;
     private static ItemStack held;
@@ -32,7 +33,7 @@ public final class AnimationClient {
     private static long ticks;
     private static double seconds;
 
-    public static void clearPlayback() { INSTANCES.clear(); }
+    public static void clearPlayback() { INSTANCES.clear(); LEGACY_RELOAD_EVENTS.clear(); }
 
     /** Receives one server-authorized reload presentation event on the client thread. */
     public static boolean reloadStarted(int eventId, int slot, int itemId, boolean empty) {
@@ -43,11 +44,29 @@ public final class AnimationClient {
         IItemRenderer.ItemRenderType context = IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON;
         IItemRenderer itemRenderer = MinecraftForgeClient.getItemRenderer(stack, context);
         if (!(itemRenderer instanceof HMGRenderItemGun_U_NEW)) return false;
+        ReloadAnimationBridge.StartEvent event = new ReloadAnimationBridge.StartEvent(eventId, slot, itemId, empty);
+        if (!ReloadAnimationBridge.matches(event, mc.thePlayer.inventory.currentItem,
+                Item.getIdFromItem(stack.getItem()))) return false;
         AnimationDefinition definition = ((HMGRenderItemGun_U_NEW)itemRenderer).partsRender_gun.animationDefinition;
-        if (definition == null) return false;
+        if (definition == null) {
+            Integer previous = LEGACY_RELOAD_EVENTS.get(stack);
+            if (previous != null && previous == eventId) return false;
+            LEGACY_RELOAD_EVENTS.put(stack, eventId);
+            if (!(stack.getItem() instanceof HMGItem_Unified_Guns)) return false;
+            HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)stack.getItem();
+            gun.checkTags(stack);
+            NBTTagCompound tag = stack.getTagCompound();
+            // The server has already accepted this reload. Reconcile only the legacy
+            // client presentation timer that the original renderer consumes.
+            tag.setBoolean("IsReloading", true);
+            tag.setBoolean("WaitReloading", false);
+            tag.setInteger("RloadTime", 0);
+            tag.setInteger("CockingTime", 0);
+            return true;
+        }
         Entry entry = entry(stack, mc.thePlayer, context, 0, definition);
         ReloadAnimationBridge.Request request = entry.reloadBridge.accept(
-                new ReloadAnimationBridge.StartEvent(eventId, slot, itemId, empty),
+                event,
                 mc.thePlayer.inventory.currentItem, Item.getIdFromItem(stack.getItem()), definition.clips.keySet());
         if (request == null) return false;
         entry.reloadRequest = request;
