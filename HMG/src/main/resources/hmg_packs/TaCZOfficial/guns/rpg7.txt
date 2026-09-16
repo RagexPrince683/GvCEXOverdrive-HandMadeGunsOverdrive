@@ -21,7 +21,8 @@ ReloadMat3,false
 //???
 attachRestriction,true
 
-InventoryScale,3
+// Inventory-only scale: the legacy MQO multiplier of 3 oversizes the imported geometry.
+InventoryScale,0.5
 
 ScopeTexture,misc/rr.png,misc/redPoint.png,misc/scope_RPG7.png
 Explosion,0.5f

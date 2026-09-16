@@ -40,15 +40,17 @@ public final class HMGRepositoryPackAssetTests {
     private static int knownMissing;
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 1) throw new IllegalArgumentException("Expected the handmadeguns_Packs root");
-        File root = new File(args[0]).getCanonicalFile();
-        if (!root.isDirectory()) throw new IOException("Pack root is not a directory: " + root);
+        if (args.length == 0) throw new IllegalArgumentException("Expected HMG pack roots");
+        for (String argument : args) {
+            File root = new File(argument).getCanonicalFile();
+            if (!root.isDirectory()) throw new IOException("Pack root is not a directory: " + root);
 
-        File[] packs = root.listFiles(File::isDirectory);
-        if (packs == null) throw new IOException("Cannot enumerate pack root: " + root);
-        Arrays.sort(packs, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-        for (File pack : packs) validatePack(root, pack);
-        validateStg44TextureCategories(root);
+            File[] packs = root.listFiles(File::isDirectory);
+            if (packs == null) throw new IOException("Cannot enumerate pack root: " + root);
+            Arrays.sort(packs, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
+            for (File pack : packs) validatePack(root, pack);
+            validateStg44TextureCategories(root);
+        }
 
         System.out.println("HMG repository pack asset tests passed: " + checks
                 + " checks (" + knownMissing + " pre-existing unresolved logical references)");

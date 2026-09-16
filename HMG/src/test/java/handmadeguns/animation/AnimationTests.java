@@ -50,6 +50,7 @@ public final class AnimationTests {
                 "TaCZ reload contributes rendered root pose");
         near(controller.progress(AnimationController.Layer.ACTION),.5/2.6,"TaCZ reload clock advances");
         File packs = new File(file.getParentFile().getParentFile(), "src/main/resources/hmg_packs");
+        migratedPresentation(new File(packs, "TaCZOfficial"));
         for (String name : Arrays.asList("RPK", "AKS74U")) {
             File gun = new File(packs,"GVCguns/guns/" + name + ".txt");
             boolean movingReload = false, importedDirective = false;
@@ -160,6 +161,96 @@ public final class AnimationTests {
                     && Math.abs(face.vertices[i][2]-z)<1e-5 && Math.abs(face.uv[i][0]-u)<1e-6
                     && Math.abs(face.uv[i][1]-v)<1e-6) return true;
         return false;
+    }
+
+    private static void migratedPresentation(File pack) throws Exception {
+        BedrockAnimationLoader loader = new BedrockAnimationLoader(true);
+        AnimationDefinition rifle = loader.load(new File(pack, "animations/rifle_default.animation.json"));
+        AnimationDefinition pistol = loader.load(new File(pack, "animations/pistol_default.animation.json"));
+        for (File model : new File(pack, "models").listFiles()) {
+            if (!model.getName().endsWith("_geo.json")) continue;
+            String id = model.getName().replace("_geo.json", "");
+            BlockbenchProject geometry = BedrockGeometryLoader.load(model, new File(pack, "textures/models/" + id + ".png"));
+            AnimationDefinition local = loader.load(new File(pack, "animations/" + id + ".animation.json"));
+            AnimationDefinition definition = BedrockAnimationLoader.retainKnownParts(local.withFallback(
+                    Arrays.asList("m1911", "glock_17", "deagle").contains(id) ? pistol : rifle),
+                    geometry.nodes.keySet(), new HashSet<String>());
+            definition.validateParts(geometry.nodes.keySet());
+            AnimationController controller = new AnimationController(definition);
+            controller.advanceTo(0, null);
+            controller.play(AnimationController.Layer.BASE, "idle");
+            controller.play(AnimationController.Layer.ACTION, "draw");
+            controller.advanceTo(definition.requireClip("draw").duration + 1, null);
+            check(controller.current(AnimationController.Layer.ACTION) == null, id + " draw completes");
+            check("idle".equals(controller.current(AnimationController.Layer.BASE)), id + " base survives draw");
+            AnimationClip idle = definition.requireClip("idle");
+            for (String hand : Arrays.asList("lefthand", "righthand")) {
+                AnimationTrack track = idle.tracks.get(hand);
+                if (track == null) continue;
+                AnimationPose.Transform expected = track.sample(idle.loop == AnimationClip.Loop.HOLD ? idle.duration : 0);
+                // Static idle channels in this catalog hold the same pose throughout.
+                AnimationPose.Transform actual = controller.sample(AnimationPose.EMPTY).get(hand);
+                near(actual.x, expected.x, id + " idle hand x");
+                near(actual.rx, expected.rx, id + " idle hand rotation");
+                near(actual.sy, expected.sy, id + " idle hand scale");
+            }
+            if ("rpg7".equals(id)) {
+                Set<String> ammo = BedrockAnimationLoader.ammunitionBones(definition);
+                check(ammo.contains("rocket"), "RPG ammo inferred from authored empty pose");
+                check(BedrockAnimationLoader.ammunitionVisible(ammo, "rocket", 1, null), "loaded rocket visible");
+                check(!BedrockAnimationLoader.ammunitionVisible(ammo, "rocket", 0, null), "empty rocket hidden");
+                AnimationClip reload = definition.requireClip("reload_empty");
+                check(BedrockAnimationLoader.ammunitionVisible(ammo, "rocket", 0, reload), "reload owns rocket scale");
+                near(reload.tracks.get("rocket").sample(0).sx, 0, "rocket initially hidden during reload");
+                near(reload.tracks.get("rocket").sample(.6).sx, 1, "rocket appears at authored reload key");
+                check(!BedrockAnimationLoader.ammunitionVisible(ammo, "rocket", 0, null), "cancelled reload hides uncommitted rocket");
+            }
+            if ("m1911".equals(id)) check(!BedrockAnimationLoader.ammunitionBones(definition).contains("lefthand"),
+                    "M1911 off-hand has no new ammunition visibility rule");
+        }
+        AnimationDefinition movement = loader.parse(new StringReader("{\"animations\":{"
+                + "\"walk_forward\":{\"loop\":true,\"animation_length\":1,\"bones\":{\"root\":{\"position\":[0,0,16]}}},"
+                + "\"idle\":{\"loop\":true,\"animation_length\":1,\"bones\":{\"root\":{\"position\":[0,0,0]}}},"
+                + "\"inspect\":{\"animation_length\":1,\"bones\":{\"root\":{\"position\":[0,0,32]}}}}}"), "movement-regression");
+        AnimationController controller = new AnimationController(movement);
+        controller.advanceTo(0, null);
+        controller.play(AnimationController.Layer.MOVEMENT, "walk_forward");
+        near(controller.sample(AnimationPose.EMPTY).get("root").z, 0, "walk transition starts at previous pose");
+        controller.advanceTo(.06, null);
+        near(controller.sample(AnimationPose.EMPTY).get("root").z, 1.5, "walk halfway crossfade");
+        controller.play(AnimationController.Layer.ACTION, "inspect");
+        controller.stop(AnimationController.Layer.MOVEMENT);
+        near(controller.sample(AnimationPose.EMPTY).get("root").z, 6, "movement fade cannot contaminate inspect");
+        controller.advanceTo(.2, null);
+        near(controller.sample(AnimationPose.EMPTY).get("root").z, 6, "inspect remains authoritative after movement fade");
+        controller.stop(AnimationController.Layer.ACTION);
+        near(controller.sample(AnimationPose.EMPTY).get("root").z, 0, "stopped movement leaves no stale pose");
+
+        LocomotionAnimationBridge.FireRecovery recovery =
+                LocomotionAnimationBridge.updateFireRecovery(0, false, true, false, false);
+        check(!recovery.ready, "lowered gun cannot fire");
+        boolean triggered = true;
+        for (int tick = 0; tick < LocomotionAnimationBridge.FIRE_RECOVERY_TICKS; tick++) {
+            recovery = LocomotionAnimationBridge.updateFireRecovery(recovery.ticks, recovery.queuedTrigger,
+                    false, triggered, false);
+            check(!recovery.ready, "recovery tick blocks fire " + tick);
+            triggered = false;
+        }
+        recovery = LocomotionAnimationBridge.updateFireRecovery(recovery.ticks, recovery.queuedTrigger,
+                false, triggered, false);
+        check(recovery.ready && recovery.triggered,
+                "recovery releases retained tap once");
+        recovery = LocomotionAnimationBridge.updateFireRecovery(recovery.ticks, recovery.queuedTrigger,
+                false, false, false);
+        check(recovery.ready && !recovery.triggered,
+                "tap is not repeated");
+        LocomotionAnimationBridge.State state = new LocomotionAnimationBridge.State();
+        Set<String> clips = rifle.clips.keySet();
+        state.update(new LocomotionAnimationBridge.Input(true,true,true,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD,true), clips, null);
+        LocomotionAnimationBridge.Request exit = state.update(new LocomotionAnimationBridge.Input(true,false,false,true,false,
+                LocomotionAnimationBridge.Direction.FORWARD,true), clips, "run_start");
+        check("movement_idle".equals(exit.clip), "Bedrock recovery crossfades directly to fire-ready pose");
     }
 
     private static void bedrockFaceOrientation() throws Exception {

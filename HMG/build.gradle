@@ -310,7 +310,8 @@ task packResolverTest(type: JavaExec, dependsOn: testClasses) {
 task repositoryPackAssetTest(type: JavaExec, dependsOn: testClasses) {
 	main = 'handmadeguns.pack.HMGRepositoryPackAssetTests'
 	classpath = sourceSets.test.runtimeClasspath
-	args rootProject.file('HMG/eclipse/handmadeguns_Packs').absolutePath
+	args rootProject.file('HMG/eclipse/handmadeguns_Packs').absolutePath,
+			rootProject.file('HMG/src/main/resources/hmg_packs').absolutePath
 }
 test.dependsOn animationTest, packResolverTest, repositoryPackAssetTest
 

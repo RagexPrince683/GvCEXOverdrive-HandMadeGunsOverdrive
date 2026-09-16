@@ -4,20 +4,55 @@ import java.util.Set;
 
 /** Selects ordinary locomotion clips without importing a pack's gameplay/state-machine script. */
 public final class LocomotionAnimationBridge {
+    public static final int FIRE_RECOVERY_TICKS = 4;
+
+    /** Pure state transition; the owning gun tick persists the result on both logical sides. */
+    public static FireRecovery updateFireRecovery(int previousRecovery, boolean queuedTrigger,
+                                                  boolean lowered, boolean triggered, boolean reloading) {
+        int recovery = lowered ? FIRE_RECOVERY_TICKS : previousRecovery;
+        boolean ready = recovery <= 0;
+        int nextRecovery = lowered ? recovery : Math.max(0, recovery - 1);
+        if (!ready && triggered) queuedTrigger = true;
+        if (reloading) queuedTrigger = false;
+        if (ready && queuedTrigger) {
+            triggered = true;
+            queuedTrigger = false;
+        }
+        return new FireRecovery(nextRecovery, queuedTrigger, triggered, ready);
+    }
+
+    public static final class FireRecovery {
+        public final int ticks;
+        public final boolean queuedTrigger, triggered, ready;
+
+        private FireRecovery(int ticks, boolean queuedTrigger, boolean triggered, boolean ready) {
+            this.ticks = ticks;
+            this.queuedTrigger = queuedTrigger;
+            this.triggered = triggered;
+            this.ready = ready;
+        }
+    }
     public enum Direction { FORWARD, BACKWARD, SIDEWAY }
 
     public static final class Input {
         public final boolean equipped, moving, sprinting, onGround, aiming;
         public final Direction direction;
+        public final boolean quickExit;
 
         public Input(boolean equipped, boolean moving, boolean sprinting, boolean onGround,
                      boolean aiming, Direction direction) {
+            this(equipped, moving, sprinting, onGround, aiming, direction, false);
+        }
+
+        public Input(boolean equipped, boolean moving, boolean sprinting, boolean onGround,
+                     boolean aiming, Direction direction, boolean quickExit) {
             this.equipped = equipped;
             this.moving = moving;
             this.sprinting = sprinting;
             this.onGround = onGround;
             this.aiming = aiming;
             this.direction = direction == null ? Direction.FORWARD : direction;
+            this.quickExit = quickExit;
         }
     }
 
@@ -68,7 +103,8 @@ public final class LocomotionAnimationBridge {
             if (sprinting || enteringSprint) {
                 sprinting = false;
                 enteringSprint = false;
-                transitionClip = first(clips, "run_end", "sprint_end", "sprinting_end");
+                // Bedrock recovery uses the movement crossfade, bounded by the fire gate.
+                transitionClip = input.quickExit ? null : first(clips, "run_end", "sprint_end", "sprinting_end");
                 if (transitionClip != null) {
                     exitingSprint = true;
                     return play(transitionClip, true, AnimationClip.Loop.ONCE, current);

@@ -307,11 +307,14 @@ public final class AnimationClient {
         else if (entity != null && Math.abs(entity.moveStrafing) > Math.abs(entity.moveForward))
             direction = LocomotionAnimationBridge.Direction.SIDEWAY;
         boolean triggered = tag != null && tag.getBoolean("IsTriggered");
-        boolean sprinting = entity != null && entity.isSprinting() && !reload && cock == 0 && !triggered;
+        boolean nativeBedrock = scope.renderer.model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel
+                && ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)scope.renderer.model).project.bedrock;
+        boolean raised = nativeBedrock && tag != null && tag.getBoolean("set_up");
+        boolean sprinting = entity != null && entity.isSprinting() && !reload && cock == 0 && !triggered && !raised;
         LocomotionAnimationBridge.Request request = entry.locomotion.update(
                 new LocomotionAnimationBridge.Input(equipped && !reload && cock == 0
                         && entry.controller.current(AnimationController.Layer.ACTION) == null, moving, sprinting,
-                        entity != null && entity.onGround, aiming, direction),
+                        entity != null && entity.onGround, aiming, direction, nativeBedrock),
                 entry.definition.clips.keySet(), entry.controller.current(AnimationController.Layer.MOVEMENT));
         if (request == null) return;
         if (request.stop) entry.controller.stop(AnimationController.Layer.MOVEMENT);
@@ -343,6 +346,18 @@ public final class AnimationClient {
         return LegacyMotionAdapter.apply(scope.entry.pose, key, legacy);
     }
 
+    public static boolean ammunitionVisible(PartsRender_Gun renderer, String part) {
+        Scope scope = ACTIVE.get();
+        if (scope == null || scope.renderer != renderer || scope.entry == null) return true;
+        Entry entry = scope.entry;
+        String action = entry.controller.current(AnimationController.Layer.ACTION);
+        // Reload-owned bones retain their authored scale/visibility timing. Other empty bones
+        // reappear only when HMG commits the ammunition, never from a presentation event.
+        return handmadeguns.client.modelLoader.blockbench.BedrockAnimationLoader.ammunitionVisible(
+                entry.ammunitionBones, part, entry.ammunition,
+                action == null ? null : entry.definition.requireClip(action));
+    }
+
     public static final class Scope implements AutoCloseable {
         final Scope previous;
         final PartsRender_Gun renderer;
@@ -366,6 +381,7 @@ public final class AnimationClient {
         final int flags;
         final AnimationDefinition definition;
         final AnimationController controller;
+        final Set<String> ammunitionBones;
         double lastSeen = seconds, preparedAt = Double.NaN, reloadPlaybackEndedAt = Double.NaN;
         AnimationPose pose = AnimationPose.EMPTY;
         final ReloadAnimationBridge.State reloadBridge = new ReloadAnimationBridge.State();
@@ -379,6 +395,7 @@ public final class AnimationClient {
             this.owner = new WeakReference<Object>(owner); hasOwner = owner != null;
             this.context = context; this.flags = flags; this.definition = definition;
             controller = new AnimationController(definition);
+            ammunitionBones = handmadeguns.client.modelLoader.blockbench.BedrockAnimationLoader.ammunitionBones(definition);
         }
         boolean play(AnimationController.Layer layer, String clip, boolean restart) {
             return definition.clips.containsKey(clip) && controller.play(layer, clip, restart, 1, null);

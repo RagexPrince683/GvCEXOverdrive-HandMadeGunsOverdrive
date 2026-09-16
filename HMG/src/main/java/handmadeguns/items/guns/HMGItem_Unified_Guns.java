@@ -187,6 +187,10 @@ public class HMGItem_Unified_Guns extends Item {
 		}
 	}
 	public void onUpdate(ItemStack itemstack, World world, Entity entity, int i, boolean flag){
+		if (gunInfo.bedrockPresentation && !flag && itemstack.hasTagCompound()) {
+			itemstack.getTagCompound().removeTag("HMGSprintRecovery");
+			itemstack.getTagCompound().removeTag("HMGSprintTrigger");
+		}
 
 		synchronized (this) {
 			guntemp = new GunTemp();
@@ -642,6 +646,23 @@ public class HMGItem_Unified_Guns extends Item {
 						}
 					} else nbt.setBoolean("Cocking", true);
 					boolean is_Bolt_shooting_position = cycleBolt(itemstack) && (!gunInfo.needcock || nbt.getBoolean("Cocking"));
+					boolean fireReady = true;
+					if (gunInfo.bedrockPresentation && entity instanceof EntityPlayer
+							&& ((EntityPlayer)entity).getHeldItem() == itemstack && guntemp.currentConnectedTurret == null) {
+						// Runs on the normal gun tick, including the authoritative server tick.
+						boolean lowered = entity.isSprinting() && !nbt.getBoolean("set_up")
+								&& !nbt.getBoolean("IsTriggered") && !nbt.getBoolean("IsReloading")
+								&& !HandmadeGunsCore.Key_ADS(entity) && cockingtime == 0;
+						handmadeguns.animation.LocomotionAnimationBridge.FireRecovery recovery =
+								handmadeguns.animation.LocomotionAnimationBridge.updateFireRecovery(
+										nbt.getInteger("HMGSprintRecovery"), nbt.getBoolean("HMGSprintTrigger"),
+										lowered, nbt.getBoolean("IsTriggered"), nbt.getBoolean("IsReloading"));
+						nbt.setInteger("HMGSprintRecovery", recovery.ticks);
+						nbt.setBoolean("IsTriggered", recovery.triggered);
+						if (recovery.queuedTrigger) nbt.setBoolean("HMGSprintTrigger", true);
+						else nbt.removeTag("HMGSprintTrigger");
+						fireReady = recovery.ready;
+					}
 					boolean isbulletremaining = remain_Bullet(itemstack) > 0;
 					if (isbulletremaining && nbt.getBoolean("IsReloading") && isPerShellReload(itemstack) && shouldInterruptPerShellReload(entity, nbt)) {
 						nbt.setBoolean("IsReloading", false);
@@ -650,7 +671,7 @@ public class HMGItem_Unified_Guns extends Item {
 					}
 					Entity SACLOSCheck = world.getEntityByID(entity.getEntityData().getInteger("SACLOS_HOMING"));
 
-					if (nbt.getBoolean("IsTriggered") && !isPerShellInsertionInProgress(itemstack, nbt) && !(SACLOSCheck instanceof HMGEntityBulletBase && ((HMGEntityBulletBase) SACLOSCheck).SACLOS_Homing && this.gunInfo.SACLOS_Homing)) {
+					if (fireReady && nbt.getBoolean("IsTriggered") && !isPerShellInsertionInProgress(itemstack, nbt) && !(SACLOSCheck instanceof HMGEntityBulletBase && ((HMGEntityBulletBase) SACLOSCheck).SACLOS_Homing && this.gunInfo.SACLOS_Homing)) {
 //						System.out.println("debug");
 						if (!gunInfo.needfix || nbt.getBoolean("HMGfixed")) {
 							if (!nbt.getBoolean("TriggerBacked")) {
@@ -675,7 +696,7 @@ public class HMGItem_Unified_Guns extends Item {
 								}
 							}
 						}
-					} else {
+					} else if (fireReady) {
 						if (nbt.getBoolean("TriggerBacked") && gunInfo.chargeType) {
 							if (is_Bolt_shooting_position && !nbt.getBoolean("Bursting")) {
 								nbt.setBoolean("Bursting", true);
@@ -684,7 +705,7 @@ public class HMGItem_Unified_Guns extends Item {
 						}
 						nbt.setBoolean("TriggerBacked", false);
 					}
-					if (is_Bolt_shooting_position && isbulletremaining && nbt.getBoolean("Bursting")) {
+					if (fireReady && is_Bolt_shooting_position && isbulletremaining && nbt.getBoolean("Bursting")) {
 						nbt.setInteger("RemainBurstround", nbt.getInteger("RemainBurstround") - 1);
 						if (nbt.getInteger("RemainBurstround") < 0) {
 							nbt.setBoolean("Bursting", false);

@@ -40,6 +40,13 @@ public final class BedrockAnimationLoader {
             for (Map.Entry<String, JsonElement> entry : animations.entrySet())
                 clips.put(entry.getKey(), clip(entry.getKey(), entry.getValue().getAsJsonObject(), source));
             alias(clips, "idle", "static_idle", false);
+            // TaCZ installs static_idle as a persistent pose, even when its export omits loop.
+            if (!authoredIdle && clips.containsKey("idle")) {
+                AnimationClip idle = clips.get("idle");
+                if (idle.loop == AnimationClip.Loop.ONCE)
+                    clips.put("idle", new AnimationClip("idle", idle.duration, AnimationClip.Loop.HOLD,
+                            idle.tracks, idle.events, idle.fadeIn, idle.fadeOut, idle.priority, idle.interruptible));
+            }
             alias(clips, "fire", "shoot", true);
             alias(clips, "reload_empty", "reload_dry", true);
             alias(clips, "reload", "reload_tactical", true);
@@ -52,6 +59,28 @@ public final class BedrockAnimationLoader {
     }
 
     public void clear() { cache.clear(); }
+
+    /** Standard TaCZ ammo nodes plus bones explicitly hidden by the authored empty static pose. */
+    public static Set<String> ammunitionBones(AnimationDefinition definition) {
+        Set<String> result = new HashSet<String>(Arrays.asList("bullet_in_barrel", "bullet_in_mag", "bullet_chain"));
+        AnimationClip empty = definition.clips.get("static_bolt_caught");
+        if (empty != null) for (Map.Entry<String, AnimationTrack> entry : empty.tracks.entrySet()) {
+            AnimationTrack track = entry.getValue();
+            if (track.scale == null) continue;
+            boolean hidden = !track.scale.keys.isEmpty();
+            for (AnimationChannel.Key key : track.scale.keys) {
+                AnimationPose.Transform value = track.sample(key.time);
+                hidden &= value.sx == 0 && value.sy == 0 && value.sz == 0;
+            }
+            if (hidden) result.add(entry.getKey());
+        }
+        return Collections.unmodifiableSet(result);
+    }
+
+    public static boolean ammunitionVisible(Set<String> bones, String part, int ammunition, AnimationClip action) {
+        return !bones.contains(part) || ammunition > 0 || (action != null
+                && action.name.startsWith("reload") && action.tracks.containsKey(part));
+    }
 
     public void invalidate(File file) {
         try { cache.remove(file.getCanonicalPath()); }
@@ -98,7 +127,9 @@ public final class BedrockAnimationLoader {
             for (AnimationEvent event : events) duration = Math.max(duration, event.time);
         }
         if (duration == 0 && loop == AnimationClip.Loop.LOOP) loop = AnimationClip.Loop.HOLD;
-        return new AnimationClip(name, duration, loop, tracks, events, 0, 0, 0, true);
+        double fade = name.equals("idle") || name.startsWith("walk") || name.startsWith("run")
+                || name.startsWith("sprint") ? 0.12 : 0;
+        return new AnimationClip(name, duration, loop, tracks, events, fade, fade, 0, true);
     }
 
     private AnimationChannel channel(JsonElement value, String kind, boolean loop,

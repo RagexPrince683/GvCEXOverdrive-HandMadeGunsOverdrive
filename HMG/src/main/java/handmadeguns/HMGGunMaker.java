@@ -419,6 +419,7 @@ public class HMGGunMaker {
 									throw new IllegalArgumentException("Expected BlockbenchModel,models/name.bbmodel in " + file1);
 								blockbenchPath = type[1];
 								bedrockPath = null;
+								gunInfo.bedrockPresentation = false;
 								gunInfo.canobj = true;
 								break;
 							case "BedrockModel":
@@ -426,6 +427,7 @@ public class HMGGunMaker {
 									throw new IllegalArgumentException("Expected BedrockModel,models/name_geo.json in " + file1);
 								bedrockPath = type[1];
 								blockbenchPath = null;
+								gunInfo.bedrockPresentation = true;
 								gunInfo.canobj = true;
 								break;
 							case "ObjTexture":

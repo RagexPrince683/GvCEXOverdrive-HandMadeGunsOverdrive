@@ -202,6 +202,9 @@ public class PartsRender_Gun extends PartsRender {
 		return false;
 	}
 	public void PartSidentification_Attach(HMGGunParts parts, GunState state, float flame, int remainbullets, HMGGunParts_Motion_PosAndRotation OffsetAndRotation){
+		if (parts instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part
+				&& ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part)parts).bedrock
+				&& !handmadeguns.client.animation.AnimationClient.ammunitionVisible(this, parts.animationKey())) return;
 		if (animationDefinition != null)
 			OffsetAndRotation = handmadeguns.client.animation.AnimationClient.pose(this, parts, OffsetAndRotation);
 		if(gunitem.gunInfo.magazine.length >1) {

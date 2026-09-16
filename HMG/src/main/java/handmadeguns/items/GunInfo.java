@@ -158,6 +158,8 @@ public class GunInfo {
 	public final float[] attachmentLocationRotations = new float[6];
 
 	public float inventoryscale = 1;
+	/** Parsed on both sides; never inferred from a client renderer. */
+	public boolean bedrockPresentation;
 	public float inventoryOffsetX = 0.0F;
 	public float inventoryOffsetY = 0.0F;
 	public float inventoryOffsetZ = 0.0F;

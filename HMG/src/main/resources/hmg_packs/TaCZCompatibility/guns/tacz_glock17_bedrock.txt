@@ -17,7 +17,7 @@ ZoomRender,true
 ZoomRenderType,true,true,true
 ZoomRenderTypeTxture,false,false,false
 
-Texture,items/tacz_glock17.png
+Texture,items/tacz_glock_17.png
 BedrockModel,glock_17_geo.json
 ModelTexture,glock_17.png
 Animations,glock_17.animation.json,pistol_default.animation.json

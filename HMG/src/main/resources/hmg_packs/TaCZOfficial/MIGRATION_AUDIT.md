@@ -31,6 +31,30 @@ Each definition starts from its existing HMG gun and retains gameplay/stat,
 magazine, fire-sound, and relevant attachment directives. Legacy model transforms
 and part animations are replaced by unchanged official Bedrock presentation assets.
 
+## Follow-up presentation and dependency audit
+
+Static follow-up date: 2026-09-16. The standalone `TaCZOfficial` pack now carries
+the complete set of legacy HMG assets referenced by these definitions: 13 item
+icons from `GVCguns`/`Addfixing` and eight scope overlays from `Addfixing`, copied
+unchanged under the same typed paths. This includes `scope_g36.png` and
+`scope_g36_night.png`; G36K ADS did not require a TaCZ-specific scope image or a
+copy of an entire source pack. Repository validation now checks both the development
+pack tree and the distributed `src/main/resources/hmg_packs` tree, so a migrated
+definition cannot silently rely on a sibling pack's copy of an icon or overlay.
+
+The imported `static_idle` alias is held when TaCZ omitted an explicit loop flag,
+preserving the authored hand locators after draw. Imported locomotion crossfades
+over 0.12 seconds, and held native Bedrock guns leave the lowered sprint pose before
+the owning gun tick releases a queued trigger after four recovery ticks. Ammunition
+bones follow HMG's round count using TaCZ's standard names plus bones authored at
+zero scale throughout `static_bolt_caught`; this recognizes the RPG-7 `rocket` bone
+without a weapon-specific rule and preserves its authored reload scaling.
+
+RPG-7 uses `InventoryScale,0.5` only for its imported GUI preview. Gameplay scale,
+first person, third person, dropped items, and other migrated guns are unchanged.
+No M1911 hand-specific behavior was added; it remains a regression boundary for the
+generic locator and ammunition-bone rules.
+
 ## Intentionally deferred or skipped
 
 - M870, M1014, and Kar98k: per-shell/per-round presentation needs sequencing beyond HMG's single reload lifecycle.
