@@ -34,3 +34,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,9M113
 RR,9M113
+TechYear,1974

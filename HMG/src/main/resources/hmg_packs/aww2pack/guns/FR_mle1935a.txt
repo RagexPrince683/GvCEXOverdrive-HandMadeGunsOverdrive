@@ -50,3 +50,4 @@ Tabname,HMG_WW2Guns
 GunSoundLV,160,1
 HG,Pistolet Automatic Model 1935A
 Name,Pistolet Automatic Model 1935A
+TechYear,1937

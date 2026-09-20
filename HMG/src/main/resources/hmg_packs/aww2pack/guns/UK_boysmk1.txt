@@ -209,3 +209,4 @@ AddParts,mat1
 GunSoundLV,172,1
 AMR,Boys Anti-Tank Rifle Mk 1
 Name,Boys Anti-Tank Rifle Mk 1
+TechYear,1937

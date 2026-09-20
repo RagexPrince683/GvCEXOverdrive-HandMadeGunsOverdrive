@@ -142,3 +142,4 @@ AddParts,mat1
 GunSoundLV,165,1
 LMG,Type 99 Light Machine Gun
 Name,JPType 99 Light Machine Gun
+TechYear,1939

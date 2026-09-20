@@ -34,3 +34,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,HJ-9
 RR,HJ-9
+TechYear,1999

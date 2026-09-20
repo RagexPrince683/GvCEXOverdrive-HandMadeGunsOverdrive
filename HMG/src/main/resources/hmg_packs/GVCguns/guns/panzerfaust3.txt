@@ -70,3 +70,4 @@ GunSoundLV,180,180
 Tabname,HMG_GVCGuns
 Name,Panzerfaust 3
 RR,Panzerfaust 3
+TechYear,1992

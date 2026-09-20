@@ -214,3 +214,4 @@ AddParts,Base_Sys
 GunSoundLV,165,1
 LMG,Maschinengewehr 42 (MG42)
 Name,Maschinengewehr 42 (MG42)
+TechYear,1942

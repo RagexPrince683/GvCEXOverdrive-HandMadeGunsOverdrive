@@ -131,3 +131,4 @@ AddParts,mat1
 GunSoundLV,164,1
 HG,WW2 M1911
 Name,WW2 M1911
+TechYear,1911

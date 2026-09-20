@@ -145,3 +145,4 @@ AddParts,mat1
 GunSoundLV,165,1
 LMG,FM 24/29 Light Machine Gun
 Name,FM 24/29 Light Machine Gun
+TechYear,1925

@@ -248,3 +248,4 @@ Tabname,HMG_GVCGuns
 Name,Accuracy International Arctic Warfare (L96/AWP)
 GunSoundLV,165,1
 SR,L96
+TechYear,1985

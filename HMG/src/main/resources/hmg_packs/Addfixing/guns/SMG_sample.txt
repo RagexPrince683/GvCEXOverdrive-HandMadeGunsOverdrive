@@ -46,3 +46,4 @@ Cartridge,false
 AR,SMG_sample
 
 //addRecipe,SMG_sample,1,abc,00f,000,265,265,265,280,280,280,280,280,280
+TechYear,2000

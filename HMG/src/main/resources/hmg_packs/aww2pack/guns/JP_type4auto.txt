@@ -159,3 +159,4 @@ Motion,0.95
 GunSoundLV,165,1
 SR,Type 4 Rifle
 Name,JPType 4 Rifle
+TechYear,1944

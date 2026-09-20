@@ -180,3 +180,4 @@ AddParts,mat1
 GunSoundLV,165,1
 SR,M1917 Enfield
 Name,M1917 Enfield
+TechYear,1917

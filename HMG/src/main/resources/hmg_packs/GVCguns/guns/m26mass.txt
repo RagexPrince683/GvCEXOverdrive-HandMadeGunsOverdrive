@@ -93,3 +93,4 @@ Unified_guns,M26 Mass
 //addRecipe,M870,1,abc,def,000,265,265,280,280,265,280,280,280,280
 //AR,M870
 
+TechYear,2008

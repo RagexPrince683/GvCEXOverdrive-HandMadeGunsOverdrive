@@ -157,3 +157,4 @@ Automatic,true
 GunSoundLV,165,1
 SR,Gewehr 43
 Name,Gewehr 43
+TechYear,1943

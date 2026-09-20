@@ -51,3 +51,4 @@ Tabname,HMG_WW2Guns
 GunSoundLV,160,1
 HG,Type 14 Nambu
 Name,JPType 14 Nambu
+TechYear,1926

@@ -149,3 +149,4 @@ AddParts,mat1
 GunSoundLV,165,1
 AR,M1918 Browning Automatic Rifle
 Name,M1918 Browning Automatic Rifle
+TechYear,1918

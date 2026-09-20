@@ -450,3 +450,4 @@ LMG,M1919A6
 //ItemB,minecraft,iron_block
 //ItemC,minecraft,emerald
 //addNewRecipe,HandmadeGuns,M1919A6,1
+TechYear,1943

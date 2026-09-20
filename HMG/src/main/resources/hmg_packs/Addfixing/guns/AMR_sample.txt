@@ -55,3 +55,4 @@ Automatic,true
 Magazine,0,HandmadeGuns,bullet_hmg
 
 AMR,AMR_sample
+TechYear,2000

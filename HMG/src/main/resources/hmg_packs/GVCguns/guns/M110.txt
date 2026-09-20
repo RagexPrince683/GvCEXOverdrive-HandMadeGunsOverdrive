@@ -176,3 +176,4 @@ Tabname,HMG_GVCGuns
 Name,M110 SASS
 GunSoundLV,165,1
 SR,M110
+TechYear,2008

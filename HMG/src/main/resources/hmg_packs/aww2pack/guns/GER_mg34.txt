@@ -214,3 +214,4 @@ AddParts,Base_Sys
 GunSoundLV,165,1
 LMG,Maschinengewehr 34 (MG34)
 Name,Maschinengewehr 34 (MG34)
+TechYear,1934

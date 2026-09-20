@@ -493,3 +493,4 @@ BulletNameCart,12_7mmCart
 
 
 LMG,ZID_KORD_ForVehicle
+TechYear,1998

@@ -145,3 +145,4 @@ GunSoundLV,165,165
 
 Tabname,HMG_GVCGuns
 GL,GL-06
+TechYear,2006

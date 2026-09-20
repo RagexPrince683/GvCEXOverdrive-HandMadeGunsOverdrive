@@ -147,3 +147,4 @@ AddParts,mat1
 GunSoundLV,165,1
 LMG,Maschinengewehr 30 (MG 30 7.92x57mm Mauser)
 Name,Maschinengewehr 30 (MG 30 7.92x57mm Mauser)
+TechYear,1930

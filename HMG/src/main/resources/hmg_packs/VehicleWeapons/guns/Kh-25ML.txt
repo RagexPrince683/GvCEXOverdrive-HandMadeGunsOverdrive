@@ -36,3 +36,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,Kh-25ML
 RR,Kh-25ML
+TechYear,1975

@@ -579,3 +579,4 @@ BackParts
 Tabname,HMG_GVCGuns
 Name,Raging Judge
 HG,ragingjudge
+TechYear,2010

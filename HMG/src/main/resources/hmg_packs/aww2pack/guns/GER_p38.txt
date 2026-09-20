@@ -125,3 +125,4 @@ AddParts,mat1
 GunSoundLV,160,1
 HG,Walther P-38
 Name,Walther P-38
+TechYear,1938

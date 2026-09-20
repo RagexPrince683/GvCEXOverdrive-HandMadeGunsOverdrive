@@ -69,3 +69,4 @@ GunSoundLV,185,185
 Tabname,HMG_GVCGuns
 Name,AT-4
 RR,at4
+TechYear,1987

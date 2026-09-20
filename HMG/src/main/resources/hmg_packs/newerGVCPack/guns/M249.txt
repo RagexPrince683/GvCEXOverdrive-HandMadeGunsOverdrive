@@ -287,3 +287,4 @@ Tabname,HMG_GVCGuns
 Name,FN M249 (Minimi)
 GunSoundLV,165,1
 LMG,FN M249 (Minimi)
+TechYear,1984

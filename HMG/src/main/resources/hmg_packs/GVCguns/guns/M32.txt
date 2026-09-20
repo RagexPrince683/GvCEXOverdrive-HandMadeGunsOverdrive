@@ -155,3 +155,4 @@ GunSoundLV,165,165
 Tabname,HMG_GVCGuns
 
 GL,M32 Milkor MGL
+TechYear,1983

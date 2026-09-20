@@ -307,3 +307,4 @@ Tabname,HMG_GVCGuns
 Name,M240L
 GunSoundLV,165,1
 LMG,M240L
+TechYear,2010

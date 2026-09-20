@@ -205,3 +205,4 @@ AddParts,SYS_Base
 Tabname,HMG_GVCGuns
 Name,RPK-74
 AR,RPK74
+TechYear,1974

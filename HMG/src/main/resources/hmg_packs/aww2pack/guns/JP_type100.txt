@@ -166,3 +166,4 @@ AddParts,mat1
 GunSoundLV,160,1
 AR,Type 100 Submachine Gun (1944)
 Name,JPType 100 Submachine Gun (1944)
+TechYear,1944

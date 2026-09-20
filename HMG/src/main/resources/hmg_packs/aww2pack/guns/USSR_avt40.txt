@@ -160,3 +160,4 @@ Automatic,true
 GunSoundLV,165,1
 SR,AVT-40
 Name,AVT-40
+TechYear,1942

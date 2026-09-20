@@ -58,3 +58,4 @@ BackParts
 Tabname,VehicleWeapons
 Name,AIM-54
 RR,AIM-54
+TechYear,1974

@@ -121,3 +121,4 @@ AddParts,mat1
 GunSoundLV,165,1
 SR,M1 Garand (.308 Win)
 Name,M1 Garand (.308 Win)
+TechYear,1963

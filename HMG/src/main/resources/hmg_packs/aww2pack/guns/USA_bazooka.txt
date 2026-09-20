@@ -56,3 +56,4 @@ GunSoundLV,163,163
 
 RR,M9A1 Bazooka
 Name,M9A1 Bazooka
+TechYear,1944

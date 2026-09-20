@@ -203,3 +203,4 @@ Automatic,false
 GunSoundLV,165,1
 SR,Lee Enfield
 Name,Lee Enfield
+TechYear,1895

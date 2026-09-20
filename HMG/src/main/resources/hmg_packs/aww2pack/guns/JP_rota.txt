@@ -56,3 +56,4 @@ GunSoundLV,165,165
 Tabname,HMG_WW2Guns
 RR,70mm Type 4 AT Rocket Launcher
 Name,JP70mm Type 4 AT Rocket Launcher
+TechYear,1944

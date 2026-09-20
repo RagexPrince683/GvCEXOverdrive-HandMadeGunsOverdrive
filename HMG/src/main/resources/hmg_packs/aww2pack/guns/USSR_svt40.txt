@@ -161,3 +161,4 @@ Tabname,HMG_WW2Guns
 GunSoundLV,165,1
 SR,SVT-40
 Name,SVT-40
+TechYear,1940

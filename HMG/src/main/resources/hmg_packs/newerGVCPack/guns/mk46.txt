@@ -303,3 +303,4 @@ Tabname,HMG_GVCGuns
 Name,Mk46 LWMG
 GunSoundLV,165,1
 LMG,Mk46 LWMG
+TechYear,2001

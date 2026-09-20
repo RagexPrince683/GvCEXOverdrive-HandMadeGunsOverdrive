@@ -27,3 +27,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,mk82
 GL,mk82
+TechYear,1950

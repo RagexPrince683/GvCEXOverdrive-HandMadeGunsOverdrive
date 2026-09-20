@@ -200,3 +200,4 @@ Tabname,HMG_GVCGuns
 Name,SVD Dragonov
 GunSoundLV,165,1
 SR,SVD
+TechYear,1963

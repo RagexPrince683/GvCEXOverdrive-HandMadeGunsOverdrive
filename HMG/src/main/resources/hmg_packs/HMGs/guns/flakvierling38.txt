@@ -101,3 +101,4 @@ LMG,Flak-38
 //ItemB,minecraft,iron_block
 //ItemC,minecraft,emerald
 //addNewRecipe,HandmadeGuns,Flak-38,1
+TechYear,1940

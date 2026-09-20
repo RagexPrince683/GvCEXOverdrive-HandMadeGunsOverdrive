@@ -206,3 +206,4 @@ GunSoundLV,130,1
 AR,vss
 
 //addRecipe,AR_sample,1,abc,0ef,000,265,265,265,280,265,280,280,280,280
+TechYear,1987

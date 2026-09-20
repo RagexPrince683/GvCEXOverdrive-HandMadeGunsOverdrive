@@ -308,3 +308,4 @@ Tabname,HMG_GVCGuns
 Name,M60
 GunSoundLV,165,1
 LMG,M60
+TechYear,1957

@@ -202,3 +202,4 @@ Name,PTRD-41
 Tabname,HMG_GVCGuns
 GunSoundLV,172,1
 SR,PTRD1941
+TechYear,1941

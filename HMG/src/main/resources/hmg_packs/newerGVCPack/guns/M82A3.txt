@@ -231,3 +231,4 @@ Tabname,HMG_GVCGuns
 Name,Barrett M82
 GunSoundLV,172,1
 SR,Barrett M82
+TechYear,2002

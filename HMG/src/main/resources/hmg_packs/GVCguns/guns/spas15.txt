@@ -304,3 +304,4 @@ Unified_guns,SPAS-15
 //SGF,AR12
 
 //addRecipe,SGF_sample,1,abc,def,ghi,265,265,265,280,265,265,280,265,265
+TechYear,1986

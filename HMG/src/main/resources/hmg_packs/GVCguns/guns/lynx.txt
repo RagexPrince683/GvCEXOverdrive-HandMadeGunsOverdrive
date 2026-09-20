@@ -250,3 +250,4 @@ Tabname,HMG_GVCGuns
 Name,Lynx GM6
 GunSoundLV,165,1
 SR,lynx
+TechYear,2012

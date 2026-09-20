@@ -84,3 +84,4 @@ Unified_guns,Mag-7
 //addRecipe,M870,1,abc,def,000,265,265,280,280,265,280,280,280,280
 //AR,M870
 
+TechYear,1995

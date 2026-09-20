@@ -140,3 +140,4 @@ GunSoundLV,165,165
 
 Tabname,HMG_GVCGuns
 GL,M320 GLM
+TechYear,2008

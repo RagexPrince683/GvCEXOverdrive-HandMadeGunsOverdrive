@@ -300,4 +300,11 @@ shared skin metadata; an unavailable resource safely leaves the base gun unskinn
 
 Gun definitions may declare `TechYear,<year>`. HMG resolves that year through the server's configurable tier year ceilings. Use `TechTier,<0.0..5.0>` only as an explicit half-step override for fictional, prototype, or otherwise unclassifiable equipment. If both are present, the year is still displayed but `TechTier` controls access.
 
+Every loadable gun definition bundled with HMG Overdrive has an explicit year. This includes legacy
+OBJ/MQO guns, imported TaCZ/Bedrock guns, the Blockbench example gun, grenades and launchers created
+through the gun loader, and vehicle-weapon definitions. Files that only define melee items,
+attachments, recipes, random-kit items, or authoring templates are not gun definitions and are not
+part of technology progression. Third-party packs may still omit both keys to retain unrestricted
+legacy behavior.
+
 Neither field is mandatory. Definitions without both fields retain pre-progression behavior and are unrestricted. Malformed values are ignored instead of aborting pack loading.

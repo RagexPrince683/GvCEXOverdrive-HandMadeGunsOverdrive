@@ -44,3 +44,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,AIM-9E
 RR,AIM-9E
+TechYear,1967

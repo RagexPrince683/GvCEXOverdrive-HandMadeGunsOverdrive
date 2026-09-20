@@ -366,3 +366,4 @@ Tabname,HMG_GVCGuns
 Name,FN Minimi (7.62)
 GunSoundLV,165,1
 LMG,FN Minimi (7.62)
+TechYear,2006

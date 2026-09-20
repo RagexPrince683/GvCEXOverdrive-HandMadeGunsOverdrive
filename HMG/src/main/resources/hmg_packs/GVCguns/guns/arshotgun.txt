@@ -309,3 +309,4 @@ Unified_guns,AR-12
 //SGF,AR12
 
 //addRecipe,SGF_sample,1,abc,def,ghi,265,265,265,280,265,265,280,265,265
+TechYear,2010

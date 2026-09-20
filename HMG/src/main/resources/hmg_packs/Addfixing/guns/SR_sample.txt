@@ -198,3 +198,4 @@ Rates,2
 Unified_guns,SR_sample
 
 //addSmelting,SR_sample,1.0f,264
+TechYear,2000

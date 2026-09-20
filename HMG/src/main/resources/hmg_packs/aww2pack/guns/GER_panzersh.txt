@@ -58,3 +58,4 @@ DropMagazine,false
 
 RR,Panzerschreck 54
 Name,Panzerschreck 54
+TechYear,1944

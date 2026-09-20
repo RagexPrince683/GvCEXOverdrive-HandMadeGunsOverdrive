@@ -34,3 +34,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,Kh-31
 RR,Kh-31
+TechYear,1988

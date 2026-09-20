@@ -451,3 +451,4 @@ LMG,byfrou01_M2HB_fromNGP
 //ItemB,minecraft,iron_block
 //ItemC,minecraft,emerald
 //addNewRecipe,HandmadeGuns,byfrou01_M2HB_fromNGP,1
+TechYear,1933

@@ -55,3 +55,4 @@ InventoryScale,3.7
 GunSoundLV,160,1
 HG,Enfield Mk 2 Revolver
 Name,Enfield Mk 2 Revolver
+TechYear,1932

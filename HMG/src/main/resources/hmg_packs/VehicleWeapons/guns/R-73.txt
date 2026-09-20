@@ -44,3 +44,4 @@ Turretanglelimit,0,0,0,0
 Tabname,VehicleWeapons
 Name,R-73
 RR,R-73
+TechYear,1984

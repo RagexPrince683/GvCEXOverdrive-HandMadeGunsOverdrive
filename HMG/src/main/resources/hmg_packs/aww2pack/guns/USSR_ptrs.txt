@@ -146,3 +146,4 @@ AddParts,mat1
 GunSoundLV,172,1
 AMR,PTRS-41
 Name,PTRS-41
+TechYear,1941

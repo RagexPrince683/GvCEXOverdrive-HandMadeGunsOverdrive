@@ -62,3 +62,4 @@ GunSoundLV,163,163
 
 RR,M20A1 Super Bazooka
 Name,M20A1 Super Bazooka
+TechYear,1952

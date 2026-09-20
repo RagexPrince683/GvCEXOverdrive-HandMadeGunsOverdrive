@@ -632,3 +632,4 @@ BackParts
 Tabname,HMG_GVCGuns
 Name,M1895 Nagant Revolver
 HG,M1895Nagant
+TechYear,1895

@@ -47,3 +47,4 @@ chunkLoaderBullet,true
 Tabname,VehicleWeapons
 Name,R-77
 RR,R-77
+TechYear,2002

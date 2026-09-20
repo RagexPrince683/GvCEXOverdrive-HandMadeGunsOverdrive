@@ -146,3 +146,4 @@ GunSoundLV,165,1
 LMG,Bren Mark 2 Light Machine Gun
 Name,Bren Mark 2 Light Machine Gun
 //303 british
+TechYear,1941

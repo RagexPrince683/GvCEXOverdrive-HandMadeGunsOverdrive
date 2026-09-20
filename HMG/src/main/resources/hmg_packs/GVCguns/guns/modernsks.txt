@@ -223,3 +223,4 @@ Name,Modern SKS
 
 GunSoundLV,165,1
 SR,SKSM
+TechYear,2000

@@ -156,3 +156,4 @@ GunSoundLV,165,165
 
 Tabname,HMG_GVCGuns
 GL,M-79
+TechYear,1961

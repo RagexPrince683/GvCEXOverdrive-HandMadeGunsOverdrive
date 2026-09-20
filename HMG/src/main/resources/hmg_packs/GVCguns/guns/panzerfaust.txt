@@ -80,3 +80,4 @@ GunSoundLV,178,178
 Tabname,HMG_GVCGuns
 Name,Panzerfaust 100
 RR,panzerfaust
+TechYear,1945

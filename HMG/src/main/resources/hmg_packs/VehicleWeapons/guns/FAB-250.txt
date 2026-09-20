@@ -26,3 +26,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,FAB-250
 GL,FAB-250
+TechYear,1940

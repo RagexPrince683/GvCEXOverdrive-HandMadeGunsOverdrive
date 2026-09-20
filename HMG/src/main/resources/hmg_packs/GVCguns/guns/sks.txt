@@ -191,3 +191,4 @@ Name,SKS
 
 GunSoundLV,165,1
 SR,SKS
+TechYear,1945

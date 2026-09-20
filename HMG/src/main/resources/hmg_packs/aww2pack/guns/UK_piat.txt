@@ -56,3 +56,4 @@ GunSoundLV,158,158
 
 RR,PIAT
 Name,PIAT
+TechYear,1943

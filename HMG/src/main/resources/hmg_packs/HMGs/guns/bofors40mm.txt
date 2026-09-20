@@ -105,3 +105,4 @@ LMG,bofors_40mm
 //ItemB,minecraft,iron_block
 //ItemC,minecraft,emerald
 //addNewRecipe,HandmadeGuns,bofors_40mm,1
+TechYear,1936

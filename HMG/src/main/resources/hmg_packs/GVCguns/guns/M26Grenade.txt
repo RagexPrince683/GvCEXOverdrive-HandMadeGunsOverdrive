@@ -75,3 +75,4 @@ Magazine,0,HandmadeGuns,null
 Tabname,HMG_GVCGuns
 Name,M26 Grenade
 GL,M26 Frag Grenade
+TechYear,1952

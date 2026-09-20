@@ -45,3 +45,4 @@ Turretanglelimit,0,0,0,0
 Tabname,VehicleWeapons
 Name,R-3
 RR,R-3
+TechYear,1961

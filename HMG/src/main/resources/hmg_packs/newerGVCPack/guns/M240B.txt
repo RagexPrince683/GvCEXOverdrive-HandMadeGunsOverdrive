@@ -307,3 +307,4 @@ Tabname,HMG_GVCGuns
 Name,M240B
 GunSoundLV,165,1
 LMG,M240B
+TechYear,1995

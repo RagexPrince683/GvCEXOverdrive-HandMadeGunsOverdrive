@@ -162,3 +162,4 @@ Tabname,HMG_WW2Guns
 GunSoundLV,160,1
 AR,Sten Mk.II Submachine Gun
 
+TechYear,1941

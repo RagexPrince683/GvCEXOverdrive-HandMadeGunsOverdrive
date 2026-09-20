@@ -298,3 +298,4 @@ UnderGunOffset,0f,0.1703,8.8311f
 GunSoundLV,163,1
 SR,Type 38 Rifle (6.5x50mm Arisaka)
 Name,JPType 38 Rifle (6.5x50mm Arisaka)
+TechYear,1905

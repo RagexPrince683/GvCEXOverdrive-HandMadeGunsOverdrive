@@ -79,3 +79,4 @@ GunSoundLV,182,182
 Tabname,HMG_GVCGuns
 Name,RPG-7
 RR,RPG7
+TechYear,1961

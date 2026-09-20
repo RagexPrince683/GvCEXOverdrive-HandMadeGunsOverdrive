@@ -151,3 +151,4 @@ AddParts,mat1
 GunSoundLV,159,1
 SR,M2 Carbine
 Name,M2 Carbine
+TechYear,1944

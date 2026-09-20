@@ -164,3 +164,4 @@ MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 GunSoundLV,164,1
 AR,M3 Grease Submachine Gun (.45 ACP)
 
+TechYear,1943

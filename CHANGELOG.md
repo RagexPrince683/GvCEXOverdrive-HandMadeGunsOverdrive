@@ -232,3 +232,15 @@
 - Added per-world persistent HMG progression, permission-level-2 commands, immediate client synchronization, configurable operator/creative bypass, and independent enable/disable state.
 - Enforced the server-owned tier decision in firing, trigger packets, Gun Smithing Table transactions, and ordinary crafting completion without deleting existing restricted items. Classified the maintained TaCZ migration sets and Blockbench AKM by represented variant year.
 - Java 8 offline compilation passed. No Minecraft launch or in-game validation was performed; persistence, live command sync, each bypass mode, blocked crafting/use, and tooltips still require multiplayer runtime testing.
+
+2026-09-20 10:08 — Complete bundled HMG technology-year metadata
+
+- Audited all 242 bundled `guns/` configuration files against the actual gun-construction directives:
+  228 loadable firearms, launchers, grenades, and vehicle weapons participate in progression, while
+  14 melee, recipe, kit, attachment, and template-only files are intentionally outside it.
+- Added explicit `TechYear` metadata to the 195 previously unclassified definitions, covering the
+  legacy, WWII, GVC, HMG, newer GVC, vehicle-weapon, Blockbench, Bedrock/TaCZ, and ClassicRCCRP
+  content paths. All 228 loadable definitions now contain exactly one year/tier declaration.
+- Used represented-variant dates for duplicated families and later configurations. Generic sample
+  definitions and vaguely named conversions use documented approximate years rather than remaining
+  unrestricted. Static completeness validation passed; in-game tier display and gating remain to be tested.

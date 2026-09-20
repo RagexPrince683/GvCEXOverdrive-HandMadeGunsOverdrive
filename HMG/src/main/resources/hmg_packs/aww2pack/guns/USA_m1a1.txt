@@ -162,3 +162,4 @@ MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 GunSoundLV,164,1
 AR,M1A1 Thompson Submachine Gun
 Name,M1A1 Thompson Submachine Gun
+TechYear,1942

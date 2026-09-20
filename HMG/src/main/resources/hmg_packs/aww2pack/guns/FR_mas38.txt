@@ -158,3 +158,4 @@ AddParts,mat1
 GunSoundLV,160,1
 AR,MAS-38
 Name,MAS-38
+TechYear,1939

@@ -247,3 +247,4 @@ Tabname,HMG_GVCGuns
 Name,M40A1
 GunSoundLV,165,1
 SR,m40a1
+TechYear,1977

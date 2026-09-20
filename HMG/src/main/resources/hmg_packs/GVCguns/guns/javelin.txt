@@ -99,3 +99,4 @@ GunSoundLV,160,160
 Tabname,HMG_GVCGuns
 Name,FGM-148 Javelin
 RR,FGM148
+TechYear,1996

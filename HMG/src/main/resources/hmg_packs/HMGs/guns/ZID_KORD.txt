@@ -505,3 +505,4 @@ LMG,Kord
 Name,Kord
 
 
+TechYear,1998

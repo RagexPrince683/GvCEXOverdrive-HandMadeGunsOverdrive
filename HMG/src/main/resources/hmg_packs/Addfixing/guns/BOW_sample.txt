@@ -39,3 +39,4 @@ RightType,0
 Magazine,262
 
 BOW,BOW_sample
+TechYear,2000

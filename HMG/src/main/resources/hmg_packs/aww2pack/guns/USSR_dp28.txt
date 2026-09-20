@@ -144,3 +144,4 @@ AddParts,mat1
 GunSoundLV,165,1
 LMG,DP-28 Degtyaryov Light Machine Gun
 Name,DP-28 Degtyaryov Light Machine Gun
+TechYear,1928

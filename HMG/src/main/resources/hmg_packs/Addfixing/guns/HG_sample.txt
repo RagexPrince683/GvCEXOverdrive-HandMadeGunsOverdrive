@@ -52,3 +52,4 @@ Magazine,0,HandmadeGuns,bullet_hg_hmg
 HG,HG_sample
 
 //addRecipe,HG_sample,1,ab0,0e0,000,265,265,280,280,280,280,280,280,280
+TechYear,2000

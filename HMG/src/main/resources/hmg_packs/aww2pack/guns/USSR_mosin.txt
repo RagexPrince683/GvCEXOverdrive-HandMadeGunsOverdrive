@@ -159,3 +159,4 @@ AddParts,mat1
 GunSoundLV,165,1
 SR,Mosin Nagant
 Name,Mosin Nagant
+TechYear,1891

@@ -75,3 +75,4 @@ GunSoundLV,188,188
 Tabname,HMG_GVCGuns
 Name,Mk153 SMAW
 RR,Mk153 SMAW
+TechYear,1984

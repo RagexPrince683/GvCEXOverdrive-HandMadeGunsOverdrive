@@ -174,3 +174,4 @@ AddParts,mat1
 GunSoundLV,165,1
 SR,MAS-36
 Name,MAS-36
+TechYear,1936

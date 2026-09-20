@@ -127,3 +127,4 @@ AddParts,mat1
 GunSoundLV,160,1
 HG,Tula Tokarev TT-33 Pistol
 Name,Tula Tokarev TT-33 Pistol
+TechYear,1933

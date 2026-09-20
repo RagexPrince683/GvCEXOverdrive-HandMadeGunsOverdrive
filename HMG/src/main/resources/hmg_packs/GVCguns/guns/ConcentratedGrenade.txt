@@ -74,3 +74,4 @@ Magazine,0,HandmadeGuns,null
 Tabname,HMG_GVCGuns
 Name,Stielhandgranate Concentrated Charge
 GL,Stielhandgranate Concentrated Charge
+TechYear,1939

@@ -50,3 +50,4 @@ chunkLoaderBullet,true
 Tabname,VehicleWeapons
 Name,R-37
 RR,R-37
+TechYear,2019

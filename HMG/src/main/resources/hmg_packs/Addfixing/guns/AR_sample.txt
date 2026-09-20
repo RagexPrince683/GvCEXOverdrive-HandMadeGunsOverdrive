@@ -209,3 +209,4 @@ AR,AR_sample
 //ItemH,null
 //ItemI,null
 //addNewRecipe,HandmadeGuns,AR_sample,1
+TechYear,2000

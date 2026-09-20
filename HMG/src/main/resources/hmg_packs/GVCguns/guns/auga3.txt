@@ -265,3 +265,4 @@ GunSoundLV,160,1
 AR,Steyr AUG A3 (9mm)
 
 //addRecipe,AR_sample,1,abc,0ef,000,265,265,265,280,265,280,280,280,280
+TechYear,2004

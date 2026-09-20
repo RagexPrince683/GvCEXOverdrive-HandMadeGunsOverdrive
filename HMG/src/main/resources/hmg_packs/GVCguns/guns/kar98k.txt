@@ -221,3 +221,4 @@ Tabname,HMG_GVCGuns
 Name,Kar-98k
 GunSoundLV,165,1
 SR,kar98k
+TechYear,1935

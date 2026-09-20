@@ -121,3 +121,4 @@ GunSoundLV,165,165
 Tabname,HMG_GVCGuns
 Name,Type 91 Manpads
 RR,type91mp
+TechYear,1991

@@ -28,3 +28,4 @@ Turretanglelimit,0,0,0,0
 Tabname,VehicleWeapons
 Name,UB-32
 RR,UB-32
+TechYear,1957

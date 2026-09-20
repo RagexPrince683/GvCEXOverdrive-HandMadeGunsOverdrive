@@ -390,3 +390,4 @@ Tabname,HMG_GVCGuns
 Name,Mk48 Mod 1 LWMG
 GunSoundLV,165,1
 LMG,Mk48 Mod 1 LWMG
+TechYear,2003

@@ -43,3 +43,4 @@ NeedFix,true
 Tabname,VehicleWeapons
 Name,9M335
 RR,9M335
+TechYear,2012

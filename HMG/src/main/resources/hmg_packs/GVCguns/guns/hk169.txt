@@ -140,3 +140,4 @@ GunSoundLV,165,165
 
 Tabname,HMG_GVCGuns
 GL,HK169
+TechYear,1974
