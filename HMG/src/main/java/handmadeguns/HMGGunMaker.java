@@ -1044,6 +1044,8 @@ public class HMGGunMaker {
 									break;
 							}
 							if(newgun != null) {
+								if(isClient) recordIconSources(file1, assetResolver, gunInfo,
+										objmodel, objtexture, blockbenchPath, bedrockPath, animationPaths);
 								try {
 									Item check = GameRegistry.findItem("HandmadeGuns",GunName);
 									if(check == null) {
@@ -2023,6 +2025,31 @@ public class HMGGunMaker {
 		return sourceFile != null ? sourceFile.getPath() : "<unknown>";
 	}
 
+	private static void recordIconSources(File source, HMGPackAssetResolver resolver, GunInfo info,
+			String model, String texture, String blockbench, String bedrock, java.util.List<String> animations) {
+		info.iconSourceFiles.add(source);
+		if(blockbench != null) addIconSource(info, resolver, HMGPackAssetResolver.Type.BLOCKBENCH_MODEL, blockbench);
+		else if(bedrock != null) {
+			addIconSource(info, resolver, HMGPackAssetResolver.Type.BEDROCK_MODEL, bedrock);
+			addIconSource(info, resolver, HMGPackAssetResolver.Type.MODEL_TEXTURE, texture);
+		} else {
+			try {
+				info.iconSourceResources.add(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL, model));
+				info.iconSourceResources.add(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, texture));
+			} catch(IOException unavailable) { /* The normal loader reports missing assets. */ }
+		}
+		for(String animation : animations) addIconSource(info, resolver, HMGPackAssetResolver.Type.ANIMATION, animation);
+		try { info.iconLoadedFingerprint = handmadeguns.client.render.HMGInventoryIconManager.sourceFingerprint(info); }
+		catch(Exception unavailable) { /* The icon resolver will report an unavailable source once. */ }
+	}
+
+	private static void addIconSource(GunInfo info, HMGPackAssetResolver resolver,
+			HMGPackAssetResolver.Type type, String reference) {
+		if(reference == null || reference.trim().isEmpty()) return;
+		try { info.iconSourceFiles.add(resolver.resolve(type, reference)); }
+		catch(IOException unavailable) { /* The normal loader reports missing assets. */ }
+	}
+
 	/** Keeps legacy pack-relative script paths valid when their source is bundled. */
 	private static File resolvePackScriptFile(File sourceFile, String configuredPath) throws IOException {
 		File legacyPath = new File(HMG_proxy.ProxyFile(), configuredPath);
@@ -2257,6 +2284,10 @@ public class HMGGunMaker {
 			break;
 			case "Texture":
 				gunInfo.texture = resolveItemTexture(sourceFile, type[1]);
+				break;
+			case "IconTexture":
+				gunInfo.texture = resolveItemTexture(sourceFile, type[1]);
+				gunInfo.useModelAsIcon = false;
 				break;
 			case "UseModelIcon": //todo new
 				gunInfo.useModelAsIcon = Boolean.parseBoolean(type[1]);

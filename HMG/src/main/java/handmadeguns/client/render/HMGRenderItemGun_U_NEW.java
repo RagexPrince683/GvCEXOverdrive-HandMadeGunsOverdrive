@@ -284,7 +284,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				if (item != null && item.getItem() instanceof HMGItem_Unified_Guns) {
 					HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns) item.getItem();
 					if (gun != null && gun.gunInfo != null && gun.gunInfo.useModelAsIcon && this.model != null) {
-						return true;
+						return HMGInventoryIconManager.claimCachedIcon(item, this);
 					}
 				}
 				return false;
@@ -327,6 +327,10 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	private boolean inventoryPreview;
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack gunstack, Object... data) {
+		if (type == ItemRenderType.INVENTORY && !HMGInventoryIconManager.isCapturing()) {
+			HMGInventoryIconManager.renderCachedIcon(gunstack);
+			return;
+		}
 		if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
 			ResourceLocation blockbenchTexture = ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).texture();
 			partsRender_gun.texture = guntexture = blockbenchTexture;
@@ -355,7 +359,9 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		}
 
 		boolean skipAfter = false;
-		Invocable invocable = (Invocable) gunitem.gunInfo.renderscript;
+		// Arbitrary render scripts may depend on world time or mutate the preview.
+		// Canonical captures use the native model/parts pipeline instead.
+		Invocable invocable = HMGInventoryIconManager.isCapturing() ? null : (Invocable) gunitem.gunInfo.renderscript;
 		if(invocable != null){
 			try {
 				skipAfter = (boolean) ((Invocable)gunitem.gunInfo.script).invokeFunction("GunModelRender_New", this,gunitem,gunstack);
@@ -774,7 +780,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				break;
 			}
 			case ENTITY: {
-				pass = MinecraftForgeClient.getRenderPass();
+				pass = HMGInventoryIconManager.isCapturing() ? HMGInventoryIconManager.capturePass() : MinecraftForgeClient.getRenderPass();
 				partsRender_gun.pass = pass;
 				partsRender_gun.renderGunSkinOverlay = true;
 				isfirstperson = false;
@@ -1111,6 +1117,10 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	}
 	private void rendering_situation(ItemStack gunstack,Entity entity, boolean isreloading, NBTTagCompound reloadTag){
 		int remainbullets = gunitem.remain_Bullet(gunstack);
+		if (HMGInventoryIconManager.isCapturing()) {
+			partsRender_gun.partSidentification(new GunState[]{GunState.Default}, 0.0F, remainbullets);
+			return;
+		}
 		if (nbt == null) gunitem.checkTags(gunstack);
 		boolean recoiled = this.getbooleanfromnbt("Recoiled");
 		int mode = nbt.getInteger("HMGMode");

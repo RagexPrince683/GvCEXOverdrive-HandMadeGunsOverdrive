@@ -241,6 +241,17 @@ public final class AnimationClient {
         if (entry.preparedAt == seconds) return;
         entry.preparedAt = seconds;
         AnimationPose legacy = LegacyMotionAdapter.sample(renderer.partslist, entry.definition.partNames, states, legacyTime);
+        if(handmadeguns.client.render.HMGInventoryIconManager.isCapturing()) {
+            // Sample directly: no fade-in, world clock, action playback or event dispatch.
+            java.util.Map<String, AnimationPose.Transform> parts =
+                    new java.util.LinkedHashMap<String, AnimationPose.Transform>(legacy.parts);
+            AnimationClip clip = entry.definition.clips.get(
+                    entry.definition.clips.containsKey("static_idle") ? "static_idle" : "idle");
+            if(clip != null) for(java.util.Map.Entry<String, handmadeguns.animation.AnimationTrack> track : clip.tracks.entrySet())
+                parts.put(track.getKey(), track.getValue().sample(0));
+            entry.pose = new AnimationPose(parts);
+            return;
+        }
         if (!entry.initialized) entry.controller.sample(legacy);
         final List<HMGAnimationEvent> markers = new ArrayList<HMGAnimationEvent>();
         AnimationPlayback.EventSink sink = new AnimationPlayback.EventSink() {

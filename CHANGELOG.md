@@ -252,3 +252,18 @@
 - Added pack, source-entry, destination, and operation context to materialization failures while preserving the filesystem exception as the cause. The generated-cache path remains confined to `handmadeguns_builtin/`; external and user-authored pack roots are unchanged.
 - Audited bundled-pack readers. No HMG code was found reading the generated `sounds.json`, so the reported lock owner remains unproven; PrismLauncher, Minecraft resource loading, and external Windows software cannot be distinguished from the exception alone. Fixed deterministic closure for the actual leaked/exception-prone HMG magazine, definition, settings, sound-writer, resource, and script streams found during the audit.
 - Java 8 offline compilation passed. The pack-resolver suite covers unchanged directory/JAR reuse, changed-file replacement, and the absence of a leftover temporary file after successful replacement; Minecraft was not launched, and a real transient external Windows lock still requires runtime validation.
+
+2026-09-20 14:58 — Add hybrid prebaked and cached HMG inventory icons
+
+- Made the normal `textures/items` sprite the default inventory representation, so the maintained
+  packs' existing deterministic art bypasses model rendering. Added `IconTexture` as an explicit
+  alias while preserving the legacy `Texture` directive and opt-in `UseModelIcon,true` behavior.
+- Added an independent schema-versioned cache under `cache/hmg/icons/` for explicitly requested
+  model-derived icons. Cache identities include content, definition/model/texture fingerprints and
+  inventory transforms; hits load lazily, corrupt files regenerate, requests deduplicate, and PNG
+  writes run off the render thread.
+- Model capture is paced outside item callbacks and uses a canonical attachment-free stack. While
+  an entry is pending the normal item sprite is used; generation failure retains the legacy live
+  renderer fallback. Equipped, first/third-person, dropped, placed, skin, and attachment rendering
+  are unchanged. Offline `:HMG:compileJava` passed; capture framing, cache reload, fallback, and GUI/
+  NEI presentation still require in-game validation.

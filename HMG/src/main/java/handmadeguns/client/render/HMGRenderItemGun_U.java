@@ -410,7 +410,7 @@ public class HMGRenderItemGun_U implements IItemRenderer {
 				if (item != null && item.getItem() instanceof HMGItem_Unified_Guns) {
 					HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns) item.getItem();
 					if (gun != null && gun.gunInfo != null && gun.gunInfo.useModelAsIcon && this.modeling != null) {
-						return true;
+						return HMGInventoryIconManager.claimCachedIcon(item, this);
 					}
 				}
 				return false;
@@ -449,6 +449,10 @@ public class HMGRenderItemGun_U implements IItemRenderer {
 	float rotex;
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack item, Object... data) {
+		if (type == ItemRenderType.INVENTORY && !HMGInventoryIconManager.isCapturing()) {
+			HMGInventoryIconManager.renderCachedIcon(item);
+			return;
+		}
 		gunSkinTexture = HMGGunSkinTextures.available(HMGGunSkinRegistry.appliedTexture(item));
 		GL11.glEnable(GL_BLEND);
 		GL11.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

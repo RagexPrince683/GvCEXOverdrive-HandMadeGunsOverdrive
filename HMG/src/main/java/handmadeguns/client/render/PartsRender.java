@@ -158,7 +158,7 @@ public abstract class PartsRender {
 				GL11.glAlphaFunc(GL_EQUAL, 1.0F);
 			}
 			try {
-				if(parts.script_global!=null)skip = (boolean) ((Invocable)parts.script_global).invokeFunction("ModelUpdate_Pre",this,parts);
+				if(parts.script_global!=null && !HMGInventoryIconManager.isCapturing())skip = (boolean) ((Invocable)parts.script_global).invokeFunction("ModelUpdate_Pre",this,parts);
 			} catch (ScriptException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
@@ -190,7 +190,7 @@ public abstract class PartsRender {
 				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) lastBrightnessX, (float) lastBrightnessY);
 			}
 			try {
-				if(parts.script_global!=null)((Invocable)parts.script_global).invokeFunction("ModelUpdate_Post",this);
+				if(parts.script_global!=null && !HMGInventoryIconManager.isCapturing())((Invocable)parts.script_global).invokeFunction("ModelUpdate_Post",this);
 			} catch (ScriptException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}

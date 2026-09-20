@@ -102,7 +102,12 @@ public class GunInfo {
 
 	//'gun' 2d item texture
 	public String texture;
-	public boolean useModelAsIcon = true; // DEFAULT ON
+	/** Model-derived inventory art is captured once; ordinary sprites remain the fallback. */
+	public boolean useModelAsIcon = true;
+	/** Source locations, not stale size/mtime fingerprints. Read lazily by the client cache. */
+	public final java.util.List<java.io.File> iconSourceFiles = new java.util.ArrayList<java.io.File>();
+	public final java.util.List<String> iconSourceResources = new java.util.ArrayList<String>();
+	public String iconLoadedFingerprint;
 
 	public double motion = 1D;
 	public double weight = 1D;

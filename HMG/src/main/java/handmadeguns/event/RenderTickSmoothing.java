@@ -8,6 +8,7 @@ import handmadeguns.HandmadeGunsCore;
 import handmadeguns.entity.HMGEntityParticles;
 import handmadeguns.client.render.HMGRenderItemGun_U;
 import handmadeguns.client.render.HMGRenderItemGun_U_NEW;
+import handmadeguns.client.render.HMGInventoryIconManager;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import handmadeguns.compat.HMGRecoilBridge;
 import handmadeguns.compat.HMGAimRecoilController;
@@ -106,6 +107,7 @@ public class RenderTickSmoothing {
 
 			break;
 			case END :
+				HMGInventoryIconManager.onRenderFrame();
 				if(backUppedMouseSensitivity != -1) {
 					HMG_proxy.getMCInstance().gameSettings.mouseSensitivity = backUppedMouseSensitivity;
 				}

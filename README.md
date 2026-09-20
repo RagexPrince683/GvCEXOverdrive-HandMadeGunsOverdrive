@@ -74,9 +74,14 @@ A unified gun can use a normal OBJ/MQO model with optional named animation JSON:
 ```text
 Model,my_rifle.obj
 ModelTexture,my_rifle.png
-Texture,my_rifle_icon.png
+IconTexture,my_rifle_icon.png
 Animations,my_rifle.json
 ```
+
+`IconTexture` (or the legacy `Texture` spelling) uses the supplied normal item sprite directly and
+is the default inventory behavior. Packs that explicitly set `UseModelIcon,true` opt into one lazy
+canonical model capture, persistently cached under `cache/hmg/icons` instead of redrawing the gun
+model for every inventory, creative-tab, GUI, or NEI pass.
 
 Or it can load a native Blockbench project, including its embedded model and animations:
 

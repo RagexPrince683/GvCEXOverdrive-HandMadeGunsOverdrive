@@ -101,11 +101,19 @@ ScopeTexture,null.png,null.png,scope.png
 Animations,akm.json
 ```
 
-`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `Texture` selects an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence. Exported cube geometry uses `BedrockModel,ak47_geo.json` plus `ModelTexture,ak47.png`. `Animations,ak47.animation.json,rifle_default.animation.json` merges sources left-to-right without replacing an earlier clip.
+`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `IconTexture` and the legacy-compatible `Texture` spelling select an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Normal item sprites are the default and bypass all 3D icon generation. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence. Exported cube geometry uses `BedrockModel,ak47_geo.json` plus `ModelTexture,ak47.png`. `Animations,ak47.animation.json,rifle_default.animation.json` merges sources left-to-right without replacing an earlier clip.
 
 Authors may include the logical directory explicitly (`Model,models/akm.mqo`, `ModelTexture,textures/models/akm.png`, `Texture,textures/items/akm_icon.png`, or `Animations,animations/akm.json`). Short references are preferred because the directive determines the category. Absolute paths, `..` traversal, and canonical or symbolic-link escapes are rejected. HMG does not recursively search the Minecraft instance, resource packs, Flan packs, or neighboring HMG packs.
 
 Item icons can also use the concise `Texture,akm_icon.png`; sight overlays can use `ScopeTexture,scope.png,...`. The checked-in packs use these clean categories so their references do not depend on legacy fallback lookup.
+
+`UseModelIcon,true` is an explicit opt-in for packs that cannot ship deterministic item art. HMG
+captures one canonical attachment-free inventory rendering only when the icon is first requested,
+writes a schema-versioned PNG under the Minecraft directory's `cache/hmg/icons/`, and reuses it on
+later launches. The cache identity includes the definition, resolved model/item/model-texture file
+size and modification time, inventory transforms, content ID, and cache schema. Corrupt entries are
+ignored and regenerated; generation failure falls back to the legacy live renderer. Set the JVM
+property `-Dhmg.debugIconCache=true` for periodic aggregate counters without per-frame logging.
 
 Resolution is deterministic: the matching logical category wins, followed by the known legacy folders for that asset type. Clean `models/`, `textures/models/`, `textures/items/`, `textures/misc/`, and `sounds/` files are mirrored into the pack's registered `assets/handmadeguns` resource tree during startup; this is an internal compatibility detail rather than an authoring requirement.
 

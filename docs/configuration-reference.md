@@ -18,6 +18,12 @@ Animations,my_rifle.animation.json,rifle_default.animation.json
 
 Use only one model directive. `BedrockModel` requires the external model PNG selected by `ModelTexture`. `Animations` entries are ordered from highest to lowest precedence: embedded `.bbmodel` clips win first, then a weapon-local file, while later shared files supply only missing clip names. Geometry and animation references remain pack-local. See [animation and imported-model authoring](animation-authoring.md) for the supported Bedrock subset and locomotion mapping.
 
+Inventory icons use `IconTexture,my_rifle_icon.png` or the backward-compatible
+`Texture,my_rifle_icon.png` spelling. The normal sprite is the default. `UseModelIcon,true` opts a
+gun into lazy canonical model capture and the persistent `cache/hmg/icons/` cache; it does not
+change equipped, first-person, dropped, placed, skin, or attachment rendering. `InventoryScale`
+and `InventoryOffset` participate in the cache identity, so changing either regenerates that icon.
+
 Imported Bedrock guns can opt into authored mechanical audio and HMG-owned
 per-shell presentation stages:
 

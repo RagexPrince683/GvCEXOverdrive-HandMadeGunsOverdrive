@@ -129,6 +129,10 @@ public class ClientProxyHMG extends CommonSideProxyHMG {
 		SoundSystemConfig.setNumberStreamingChannels(32);
 		AdvancedModelLoader.registerModelHandler(new MQO_ModelLoader());
 		AdvancedModelLoader.registerModelHandler(new TechneModelLoader());
+		if (Minecraft.getMinecraft().getResourceManager() instanceof IReloadableResourceManager) {
+			((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager())
+					.registerReloadListener(HMGInventoryIconManager.instance());
+		}
 	}
 	@Override
 	public void playsoundat(String sound, float soundLV, float soundSP, float tempsp, double posX, double posY, double posZ){
