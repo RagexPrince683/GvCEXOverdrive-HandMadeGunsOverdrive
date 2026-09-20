@@ -40,7 +40,7 @@ The repository's automated animation and resolver tests cover parser, interpolat
 
 HMG's reload commands reread registered external gun and attachment settings, with different model-cache behavior. They do not guarantee a clean rebuild of every registry entry, recipe, script, creative tab, sound registration, or client/server state. Use a full restart for release validation and structural pack changes.
 
-Bundled content is regenerated into `handmadeguns_builtin/` and is not an editable live-reload layer.
+Bundled content is materialized into `handmadeguns_builtin/`; unchanged files are reused, and the cache is not an editable live-reload layer.
 
 ## Remaining Documentation Gaps
 

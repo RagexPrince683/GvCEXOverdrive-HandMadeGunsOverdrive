@@ -7,10 +7,12 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.stream.Stream;
 
 public final class HMGPackAssetResolverTests {
     private static int checks;
@@ -121,10 +123,12 @@ public final class HMGPackAssetResolverTests {
 
             System.out.println("HMG pack resolver tests passed: " + checks);
         } finally {
-            Files.walk(temporary).sorted(Comparator.reverseOrder()).forEach(path -> {
-                try { Files.deleteIfExists(path); }
-                catch (IOException failure) { throw new RuntimeException(failure); }
-            });
+            try (Stream<Path> paths = Files.walk(temporary)) {
+                paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                    try { Files.deleteIfExists(path); }
+                    catch (IOException failure) { throw new RuntimeException(failure); }
+                });
+            }
         }
     }
 
@@ -133,7 +137,16 @@ public final class HMGPackAssetResolverTests {
 		write(codeRoot.resolve("hmg_packs/DirectoryPack/guns/test.txt"), "directory");
 		Path cache = Files.createDirectories(temporary.resolve("directory-cache"));
 		equal(1, HMGBundledPackSource.materializeFromLocation(codeRoot.toUri().toURL(), cache.toFile()));
-		equal("directory", new String(Files.readAllBytes(cache.resolve("DirectoryPack/guns/test.txt")), StandardCharsets.UTF_8));
+		Path generated = cache.resolve("DirectoryPack/guns/test.txt");
+		equal("directory", new String(Files.readAllBytes(generated), StandardCharsets.UTF_8));
+		FileTime preserved = FileTime.fromMillis(123456789000L);
+		Files.setLastModifiedTime(generated, preserved);
+		equal(1, HMGBundledPackSource.materializeFromLocation(codeRoot.toUri().toURL(), cache.toFile()));
+		equal(preserved, Files.getLastModifiedTime(generated));
+		write(codeRoot.resolve("hmg_packs/DirectoryPack/guns/test.txt"), "changed");
+		equal(1, HMGBundledPackSource.materializeFromLocation(codeRoot.toUri().toURL(), cache.toFile()));
+		equal("changed", new String(Files.readAllBytes(generated), StandardCharsets.UTF_8));
+		check(noTemporaryFiles(generated.getParent()), "bundled directory replacement left a temporary file");
 	}
 
 	private static void testBundledJarLocations(Path temporary) throws Exception {
@@ -149,12 +162,24 @@ public final class HMGPackAssetResolverTests {
 
 		Path fileCache = Files.createDirectories(temporary.resolve("file-jar-cache"));
 		equal(1, HMGBundledPackSource.materializeFromLocation(archive.toUri().toURL(), fileCache.toFile()));
-		equal("jar", new String(Files.readAllBytes(fileCache.resolve("JarPack/guns/test.txt")), StandardCharsets.UTF_8));
+		Path generated = fileCache.resolve("JarPack/guns/test.txt");
+		equal("jar", new String(Files.readAllBytes(generated), StandardCharsets.UTF_8));
+		FileTime preserved = FileTime.fromMillis(123456789000L);
+		Files.setLastModifiedTime(generated, preserved);
+		equal(1, HMGBundledPackSource.materializeFromLocation(archive.toUri().toURL(), fileCache.toFile()));
+		equal(preserved, Files.getLastModifiedTime(generated));
 
 		Path opaqueCache = Files.createDirectories(temporary.resolve("opaque-jar-cache"));
 		URL opaqueJar = new URL("jar:" + archive.toUri().toURL().toExternalForm() + "!/");
 		equal(1, HMGBundledPackSource.materializeFromLocation(opaqueJar, opaqueCache.toFile()));
 		equal("jar", new String(Files.readAllBytes(opaqueCache.resolve("JarPack/guns/test.txt")), StandardCharsets.UTF_8));
+	}
+
+	private static boolean noTemporaryFiles(Path directory) {
+		File[] entries = directory.toFile().listFiles();
+		if (entries == null) return true;
+		for (File entry : entries) if (entry.getName().endsWith(".hmg.tmp")) return false;
+		return true;
 	}
 
     private static void write(Path path, String value) throws IOException {

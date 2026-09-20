@@ -244,3 +244,11 @@
 - Used represented-variant dates for duplicated families and later configurations. Generic sample
   definitions and vaguely named conversions use documented approximate years rather than remaining
   unrestricted. Static completeness validation passed; in-game tier display and gating remain to be tested.
+
+2026-09-20 10:31 — Harden bundled-pack materialization on Windows
+
+- Stopped the initialization phase from materializing the bundled pack cache a second time after the cache had already been registered with Minecraft's resource system. Materialization failures now have their own initialization boundary instead of being mislabeled as recipe-loading failures.
+- Reuse byte-equivalent generated files instead of replacing them: archive entries use their stored size and CRC, while development-directory sources use a size/content comparison. Changed files are written to closed sibling temporary files and then moved into place, with atomic replacement where supported and a bounded Windows sharing/access-failure retry on only the final move.
+- Added pack, source-entry, destination, and operation context to materialization failures while preserving the filesystem exception as the cause. The generated-cache path remains confined to `handmadeguns_builtin/`; external and user-authored pack roots are unchanged.
+- Audited bundled-pack readers. No HMG code was found reading the generated `sounds.json`, so the reported lock owner remains unproven; PrismLauncher, Minecraft resource loading, and external Windows software cannot be distinguished from the exception alone. Fixed deterministic closure for the actual leaked/exception-prone HMG magazine, definition, settings, sound-writer, resource, and script streams found during the audit.
+- Java 8 offline compilation passed. The pack-resolver suite covers unchanged directory/JAR reuse, changed-file replacement, and the absence of a leftover temporary file after successful replacement; Minecraft was not launched, and a real transient external Windows lock still requires runtime validation.

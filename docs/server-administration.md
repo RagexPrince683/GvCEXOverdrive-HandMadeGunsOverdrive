@@ -43,7 +43,7 @@ Render.enableVBOModelRendering=true
 
 HMG first loads its bundled official packs, then external packs from `handmadeguns_Packs`, followed by the supported legacy `mods/handmadeguns/addgun` path. Compatible external definitions and resources can override the bundled baseline. Packs are sorted by folder/file name before loading. Keep pack names stable across server updates so item registration order is predictable.
 
-`handmadeguns_builtin/` is a regenerated private cache for the bundled JAR resources. Do not deploy custom packs into it, edit it, or depend on its contents surviving an update.
+`handmadeguns_builtin/` is a private cache for the bundled JAR resources. HMG reuses unchanged generated files and replaces changed files during an update. Do not deploy custom packs into it, edit it, or depend on its contents surviving an update.
 
 When updating packs:
 

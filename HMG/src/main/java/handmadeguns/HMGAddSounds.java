@@ -49,27 +49,27 @@ public class HMGAddSounds
 				File newfile = new File(jsonDir, "sounds.json");
 
 				if (newfile.createNewFile()) {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(newfile));
-					bw.write("{");
-					bw.newLine();
-					for (int i = 0; i < filelist1.length; i++) {
-						String s = "\"handmadeguns." + soundsfile[i] + "\"";
-						String c = "\"category\"";
-						String n = "\"hostile\"";
-						String ss = "\"sounds\"";
-						bw.write(s + ": {" + c + ": " + n + "," + ss + ": [\"" + soundsfile[i] + "\"]},");
+					try (BufferedWriter bw = new BufferedWriter(new FileWriter(newfile))) {
+						bw.write("{");
 						bw.newLine();
+						for (int i = 0; i < filelist1.length; i++) {
+							String s = "\"handmadeguns." + soundsfile[i] + "\"";
+							String c = "\"category\"";
+							String n = "\"hostile\"";
+							String ss = "\"sounds\"";
+							bw.write(s + ": {" + c + ": " + n + "," + ss + ": [\"" + soundsfile[i] + "\"]},");
+							bw.newLine();
+						}
+						{
+							String s = "\"handmadeguns." + "nulls" + "\"";
+							String c = "\"category\"";
+							String n = "\"hostile\"";
+							String ss = "\"sounds\"";
+							bw.write(s + ": {" + c + ": " + n + "," + ss + ": [\"" + "nulls" + "\"]}");
+							bw.newLine();
+						}
+						bw.write("}");
 					}
-					{
-						String s = "\"handmadeguns." + "nulls" + "\"";
-						String c = "\"category\"";
-						String n = "\"hostile\"";
-						String ss = "\"sounds\"";
-						bw.write(s + ": {" + c + ": " + n + "," + ss + ": [\"" + "nulls" + "\"]}");
-						bw.newLine();
-					}
-					bw.write("}");
-					bw.close();
 				}
 			} catch (FileNotFoundException ex) {
 				ex.printStackTrace();

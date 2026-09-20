@@ -313,7 +313,7 @@ public class HMGGunMaker {
 		try {
 			// File file = new File(configfile,"hmg_handmadeguns.txt");
 			if (checkBeforeReadfile(file1)) {
-				BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file1),"Shift-JIS"));
+				try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file1),"Shift-JIS"))) {
 
 				String str;
 				while ((str = br.readLine()) != null) { // 1行ずつ読み込む
@@ -1351,7 +1351,7 @@ public class HMGGunMaker {
 					} // 1
 
 				}
-				br.close(); // ファイルを閉じる
+				}
 			} else {
 
 			}
@@ -1599,18 +1599,13 @@ public class HMGGunMaker {
 	private static List<String> readText(ResourceLocation resource) throws IOException
 	{
 		List<String> list = new ArrayList<String>();
-		InputStream is = getInputStream(resource);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-		String currentLine = null;
-
-		while((currentLine = reader.readLine()) != null)
-		{
-			list.add(currentLine);
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(getInputStream(resource)))) {
+			String currentLine;
+			while((currentLine = reader.readLine()) != null)
+			{
+				list.add(currentLine);
+			}
 		}
-
-		is.close();
-		reader.close();
-
 		return list;
 	}
 	private static InputStream getInputStream(ResourceLocation par1) throws IOException
@@ -2744,11 +2739,11 @@ public class HMGGunMaker {
 		}
 	}
 
-	private static ScriptEngine doScript(FileReader s)
+	private static ScriptEngine doScript(FileReader s) throws IOException
 	{
 		ScriptEngine se = SCRIPT_ENGINE_MANAGER.getEngineByName("js");//引数にnull入れないと20でぬるぽ
 
-		try
+		try (FileReader reader = s)
 		{
 			if(se.toString().contains("Nashorn"))
 			{
@@ -2758,7 +2753,7 @@ public class HMGGunMaker {
 
 			//se.put("packreg", REGISTER);
 
-			se.eval(s);
+			se.eval(reader);
 			return se;
 		}
 		catch(ScriptException e)

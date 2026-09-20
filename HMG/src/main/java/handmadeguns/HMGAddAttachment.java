@@ -126,9 +126,9 @@ public class HMGAddAttachment
 			if (checkBeforeReadfile(file))
 			{
 
-				BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"));
-				String str;
-				while((str = br.readLine()) != null){  // 1行ずつ読み込む
+				try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"))) {
+					String str;
+					while((str = br.readLine()) != null){  // 1行ずつ読み込む
 					//System.out.println(str);
 					String[] type = HMGConfigLineParser.parseAttachmentExtensionLine(str);
 
@@ -855,8 +855,8 @@ public class HMGAddAttachment
 						ResourceLocation tex = HMGGunMaker.getCachedResourceLocation(resolver.resourceLocation(HMGPackAssetResolver.Type.MODEL_TEXTURE, objtexture));
 						MinecraftForgeClient.registerItemRenderer(attachment, new HMGRenderItemCustom(model, tex));
 					}
+					}
 				}
-				br.close();  // ファイルを閉じる
 			}
 			else
 			{

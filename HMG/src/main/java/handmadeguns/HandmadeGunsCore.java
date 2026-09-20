@@ -103,6 +103,7 @@ public class HandmadeGunsCore {
 		}
 	};
 	private static final ScriptEngineManager SCRIPT_ENGINE_MANAGER = new ScriptEngineManager(null);
+	private File bundledPackDirectory;
 
 	//@Mod.Instance
 	//public static HandmadeGunsCore instance2;
@@ -329,15 +330,14 @@ public class HandmadeGunsCore {
 		FMLCommonHandler.instance().bus().register(HMGServerTaskQueue.INSTANCE);
 		FMLCommonHandler.instance().bus().register(new handmadeguns.tech.HMGTechTierEvents());
 		HMG_proxy.setuprender();
-		File bundledPackdir = null;
 		try {
-			bundledPackdir = HMGBundledPackSource.materialize(HMG_proxy.ProxyFile());
-			readPackResource(bundledPackdir, pEvent.getSide().isClient());
-			readPack(bundledPackdir, pEvent.getSide().isClient());
-			loadPackScripts(bundledPackdir, pEvent);
+			bundledPackDirectory = HMGBundledPackSource.materialize(HMG_proxy.ProxyFile());
 		} catch (IOException failure) {
-			throw new RuntimeException("Cannot load bundled HMG Overdrive content", failure);
+			throw new RuntimeException("Cannot materialize bundled HMG Overdrive content", failure);
 		}
+		readPackResource(bundledPackDirectory, pEvent.getSide().isClient());
+		readPack(bundledPackDirectory, pEvent.getSide().isClient());
+		loadPackScripts(bundledPackDirectory, pEvent);
 		File packdir_normal = new File(HMG_proxy.ProxyFile(), "handmadeguns_Packs");
 		packdir_normal.mkdirs();
 		readPackResource(packdir_normal,pEvent.getSide().isClient());
@@ -365,7 +365,7 @@ public class HandmadeGunsCore {
 									if (script.toString().contains("Nashorn")) {
 										script.eval("load(\"nashorn:mozilla_compat.js\");");
 									}
-									script.eval(new FileReader(aScript));
+									evaluateScriptFile(script, aScript);
 									try {
 										((Invocable) script).invokeFunction("preInit", pEvent);
 									} catch (ScriptException e) {
@@ -377,7 +377,7 @@ public class HandmadeGunsCore {
 								} catch (ScriptException e) {
 									throw new RuntimeException("Script exec error", e);
 								}
-							} catch (FileNotFoundException e) {
+							} catch (IOException e) {
 								e.printStackTrace();
 							}
 						}
@@ -392,7 +392,7 @@ public class HandmadeGunsCore {
 									if (script.toString().contains("Nashorn")) {
 										script.eval("load(\"nashorn:mozilla_compat.js\");");
 									}
-									script.eval(new FileReader(aScript));
+									evaluateScriptFile(script, aScript);
 									try {
 										((Invocable) script).invokeFunction("preInit", pEvent);
 									} catch (ScriptException e) {
@@ -404,7 +404,7 @@ public class HandmadeGunsCore {
 								} catch (ScriptException e) {
 									throw new RuntimeException("Script exec error", e);
 								}
-							} catch (FileNotFoundException e) {
+							} catch (IOException e) {
 								e.printStackTrace();
 							}
 						}
@@ -438,7 +438,7 @@ public class HandmadeGunsCore {
 						ScriptEngine script = SCRIPT_ENGINE_MANAGER.getEngineByName("js");
 						if (script == null) throw new IOException("No JavaScript engine is available");
 						if (script.toString().contains("Nashorn")) script.eval("load(\"nashorn:mozilla_compat.js\");");
-						script.eval(new FileReader(scriptFile));
+						evaluateScriptFile(script, scriptFile);
 						try { ((Invocable) script).invokeFunction("preInit", event); }
 						catch (NoSuchMethodException ignored) { }
 						scripts.add((Invocable) script);
@@ -447,6 +447,12 @@ public class HandmadeGunsCore {
 					}
 				}
 			}
+		}
+	}
+
+	private static void evaluateScriptFile(ScriptEngine script, File file) throws IOException, ScriptException {
+		try (FileReader reader = new FileReader(file)) {
+			script.eval(reader);
 		}
 	}
 
@@ -672,8 +678,7 @@ public class HandmadeGunsCore {
 		HMGGunMaker.speedCof = 1;
 		File settings = new File(pack, "additionalSettings.txt");
 		if (!settings.isFile() || !checkBeforeReadfile(settings)) return;
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), "Shift-JIS"));
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), "Shift-JIS"))) {
 			String str;
 			while ((str = br.readLine()) != null) {
 				String[] key = HMGGunMaker.splitComma(str);
@@ -683,7 +688,6 @@ public class HandmadeGunsCore {
 					case "speedCof": HMGGunMaker.speedCof = Float.parseFloat(key[1]); break;
 				}
 			}
-			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -714,11 +718,9 @@ public class HandmadeGunsCore {
 		HGMetalBlocks.registerRecipes();
 		HGGunRecipes.init();
 		DeferredHMGRecipes.registerAll();
-		try {
-			readPackRecipe(HMGBundledPackSource.materialize(HMG_proxy.ProxyFile()));
-		} catch (IOException failure) {
-			throw new RuntimeException("Cannot load bundled HMG Overdrive recipes", failure);
-		}
+		if (bundledPackDirectory == null)
+			throw new IllegalStateException("Bundled HMG Overdrive content was not materialized during pre-initialization");
+		readPackRecipe(bundledPackDirectory);
 		readPackRecipe(new File(HMG_proxy.ProxyFile(), "handmadeguns_Packs"));
 		readPackRecipe(new File(HMG_proxy.ProxyFile(), "mods/handmadeguns/addgun"));
 		GunSmithRecipeRegistry.resolvePendingCopies();

@@ -20,9 +20,9 @@ public class HMGAddTabs
 			if (checkBeforeReadfile(file))
 			{
 
-				BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"));
-				String str;
-				while((str = br.readLine()) != null) {  // 1行ずつ読み込む
+				try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"))) {
+					String str;
+					while((str = br.readLine()) != null) {  // 1行ずつ読み込む
 					//System.out.println(str);
 					String[] type = str.split(",");
 					if(type[0].equals("name")){
@@ -35,8 +35,8 @@ public class HMGAddTabs
 						tabshmg.put(tabname,new HMGCreativeTab_ForCustom(tabname,iconname));
 					}
 
+					}
 				}
-				br.close();  // ファイルを閉じる
 			}
 			else
 			{

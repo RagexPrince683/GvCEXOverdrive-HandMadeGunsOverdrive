@@ -38,8 +38,9 @@ Later compatible definitions and resources can replace earlier ones. Incompatibl
 
 HMG Overdrive's maintained packs are included in the main mod JAR. At startup they
 are exposed through a private `handmadeguns_builtin/` cache solely because the
-legacy parsers consume files; that cache is regenerated from the JAR and is not an
-addon location. Installing the HMG JAR alone therefore includes the official guns,
+legacy parsers consume files. Unchanged generated files are reused; files changed by
+an HMG update are staged to a temporary sibling and then replaced. The cache is not
+an addon location. Installing the HMG JAR alone therefore includes the official guns,
 definitions, models, animations, textures, sounds, tabs, scripts, and recipes.
 
 Filesystem packs still load after the bundled baseline. A matching gun, compatible

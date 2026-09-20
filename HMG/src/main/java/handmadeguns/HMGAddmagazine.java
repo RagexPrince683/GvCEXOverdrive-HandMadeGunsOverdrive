@@ -39,13 +39,8 @@ public class HMGAddmagazine {
         String modelname = "default";
         int round = 30;
         if(checkBeforeReadfile(file1)) {
-            BufferedReader br = null;
-            try {
-                br = new BufferedReader(new InputStreamReader(new FileInputStream(file1),"Shift-JIS"));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            while ((str = br.readLine()) != null) {  // 1�s���ǂݍ���
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file1),"Shift-JIS"))) {
+                while ((str = br.readLine()) != null) {  // 1�s���ǂݍ���
                 String[] data = HMGGunMaker.splitComma(str);
                 if(data.length>0){
                     if(data[0].equals("StackSize")){
@@ -148,6 +143,7 @@ public class HMGAddmagazine {
                         }
 						if (registered == null) GameRegistry.registerItem(newmagazine, Name);
                     }
+                }
                 }
             }
         }

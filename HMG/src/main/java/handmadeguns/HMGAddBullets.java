@@ -29,7 +29,7 @@ public class HMGAddBullets {
             HMGPackAssetResolver resolver = new HMGPackAssetResolver(file1.getParentFile().getParentFile());
             // File file = new File(configfile,"hmg_handmadeguns.txt");
             if (checkBeforeReadfile(file)) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"));
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"Shift-JIS"))) {
 
                 String str;
                 String BulletName;
@@ -174,7 +174,7 @@ public class HMGAddBullets {
                         }
                     } // 1
                 }
-                br.close(); // �t�@�C�������
+                }
             } else {
 
             }
