@@ -86,10 +86,12 @@ MuzzleJump,-4
 BedrockModel,deagle_geo.json
 ModelTexture,deagle.png
 Animations,deagle.animation.json,pistol_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ deagle
+Name,TaCZ Desert Eagle
 HG,TaCZOfficial_deagle
+TechYear,1983

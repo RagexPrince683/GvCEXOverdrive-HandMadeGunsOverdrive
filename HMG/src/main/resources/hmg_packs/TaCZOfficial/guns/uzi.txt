@@ -80,10 +80,12 @@ MuzzleJump,-2
 BedrockModel,uzi_geo.json
 ModelTexture,uzi.png
 Animations,uzi.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ uzi
+Name,TaCZ Uzi
 HG,TaCZOfficial_uzi
+TechYear,1954

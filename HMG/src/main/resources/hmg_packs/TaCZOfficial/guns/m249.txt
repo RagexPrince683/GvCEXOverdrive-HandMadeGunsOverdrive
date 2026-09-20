@@ -103,6 +103,7 @@ GunSoundLV,165,1
 BedrockModel,m249_geo.json
 ModelTexture,m249.png
 Animations,m249.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
@@ -110,3 +111,4 @@ Tabname,HMG_Bedrock_TaCZ
 
 Name,TaCZ M249
 LMG,TaCZOfficial_M249
+TechYear,1984

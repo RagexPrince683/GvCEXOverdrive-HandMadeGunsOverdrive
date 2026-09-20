@@ -1,5 +1,7 @@
 package handmadeguns.animation;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import handmadeguns.client.modelLoader.blockbench.BlockbenchProject;
 import handmadeguns.client.modelLoader.blockbench.BedrockAnimationLoader;
 import handmadeguns.client.modelLoader.blockbench.BedrockGeometryLoader;
@@ -51,6 +53,7 @@ public final class AnimationTests {
         near(controller.progress(AnimationController.Layer.ACTION),.5/2.6,"TaCZ reload clock advances");
         File packs = new File(file.getParentFile().getParentFile(), "src/main/resources/hmg_packs");
         migratedPresentation(new File(packs, "TaCZOfficial"));
+        migratedClassicPresentation(new File(packs, "TaCZClassicRCCRP"));
         for (String name : Arrays.asList("RPK", "AKS74U")) {
             File gun = new File(packs,"GVCguns/guns/" + name + ".txt");
             boolean movingReload = false, importedDirective = false;
@@ -74,13 +77,13 @@ public final class AnimationTests {
             // RPK uses the legacy compatible-parts generator; AKS has explicit authored keys.
             if ("AKS74U".equals(name)) check(movingReload,"AKS authored reload produces a non-neutral pose without Minecraft");
         }
-        File compatibility = new File(packs, "TaCZCompatibility");
+        File official = new File(packs, "TaCZOfficial");
         BlockbenchProject ak = BedrockGeometryLoader.load(
-                new File(compatibility, "models/ak47_geo.json"),
-                new File(compatibility, "textures/models/ak47.png"));
+                new File(official, "models/ak47_geo.json"),
+                new File(official, "textures/models/ak47.png"));
         BlockbenchProject glock = BedrockGeometryLoader.load(
-                new File(compatibility, "models/glock_17_geo.json"),
-                new File(compatibility, "textures/models/glock_17.png"));
+                new File(official, "models/glock_17_geo.json"),
+                new File(official, "textures/models/glock_17.png"));
         check(!ak.nodes.get("mount").visible && ak.nodes.get("rail2").parent == ak.nodes.get("mount"),
                 "attachment-free AK hides the mount and its sight-rail subtree");
         check(!ak.nodes.get("additional_magazine").visible && !glock.nodes.get("additional_magazine").visible,
@@ -167,11 +170,37 @@ public final class AnimationTests {
         BedrockAnimationLoader loader = new BedrockAnimationLoader(true);
         AnimationDefinition rifle = loader.load(new File(pack, "animations/rifle_default.animation.json"));
         AnimationDefinition pistol = loader.load(new File(pack, "animations/pistol_default.animation.json"));
+        String soundRegistry = new String(java.nio.file.Files.readAllBytes(
+                new File(pack, "assets/handmadeguns/sounds.json").toPath()), java.nio.charset.StandardCharsets.UTF_8);
         for (File model : new File(pack, "models").listFiles()) {
             if (!model.getName().endsWith("_geo.json")) continue;
             String id = model.getName().replace("_geo.json", "");
             BlockbenchProject geometry = BedrockGeometryLoader.load(model, new File(pack, "textures/models/" + id + ".png"));
             AnimationDefinition local = loader.load(new File(pack, "animations/" + id + ".animation.json"));
+            for (AnimationClip clip : local.clips.values()) {
+                if (clip.name.matches("(^|.*_)(shoot|fire)($|_.*)")) continue;
+                for (AnimationEvent marker : clip.events) {
+                    if (!"bedrock_sound".equals(marker.name)) continue;
+                    JsonElement effectElement = new JsonParser().parse(marker.data).getAsJsonObject().get("effect");
+                    if (effectElement == null) continue;
+                    String effect = effectElement.getAsString();
+                    if (!effect.startsWith("tacz:")) continue;
+                    String path = effect.substring("tacz:".length());
+                    if ("m1014/cloth_move_3".equals(path)) {
+                        check(!new File(pack, "sounds/tacz/" + path + ".ogg").isFile(),
+                                "known absent upstream M1014 marker is not substituted");
+                    } else {
+                        check(new File(pack, "sounds/tacz/" + path + ".ogg").isFile(),
+                                id + " marker sound dependency " + path);
+                        check(soundRegistry.contains("\"tacz/" + path + "\""),
+                                id + " marker sound registration " + path);
+                    }
+                }
+            }
+            if (Arrays.asList("m870", "m1014", "kar98").contains(id)) {
+                for (String clip : Arrays.asList("reload_intro", "reload_intro_empty", "reload_loop", "reload_end"))
+                    check(local.clips.containsKey(clip), id + " staged per-shell clip " + clip);
+            }
             AnimationDefinition definition = BedrockAnimationLoader.retainKnownParts(local.withFallback(
                     Arrays.asList("m1911", "glock_17", "deagle").contains(id) ? pistol : rifle),
                     geometry.nodes.keySet(), new HashSet<String>());
@@ -179,7 +208,7 @@ public final class AnimationTests {
             AnimationController controller = new AnimationController(definition);
             controller.advanceTo(0, null);
             controller.play(AnimationController.Layer.BASE, "idle");
-            controller.play(AnimationController.Layer.ACTION, "draw");
+            controller.play(AnimationController.Layer.ACTION, "draw", false, 1, AnimationClip.Loop.ONCE);
             controller.advanceTo(definition.requireClip("draw").duration + 1, null);
             check(controller.current(AnimationController.Layer.ACTION) == null, id + " draw completes");
             check("idle".equals(controller.current(AnimationController.Layer.BASE)), id + " base survives draw");
@@ -251,6 +280,56 @@ public final class AnimationTests {
         LocomotionAnimationBridge.Request exit = state.update(new LocomotionAnimationBridge.Input(true,false,false,true,false,
                 LocomotionAnimationBridge.Direction.FORWARD,true), clips, "run_start");
         check("movement_idle".equals(exit.clip), "Bedrock recovery crossfades directly to fire-ready pose");
+    }
+
+    private static void migratedClassicPresentation(File pack) throws Exception {
+        BedrockAnimationLoader loader = new BedrockAnimationLoader(true);
+        String soundRegistry = new String(java.nio.file.Files.readAllBytes(
+                new File(pack, "assets/handmadeguns/sounds.json").toPath()), java.nio.charset.StandardCharsets.UTF_8);
+        String[][] sources = {
+                {"ak74", "ak_series", "rifle_default"},
+                {"ak74m", "ak_series", "rifle_default"},
+                {"aks74u", "aks74u", "rifle_tac_rush_default"},
+                {"hk416", "hk416", "rifle_default"},
+                {"m110", "sr25", "rifle_default"},
+                {"mg36", "mg36", "rifle_default"}
+        };
+        for (String[] source : sources) {
+            String id = source[0];
+            BlockbenchProject geometry = BedrockGeometryLoader.load(
+                    new File(pack, "models/" + id + "_geo.json"),
+                    new File(pack, "textures/models/" + id + ".png"));
+            AnimationDefinition local = loader.load(new File(pack, "animations/" + source[1] + ".animation.json"));
+            AnimationDefinition fallback = loader.load(new File(pack, "animations/" + source[2] + ".animation.json"));
+            AnimationDefinition definition = BedrockAnimationLoader.retainKnownParts(local.withFallback(fallback),
+                    geometry.nodes.keySet(), new HashSet<String>());
+            definition.validateParts(geometry.nodes.keySet());
+            check(definition.clips.containsKey("reload_empty") && definition.clips.containsKey("reload_tactical"),
+                    id + " ClassicRCCRP empty/tactical reload family");
+            for (AnimationClip clip : local.clips.values()) {
+                if (clip.name.matches("(^|.*_)(shoot|fire)($|_.*)")) continue;
+                for (AnimationEvent marker : clip.events) {
+                    if (!"bedrock_sound".equals(marker.name)) continue;
+                    JsonElement effectElement = new JsonParser().parse(marker.data).getAsJsonObject().get("effect");
+                    if (effectElement == null) continue;
+                    String effect = effectElement.getAsString();
+                    int separator = effect.indexOf(':');
+                    if (separator <= 0 || separator == effect.length() - 1) continue;
+                    String namespace = effect.substring(0, separator);
+                    String path = effect.substring(separator + 1);
+                    if (!"ccrp".equals(namespace) && !"tacz".equals(namespace)) continue;
+                    if ("ccrp:sr25/sr25_inspect_xmag_magslide".equals(effect)) {
+                        check(!new File(pack, "sounds/ccrp/" + path + ".ogg").isFile(),
+                                "known absent ClassicRCCRP extended-magazine inspect marker is not substituted");
+                    } else {
+                        check(new File(pack, "sounds/" + namespace + "/" + path + ".ogg").isFile(),
+                                id + " ClassicRCCRP marker sound dependency " + effect);
+                        check(soundRegistry.contains("\"" + namespace + "/" + path + "\""),
+                                id + " ClassicRCCRP marker sound registration " + effect);
+                    }
+                }
+            }
+        }
     }
 
     private static void bedrockFaceOrientation() throws Exception {
@@ -406,6 +485,13 @@ public final class AnimationTests {
         check(parsed.clips.containsKey("fire"), "Bedrock shoot alias");
         check(parsed.requireClip("static_idle").loop == AnimationClip.Loop.HOLD,
                 "zero-duration Bedrock loop holds");
+        AnimationController staticController = new AnimationController(parsed);
+        check(staticController.play(AnimationController.Layer.MOVEMENT, "movement_idle", false, 1,
+                        AnimationClip.Loop.LOOP),
+                "generic locomotion loop accepts zero-duration authored hold");
+        staticController.advanceTo(1, null);
+        check("movement_idle".equals(staticController.current(AnimationController.Layer.MOVEMENT)),
+                "zero-duration locomotion pose remains held");
         near(parsed.requireClip("walk_forward").duration,.5,"Bedrock missing duration inferred from keys");
         near(parsed.requireClip("walk_forward").events.get(0).time,.25,"Bedrock presentation event retained");
         AnimationPose.Transform root = parsed.requireClip("walk_forward").tracks.get("root").sample(.5);
@@ -754,6 +840,32 @@ public final class AnimationTests {
         request = fallback.accept(new ReloadAnimationBridge.StartEvent(8, 2, 100, true),
                 2, 100, Collections.singleton("reload"));
         check(request != null && "reload".equals(request.clip), "reload alias remains the variant fallback");
+
+        Set<String> stagedClips = new LinkedHashSet<String>(Arrays.asList(
+                "reload_intro", "reload_intro_empty", "reload_loop", "reload_end", "reload"));
+        ReloadAnimationBridge.State staged = new ReloadAnimationBridge.State();
+        request = staged.accept(new ReloadAnimationBridge.StartEvent(9, 2, 100, true,
+                ReloadAnimationBridge.Stage.INTRO), 2, 100, stagedClips);
+        check(request != null && "reload_intro_empty".equals(request.clip) && request.loop == null,
+                "empty per-shell reload selects authored intro");
+        request = staged.accept(new ReloadAnimationBridge.StartEvent(10, 2, 100, false,
+                ReloadAnimationBridge.Stage.INSERT), 2, 100, stagedClips);
+        check(request != null && "reload_loop".equals(request.clip) && request.loop == AnimationClip.Loop.HOLD,
+                "each committed shell gets one held insert clip instead of an animation-driven loop");
+        request = staged.accept(new ReloadAnimationBridge.StartEvent(11, 2, 100, false,
+                ReloadAnimationBridge.Stage.END), 2, 100, stagedClips);
+        staged.started(request != null);
+        check(request != null && "reload_end".equals(request.clip) && staged.finishing()
+                        && !staged.presentationReload(false),
+                "finish presentation no longer blocks HMG firing authority");
+        ReloadAnimationBridge.State noEndClip = new ReloadAnimationBridge.State();
+        request = noEndClip.accept(new ReloadAnimationBridge.StartEvent(12, 2, 100, false,
+                ReloadAnimationBridge.Stage.INSERT), 2, 100, stagedClips);
+        noEndClip.started(request != null);
+        request = noEndClip.accept(new ReloadAnimationBridge.StartEvent(13, 2, 100, false,
+                ReloadAnimationBridge.Stage.END), 2, 100, Collections.singleton("reload_loop"));
+        check(request != null && request.stop && !noEndClip.ownsAction(),
+                "missing optional end clip still releases a held insert pose");
     }
 
     private static void legacyReloadRegression() throws Exception {

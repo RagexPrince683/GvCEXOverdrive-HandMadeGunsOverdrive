@@ -1,0 +1,12 @@
+ClassicRCCRP 1.1.6 release hotfix 2 is distributed under the Creative Commons
+Attribution 4.0 International license (CC BY 4.0), as published on its project
+license page:
+
+https://www.curseforge.com/minecraft/customization/tacz-classics-reborn/license
+
+The license deed and legal code are available at:
+
+https://creativecommons.org/licenses/by/4.0/
+https://creativecommons.org/licenses/by/4.0/legalcode
+
+Attribution for the adapted subset included here is recorded in CREDITS.txt.

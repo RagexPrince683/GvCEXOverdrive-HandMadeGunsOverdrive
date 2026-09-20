@@ -1,0 +1,29 @@
+ClassicRCCRP presentation assets
+================================
+
+Source pack: TaCZ: Classics Reborn / C.C.R.P | CAMG Combat Repository Pack
+Source version: 1.1.6 release hotfix 2
+Packmaker: cima_silchin_warfare / Cima Arms Modification Group
+Project: https://www.curseforge.com/minecraft/customization/tacz-classics-reborn
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License page: https://www.curseforge.com/minecraft/customization/tacz-classics-reborn/license
+
+Imported ClassicRCCRP assets are the selected AK-74, AK-74M, AKS-74U, HK416,
+M110, and MG36 geometry, model textures, weapon-local animations, and the
+non-firing mechanical sounds referenced by their imported animation markers.
+The extracted source pack does not provide more specific per-asset model,
+texture, animation, or audio author fields, so the packmaker is credited for
+each category rather than inventing authorship.
+
+The shared rifle_default animation copied into this pack comes from official
+TaCZ (Serene Wave Studio / Timeless Squad) and remains covered by the retained
+TaCZ GPL-3.0 license text in LICENSE_TaCZ_GPL-3.0.txt. The AKS-74U uses
+ClassicRCCRP's rifle_tac_rush_default instead.
+
+The 2D item icons and scope overlays under textures/items and textures/misc are
+unchanged dependencies from HMG's GVCguns pack. HMG gameplay definitions,
+ballistics, recoil, spread, fire rate, magazines, ammunition, attachment rules,
+reload authority, and firing sounds remain HMG-owned. The compatibility changes
+are limited to pack-local paths, separate item registrations, imported-model
+directives, and animation-marker mechanical audio. Inclusion does not imply
+endorsement by ClassicRCCRP, Cima Arms Modification Group, TaCZ, or contributors.

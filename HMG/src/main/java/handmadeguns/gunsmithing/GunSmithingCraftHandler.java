@@ -47,6 +47,10 @@ public class GunSmithingCraftHandler {
      */
     private static boolean craftTransaction(EntityPlayer player,
                                             GunSmithRecipe entry) {
+		if (!handmadeguns.tech.HMGTechTierManager.isUnlocked(entry.getOutput(), player, player.worldObj)) {
+			handmadeguns.tech.HMGTechTierManager.notifyLocked(player, entry.getOutput());
+			return false;
+		}
         synchronized (player.inventory) {
             GunTableInventoryAllocator.AllocationResult allocation =
                     GunTableInventoryAllocator.allocate(player, entry.getIngredients());

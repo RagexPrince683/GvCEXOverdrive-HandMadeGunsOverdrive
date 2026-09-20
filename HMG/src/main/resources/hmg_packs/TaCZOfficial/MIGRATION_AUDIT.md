@@ -1,73 +1,102 @@
 # Official TaCZ migration audit
 
-Static audit date: 2026-09-15. Minecraft was not launched.
+Latest static migration date: 2026-09-19. Minecraft was not launched.
 
 ## Migrated mappings
 
-| HMG gun | TaCZ source gun | Source pack | Reload clip | Duration | HMG ticks |
-| --- | --- | --- | --- | ---: | ---: |
-| AA-12 | aa12 | Official TaCZ | reload_tactical | 3.2500 s | 65 |
-| AK-47 | ak47 | Official TaCZ | reload_tactical | 2.4000 s | 48 |
-| Desert Eagle | deagle | Official TaCZ | reload_tactical | 2.0333 s | 41 |
-| Glock 17 | glock_17 | Official TaCZ | reload_tactical | 1.9333 s | 39 |
-| G3 | hk_g3 | Official TaCZ | reload_tactical | 2.2500 s | 45 |
-| G36K | g36k | Official TaCZ | reload_tactical | 2.6333 s | 53 |
-| M16A1 | m16a1 | Official TaCZ | reload_tactical | 2.3333 s | 47 |
-| M16A4 | m16a4 | Official TaCZ | reload_tactical | 2.3333 s | 47 |
-| M1911 | m1911 | Official TaCZ | reload_tactical | 2.0667 s | 41 |
-| M249 | m249 | Official TaCZ | reload_tactical | 5.9333 s | 119 |
-| M4A1 | m4a1 | Official TaCZ | reload_tactical | 2.3667 s | 47 |
-| MP5 | hk_mp5a5 | Official TaCZ | reload_tactical | 2.3000 s | 46 |
-| P90 | p90 | Official TaCZ | reload_tactical | 2.7083 s | 54 |
-| QBZ-95 | qbz_95 | Official TaCZ | reload_tactical | 2.4333 s | 49 |
-| RPG-7 | rpg7 | Official TaCZ | reload_empty | 3.5333 s | 71 |
-| RPK | rpk | Official TaCZ | reload_tactical | 3.0667 s | 61 |
-| SCAR-H | scar_h | Official TaCZ | reload_tactical | 2.3333 s | 47 |
-| SCAR-L | scar_l | Official TaCZ | reload_tactical | 2.4333 s | 49 |
-| UMP45 | ump45 | Official TaCZ | reload_tactical | 2.5333 s | 51 |
-| Uzi | uzi | Official TaCZ | reload_tactical | 2.1333 s | 43 |
+| HMG gameplay definition | TaCZ presentation source | Mapping | Presentation notes |
+| --- | --- | --- | --- |
+| AA-12 | `aa12` | exact | standard tactical/empty reload |
+| AK-47 | `ak47` | exact | standard tactical/empty reload |
+| Desert Eagle | `deagle` | exact | standard tactical/empty reload |
+| Glock 17 | `glock_17` | exact | standard tactical/empty reload |
+| G3 | `hk_g3` | exact | standard tactical/empty reload |
+| G36K | `g36k` | exact | standard tactical/empty reload and HMG scope overlays |
+| M16A1 | `m16a1` | exact | standard tactical/empty reload |
+| M16A4 | `m16a4` | exact | standard tactical/empty reload |
+| M1911 | `m1911` | exact | no hand-specific override |
+| M249 | `m249` | exact | standard tactical/empty reload |
+| M4A1 | `m4a1` | exact | standard tactical/empty reload |
+| MP5 | `hk_mp5a5` | exact | standard tactical/empty reload |
+| P90 | `p90` | exact | standard tactical/empty reload |
+| QBZ-95 | `qbz_95` | exact | standard tactical/empty reload |
+| RPG-7 | `rpg7` | exact | imported rocket bone follows HMG ammunition state |
+| RPK | `rpk` | exact | standard tactical/empty reload |
+| SCAR-H | `scar_h` | exact | standard tactical/empty reload |
+| SCAR-L | `scar_l` | exact | standard tactical/empty reload |
+| UMP45 | `ump45` | exact | standard tactical/empty reload |
+| Uzi | `uzi` | exact | standard tactical/empty reload |
+| M870 | `m870` | exact | staged intro -> per-shell insert -> end |
+| M1014 | `m1014` | exact | staged intro -> per-shell insert -> end |
+| Kar98k | `kar98` | exact | staged intro -> per-round insert -> end |
+| M320 | `m320` | exact standalone launcher | marker-less reload uses declared authored whole-clip sound |
+| HK416 | `hk416d` | directly compatible D variant | HMG HK416 gameplay remains unchanged |
+| M14 | `mk14` | directly compatible Mk 14 EBR variant | HMG M14 gameplay remains unchanged |
 
-Each definition starts from its existing HMG gun and retains gameplay/stat,
-magazine, fire-sound, and relevant attachment directives. Legacy model transforms
-and part animations are replaced by unchanged official Bedrock presentation assets.
+Every definition is separately registered in the player-facing `HMG TaCZ Guns`
+tab (internal key `HMG_Bedrock_TaCZ`). HMG retains
+damage, projectile behavior, recoil, spread, fire rate, magazine/ammunition,
+attachments, restrictions, reload gameplay, and firing sounds. Official TaCZ
+supplies unchanged geometry, texture, local/shared animation, marker timing,
+mechanical audio, hand/view nodes, and first/third-person presentation.
 
-## Follow-up presentation and dependency audit
+## Reload and audio compatibility
 
-Static follow-up date: 2026-09-16. The standalone `TaCZOfficial` pack now carries
-the complete set of legacy HMG assets referenced by these definitions: 13 item
-icons from `GVCguns`/`Addfixing` and eight scope overlays from `Addfixing`, copied
-unchanged under the same typed paths. This includes `scope_g36.png` and
-`scope_g36_night.png`; G36K ADS did not require a TaCZ-specific scope image or a
-copy of an entire source pack. Repository validation now checks both the development
-pack tree and the distributed `src/main/resources/hmg_packs` tree, so a migrated
-definition cannot silently rely on a sibling pack's copy of an icon or overlay.
+`AnimationEventSounds,true` routes namespaced Bedrock sound markers through HMG's
+client reload-sound path only for the local first-person owner. Marker playback is
+clocked by the imported clip; skipped-frame markers retain the existing animation
+event ordering. `shoot` and `fire` clip markers are rejected. The pack contains
+only the actually referenced non-fire OGG dependencies plus sound registrations.
 
-The imported `static_idle` alias is held when TaCZ omitted an explicit loop flag,
-preserving the authored hand locators after draw. Imported locomotion crossfades
-over 0.12 seconds, and held native Bedrock guns leave the lowered sprint pose before
-the owning gun tick releases a queued trigger after four recovery ticks. Ammunition
-bones follow HMG's round count using TaCZ's standard names plus bones authored at
-zero scale throughout `static_bolt_caught`; this recognizes the RPG-7 `rocket` bone
-without a weapon-specific rule and preserves its authored reload scaling.
+M320's authored reload clips have no markers, so its definition uses the generic
+`AnimationSound` clip-start fallback. This is the only content-specific audio
+override. The upstream M1014 animation references `tacz:m1014/cloth_move_3`, but
+the official source tree has no corresponding OGG; that one marker is deliberately
+silent rather than replaced with an approximate sound.
 
-RPG-7 uses `InventoryScale,0.5` only for its imported GUI preview. Gameplay scale,
-first person, third person, dropped items, and other migrated guns are unchanged.
-No M1911 hand-specific behavior was added; it remains a regression boundary for the
-generic locator and ammunition-bone rules.
+M870 and M1014 keep their original HMG eight-item shell magazines and 25-tick
+per-shell commit time. Kar98k previously used one five-round clip item, which
+cannot expose HMG's per-round commit lifecycle. Its migrated variant instead uses
+the already existing one-round `7.92mm bullet` item in five magazine slots and a
+14-tick round commit. This changes only the migrated variant's reload carrier; its
+HMG ballistics, capacity, firing sound, bolt timing, and reserve authority remain.
 
-## Intentionally deferred or skipped
+The staged bridge starts `reload_intro` or `reload_intro_empty`, plays one
+`reload_loop` for each HMG-authorized insertion, holds the loop's final pose until
+the existing interrupt window resolves, and plays `reload_end` on completion or
+cancellation. Animations never grant ammunition.
 
-- M870, M1014, and Kar98k: per-shell/per-round presentation needs sequencing beyond HMG's single reload lifecycle.
-- M320: custom launcher/under-barrel behavior is outside the ordinary-gun scope.
-- Minigun: no ordinary reload family and requires special operation.
-- SKS Tactical and other substantially customized variants: not substituted for standard HMG guns.
-- AK-74/AK-74M and other caliber/model variants: not treated as AK-47 matches.
-- Warzone: packed `taczpack.dat` content was not decoded, inspected, or imported.
-- SX, ClassicRCCRP, Continental, and WaT matches remain candidates for later batches.
+## Dependencies and provenance
 
-## Known presentation gap
+Geometry, model textures, weapon-local animations, shared rifle/pistol defaults,
+referenced mechanical OGGs, item icons, and scope/ADS overlays are copied only as
+required by these definitions. Official assets and authors are credited in
+`CREDITS.txt`; the upstream README and GPL-3.0 license remain beside this audit.
+The HMG icons/overlays remain byte-identical dependencies from GVCguns/Addfixing.
 
-Authored animation durations are applied to HMG's reload timer. The unchanged
-animations retain TaCZ sound markers, but HMG does not yet resolve those identifiers
-to bundled TaCZ sound files. Variants retain the HMG reload sound as an explicit
-temporary fallback; TaCZ reload/mechanical audio import remains incomplete.
+## Intentionally excluded
+
+- Minigun: requires spin/operation/heat behavior rather than an ordinary HMG reload.
+- AUG: official asset is 5.56x45 while HMG's `auga3` definition is the 9 mm conversion.
+- M700: official asset is .30-06 while HMG R700 is .223.
+- SPAS-12: HMG's available SPAS-15 is not the same weapon.
+- SKS Tactical and other substantially customized variants: no direct HMG gameplay equivalent.
+- Other official guns: no exact or directly compatible HMG definition was identified.
+- Warzone: packed `taczpack.dat` content remains uninspected and unimported.
+- SX and WaT: published CC BY-NC-ND terms prohibit adapted redistribution.
+- The Continental: no exact/directly compatible HMG gameplay match was found.
+
+ClassicRCCRP's six licensed exact matches are maintained in the separate
+`TaCZClassicRCCRP` pack with their own audit, credits, and license notices.
+
+## Crafting and cleanup
+
+All 26 migrated items use `CopyRecipe` mappings to the exact legacy gameplay
+counterpart. The copies are resolved after all recipe roots load, so their Gun
+Smithing Table ingredients and category remain synchronized with the authoritative
+legacy recipes without duplicating ingredient grids.
+
+The earlier `TaCZCompatibility` AK-47/Glock 17 development pack was removed. Its
+geometry, animations, and model textures were byte-identical to the production
+copies already retained here; its duplicate gun registrations and redundant item
+icons are no longer packaged.

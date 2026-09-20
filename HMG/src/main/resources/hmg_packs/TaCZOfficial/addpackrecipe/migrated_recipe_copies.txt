@@ -1,0 +1,28 @@
+# Migrated presentation variants inherit the exact Gun Smithing Table recipe of
+# their HMG gameplay counterpart. Syntax: CopyRecipe,new output,source output.
+CopyRecipe,HandmadeGuns:TaCZOfficial_aa12,HandmadeGuns:AA-12
+CopyRecipe,HandmadeGuns:TaCZOfficial_AK47,HandmadeGuns:AK47
+CopyRecipe,HandmadeGuns:TaCZOfficial_deagle,HandmadeGuns:Desert Eagle
+CopyRecipe,HandmadeGuns:TaCZOfficial_G36K,HandmadeGuns:G36K
+CopyRecipe,HandmadeGuns:TaCZOfficial_G17,HandmadeGuns:G17
+CopyRecipe,HandmadeGuns:TaCZOfficial_g3,HandmadeGuns:G3A3
+CopyRecipe,HandmadeGuns:TaCZOfficial_mp5,HandmadeGuns:mp5
+CopyRecipe,HandmadeGuns:TaCZOfficial_HK416D,HandmadeGuns:HK416
+CopyRecipe,HandmadeGuns:TaCZOfficial_Kar98k,HandmadeGuns:kar98k
+CopyRecipe,HandmadeGuns:TaCZOfficial_M1014,HandmadeGuns:Benelli M4 Super 90 (M1014)
+CopyRecipe,HandmadeGuns:TaCZOfficial_M16A1,HandmadeGuns:M16A1
+CopyRecipe,HandmadeGuns:TaCZOfficial_M16A4,HandmadeGuns:M16A4
+CopyRecipe,HandmadeGuns:TaCZOfficial_M1911,HandmadeGuns:M1911
+CopyRecipe,HandmadeGuns:TaCZOfficial_M249,HandmadeGuns:FN M249 (Minimi)
+CopyRecipe,HandmadeGuns:TaCZOfficial_M320,HandmadeGuns:M320 GLM
+CopyRecipe,HandmadeGuns:TaCZOfficial_M4A1,HandmadeGuns:M4A1
+CopyRecipe,HandmadeGuns:TaCZOfficial_M870,HandmadeGuns:Remington Model 870
+CopyRecipe,HandmadeGuns:TaCZOfficial_Mk14,HandmadeGuns:m14
+CopyRecipe,HandmadeGuns:TaCZOfficial_p90,HandmadeGuns:p90
+CopyRecipe,HandmadeGuns:TaCZOfficial_qbz95,HandmadeGuns:QBZ95
+CopyRecipe,HandmadeGuns:TaCZOfficial_RPG7,HandmadeGuns:RPG7
+CopyRecipe,HandmadeGuns:TaCZOfficial_RPK,HandmadeGuns:RPK
+CopyRecipe,HandmadeGuns:TaCZOfficial_scarh,HandmadeGuns:SCARH
+CopyRecipe,HandmadeGuns:TaCZOfficial_scarl,HandmadeGuns:SCARL
+CopyRecipe,HandmadeGuns:TaCZOfficial_ump45,HandmadeGuns:ump45
+CopyRecipe,HandmadeGuns:TaCZOfficial_uzi,HandmadeGuns:uzi

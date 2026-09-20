@@ -61,3 +61,10 @@ Use a full client and server restart before release validation or after structur
 ## Permissions
 
 `/reloadSettings`, `/reloadsettingsnomodel`, and `/hmgmanual` return permission level `0` in source. On a public server, restrict the reload commands with a command filter, permissions layer, or server wrapper if ordinary players should not invoke them.
+## HMG technology progression
+
+- `/hmg tier get` reports the world's unlocked HMG tier.
+- `/hmg tier set <tier>` accepts `0.0` through `5.0` in `0.5` increments and immediately synchronizes connected clients.
+- `/hmg tier item` inspects the held gun's identifier, year, override, resolved requirement, server tier, and lock state.
+
+The HMG command requires permission level 2. Changing HMG progression never changes MC Heli progression.

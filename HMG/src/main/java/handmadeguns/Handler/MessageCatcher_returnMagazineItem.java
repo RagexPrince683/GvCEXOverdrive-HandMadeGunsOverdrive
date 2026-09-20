@@ -13,11 +13,8 @@ import handmadeguns.network.PacketreturnMgazineItem;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MessageCatcher_returnMagazineItem implements IMessageHandler<PacketreturnMgazineItem, IMessage> {
-    private static final AtomicInteger RELOAD_EVENT_IDS = new AtomicInteger();
-
     @Override
     public IMessage onMessage(final PacketreturnMgazineItem message, MessageContext ctx) {
         final EntityPlayerMP sender = ctx.getServerHandler().playerEntity;
@@ -37,9 +34,9 @@ public class MessageCatcher_returnMagazineItem implements IMessageHandler<Packet
             boolean empty = gun.remain_Bullet(itemStack) == 0;
             boolean accepted = gun.startReloadFromKey(itemStack, player.worldObj, player)
                     && !wasReloading && itemStack.getTagCompound().getBoolean("IsReloading");
-            ReloadAnimationBridge.StartEvent event = ReloadAnimationBridge.acceptedEvent(accepted,
-                    RELOAD_EVENT_IDS.incrementAndGet(), player.inventory.currentItem,
-                    Item.getIdFromItem(itemStack.getItem()), empty);
+            ReloadAnimationBridge.Stage stage = gun.reloadPresentationStage(itemStack);
+            ReloadAnimationBridge.StartEvent event = accepted ? ReloadAnimationBridge.nextEvent(
+                    player.inventory.currentItem, Item.getIdFromItem(itemStack.getItem()), empty, stage) : null;
             if (event != null) HMGPacketHandler.INSTANCE.sendTo(new PacketReloadAnimation(event), player);
             return;
         }

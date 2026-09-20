@@ -98,10 +98,12 @@ GunSoundLV,165,1
 BedrockModel,ak47_geo.json
 ModelTexture,ak47.png
 Animations,ak47.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ AK47
+Name,TaCZ AK-47
 AR,TaCZOfficial_AK47
+TechYear,1949

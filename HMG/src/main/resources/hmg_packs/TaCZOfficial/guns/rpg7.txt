@@ -22,7 +22,7 @@ ReloadMat3,false
 attachRestriction,true
 
 // Inventory-only scale: the legacy MQO multiplier of 3 oversizes the imported geometry.
-InventoryScale,0.5
+InventoryScale,0.75
 
 ScopeTexture,misc/rr.png,misc/redPoint.png,misc/scope_RPG7.png
 Explosion,0.5f
@@ -65,10 +65,12 @@ GunSoundLV,182,182
 BedrockModel,rpg7_geo.json
 ModelTexture,rpg7.png
 Animations,rpg7.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ RPG7
+Name,TaCZ RPG-7
 RR,TaCZOfficial_RPG7
+TechYear,1961

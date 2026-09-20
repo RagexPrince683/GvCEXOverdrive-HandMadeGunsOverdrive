@@ -3,6 +3,7 @@ package handmadeguns.client.animation;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import com.google.gson.JsonObject;
 import handmadeguns.animation.*;
 import handmadeguns.client.render.*;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
@@ -36,7 +37,8 @@ public final class AnimationClient {
     public static void clearPlayback() { INSTANCES.clear(); LEGACY_RELOAD_EVENTS.clear(); }
 
     /** Receives one server-authorized reload presentation event on the client thread. */
-    public static boolean reloadStarted(int eventId, int slot, int itemId, boolean empty) {
+    public static boolean reloadStarted(int eventId, int slot, int itemId, boolean empty,
+                                        ReloadAnimationBridge.Stage stage) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.thePlayer.inventory.currentItem != slot) return false;
         ItemStack stack = mc.thePlayer.getHeldItem();
@@ -44,7 +46,7 @@ public final class AnimationClient {
         IItemRenderer.ItemRenderType context = IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON;
         IItemRenderer itemRenderer = MinecraftForgeClient.getItemRenderer(stack, context);
         if (!(itemRenderer instanceof HMGRenderItemGun_U_NEW)) return false;
-        ReloadAnimationBridge.StartEvent event = new ReloadAnimationBridge.StartEvent(eventId, slot, itemId, empty);
+        ReloadAnimationBridge.StartEvent event = new ReloadAnimationBridge.StartEvent(eventId, slot, itemId, empty, stage);
         if (!ReloadAnimationBridge.matches(event, mc.thePlayer.inventory.currentItem,
                 Item.getIdFromItem(stack.getItem()))) return false;
         AnimationDefinition definition = ((HMGRenderItemGun_U_NEW)itemRenderer).partsRender_gun.animationDefinition;
@@ -260,12 +262,20 @@ public final class AnimationClient {
         if (!entry.initialized) {
             entry.play(AnimationController.Layer.BASE, "idle", false);
             if (scope.context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON)
-                entry.play(AnimationController.Layer.ACTION, "draw", false);
+                entry.play(AnimationController.Layer.ACTION, "draw", false, AnimationClip.Loop.ONCE);
         }
         if (entry.reloadRequest != null) {
             entry.controller.stop(AnimationController.Layer.ACTION);
-            entry.reloadBridge.started(entry.play(entry.reloadRequest.layer, entry.reloadRequest.clip,
-                    entry.reloadRequest.restart));
+            if (entry.reloadRequest.stop) {
+                entry.reloadBridge.finishNaturally();
+                entry.reloadPlaybackEndedAt = Double.NaN;
+            } else {
+                String reloadClip = entry.reloadRequest.clip;
+                boolean playbackStarted = entry.play(entry.reloadRequest.layer, reloadClip,
+                        entry.reloadRequest.restart, entry.reloadRequest.loop);
+                entry.reloadBridge.started(playbackStarted);
+                if (playbackStarted) addFallbackReloadSound(scope, entry, reloadClip, markers);
+            }
             entry.reloadRequest = null;
         }
         if (!reload && cock > 0 && entry.cock == 0) {
@@ -273,6 +283,11 @@ public final class AnimationClient {
             entry.play(AnimationController.Layer.ACTION, entry.definition.clips.containsKey("cock") ? "cock" : "bolt", true);
         }
         if (shot && !reload) {
+            if (entry.reloadBridge.finishing()) {
+                entry.controller.stop(AnimationController.Layer.ACTION);
+                entry.reloadBridge.finishNaturally();
+                entry.reloadPlaybackEndedAt = Double.NaN;
+            }
             String action = entry.controller.current(AnimationController.Layer.ACTION);
             if ("inspect".equals(action) || "inspect_empty".equals(action)) entry.controller.stop(AnimationController.Layer.ACTION);
             entry.play(AnimationController.Layer.ADDITIVE, "fire", true);
@@ -289,6 +304,23 @@ public final class AnimationClient {
         entry.observeReloadCompletion();
         entry.pose = entry.controller.sample(legacy);
         for (HMGAnimationEvent marker : markers) MinecraftForge.EVENT_BUS.post(marker);
+    }
+
+    private static void addFallbackReloadSound(Scope scope, Entry entry, String clip,
+                                               List<HMGAnimationEvent> markers) {
+        if (!(scope.stateStack.getItem() instanceof HMGItem_Unified_Guns)) return;
+        AnimationClip selected = entry.definition.clips.get(clip);
+        if (selected == null) return;
+        for (AnimationEvent event : selected.events)
+            if ("bedrock_sound".equals(event.name)) return;
+        HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)scope.stateStack.getItem();
+        String sound = gun.gunInfo.animationSounds.get(clip);
+        if (sound == null || sound.isEmpty()) return;
+        JsonObject payload = new JsonObject();
+        payload.addProperty("effect", sound);
+        markers.add(new HMGAnimationEvent(scope.stack, scope.owner instanceof Entity ? (Entity)scope.owner : null,
+                scope.context, entry.definition.source, clip,
+                new AnimationEvent(0, "bedrock_sound", payload.toString()), -1, -1));
     }
 
     private static void updateLocomotion(Scope scope, Entry entry, GunState[] states,
@@ -399,6 +431,9 @@ public final class AnimationClient {
         }
         boolean play(AnimationController.Layer layer, String clip, boolean restart) {
             return definition.clips.containsKey(clip) && controller.play(layer, clip, restart, 1, null);
+        }
+        boolean play(AnimationController.Layer layer, String clip, boolean restart, AnimationClip.Loop loop) {
+            return definition.clips.containsKey(clip) && controller.play(layer, clip, restart, 1, loop);
         }
         void observeReloadCompletion() {
             if (reloadBridge.ownsAction() && reloadBridge.playbackStarted()

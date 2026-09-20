@@ -210,6 +210,7 @@ public class ClientProxyHMG extends CommonSideProxyHMG {
 		ClientRegistry.registerKeyBinding(HMGManualGunPickupClientHandler.PICKUP_KEY);
 		ClientRegistry.registerKeyBinding(handmadeguns.client.animation.AnimationClient.INSPECT);
 		cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(new handmadeguns.client.animation.AnimationClient());
+		MinecraftForge.EVENT_BUS.register(new handmadeguns.client.animation.TaCZAnimationSoundHandler());
 		HMGManualGunPickupClientHandler manualPickupHandler = new HMGManualGunPickupClientHandler();
 		cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(manualPickupHandler);
 		MinecraftForge.EVENT_BUS.register(manualPickupHandler);
@@ -675,10 +676,11 @@ public class ClientProxyHMG extends CommonSideProxyHMG {
 		return HMGGunMaker.reloadModelsForItem(heldItem == null ? null : heldItem.getItem());
 	}
 	@Override
-	public void handleReloadAnimation(final int eventId, final int slot, final int itemId, final boolean empty) {
+	public void handleReloadAnimation(final int eventId, final int slot, final int itemId, final boolean empty,
+									  final handmadeguns.animation.ReloadAnimationBridge.Stage stage) {
 		Minecraft.getMinecraft().func_152344_a(new Runnable() {
 			@Override public void run() {
-				handmadeguns.client.animation.AnimationClient.reloadStarted(eventId, slot, itemId, empty);
+				handmadeguns.client.animation.AnimationClient.reloadStarted(eventId, slot, itemId, empty, stage);
 			}
 		});
 	}

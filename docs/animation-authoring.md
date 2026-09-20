@@ -130,7 +130,7 @@ The AK uses position/rotation/scale channels, linear/Catmull–Rom interpolation
 
 ### Imported-Model Limits
 
-Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple geometry entries, and geometry versions outside the audited 1.12.0/1.21.0 pair are rejected. glTF, mesh/armature/billboard geometry, `.bbmodel` cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions remain unsupported. Animation controllers/Lua, particle playback, external sound playback, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the import instead of silently producing a partial weapon.
+Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple geometry entries, and geometry versions outside the audited 1.12.0/1.21.0 pair are rejected. glTF, mesh/armature/billboard geometry, `.bbmodel` cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions remain unsupported. Animation controllers/Lua, particle playback, unregistered or unnamespaced external sounds, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the import instead of silently producing a partial weapon.
 
 Compilation and CPU audits do not prove visual acceptance. First-person fire/reload/inspect comparisons, UV orientation, player arms, hidden magazine variants, inventory/third-person views, resource reload, VBO/display-list/Angelica rendering and dedicated-server startup still require runtime validation.
 
@@ -241,9 +241,11 @@ Presentation triggers use the following request paths:
 
 | Trigger | Request |
 | --- | --- |
-| First observation of an instance/context | BASE `idle`; first-person ACTION `draw` if present. |
+| First observation of an instance/context | BASE `idle`; first-person ACTION `draw` if present. Equip/draw is forced to one shot because TaCZ normally relies on its state machine to stop source clips authored as loop/hold. |
 | Observed recoil start/reset or ammo decrease while recoiling | ADDITIVE `fire`; cancels ACTION `inspect`/`inspect_empty`. |
-| Server accepts a manual reload | Send the owning client one slot/item/event-identified presentation event. ACTION `reload_empty` is selected from the accepted-start ammo snapshot when empty, or `reload_tactical` when nonempty, with `reload` as the existing fallback. Cancels the previous action. |
+| Server accepts a manual reload | Send the owning client one slot/item/event-identified presentation event. Ordinary guns select ACTION `reload_empty` from the accepted-start ammo snapshot when empty, or `reload_tactical` when nonempty, with `reload` as the existing fallback. A staged per-shell definition instead selects `reload_intro_empty`/`reload_intro`, then `reload_loop`. Cancels the previous action. |
+| HMG commits one per-shell round | Keep the committed round authoritative, open the existing interrupt boundary, then request one new `reload_loop` only if HMG resumes reloading. The imported insert is forced to one cycle plus hold even when the source clip declares a loop. |
+| Per-shell reload completes or is interrupted | Request `reload_end`; if absent, stop the held insert. The finish action is presentation-only and cannot block a legal HMG shot. |
 | Imported reload ACTION completes | Release imported pose ownership naturally. `IsReloading=false` does not stop an accepted clip because it cannot distinguish gameplay completion from an abort. |
 | Existing `CockingTime` becomes positive outside reload | ACTION `cock`, otherwise `bolt`; cancels the previous action. |
 | Inspect key | ACTION `inspect_empty` when empty and defined, otherwise `inspect`. Blocked during existing reload/cocking and an observed shot. |
@@ -252,11 +254,17 @@ The inspect key is **unbound by default**, configurable under HandmadeGuns in Co
 
 `reload_empty` and `reload_tactical` select visuals once from the server ammunition state at reload acceptance, before magazine removal can change it. The event does not introduce a chamber or new reload semantics. Match clip duration to existing gun timing; the controller does not stretch reload gameplay to fit an asset. A once clip can finish visually before gameplay ends. If no imported reload clip or fallback exists, the renderer retains the legacy reload state motion.
 
+Staged per-shell presentation is explicitly opt-in. HMG still decides whether a
+round can be inserted, consumes exactly one reserve item, updates the magazine,
+and exposes its existing firing-interrupt window. The intro timer is a configured
+presentation gate before the first ordinary HMG insertion timer. Already inserted
+rounds survive cancellation and no future round is granted by an animation event.
+
 `holster`, `bolt`, `cock`, `inspect_empty`, and arbitrary custom clips can also be requested through the client API. Automatic holster-before-unequip scheduling is not added: vanilla can stop rendering the stack immediately on a switch.
 
 ### Presentation Events
 
-`HMGAnimationEvent` is posted on the **client Forge event bus**, with stack, owner (when an entity exists), render context, source, clip, marker name/data, generation and loop cycle. Consumers must filter context: a preview/other-player instance is distinct from first person. No default consumer spawns casings, sounds, particles, muzzle flashes or changes visibility in this foundation. Subscribe to supply such presentation behavior. This avoids duplicating HMG's existing effects.
+`HMGAnimationEvent` is posted on the **client Forge event bus**, with stack, owner (when an entity exists), render context, source, clip, marker name/data, generation and loop cycle. Consumers must filter context: a preview/other-player instance is distinct from first person. The built-in TaCZ bridge consumes `bedrock_sound` only for an opted-in local first-person HMG gun, resolves its namespaced `effect` through the pack's sound registry, and plays it as reload/mechanical audio. Markers on `shoot`/`fire` clips are rejected so imported firing audio cannot duplicate or replace HMG's gun sound. Other events still have no default casing, particle, muzzle-flash, visibility, or gameplay behavior.
 
 Events do not load ammunition, fire the weapon, change inventory, or mutate authoritative world state. Names such as `mag_in`, `sound`, `muzzle`, or `custom` are labels, not built-in gameplay commands.
 

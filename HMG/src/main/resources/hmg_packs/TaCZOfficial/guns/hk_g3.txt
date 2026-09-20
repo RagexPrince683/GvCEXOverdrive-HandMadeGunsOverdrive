@@ -86,10 +86,12 @@ GunSoundLV,165,1
 BedrockModel,hk_g3_geo.json
 ModelTexture,hk_g3.png
 Animations,hk_g3.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ g3
+Name,TaCZ G3
 AR,TaCZOfficial_g3
+TechYear,1959

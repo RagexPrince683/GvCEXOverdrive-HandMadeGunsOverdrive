@@ -26,7 +26,13 @@ public final class AnimationController {
             if (!restart && old.clip == clip) return true;
             if (!old.clip.interruptible || clip.priority < old.clip.priority) return false;
         }
-        AnimationPlayback next = new AnimationPlayback(clip, ++generation, direction, loop == null ? clip.loop : loop);
+        AnimationClip.Loop playbackLoop = loop == null ? clip.loop : loop;
+        // Locomotion requests normally loop. Some authored Bedrock idle aliases are
+        // zero-duration static poses, which the importer correctly represents as HOLD.
+        // Preserve that authored hold when a generic caller requests LOOP.
+        if (clip.duration == 0 && playbackLoop == AnimationClip.Loop.LOOP)
+            playbackLoop = clip.loop == AnimationClip.Loop.LOOP ? AnimationClip.Loop.HOLD : clip.loop;
+        AnimationPlayback next = new AnimationPlayback(clip, ++generation, direction, playbackLoop);
         if (layer == Layer.MOVEMENT) beginMovementTransition(clip.fadeIn);
         else beginTransition(clip.fadeIn);
         layers.put(layer, next);

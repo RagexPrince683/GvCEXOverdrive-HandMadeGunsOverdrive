@@ -331,6 +331,24 @@ public class HMGGunMaker {
 					if (type.length != 0){// 1
 
 						switch (type[0]) {
+							case "TechYear":
+								try {
+									if (type.length != 2) throw new NumberFormatException("expected one year");
+									gunInfo.techYear = Integer.valueOf(parseInt(type[1]));
+								} catch (NumberFormatException invalidYear) {
+									System.err.println("[HMG] Ignoring malformed TechYear in " + file1 + ": " + str);
+								}
+								break;
+							case "TechTier":
+								try {
+									if (type.length != 2) throw new NumberFormatException("expected one tier");
+									float tier = parseFloat(type[1]);
+									if (!handmadeguns.tech.HMGTechTierManager.isValidTier(tier)) throw new NumberFormatException("invalid tier");
+									gunInfo.techTierHalfSteps = handmadeguns.tech.HMGTechTierManager.toHalfSteps(tier);
+								} catch (NumberFormatException invalidTier) {
+									System.err.println("[HMG] Ignoring malformed TechTier in " + file1 + ": " + str);
+								}
+								break;
 							case "Model":
 								if (type.length != 2) throw new IllegalArgumentException("Expected Model,name.obj or Model,name.mqo in " + file1);
 								objmodel = type[1];
@@ -2545,6 +2563,21 @@ public class HMGGunMaker {
 				break;
 			case "PerShellReload":
 				gunInfo.perShellReload = parseBoolean(type[1]);
+				break;
+			case "PerShellReloadStages":
+				gunInfo.perShellReloadStages = parseBoolean(type[1]);
+				break;
+			case "PerShellReloadIntroTime":
+				gunInfo.perShellReloadIntroTime = parseInt(type[1]);
+				gunInfo.perShellReloadEmptyIntroTime = type.length > 2 ? parseInt(type[2])
+						: gunInfo.perShellReloadIntroTime;
+				break;
+			case "AnimationEventSounds":
+				gunInfo.animationEventSounds = parseBoolean(type[1]);
+				break;
+			case "AnimationSound":
+				if (type.length < 3) throw new IllegalArgumentException("AnimationSound requires clip and sound id");
+				gunInfo.animationSounds.put(type[1].trim(), type[2].trim());
 				break;
 			case "guerrila_cant_use_this":
 				gunInfo.guerrila_can_use = false;

@@ -1,0 +1,45 @@
+// HMG M320 gameplay with unchanged official TaCZ presentation assets.
+// Source: Official TaCZ / Serene Wave Studio / Timeless Squad. See CREDITS.txt and LICENSE.txt.
+BulletPower,30
+bulletFuse,40
+BulletSpeed,1.52f
+BulletGravity,0.485
+Cycle,10
+BlletSpread,0.15f
+BlletSpreadDiffusion,5,0,1.5,0.2,3,0.5
+Recoil,8
+Recoil_sneaking,4
+ReloadTime,30
+BlockDestory,true
+RemainingBullet,1
+Attacking,3.0f
+Zoom,1.1f,2.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,true
+ZoomRenderTypeTxture,false,false,false
+Explosion,4
+BlockDestory,false
+Texture,items/M320.png
+GunSound,handmadeguns.firegrenade,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CartridgeType,4
+ScopeTexture,misc/acog.png,misc/acog.png,misc/scope.png
+RenderCross,false
+Magazine,0,HandmadeGuns,bullet_gl
+attachRestriction,true
+GunSoundLV,165,165
+
+BedrockModel,m320_geo.json
+ModelTexture,m320.png
+Animations,m320.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
+AnimationSound,reload_empty,tacz:m320/m320_reload_empty
+AnimationSound,reload_tactical,tacz:m320/m320_reload_tactical
+ModelScala,0.5f
+InworldScale,2f
+ModelArm,true
+Tabname,HMG_Bedrock_TaCZ
+
+Name,TaCZ M320
+GL,TaCZOfficial_M320
+TechYear,2008

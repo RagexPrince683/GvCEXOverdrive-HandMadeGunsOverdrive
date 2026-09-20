@@ -9,7 +9,7 @@ Credited contributors identified by the upstream project and supplied source inv
 Pos_2333; Argon4W; Exopandora; 3TUSK.
 
 HMG-Overdrive uses byte-for-byte copies of the selected TaCZ geometry, model texture,
-and animation resources. The 2D item icons and scope overlays under textures/items
+animation, and dependency-selected non-firing mechanical audio resources. The 2D item icons and scope overlays under textures/items
 and textures/misc are byte-for-byte copies from the original HMG GVCguns and
 Addfixing packs; they are retained dependencies of the migrated HMG definitions,
 not TaCZ assets. HMG gameplay definitions, ballistics, magazines, attachments, fire

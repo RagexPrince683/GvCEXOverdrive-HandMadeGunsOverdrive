@@ -25,6 +25,10 @@ public class MessageCatcher_TriggerHeld implements IMessageHandler<PacketTrigger
         if(entity instanceof EntityPlayer){
             ItemStack itemStack = ((EntityPlayer) entity).getHeldItem();
             if(itemStack != null && itemStack.getItem() instanceof HMGItem_Unified_Guns){
+				if (!handmadeguns.tech.HMGTechTierManager.isUnlocked(itemStack, (EntityPlayer) entity, world)) {
+					handmadeguns.tech.HMGTechTierManager.notifyLocked((EntityPlayer) entity, itemStack);
+					return null;
+				}
                 ((HMGItem_Unified_Guns) itemStack.getItem()).triggerHeldGun(itemStack);
             }
         }

@@ -1,0 +1,54 @@
+// HMG Kar98k gameplay with unchanged official TaCZ presentation assets.
+// The existing HMG one-round 7.92 mm magazine item exposes its native per-round lifecycle.
+// Source: Official TaCZ / Serene Wave Studio / Timeless Squad. See CREDITS.txt and LICENSE.txt.
+BulletPower,15
+BulletSpeed,15.2
+BulletGravity,0.485
+BlletSpread,0.15f
+ADS_Spread_coefficient,0.15
+BlletSpreadDiffusion,9,0,7,3.5,4,2
+Cycle,2
+Recoil,5
+Recoil_sneaking,3
+Motion,0.95
+ReloadTime,14
+RemainingBullet,5
+Attacking,5.0f
+Zoom,2.0f,4.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Texture,items/R700.png
+GunSound,handmadeguns.K98K,handmadeguns.K98K
+GunSoundReload,handmadeguns.reload
+GunSoundCooking,handmadeguns.cooking
+CustomFlash,arrow,1
+Bursts,1
+attachRestriction,true
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+SoundSpeed,1f
+ScopeTexture,misc/scope_r700.png,misc/scope_r700.png,misc/scope_r700.png
+RenderCross,false
+CockingTime,20
+Magazine,0,HandmadeGuns,7.92mm bullet
+MagazineItemCount,5
+PerShellReload,true
+PerShellReloadStages,true
+PerShellReloadIntroTime,15,32
+MagazineSG,0,HandmadeGuns,bullet_shell_hmg
+MagazineGL,0,HandmadeGuns,bullet_rr_hmg
+GunSoundLV,165,1
+
+BedrockModel,kar98_geo.json
+ModelTexture,kar98.png
+Animations,kar98.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
+ModelScala,0.5f
+InworldScale,1.8f
+ModelArm,true
+Tabname,HMG_Bedrock_TaCZ
+
+Name,TaCZ Kar98k
+SR,TaCZOfficial_Kar98k
+TechYear,1935

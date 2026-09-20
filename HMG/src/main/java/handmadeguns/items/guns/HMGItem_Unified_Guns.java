@@ -5,6 +5,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import handmadeguns.HMGPacketHandler;
 import handmadeguns.HandmadeGunsCore;
+import handmadeguns.animation.ReloadAnimationBridge;
 import handmadeguns.Util.GunsUtils;
 import handmadeguns.Util.StackAndSlot;
 import handmadeguns.entity.HMGEntityLaser;
@@ -69,6 +70,13 @@ import static net.minecraft.world.World.MAX_ENTITY_RADIUS;
 
 public class HMGItem_Unified_Guns extends Item {
 	private static final String PER_SHELL_INTERRUPT_TIME_TAG = "PerShellInterruptTime";
+	private static final String PER_SHELL_PHASE_TAG = "PerShellReloadPhase";
+	private static final String PER_SHELL_INTRO_TIME_TAG = "PerShellReloadIntroTime";
+	private static final String PER_SHELL_PRESENTATION_ACTIVE_TAG = "PerShellPresentationActive";
+	private static final String PER_SHELL_STARTED_EMPTY_TAG = "PerShellStartedEmpty";
+	private static final int PER_SHELL_PHASE_NONE = 0;
+	private static final int PER_SHELL_PHASE_INTRO = 1;
+	private static final int PER_SHELL_PHASE_INSERT = 2;
 	private static final int DEFAULT_PER_SHELL_INTERRUPT_TICKS = 4;
 
 
@@ -95,6 +103,19 @@ public class HMGItem_Unified_Guns extends Item {
 
 	public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4){
 		checkTags(par1ItemStack);
+		if (gunInfo.techYear != null) {
+			par3List.add(EnumChatFormatting.GRAY + "Introduced: " + gunInfo.techYear);
+		}
+		if (gunInfo.techYear != null || gunInfo.techTierHalfSteps >= 0) {
+			float requiredTier = handmadeguns.tech.HMGTechTierManager.resolveRequiredTier(gunInfo);
+			par3List.add(EnumChatFormatting.GRAY + "Required Tech Tier: " + requiredTier
+					+ (gunInfo.techTierHalfSteps >= 0 ? " (override)" : ""));
+			if (par2EntityPlayer != null && !handmadeguns.tech.HMGTechTierManager.isUnlocked(
+					par1ItemStack, par2EntityPlayer, par2EntityPlayer.worldObj)) {
+				par3List.add(EnumChatFormatting.RED + "LOCKED — Server Tech Tier: "
+						+ handmadeguns.tech.HMGTechTierManager.getUnlockedTier(par2EntityPlayer.worldObj));
+			}
+		}
 		{
 			String powor = String
 					.valueOf(gunInfo.power + EnchantmentHelper.getEnchantmentLevel(Enchantment.power.effectId, par1ItemStack));
@@ -665,9 +686,12 @@ public class HMGItem_Unified_Guns extends Item {
 					}
 					boolean isbulletremaining = remain_Bullet(itemstack) > 0;
 					if (isbulletremaining && nbt.getBoolean("IsReloading") && isPerShellReload(itemstack) && shouldInterruptPerShellReload(entity, nbt)) {
+						finishPerShellPresentation(itemstack, world, entity, nbt);
 						nbt.setBoolean("IsReloading", false);
 						nbt.setBoolean("WaitReloading", false);
 						nbt.setInteger("RloadTime", 0);
+						nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
+						nbt.setInteger(PER_SHELL_INTRO_TIME_TAG, 0);
 					}
 					Entity SACLOSCheck = world.getEntityByID(entity.getEntityData().getInteger("SACLOS_HOMING"));
 
@@ -1042,6 +1066,11 @@ public class HMGItem_Unified_Guns extends Item {
 		return entity.motionX * entity.motionX + entity.motionY * entity.motionY + entity.motionZ * entity.motionZ;
 	}
 	public void fireProcess(ItemStack itemstack, World world, Entity entity, NBTTagCompound nbt, int inventorySlot){
+		EntityPlayer firingPlayer = entity instanceof EntityPlayer ? (EntityPlayer) entity : null;
+		if (!handmadeguns.tech.HMGTechTierManager.isUnlocked(itemstack, firingPlayer, world)) {
+			handmadeguns.tech.HMGTechTierManager.notifyLocked(firingPlayer, itemstack);
+			return;
+		}
 		int fireLoop = 1;
 		boolean shotCommitted = false;
 		ItemStack oneUseState = gunInfo.isOneuse && !world.isRemote ? itemstack.copy() : null;
@@ -1640,12 +1669,38 @@ public class HMGItem_Unified_Guns extends Item {
 			e.printStackTrace();
 		}
 
+		if (perShellReload && gunInfo.perShellReloadStages
+				&& nbt.getInteger(PER_SHELL_PHASE_TAG) == PER_SHELL_PHASE_INTRO) {
+			int introDuration = nbt.getBoolean(PER_SHELL_STARTED_EMPTY_TAG)
+					? gunInfo.perShellReloadEmptyIntroTime : gunInfo.perShellReloadIntroTime;
+			if (!nbt.getBoolean("IsReloading") || remain_Bullet(itemstack) >= max_Bullet(itemstack)
+					|| !canreloadBullets(itemstack, world, entity)) {
+				finishPerShellPresentation(itemstack, world, entity, nbt);
+				nbt.setBoolean("IsReloading", false);
+				nbt.setBoolean("WaitReloading", true);
+				nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
+				nbt.setInteger(PER_SHELL_INTRO_TIME_TAG, 0);
+				return;
+			}
+			int introTime = nbt.getInteger(PER_SHELL_INTRO_TIME_TAG) + 1;
+			nbt.setBoolean("WaitReloading", false);
+			if (introTime >= Math.max(0, introDuration)) {
+				nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_INSERT);
+				nbt.setInteger(PER_SHELL_INTRO_TIME_TAG, 0);
+				nbt.setInteger("RloadTime", 0);
+				sendReloadPresentation(itemstack, world, entity, nbt, ReloadAnimationBridge.Stage.INSERT);
+			} else {
+				nbt.setInteger(PER_SHELL_INTRO_TIME_TAG, introTime);
+			}
+			return;
+		}
+
 		int reloadti = nbt.getInteger("RloadTime");
 
 		// Advance only an explicit/manual reload for players; non-player users may still be auto-started by gunProcess.
 		if (nbt.getBoolean("IsReloading") && (remain_Bullet(itemstack) < max_Bullet(itemstack) || gunInfo.isOneuse)) {
 			if (canreloadBullets(itemstack, world, entity)) {
-				if (!world.isRemote && reloadti == 0 && !gunInfo.isOneuse) {
+				if (!world.isRemote && reloadti == 0 && !gunInfo.isOneuse && !gunInfo.animationEventSounds) {
 					HMGPacketHandler.INSTANCE.sendToAll(new PacketPlaysound(entity, gunInfo.soundre.length > nbt.getInteger("getcurrentMagazine") ? gunInfo.soundre[nbt.getInteger("getcurrentMagazine")] : gunInfo.soundre[0], gunInfo.soundrespeed, gunInfo.soundrelevel, true));
 				}
 
@@ -1654,8 +1709,10 @@ public class HMGItem_Unified_Guns extends Item {
 				nbt.setBoolean("WaitReloading", false);
 				
 			} else {
+				if (perShellReload) finishPerShellPresentation(itemstack, world, entity, nbt);
 				nbt.setBoolean("IsReloading", false);
 				nbt.setBoolean("WaitReloading", true);
+				nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
 			}
 		} else {
 			reloadti = 0;
@@ -1676,6 +1733,14 @@ public class HMGItem_Unified_Guns extends Item {
 						&& shellCommitted
 						&& remain_Bullet(itemstack) < max_Bullet(itemstack)
 						&& canreloadBullets(itemstack, world, entity);
+				if (perShellReload) {
+					if (hasNextPerShellReload) {
+						nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
+					} else {
+						finishPerShellPresentation(itemstack, world, entity, nbt);
+						nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
+					}
+				}
 
 				// Reset cocking state after reload
 				if (gunInfo.needFirstCock) {
@@ -1706,6 +1771,7 @@ public class HMGItem_Unified_Guns extends Item {
 		checkTags(itemstack);
 		NBTTagCompound nbt = itemstack.getTagCompound();
 		if (isPerShellReload(itemstack) && nbt.getInteger(PER_SHELL_INTERRUPT_TIME_TAG) > 0) {
+			finishPerShellPresentation(itemstack, world, entity, nbt);
 			nbt.setInteger(PER_SHELL_INTERRUPT_TIME_TAG, 0);
 			nbt.setBoolean("IsReloading", false);
 			nbt.setBoolean("WaitReloading", false);
@@ -1720,9 +1786,27 @@ public class HMGItem_Unified_Guns extends Item {
 		nbt.setBoolean("WaitReloading", false);
 		nbt.setInteger("RloadTime", 0);
 		nbt.setInteger(PER_SHELL_INTERRUPT_TIME_TAG, 0);
+		if (isPerShellReload(itemstack) && gunInfo.perShellReloadStages) {
+			boolean empty = remain_Bullet(itemstack) == 0;
+			int introDuration = empty ? gunInfo.perShellReloadEmptyIntroTime : gunInfo.perShellReloadIntroTime;
+			nbt.setInteger(PER_SHELL_PHASE_TAG,
+					introDuration > 0 ? PER_SHELL_PHASE_INTRO : PER_SHELL_PHASE_INSERT);
+			nbt.setInteger(PER_SHELL_INTRO_TIME_TAG, 0);
+			nbt.setBoolean(PER_SHELL_PRESENTATION_ACTIVE_TAG, true);
+			nbt.setBoolean(PER_SHELL_STARTED_EMPTY_TAG, empty);
+		} else {
+			nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
+		}
 		nbt.setBoolean("Bursting", false);
 		nbt.setInteger("RemainBurstround", getburstCount(nbt.getInteger("HMGMode")));
 		return true;
+	}
+
+	public ReloadAnimationBridge.Stage reloadPresentationStage(ItemStack itemstack) {
+		if (!isPerShellReload(itemstack) || !gunInfo.perShellReloadStages || itemstack.getTagCompound() == null)
+			return ReloadAnimationBridge.Stage.STANDARD;
+		return itemstack.getTagCompound().getInteger(PER_SHELL_PHASE_TAG) == PER_SHELL_PHASE_INTRO
+				? ReloadAnimationBridge.Stage.INTRO : ReloadAnimationBridge.Stage.INSERT;
 	}
 
 	private boolean requiresManualReload(Entity entity) {
@@ -1759,7 +1843,9 @@ public class HMGItem_Unified_Guns extends Item {
 		nbt.setBoolean("WaitReloading", false);
 		nbt.setInteger("RloadTime", 0);
 		if (shouldInterruptPerShellReload(entity, nbt, true)) {
+			finishPerShellPresentation(itemstack, world, entity, nbt);
 			nbt.setInteger(PER_SHELL_INTERRUPT_TIME_TAG, 0);
+			nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
 			return true;
 		}
 		interruptTime--;
@@ -1768,8 +1854,32 @@ public class HMGItem_Unified_Guns extends Item {
 			nbt.setBoolean("IsReloading", true);
 			nbt.setBoolean("WaitReloading", false);
 			nbt.setInteger("RloadTime", 0);
+			if (gunInfo.perShellReloadStages) {
+				nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_INSERT);
+				sendReloadPresentation(itemstack, world, entity, nbt, ReloadAnimationBridge.Stage.INSERT);
+			}
+		} else if (interruptTime <= 0) {
+			finishPerShellPresentation(itemstack, world, entity, nbt);
+			nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
 		}
 		return true;
+	}
+
+	private void finishPerShellPresentation(ItemStack itemstack, World world, Entity entity, NBTTagCompound nbt) {
+		if (!gunInfo.perShellReloadStages || !nbt.getBoolean(PER_SHELL_PRESENTATION_ACTIVE_TAG)) return;
+		sendReloadPresentation(itemstack, world, entity, nbt, ReloadAnimationBridge.Stage.END);
+		nbt.setBoolean(PER_SHELL_PRESENTATION_ACTIVE_TAG, false);
+	}
+
+	private void sendReloadPresentation(ItemStack itemstack, World world, Entity entity, NBTTagCompound nbt,
+									ReloadAnimationBridge.Stage stage) {
+		if (world.isRemote) return;
+		EntityPlayerMP player = entity instanceof EntityPlayerMP ? (EntityPlayerMP)entity
+				: entity.riddenByEntity instanceof EntityPlayerMP ? (EntityPlayerMP)entity.riddenByEntity : null;
+		if (player == null || player.getHeldItem() != itemstack) return;
+		ReloadAnimationBridge.StartEvent event = ReloadAnimationBridge.nextEvent(player.inventory.currentItem,
+				Item.getIdFromItem(itemstack.getItem()), nbt.getBoolean(PER_SHELL_STARTED_EMPTY_TAG), stage);
+		HMGPacketHandler.INSTANCE.sendTo(new PacketReloadAnimation(event), player);
 	}
 
 	private int getPerShellInterruptTicks(NBTTagCompound nbt) {

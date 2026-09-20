@@ -160,6 +160,18 @@ Slot4,ore:ingotCopper:5
 CraftItem,HandmadeGuns:ExampleGun:0:1
 ```
 
+A separately registered presentation variant can inherit every Gun Smithing Table
+recipe from its gameplay counterpart without repeating the ingredient grid:
+
+```text
+CopyRecipe,HandmadeGuns:PresentationVariant,HandmadeGuns:LegacyGun
+```
+
+`CopyRecipe` is resolved after all bundled, external, and legacy recipe roots have
+loaded. It copies every recipe for the source output, including its category and
+normalized exact/Ore Dictionary ingredients. The target and source items must both
+be registered, and a target that already has a recipe is not duplicated.
+
 Supported prefixes are `ore:`, `oredict:`, and `OreDictionary:`. Prefix matching is case-insensitive, and the ore dictionary key after the prefix is preserved. A final numeric suffix may be used for the required amount, as in `ore:ingotCopper:5`; otherwise the slot requires one matching item.
 
 If Forge registers an item under multiple keys, automatic conversion deterministically
@@ -284,3 +296,8 @@ removing the current skin.
 Definitions load on both client and server because crafting needs their IDs. Overlay
 existence is checked only by the client renderer and is not stored in
 shared skin metadata; an unavailable resource safely leaves the base gun unskinned.
+## Technology metadata
+
+Gun definitions may declare `TechYear,<year>`. HMG resolves that year through the server's configurable tier year ceilings. Use `TechTier,<0.0..5.0>` only as an explicit half-step override for fictional, prototype, or otherwise unclassifiable equipment. If both are present, the year is still displayed but `TechTier` controls access.
+
+Neither field is mandatory. Definitions without both fields retain pre-progression behavior and are unrestricted. Malformed values are ignored instead of aborting pack loading.

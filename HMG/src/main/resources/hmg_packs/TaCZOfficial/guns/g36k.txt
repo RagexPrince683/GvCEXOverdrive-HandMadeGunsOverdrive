@@ -78,6 +78,7 @@ GunSoundLV,165,1
 BedrockModel,g36k_geo.json
 ModelTexture,g36k.png
 Animations,g36k.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
@@ -85,3 +86,4 @@ Tabname,HMG_Bedrock_TaCZ
 
 Name,TaCZ G36K
 AR,TaCZOfficial_G36K
+TechYear,1997

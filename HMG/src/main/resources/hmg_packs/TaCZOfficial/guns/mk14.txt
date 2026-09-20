@@ -1,0 +1,49 @@
+// HMG M14 gameplay with unchanged official TaCZ Mk 14 presentation assets.
+// Source: Official TaCZ / Serene Wave Studio / Timeless Squad. See CREDITS.txt and LICENSE.txt.
+BulletPower,15
+BulletSpeed,15.8
+BulletGravity,0.485
+BlletSpread,0.1f
+ADS_Spread_coefficient,0.15
+BlletSpreadDiffusion,10,0,1.8,0.2,3,0.6
+Cycle,1.6
+Motion,0.88
+Recoil,8
+Recoil_sneaking,5
+ReloadTime,50
+RemainingBullet,10
+Attacking,4.0f
+Zoom,1.0f,1.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Texture,items/m1c.png
+GunSound,handmadeguns.M14,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CustomFlash,arrow,1
+Bursts,1,-1,0
+Rates,1.6,1.6,1.6
+attachRestriction,true
+allowattach,attachmenttest
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+SoundSpeed,1f
+ScopeTexture,misc/scope_m110.png,misc/scope_m110.png,misc/scope_m110.png
+RenderCross,false
+Magazine,0,HandmadeGuns,7.62mm og magazine
+MagazineSG,0,HandmadeGuns,bullet_shell_hmg
+MagazineGL,0,HandmadeGuns,bullet_rr_hmg
+GunSoundLV,165,1
+
+BedrockModel,mk14_geo.json
+ModelTexture,mk14.png
+Animations,mk14.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
+ModelScala,0.5f
+InworldScale,1.65f
+ModelArm,true
+Tabname,HMG_Bedrock_TaCZ
+
+Name,TaCZ Mk 14 EBR
+SR,TaCZOfficial_Mk14
+TechYear,2002

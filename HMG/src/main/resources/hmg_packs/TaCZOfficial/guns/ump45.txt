@@ -81,10 +81,12 @@ MuzzleJump,-2
 BedrockModel,ump45_geo.json
 ModelTexture,ump45.png
 Animations,ump45.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ ump45
+Name,TaCZ UMP45
 HG,TaCZOfficial_ump45
+TechYear,1999

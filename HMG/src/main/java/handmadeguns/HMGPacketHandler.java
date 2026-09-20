@@ -67,5 +67,7 @@ public class HMGPacketHandler {
                 Side.CLIENT);
         INSTANCE.registerMessage(MessageCatcher_ReloadAnimation.class, PacketReloadAnimation.class, ++id,
                 Side.CLIENT);
+        INSTANCE.registerMessage(PacketTechTierSync.Handler.class, PacketTechTierSync.class, ++id,
+                Side.CLIENT);
     }
 }

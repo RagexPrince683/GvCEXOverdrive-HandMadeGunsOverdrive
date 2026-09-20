@@ -1,0 +1,79 @@
+// HMG AK-74 gameplay with ClassicRCCRP TaCZ presentation assets.
+// Source presentation: ClassicRCCRP by cima_silchin_warfare (CC BY 4.0). See CREDITS.txt and LICENSE.txt.
+BulletPower,8
+BulletSpeed,18
+BulletGravity,0.485
+
+BlletSpread,0.15f
+ADS_Spread_coefficient,0.3
+BlletSpreadDiffusion,5,0,0.9,0.2,3,0.4
+
+Motion,0.98
+
+
+Recoil,3
+Recoil_sneaking,1.4
+
+ReloadTime,50
+
+RemainingBullet,30
+
+Attacking,6.0f
+Zoom,1.0f,1.0f,4.0f
+
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+
+Texture,items/AK74.png
+GunSound,handmadeguns.AK74,handmadeguns.supu
+GunSoundReload,handmadeguns.reload
+CustomFlash,arrow,1
+Bursts,-1,1,0
+Rates,1.845,1.845,1.845
+Cycle,1.9
+
+ElevationOffsets,	 0,-0.3,-0.6,-0.9,-1.35,-1.7,-2.2
+elevationOffsets_info,0,20m ,40m ,60m ,80m ,100m , 120m
+
+attachRestriction,true
+allowattach,reddot
+allowattach,scope
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+//todo
+//allowattach,byfrou01_Bayonet
+
+
+
+
+
+
+
+
+
+
+SoundSpeed,1f
+
+ScopeTexture,null.png,null.png,misc/scope_svd.png
+RenderCross,false
+
+//Magazine,0,HandmadeGuns,5.45mm magazine
+MultiMagazine,HandmadeGuns:5.45mm magazine,HandmadeGuns:5.45mm long magazine,HandmadeGuns:5.45mm casket magazine
+MagazineSG,0,HandmadeGuns,bullet_shell_hmg
+MagazineGL,0,HandmadeGuns,bullet_rr_hmg
+
+
+BedrockModel,ak74_geo.json
+ModelTexture,ak74.png
+Animations,ak_series.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
+ModelScala,0.5f
+InworldScale,1.8f
+ModelArm,true
+Tabname,HMG_ClassicRCCRP
+
+Name,ClassicRCCRP AK-74
+GunSoundLV,165,1
+AR,TaCZClassicRCCRP_AK74
+TechYear,1974

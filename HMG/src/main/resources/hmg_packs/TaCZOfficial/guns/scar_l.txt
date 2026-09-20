@@ -95,10 +95,12 @@ GunSoundLV,165,1
 BedrockModel,scar_l_geo.json
 ModelTexture,scar_l.png
 Animations,scar_l.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ scarl
+Name,TaCZ SCAR-L
 AR,TaCZOfficial_scarl
+TechYear,2009

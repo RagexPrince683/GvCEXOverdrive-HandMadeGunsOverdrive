@@ -9,7 +9,7 @@ import static handmadeguns.HandmadeGunsCore.HMG_proxy;
 
 public final class MessageCatcher_ReloadAnimation implements IMessageHandler<PacketReloadAnimation, IMessage> {
     @Override public IMessage onMessage(PacketReloadAnimation message, MessageContext ctx) {
-        HMG_proxy.handleReloadAnimation(message.eventId, message.slot, message.itemId, message.empty);
+        HMG_proxy.handleReloadAnimation(message.eventId, message.slot, message.itemId, message.empty, message.stage);
         return null;
     }
 }

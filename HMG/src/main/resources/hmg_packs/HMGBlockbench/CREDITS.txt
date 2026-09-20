@@ -1,0 +1,8 @@
+Blockbench AKM provenance
+=========================
+
+The cod4_ak.bbmodel, AKM item texture, scope overlay, and HMG definition were
+already distributed within this repository's GVCguns pack. The embedded model
+metadata identifies the project as cod4_ak but contains no author or license field.
+This pass changes only pack ownership and does not claim new authorship or alter
+the model, texture, or overlay bytes.

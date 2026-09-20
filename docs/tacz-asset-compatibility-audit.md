@@ -136,18 +136,31 @@ All 57 displays have a complete readable ordinary-presentation set after their d
 - TaCZ-compatible Bedrock UV-to-vertex binding for box/per-face cubes, mirror, inflate, negative dimensions and declared texture resolution. Geometry and texture assets remain unchanged.
 - A format-level rejection for root or `recursion/taczpack.dat` payloads.
 - Failure isolation: a bad external fallback logs a diagnostic but no longer discards valid embedded project animations.
+- Opt-in playback of authored, namespaced Bedrock sound markers for the owning
+  first-person gun. Fire-clip markers are excluded so HMG firing sounds remain
+  authoritative; marker-less clips can declare one pack-local fallback sound.
+- An opt-in staged per-shell presentation bridge. HMG's existing gameplay commits
+  one round at a time and controls interruption, while imported clips provide an
+  intro, one held insertion per commit cycle, and an optional finish action.
 
 ## Deliberate Exclusions and Remaining Limits
 
 The following are not necessary for ordinary weapon presentation and were deliberately not imported:
 
 - TaCZ Lua/state-machine execution, timers, and queries.
-- Under-barrel/GP-25/M320-specific firing, selection, ammunition, and networking.
+- Under-barrel/GP-25 switching, selection, ammunition, and networking. The official
+  M320 is migrated only as HMG's existing standalone launcher.
 - Pack-specific fire selectors, inspect variants, tactical-rush logic, or custom run scripts.
 - Dynamic attachment/refit selection, non-default extended-magazine state, bullet visibility, optics, laser, muzzle, shell, and camera-constraint logic.
 - Ballistics, recoil authority, movement rules, stamina, inventory, reload gameplay, or server authority changes.
 - Decoding, unpacking, reverse-engineering, or importing Warzone's private `taczpack.dat` payload.
 
-Still unsupported are glTF, Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple-geometry files, versions outside the audited 1.12.0/1.21.0 pair, nonnumeric Molang, global/quaternion interpolation, and script-driven animation expressions. `walk_aiming_2` is retained and directly callable but is not guessed as a universal state because only the pistol default exposes it and the condition belongs to TaCZ's script. Per-shell/per-round weapons may have usable specialized clip names even when the conservative standard-family check above reports no reload; HMG does not infer their gameplay sequence.
+Still unsupported are glTF, Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple-geometry files, versions outside the audited 1.12.0/1.21.0 pair, nonnumeric Molang, global/quaternion interpolation, and script-driven animation expressions. `walk_aiming_2` is retained and directly callable but is not guessed as a universal state because only the pistol default exposes it and the condition belongs to TaCZ's script. Per-shell/per-round sequencing is not inferred globally: a gun definition must opt into the established `reload_intro[_empty]` -> `reload_loop` -> `reload_end` contract and supply intro timing while HMG retains round authority.
+
+Migration follow-up on 2026-09-19 added the official M870, M1014, Kar98k, M320,
+HK416D, and Mk 14 variants, plus six exact ClassicRCCRP counterparts. SX and WaT
+were not migrated because their published CC BY-NC-ND licenses prohibit adapted
+redistribution. Continental is CC BY 4.0 but supplied no exact/directly compatible
+HMG gameplay match in this pass. Warzone remains excluded by its packed format.
 
 Manual runtime validation has confirmed representative AK-47/Glock 17 first-person rendering, actions, locomotion transitions, skin compatibility, base visibility filtering and GUI centering. Remaining acceptance includes the corrected GUI angle/scale, AK UV presentation, third-person forward placement, legacy reload playback, dropped views and optional renderer paths in Minecraft 1.7.10. After that gate, additional source-complete weapons can receive ordinary HMG definitions in batches; exceptions above should not be silently promoted.

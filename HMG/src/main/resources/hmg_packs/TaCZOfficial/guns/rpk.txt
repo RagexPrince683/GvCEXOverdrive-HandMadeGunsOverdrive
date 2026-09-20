@@ -96,6 +96,7 @@ GunSoundLV,165,1
 BedrockModel,rpk_geo.json
 ModelTexture,rpk.png
 Animations,rpk.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
@@ -103,3 +104,4 @@ Tabname,HMG_Bedrock_TaCZ
 
 Name,TaCZ RPK
 AR,TaCZOfficial_RPK
+TechYear,1961

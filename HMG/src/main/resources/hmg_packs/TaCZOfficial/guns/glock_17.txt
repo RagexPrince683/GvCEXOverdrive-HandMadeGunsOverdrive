@@ -79,10 +79,12 @@ MuzzleJump,-4
 BedrockModel,glock_17_geo.json
 ModelTexture,glock_17.png
 Animations,glock_17.animation.json,pistol_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ G17
+Name,TaCZ Glock 17
 HG,TaCZOfficial_G17
+TechYear,1982

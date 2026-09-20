@@ -77,6 +77,7 @@ GunSoundLV,165,1
 BedrockModel,m16a1_geo.json
 ModelTexture,m16a1.png
 Animations,m16a1.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
@@ -84,3 +85,4 @@ Tabname,HMG_Bedrock_TaCZ
 
 Name,TaCZ M16A1
 AR,TaCZOfficial_M16A1
+TechYear,1967

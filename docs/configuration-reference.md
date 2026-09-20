@@ -18,6 +18,35 @@ Animations,my_rifle.animation.json,rifle_default.animation.json
 
 Use only one model directive. `BedrockModel` requires the external model PNG selected by `ModelTexture`. `Animations` entries are ordered from highest to lowest precedence: embedded `.bbmodel` clips win first, then a weapon-local file, while later shared files supply only missing clip names. Geometry and animation references remain pack-local. See [animation and imported-model authoring](animation-authoring.md) for the supported Bedrock subset and locomotion mapping.
 
+Imported Bedrock guns can opt into authored mechanical audio and HMG-owned
+per-shell presentation stages:
+
+```text
+AnimationEventSounds,true
+AnimationSound,reload_empty,tacz:m320/m320_reload_empty
+
+PerShellReload,true
+PerShellReloadStages,true
+PerShellReloadIntroTime,9,43
+```
+
+`AnimationEventSounds,true` plays namespaced `sound_effects` markers from the
+active imported animation for the owning player's first-person gun. It suppresses
+the generic HMG reload sound for that definition, but `shoot`/`fire` clips are
+always excluded so `GunSound` remains authoritative. `AnimationSound,<clip>,<id>`
+is a start-of-clip fallback only when that clip has no authored sound markers;
+the sound identifier must be namespaced and registered by the pack.
+
+`PerShellReloadStages,true` is valid only with HMG's existing
+`PerShellReload,true` gameplay. It maps the accepted reload to
+`reload_intro`/`reload_intro_empty`, every HMG shell commit to one
+`reload_loop`, and completion/interruption to `reload_end`. The insert clip is
+forced to hold after one cycle until HMG decides whether another round may be
+loaded. `PerShellReloadIntroTime,<tactical>,<empty>` gives the two intro lengths
+in HMG ticks; it delays the first ordinary `ReloadTime` insertion without
+granting ammunition. These directives do not change capacity, ammunition
+consumption, interruption rules, or any other gameplay authority.
+
 ### Per-ammunition door breaching
 
 `CustomMagazine` ammunition can opt a projectile into close-range wooden-door breaching:
@@ -304,3 +333,13 @@ HMG registers a world generator for the overworld. It generates copper and alumi
 - Aluminum: 9 veins/chunk, vein size 7, Y 32-95.
 
 These ore-generation toggles are computed automatically from ore dictionary checks; no active config keys for ore generation were found in the inspected HMG code.
+## Technology tiers
+
+HMG's progression system is independent of MC Heli. It is disabled by default for compatibility with existing worlds. In `handmadeguns.cfg`, the `TechnologyTiers` category provides:
+
+- `enabled`: enables server-authoritative HMG technology restrictions.
+- `operatorBypass`: lets permission-level-2 operators bypass restrictions without changing progression.
+- `creativeBypass`: lets creative players bypass restrictions without changing progression.
+- `tierMaximumYears`: eleven strictly increasing inclusive year ceilings for tiers `0.0` through `5.0`.
+
+The unlocked tier is world data, not a global configuration value, and survives restart/reload. Legacy content with neither `TechYear` nor `TechTier` remains unrestricted. Invalid metadata is logged and ignored.

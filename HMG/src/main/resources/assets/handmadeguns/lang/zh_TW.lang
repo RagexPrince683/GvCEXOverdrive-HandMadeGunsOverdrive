@@ -34,8 +34,9 @@ item.BP_sample1.name=槍械箱_範例1
 # Guide-API Field Manual (English fallback)
 itemGroup.HMGCrafting=HMG Crafting
 itemGroup.HMG_Ores=HMG Ores
-itemGroup.HMG_Blockbench=HMG Blockbench
-itemGroup.HMG_Bedrock_TaCZ=HMG Bedrock / TaCZ
+itemGroup.HMG_Blockbench=HMG Blockbench Guns
+itemGroup.HMG_Bedrock_TaCZ=HMG TaCZ Guns
+itemGroup.HMG_ClassicRCCRP=HMG ClassicRCCRP Guns
 
 # ========================
 # Base Materials / Ingots

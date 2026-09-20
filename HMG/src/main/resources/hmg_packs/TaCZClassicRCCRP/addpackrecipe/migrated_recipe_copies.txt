@@ -1,0 +1,7 @@
+# ClassicRCCRP presentation variants inherit their HMG gameplay recipes.
+CopyRecipe,HandmadeGuns:TaCZClassicRCCRP_AK74,HandmadeGuns:AK74
+CopyRecipe,HandmadeGuns:TaCZClassicRCCRP_AK74M,HandmadeGuns:AK74M
+CopyRecipe,HandmadeGuns:TaCZClassicRCCRP_AKS74U,HandmadeGuns:AKS74U
+CopyRecipe,HandmadeGuns:TaCZClassicRCCRP_HK416,HandmadeGuns:HK416
+CopyRecipe,HandmadeGuns:TaCZClassicRCCRP_M110,HandmadeGuns:M110
+CopyRecipe,HandmadeGuns:TaCZClassicRCCRP_MG36,HandmadeGuns:MG36

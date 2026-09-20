@@ -1,0 +1,47 @@
+// HMG HK416 gameplay with unchanged official TaCZ HK416D presentation assets.
+// Source: Official TaCZ / Serene Wave Studio / Timeless Squad. See CREDITS.txt and LICENSE.txt.
+BulletPower,8
+BulletSpeed,18.3
+BulletGravity,0.485
+BlletSpread,0.1
+ADS_Spread_coefficient,0.15F
+BlletSpreadDiffusion,5,0,3,0.1,2,0.8
+Cycle,1.5
+Recoil,2
+Recoil_sneaking,1.5
+Motion,0.97
+ReloadTime,50
+RemainingBullet,30
+Attacking,3.5f
+Zoom,1.0f,1.0f,4.0f
+ZoomRender,true
+ZoomRenderType,true,true,false
+ZoomRenderTypeTxture,false,false,true
+Texture,items/M4A1.png
+GunSound,handmadeguns.HK416,handmadeguns.HK416
+GunSoundReload,handmadeguns.reload
+CustomFlash,arrow,1
+Bursts,1,-1,0
+Rates,1.411,1.411,1.411
+attachRestriction,true
+allowattach,attachmenttest
+allowattach,Bullet_AP
+allowattach,Bullet_AT
+SoundSpeed,1.2f
+ScopeTexture,null.png,null.png,misc/scope.png
+RenderCross,false
+MultiMagazine,HandmadeGuns:5.56mm magazine,HandmadeGuns:bullet_lmg_hmg_CMag,HandmadeGuns:5.56mm magazine20,HandmadeGuns:5.56mm magazine90
+GunSoundLV,165,1
+
+BedrockModel,hk416d_geo.json
+ModelTexture,hk416d.png
+Animations,hk416d.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
+ModelScala,0.5f
+InworldScale,1.8f
+ModelArm,true
+Tabname,HMG_Bedrock_TaCZ
+
+Name,TaCZ HK416D
+AR,TaCZOfficial_HK416D
+TechYear,2004

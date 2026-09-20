@@ -184,6 +184,7 @@ public class CommonSideProxyHMG {
 	public void addKillFeedEntry(String attacker, String victim, ItemStack weapon) {
 	}
 
-	public void handleReloadAnimation(int eventId, int slot, int itemId, boolean empty) {
+	public void handleReloadAnimation(int eventId, int slot, int itemId, boolean empty,
+									  handmadeguns.animation.ReloadAnimationBridge.Stage stage) {
 	}
 }

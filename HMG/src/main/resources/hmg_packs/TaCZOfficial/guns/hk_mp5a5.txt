@@ -81,10 +81,12 @@ MuzzleJump,-2
 BedrockModel,hk_mp5a5_geo.json
 ModelTexture,hk_mp5a5.png
 Animations,hk_mp5a5.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ mp5
+Name,TaCZ MP5A5
 HG,TaCZOfficial_mp5
+TechYear,1985

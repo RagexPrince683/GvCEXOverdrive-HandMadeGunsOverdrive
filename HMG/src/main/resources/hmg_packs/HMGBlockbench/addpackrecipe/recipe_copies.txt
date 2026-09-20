@@ -1,0 +1,2 @@
+# The Blockbench presentation keeps the legacy AKM crafting requirements.
+CopyRecipe,HandmadeGuns:AKM_Blockbench,HandmadeGuns:AKM

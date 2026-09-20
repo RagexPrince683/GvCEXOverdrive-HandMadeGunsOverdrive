@@ -80,10 +80,12 @@ MuzzleJump,-2
 BedrockModel,p90_geo.json
 ModelTexture,p90.png
 Animations,p90.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ p90
+Name,TaCZ P90
 HG,TaCZOfficial_p90
+TechYear,1990

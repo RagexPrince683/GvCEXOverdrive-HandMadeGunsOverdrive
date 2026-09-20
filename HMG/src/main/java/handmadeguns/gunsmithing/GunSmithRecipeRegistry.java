@@ -21,6 +21,19 @@ import java.util.List;
 /** Authoritative, common-side registry for every Gun Smithing Table recipe. */
 public final class GunSmithRecipeRegistry {
     private static final List<GunSmithRecipe> RECIPES = new ArrayList<GunSmithRecipe>();
+    private static final List<RecipeCopy> PENDING_COPIES = new ArrayList<RecipeCopy>();
+
+    private static final class RecipeCopy {
+        private final ItemStack output;
+        private final ItemStack source;
+        private final File file;
+
+        private RecipeCopy(ItemStack output, ItemStack source, File file) {
+            this.output = output.copy();
+            this.source = source.copy();
+            this.file = file;
+        }
+    }
 
     private GunSmithRecipeRegistry() {}
 
@@ -194,6 +207,27 @@ public final class GunSmithRecipeRegistry {
         }
     }
 
+    /** Resolves pack-level CopyRecipe directives after every recipe root has loaded. */
+    public static synchronized void resolvePendingCopies() {
+        for (RecipeCopy copy : PENDING_COPIES) {
+            List<GunSmithRecipe> sources = findByOutput(copy.source);
+            if (sources.isEmpty()) {
+                HandmadeGunsCore.Debug("[GunSmith] Cannot copy recipe in %s: source %s has no registered recipe",
+                        copy.file.getPath(), copy.source);
+                continue;
+            }
+            if (!findByOutput(copy.output).isEmpty()) {
+                HandmadeGunsCore.Debug("[GunSmith] Skipping duplicate copied recipe output %s from %s",
+                        copy.output, copy.file.getPath());
+                continue;
+            }
+            for (GunSmithRecipe source : sources) {
+                register(new GunSmithRecipe(copy.output, source.getIngredients(), source.getCategory()));
+            }
+        }
+        PENDING_COPIES.clear();
+    }
+
     private static GunTableIngredient[] normalizeIngredients(ItemStack[] inputs) {
         GunTableIngredient[] ingredients = new GunTableIngredient[GunSmithRecipe.SLOT_COUNT];
         if (inputs != null) for (int i = 0; i < Math.min(inputs.length, ingredients.length); i++) {
@@ -249,7 +283,19 @@ public final class GunSmithRecipeRegistry {
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) continue;
-                if (line.equalsIgnoreCase("AddRecipe")) {
+                if (line.toLowerCase().startsWith("copyrecipe,")) {
+                    String[] parts = line.split(",", 3);
+                    ItemStack output = parts.length == 3 ? parseStack(parts[1]) : null;
+                    ItemStack source = parts.length == 3 ? parseStack(parts[2]) : null;
+                    if (output != null && source != null) {
+                        synchronized (GunSmithRecipeRegistry.class) {
+                            PENDING_COPIES.add(new RecipeCopy(output, source, file));
+                        }
+                    } else {
+                        HandmadeGunsCore.Debug("[GunSmith] Rejecting CopyRecipe in %s: expected resolvable output and source",
+                                file.getPath());
+                    }
+                } else if (line.equalsIgnoreCase("AddRecipe")) {
                     ingredients = new GunTableIngredient[GunSmithRecipe.SLOT_COUNT];
                     reading = true;
                 } else if (reading && line.toLowerCase().startsWith("slot")) {

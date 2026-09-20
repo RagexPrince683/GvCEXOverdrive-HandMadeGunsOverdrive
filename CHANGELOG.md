@@ -203,3 +203,32 @@
 - Bound TaCZ's standard ammunition bones, plus bones authored fully hidden by `static_bolt_caught`, to HMG ammunition state. This covers the RPG-7 rocket and preserves its authored reload scale timing without a weapon-specific exception. Corrected only the RPG-7 imported inventory scale; equipped and world scales are unchanged. M1911 received no hand-specific workaround.
 - Made the standalone migrated pack self-contained with the 21 referenced legacy HMG item/scope images, including both G36 overlays, and corrected the pre-existing TaCZCompatibility Glock icon spelling exposed by validating both development and distributed pack roots.
 - Final Java 8 offline compilation and validation passed: 794 animation checks, 48 resolver checks, and 5,447 asset checks with 72 duplicated pre-existing unresolved references across the two checked pack roots. Minecraft was not launched; visual hand pose, sprint-to-fire timing, RPG reload visibility, movement blending, GUI scale, scopes, and M1911 regression still require in-game acceptance.
+
+2026-09-19 20:23 — Complete TaCZ mechanical audio and per-shell migration
+
+- Added an opt-in client bridge for namespaced Bedrock sound markers. Authored magazine, bolt, slide, pump, shell and other mechanical cues now follow animation time for the owning first-person gun, while fire-clip markers are rejected and HMG firing sounds/gameplay remain authoritative. Marker-less clips can declare a reusable clip-start fallback; M320 is the sole migrated override using it.
+- Forced the automatic imported equip/draw request to one shot. Some TaCZ assets declare draw as loop/hold and rely on their Lua state machine to stop it; HMG now returns generically to base idle without importing that state machine.
+- Layered staged imported presentation over HMG's existing per-shell gameplay: server-accepted intro, one held insertion clip per HMG-authorized round cycle, the existing firing-interrupt boundary, and a presentation-only finish/cancel clip. M870, M1014 and Kar98k now preserve committed rounds and never grant ammunition from animation events; legacy per-shell guns remain on their unchanged path unless explicitly opted in.
+- Added official TaCZ variants for M870, M1014, Kar98k and standalone M320, plus directly compatible HK416D and Mk 14 presentations. Added exact ClassicRCCRP variants for AK-74, AK-74M, AKS-74U, HK416, M110 and MG36 in a separately attributed CC BY 4.0 pack. Assets are dependency-selected; one absent official M1014 marker and one absent ClassicRCCRP extended-magazine inspect marker remain intentionally silent.
+- Kar98k's migrated variant uses HMG's existing single-round 7.92 mm item across five magazine slots so the legacy per-round commit lifecycle is real rather than a cosmetic full-clip reload. SX and WaT remain excluded by their published no-derivatives licenses; Continental has no direct gameplay match, and Warzone remains excluded by its packed format.
+- Java 8 offline compilation passed. The animation/import suite passed 4,642 checks, the pack resolver passed 48 checks, and repository asset validation passed 5,619 checks with its 72 documented pre-existing unresolved references. Minecraft was not launched; empty/tactical audio timing, staged reload continuation/interruption, final-pose exit, Kar98 reserve consumption, M320 fallback audio, and all newly migrated presentation assets require manual in-game testing.
+
+2026-09-19 21:04 — Finish migrated-gun packaging cleanup
+
+- Added deferred `CopyRecipe` mappings so all 32 TaCZ/ClassicRCCRP variants and the Blockbench AKM inherit the exact Gun Smithing Table ingredients and category of their HMG gameplay counterpart without duplicated recipe grids.
+- Increased the imported RPG-7 inventory-only scale from 0.5 to 0.75 and normalized M870/M1014 from the inherited legacy 3.0 scale to 0.75. Equipped, world, first-person, third-person, ADS, and gameplay values are unchanged.
+- Cleaned player-facing tab and item names, gave ClassicRCCRP its own tab, and moved the pre-existing Blockbench AKM definition/model into a self-contained `HMGBlockbench` pack while retaining shared legacy assets in GVCguns.
+- Removed the obsolete `TaCZCompatibility` development pack after confirming its AK-47/Glock 17 geometry, animation, and model-texture files were byte-identical to production `TaCZOfficial` assets. Production registrations remain the only variants.
+- Java 8 offline compilation passed. The animation/import suite passed 4,642 checks, the pack resolver passed 48 checks, repository asset validation passed 5,599 checks with its 72 documented pre-existing unresolved references, and all 33 recipe-copy mappings resolved statically to registered targets and legacy recipe outputs. Minecraft was not launched; inventory sizing, tab placement/labels, item names, and all inherited Gun Smithing Table recipes require manual in-game confirmation.
+
+2026-09-19 21:20 — Hold zero-duration imported locomotion poses
+
+- Fixed the ClassicRCCRP AKS-74U crash when equipped. Its authored `static_idle` is a zero-duration held pose, but the generic locomotion request overrode that with a repeating loop and `AnimationPlayback` correctly rejected an impossible zero-length loop. The controller now preserves the imported hold semantics for that exact loop override while leaving timed locomotion and action playback unchanged.
+- Added regression coverage for requesting and advancing a generic locomotion loop over a zero-duration Bedrock idle alias. Minecraft was not launched; equipping the AKS-74U remains the manual runtime check.
+
+2026-09-20 09:24 — Add independent HMG technology progression
+
+- Added optional `TechYear` and half-step `TechTier` gun metadata with one configurable year resolver, compatibility-safe unrestricted behavior for unclassified packs, tooltips, and held-item inspection.
+- Added per-world persistent HMG progression, permission-level-2 commands, immediate client synchronization, configurable operator/creative bypass, and independent enable/disable state.
+- Enforced the server-owned tier decision in firing, trigger packets, Gun Smithing Table transactions, and ordinary crafting completion without deleting existing restricted items. Classified the maintained TaCZ migration sets and Blockbench AKM by represented variant year.
+- Java 8 offline compilation passed. No Minecraft launch or in-game validation was performed; persistence, live command sync, each bypass mode, blocked crafting/use, and tooltips still require multiplayer runtime testing.

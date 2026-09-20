@@ -232,6 +232,7 @@ public class HandmadeGunsCore {
 		configFile = pEvent.getSuggestedConfigurationFile();
 		Configuration lconf = new Configuration(configFile);
 		lconf.load();
+		handmadeguns.tech.HMGTechTierManager.configure(lconf);
 
 		//GameRegistry.registerTileEntity(GunSmithTableTileEntity.class, "GunSmithTableTileEntity");
 
@@ -326,6 +327,7 @@ public class HandmadeGunsCore {
 		// ResourceLocation aa = new ResourceLocation("handmadeguns").getResourceDomain();
 		FMLCommonHandler.instance().bus().register(this);
 		FMLCommonHandler.instance().bus().register(HMGServerTaskQueue.INSTANCE);
+		FMLCommonHandler.instance().bus().register(new handmadeguns.tech.HMGTechTierEvents());
 		HMG_proxy.setuprender();
 		File bundledPackdir = null;
 		try {
@@ -719,6 +721,7 @@ public class HandmadeGunsCore {
 		}
 		readPackRecipe(new File(HMG_proxy.ProxyFile(), "handmadeguns_Packs"));
 		readPackRecipe(new File(HMG_proxy.ProxyFile(), "mods/handmadeguns/addgun"));
+		GunSmithRecipeRegistry.resolvePendingCopies();
 		// Removal must precede application so a gun crafted with its currently applied skin removes it.
 		GameRegistry.addRecipe(new handmadeguns.recipes.HMGRecipeRemoveGunSkin());
 		GameRegistry.addRecipe(new handmadeguns.recipes.HMGRecipeApplyGunSkin());

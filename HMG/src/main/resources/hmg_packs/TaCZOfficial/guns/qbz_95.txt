@@ -111,10 +111,12 @@ GunSoundLV,165,1
 BedrockModel,qbz_95_geo.json
 ModelTexture,qbz_95.png
 Animations,qbz_95.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ qbz95
+Name,TaCZ QBZ-95
 AR,TaCZOfficial_qbz95
+TechYear,1997

@@ -10,6 +10,7 @@ public final class PacketReloadAnimation implements IMessage {
     public int slot;
     public int itemId;
     public boolean empty;
+    public ReloadAnimationBridge.Stage stage = ReloadAnimationBridge.Stage.STANDARD;
 
     public PacketReloadAnimation() { }
 
@@ -18,6 +19,7 @@ public final class PacketReloadAnimation implements IMessage {
         slot = event.slot;
         itemId = event.itemId;
         empty = event.empty;
+        stage = event.stage;
     }
 
     @Override public void fromBytes(ByteBuf buf) {
@@ -25,6 +27,7 @@ public final class PacketReloadAnimation implements IMessage {
         slot = buf.readByte();
         itemId = buf.readInt();
         empty = buf.readBoolean();
+        stage = ReloadAnimationBridge.Stage.fromNetwork(buf.readByte());
     }
 
     @Override public void toBytes(ByteBuf buf) {
@@ -32,5 +35,6 @@ public final class PacketReloadAnimation implements IMessage {
         buf.writeByte(slot);
         buf.writeInt(itemId);
         buf.writeBoolean(empty);
+        buf.writeByte(stage.ordinal());
     }
 }

@@ -82,10 +82,12 @@ GunSoundLV,161,1
 BedrockModel,aa12_geo.json
 ModelTexture,aa12.png
 Animations,aa12.animation.json,rifle_default.animation.json
+AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
 Tabname,HMG_Bedrock_TaCZ
 
-Name,TaCZ aa12
+Name,TaCZ AA-12
 Unified_guns,TaCZOfficial_aa12
+TechYear,2005
