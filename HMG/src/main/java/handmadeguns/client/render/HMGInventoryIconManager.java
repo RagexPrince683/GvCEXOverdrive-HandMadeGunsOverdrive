@@ -30,19 +30,23 @@ import handmadeguns.items.guns.HMGItem_Unified_Guns;
 /** Model capture produces persistent pixels; ready inventory icons never draw geometry. */
 public final class HMGInventoryIconManager implements IResourceManagerReloadListener {
 
-    public static final int ICON_CACHE_VERSION = 2;
+    public static final int ICON_CACHE_VERSION = 3;
     private static final int SIZE = 128;
     private static final long INTERVAL_MS = 350L;
     private static final Map<Object, Entry> ENTRIES = new IdentityHashMap<Object, Entry>();
     private static final LinkedHashMap<Object, Entry> QUEUE = new LinkedHashMap<Object, Entry>();
     private static final java.util.concurrent.atomic.AtomicLong writes = new java.util.concurrent.atomic.AtomicLong();
     private static final java.util.concurrent.atomic.AtomicLong writeFailures = new java.util.concurrent.atomic.AtomicLong();
+    private static final java.util.concurrent.atomic.AtomicLong writeNanos = new java.util.concurrent.atomic.AtomicLong();
+    private static final java.util.concurrent.atomic.AtomicLong corruptFiles = new java.util.concurrent.atomic.AtomicLong();
     private static final java.util.concurrent.ThreadPoolExecutor WRITER = new java.util.concurrent.ThreadPoolExecutor(
-            1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+            0, 1, 5L, java.util.concurrent.TimeUnit.SECONDS,
             new java.util.concurrent.ArrayBlockingQueue<Runnable>(32), new java.util.concurrent.ThreadFactory() {
         public Thread newThread(Runnable job) {
             Thread thread = new Thread(job, "hmg icon PNG writer");
-            thread.setDaemon(true);
+            // A submitted PNG is allowed to finish even if ordinary client threads stop.
+            // This worker exits after five idle seconds and is also bounded by the shutdown hook.
+            thread.setDaemon(false);
             return thread;
         }
     }, new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
@@ -50,9 +54,20 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
     private static final ByteBuffer PIXELS = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
     private static long nextWork, lastReport, requests, duplicates, prebaked, hits, misses, captures, failures, loads;
     private static long captureNanos, loadNanos;
+    private static int writerHighWater;
     private static java.util.Iterator bakeItems;
     private static boolean bakeStarted;
     private static boolean capturing;
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            public void run() {
+                WRITER.shutdown();
+                try { WRITER.awaitTermination(10L, java.util.concurrent.TimeUnit.SECONDS); }
+                catch(InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+            }
+        }, "hmg icon cache shutdown"));
+    }
 
     public static boolean isCapturing() { return capturing; }
 
@@ -107,9 +122,11 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
             if(image != null) {
                 ++loads;
                 upload(entry, image);
-                if(Boolean.getBoolean("hmg.bakeIcons")) save(image, exportFile(entry.key));
+                cacheEvent(entry, shipped ? "prebaked=HIT state=READY" : "disk=HIT state=READY");
+                if(Boolean.getBoolean("hmg.bakeIcons")) save(entry, image, exportFile(entry.key));
                 return;
             }
+            cacheEvent(entry, "disk=MISS capture=QUEUED");
             started = System.nanoTime();
             try {
                 prepare(entry);
@@ -120,8 +137,8 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
             }
             // Upload before submitting disk work: persistence never gates this session's icon.
             upload(entry, image);
-            save(image, file);
-            if(Boolean.getBoolean("hmg.bakeIcons")) save(image, exportFile(entry.key));
+            save(entry, image, file);
+            if(Boolean.getBoolean("hmg.bakeIcons")) save(entry, image, exportFile(entry.key));
         } catch(Exception failure) {
             entry.state = State.FAILED;
             ++failures;
@@ -138,8 +155,14 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
 
     private static BufferedImage read(File file) {
         if(!file.isFile()) return null;
-        try { return valid(ImageIO.read(file)); }
-        catch(IOException corrupt) { return null; }
+        BufferedImage image = null;
+        try { image = valid(ImageIO.read(file)); }
+        catch(IOException corrupt) {}
+        if(image == null) {
+            corruptFiles.incrementAndGet();
+            try { Files.deleteIfExists(file.toPath()); } catch(IOException ignored) {}
+        }
+        return image;
     }
 
     private static BufferedImage valid(BufferedImage image) {
@@ -152,33 +175,49 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         entry.state = State.READY;
     }
 
-    private static void save(final BufferedImage image, final File destination) {
+    private static void save(final Entry entry, final BufferedImage image, final File destination) {
         try {
             WRITER.execute(new Runnable() {
                 public void run() {
+                    long started = System.nanoTime();
                     File temporary = null;
                     try {
                         File parent = destination.getParentFile();
                         if(!parent.isDirectory() && !parent.mkdirs()) throw new IOException("Cannot create " + parent);
-                        temporary = File.createTempFile("icon-", ".tmp", parent);
+                        temporary = new File(destination.getPath() + ".tmp");
                         if(!ImageIO.write(image, "png", temporary)) throw new IOException("PNG encoder unavailable");
+                        if(!temporary.isFile() || temporary.length() <= 0L)
+                            throw new IOException("PNG encoder produced no data");
                         try {
                             Files.move(temporary.toPath(), destination.toPath(),
                                     StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-                        } catch(java.nio.file.AtomicMoveNotSupportedException unsupported) {
-                            Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        } catch(IOException atomicFailure) {
+                            try {
+                                Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            } catch(IOException fallbackFailure) {
+                                fallbackFailure.addSuppressed(atomicFailure);
+                                throw fallbackFailure;
+                            }
                         }
+                        if(!destination.isFile() || destination.length() <= 0L)
+                            throw new IOException("Final PNG is missing or empty");
                         writes.incrementAndGet();
-                    } catch(IOException failure) {
+                        cacheEvent(entry, "write=OK path=" + destination.getAbsolutePath());
+                    } catch(Exception failure) {
                         writeFailures.incrementAndGet();
+                        cacheEvent(entry, "write=FAILED path=" + destination.getAbsolutePath()
+                                + " reason=" + failure.getClass().getSimpleName() + ":" + failure.getMessage());
                     } finally {
+                        writeNanos.addAndGet(System.nanoTime() - started);
                         if(temporary != null) temporary.delete();
                     }
                 }
             });
+            writerHighWater = Math.max(writerHighWater, WRITER.getQueue().size());
         } catch(java.util.concurrent.RejectedExecutionException full) {
             // Keep READY. A full writer must never block the render thread.
             writeFailures.incrementAndGet();
+            cacheEvent(entry, "write=FAILED path=" + destination.getAbsolutePath() + " reason=writer-queue-full");
         }
     }
 
@@ -186,8 +225,7 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         for(Entry entry : ENTRIES.values()) release(entry);
         ENTRIES.clear();
         QUEUE.clear();
-        // Already running immutable writes remain safe: their filenames include the old fingerprint.
-        WRITER.getQueue().clear();
+        // Completed images are immutable and fingerprinted, so queued disk writes remain valid.
         if(framebuffer != null) {
             int previous = GL11.glGetInteger(0x8CA6);
             framebuffer.deleteFramebuffer();
@@ -342,10 +380,6 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         return result.toString();
     }
 
-    private static String safeName(String value) {
-        return value.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9._-]", "_");
-    }
-
     private static File directory() { return new File(Minecraft.getMinecraft().mcDataDir, "cache/hmg/icons"); }
     private static File exportFile(String key) {
         return new File(directory(), "export/assets/handmadeguns/textures/icons/" + key + ".png");
@@ -355,10 +389,12 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         if(!diagnostics() || now - lastReport < 10000L) return;
         lastReport = now;
         System.out.println(String.format(java.util.Locale.ROOT,
-                "[hmg icons] prebaked=%d hits=%d misses=%d requests=%d deduplicated=%d captures=%d failures=%d loads=%d writes=%d writeFailures=%d queue=%d writerQueue=%d avgCaptureMs=%.2f totalCaptureMs=%.2f avgResolveLoadMs=%.2f",
-                prebaked, hits, misses, requests, duplicates, captures, failures, loads, writes.get(), writeFailures.get(),
-                QUEUE.size(), WRITER.getQueue().size(), captureNanos / 1e6 / Math.max(1, captures + failures),
-                captureNanos / 1e6, loadNanos / 1e6 / Math.max(1, hits + misses + prebaked)));
+                "[HMG IconCache] prebaked=%d diskHits=%d diskMisses=%d corrupt=%d requests=%d deduplicated=%d captures=%d failures=%d loads=%d writes=%d writeFailures=%d queue=%d writerQueue=%d/%d avgCaptureMs=%.2f totalCaptureMs=%.2f avgResolveLoadMs=%.2f avgWriteMs=%.2f",
+                prebaked, hits, misses, corruptFiles.get(), requests, duplicates, captures, failures, loads,
+                writes.get(), writeFailures.get(), QUEUE.size(), WRITER.getQueue().size(), writerHighWater,
+                captureNanos / 1e6 / Math.max(1, captures + failures), captureNanos / 1e6,
+                loadNanos / 1e6 / Math.max(1, hits + misses + prebaked),
+                writeNanos.get() / 1e6 / Math.max(1, writes.get() + writeFailures.get())));
     }
 
 
@@ -377,6 +413,7 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         Object identity;
         final ItemStack stack;
         final long appearance;
+        final String contentId;
         IItemRenderer renderer;
         String key;
         String sourceFingerprint;
@@ -385,6 +422,7 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         Entry(Object identity, ItemStack stack, IItemRenderer renderer) {
             this.identity = identity; this.stack = stack; this.renderer = renderer;
             this.appearance = appearance(identity);
+            this.contentId = String.valueOf(Item.itemRegistry.getNameForObject(stack.getItem()));
         }
     }
 
@@ -407,7 +445,13 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         if(item instanceof HMGItem_Unified_Guns)
             net.minecraftforge.client.MinecraftForgeClient.getItemRenderer(new ItemStack(item), IItemRenderer.ItemRenderType.INVENTORY);
     }
-    private static boolean diagnostics() { return Boolean.getBoolean("hmg.debugIconCache"); }
+    private static boolean diagnostics() { return handmadeguns.HandmadeGunsCore.debugGunIconCache; }
+    private static void cacheEvent(Entry entry, String message) {
+        if(!diagnostics()) return;
+        String key = entry != null && entry.key != null ? entry.key : "pending";
+        String id = entry != null ? entry.contentId : "unknown";
+        System.out.println("[HMG IconCache] " + id + " key=" + key + " " + message);
+    }
     private static void projection() { GL11.glOrtho(0, 16, 16, 0, -1000, 1000); }
     private static void prepare(Entry entry) { ((HMGItem_Unified_Guns)entry.stack.getItem()).checkTags(entry.stack); }
     private static int capturePass;
@@ -437,7 +481,9 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
                 + info.inventoryOffsetX + "|" + info.inventoryOffsetY + "|" + info.inventoryOffsetZ);
         bytes(digest, entry.renderer.getClass().getName());
         bytes(digest, entry.sourceFingerprint);
-        return safeName(id) + "-v" + ICON_CACHE_VERSION + "-" + hex(digest.digest());
+        // The digest already contains the stable registry ID and source fingerprints. Keeping the
+        // final component compact avoids legacy Windows path failures in deeply nested instances.
+        return "v" + ICON_CACHE_VERSION + "-" + hex(digest.digest());
     }
     /** Read source content, never file timestamps. Also used when the native renderer is bound. */
     public static String sourceFingerprint(GunInfo info) throws Exception {

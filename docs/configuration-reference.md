@@ -322,6 +322,7 @@ The active config file is generated from the `HandmadeGuns` mod id, usually as `
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `enableDebugLogging` | boolean | `false` | Enables verbose HMG startup and content-pack diagnostics, including per-pack resource confirmations, registration timing summaries, script confirmations, per-file gun parse timings, and recipe success messages. Errors, warnings, and concise content-pack registration-complete summaries still log when this is disabled. |
+| `DebugGunIconCache` | boolean | `false` | Logs concise model-derived icon disk hits/misses, completed/failed writes, queue depth, corruption counts, and aggregate capture/load/write timings. |
 
 ### `LMM`
 

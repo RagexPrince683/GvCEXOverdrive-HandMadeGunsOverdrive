@@ -113,8 +113,12 @@ then the persistent Minecraft-directory `cache/hmg/icons/` cache, and only then 
 The cache identity hashes actual definition, model, texture, imported-project external texture, and
 animation bytes together with inventory transforms, renderer identity, content ID, and cache schema.
 Pending or failed captures use the authored sprite and never invoke the live gun renderer each frame.
-Set `-Dhmg.debugIconCache=true` for aggregate diagnostics or `-Dhmg.bakeIcons=true` to export the same
-generator output below `cache/hmg/icons/export/assets/handmadeguns/textures/icons/`.
+PNG writes encode and verify a sibling `.tmp`, use atomic replacement with a normal replace fallback,
+verify the final file, survive resource reload, and are drained for a bounded period during shutdown.
+An invalid cached PNG is deleted and regenerated on demand. Set `DebugGunIconCache = true` in the
+`Logging` config category for concise cache lifecycle/write events and aggregate diagnostics, or use
+`-Dhmg.bakeIcons=true` to export the same generator output below
+`cache/hmg/icons/export/assets/handmadeguns/textures/icons/`.
 
 Resolution is deterministic: the matching logical category wins, followed by the known legacy folders for that asset type. Clean `models/`, `textures/models/`, `textures/items/`, `textures/misc/`, and `sounds/` files are mirrored into the pack's registered `assets/handmadeguns` resource tree during startup; this is an internal compatibility detail rather than an authoring requirement.
 

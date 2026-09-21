@@ -1600,7 +1600,18 @@ public class HMGItem_Unified_Guns extends Item {
 		ltags.setBoolean("SeekerOpened",true);
 		ltags.setTag("Items", new NBTTagList());
 		ltags.setBoolean("HMGInfiniteAmmoInitialized", false);
+		int defaultMode = getDefaultFireMode();
+		ltags.setInteger("HMGMode", defaultMode);
+		ltags.setInteger("RemainBurstround", getburstCount(defaultMode));
 		return false;
+	}
+
+	private int getDefaultFireMode() {
+		int modeCount = min(gunInfo.burstcount.size(), gunInfo.rates.size());
+		for (int mode = 0; mode < modeCount; mode++) {
+			if (gunInfo.burstcount.get(mode) == -1) return mode;
+		}
+		return 0;
 	}
 
 	/**

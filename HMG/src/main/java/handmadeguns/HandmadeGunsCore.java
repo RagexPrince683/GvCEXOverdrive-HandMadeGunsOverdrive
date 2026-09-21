@@ -125,6 +125,7 @@ public class HandmadeGunsCore {
 	public static GunSmithTable blockGunTable;
 
 	public static boolean isDebugMessage = false;
+	public static boolean debugGunIconCache = false;
 	public static boolean islmmloaded;
 	public static boolean isgvcloaded;
 
@@ -284,6 +285,7 @@ public class HandmadeGunsCore {
 		combativesAimRecoilMaxYaw = lconf.get("Compatibility", "combativesAimRecoilMaxYaw", 5.0D, "Client-side maximum controller-owned horizontal aim recoil, in degrees.", 0.25D, 30.0D).getDouble(5.0D);
 		enableCombativesRecoilDebug = lconf.get("Compatibility", "enableCombativesRecoilDebug", false, "Client-side only: verbose diagnostics for HMG-to-Combatives recoil impulse submission and fallback decisions. Leave disabled during normal gameplay.").getBoolean(false);
 		isDebugMessage = lconf.get("Logging", "enableDebugLogging", false, "Enables verbose HMG startup/content-pack diagnostics such as per-pack resource confirmations, registration timings, script confirmations, and recipe success messages. Errors and warnings still log when this is false.").getBoolean(false);
+		debugGunIconCache = lconf.get("Logging", "DebugGunIconCache", false, "Logs concise model-derived gun icon cache hits, misses, completed writes, failures, queue depth, and timings.").getBoolean(false);
 
 		lconf.save();
 

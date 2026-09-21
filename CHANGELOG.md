@@ -270,3 +270,26 @@
 - Added resource-reload cleanup, changed-source targeted model refresh, aggregate diagnostics, and a
   same-generator developer export mode. Offline `:HMG:compileJava` passed, and user runtime testing
   confirmed the expected generated-icon behavior; broader resource-reload/prebake coverage remains.
+
+2026-09-20 22:21 — Default new guns to automatic fire
+
+- New gun stacks now select the first valid automatic fire mode when the weapon defines one; guns
+  without automatic fire continue to use their first authored mode.
+- Existing gun stacks retain their saved selector setting. Compilation was checked offline; the new
+  default selector still requires in-game validation.
+
+2026-09-21 01:22 — Finalize persistent gun icon writes
+
+Player-facing
+
+- Model-derived gun icons retain their existing canonical capture, authored-sprite pending/failure
+  fallback, and texture-only ready rendering. Unchanged restart hits now resolve the compact PNG name
+  under `cache/hmg/icons/` and upload it without another capture.
+
+Developer/backend
+
+- PNG jobs now run on a non-daemon worker that exits after an idle timeout and receives a bounded
+  shutdown drain. Resource reload continues to preserve already-submitted immutable write jobs.
+- Each save creates the cache parent, encodes and verifies a sibling `.tmp`, attempts atomic replace
+  with a normal replace fallback, verifies the final PNG, and retains the in-memory READY icon if disk
+  persistence fails. `DebugGunIconCache` exposes opt-in cache and write diagnostics.
