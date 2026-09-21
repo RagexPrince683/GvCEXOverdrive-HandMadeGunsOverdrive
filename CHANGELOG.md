@@ -253,17 +253,20 @@
 - Audited bundled-pack readers. No HMG code was found reading the generated `sounds.json`, so the reported lock owner remains unproven; PrismLauncher, Minecraft resource loading, and external Windows software cannot be distinguished from the exception alone. Fixed deterministic closure for the actual leaked/exception-prone HMG magazine, definition, settings, sound-writer, resource, and script streams found during the audit.
 - Java 8 offline compilation passed. The pack-resolver suite covers unchanged directory/JAR reuse, changed-file replacement, and the absence of a leftover temporary file after successful replacement; Minecraft was not launched, and a real transient external Windows lock still requires runtime validation.
 
-2026-09-20 14:58 — Add hybrid prebaked and cached HMG inventory icons
+2026-09-20 14:58 — Add persistent model-derived HMG inventory icons
 
-- Made the normal `textures/items` sprite the default inventory representation, so the maintained
-  packs' existing deterministic art bypasses model rendering. Added `IconTexture` as an explicit
-  alias while preserving the legacy `Texture` directive and opt-in `UseModelIcon,true` behavior.
-- Added an independent schema-versioned cache under `cache/hmg/icons/` for explicitly requested
-  model-derived icons. Cache identities include content, definition/model/texture fingerprints and
-  inventory transforms; hits load lazily, corrupt files regenerate, requests deduplicate, and PNG
-  writes run off the render thread.
-- Model capture is paced outside item callbacks and uses a canonical attachment-free stack. While
-  an entry is pending the normal item sprite is used; generation failure retains the legacy live
-  renderer fallback. Equipped, first/third-person, dropped, placed, skin, and attachment rendering
-  are unchanged. Offline `:HMG:compileJava` passed; capture framing, cache reload, fallback, and GUI/
-  NEI presentation still require in-game validation.
+- Preserved model-derived icons as the default for model-backed guns. `IconTexture`/legacy `Texture`
+  and `UseModelIcon,false` remain explicit authored-sprite overrides rather than becoming the global
+  default. Inventory, hotbar, creative, GUI, and NEI share one generated icon; equipped, dropped,
+  placed, skin, and attachment rendering remains live and unchanged.
+- Added an independent schema-versioned cache under `cache/hmg/icons/`: shipped prebakes resolve first,
+  disk PNGs second, and a deduplicated capture queue third. Content hashes cover the definition,
+  model, texture, external imported textures, animation sources, transforms, content ID, renderer,
+  canonical appearance, and schema rather than relying on size/mtime metadata.
+- Capture uses an attachment-free, unskinned stack and deterministic time-zero idle/static-idle pose,
+  skips arbitrary render scripts, supports the renderer's opaque/transparent passes, reuses one
+  framebuffer/read buffer, uploads immediately, and submits atomic PNG saves to a bounded writer.
+  Pending and failed states use the authored sprite without an expensive live-render fallback.
+- Added resource-reload cleanup, changed-source targeted model refresh, aggregate diagnostics, and a
+  same-generator developer export mode. Offline `:HMG:compileJava` passed, and user runtime testing
+  confirmed the expected generated-icon behavior; broader resource-reload/prebake coverage remains.

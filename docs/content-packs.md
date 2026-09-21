@@ -101,19 +101,20 @@ ScopeTexture,null.png,null.png,scope.png
 Animations,akm.json
 ```
 
-`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `IconTexture` and the legacy-compatible `Texture` spelling select an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Normal item sprites are the default and bypass all 3D icon generation. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence. Exported cube geometry uses `BedrockModel,ak47_geo.json` plus `ModelTexture,ak47.png`. `Animations,ak47.animation.json,rifle_default.animation.json` merges sources left-to-right without replacing an earlier clip.
+`Model` is the concise OBJ/MQO directive and enables the custom model automatically. `ModelTexture` and the legacy-compatible `ObjTexture` select a texture from `textures/models/`; `IconTexture` and the legacy-compatible `Texture` spelling select an inventory/hotbar icon from `textures/items/`; and `ScopeTexture` selects an overlay from `textures/misc/`. These categories are intentionally separate: a model texture is never used as an item icon. Model-backed guns default to generated model art; an `IconTexture` or `UseModelIcon,false` selects the authored sprite instead. Blockbench projects use `BlockbenchModel,cod4_ak.bbmodel`; their embedded texture and animations continue to take precedence. Exported cube geometry uses `BedrockModel,ak47_geo.json` plus `ModelTexture,ak47.png`. `Animations,ak47.animation.json,rifle_default.animation.json` merges sources left-to-right without replacing an earlier clip.
 
 Authors may include the logical directory explicitly (`Model,models/akm.mqo`, `ModelTexture,textures/models/akm.png`, `Texture,textures/items/akm_icon.png`, or `Animations,animations/akm.json`). Short references are preferred because the directive determines the category. Absolute paths, `..` traversal, and canonical or symbolic-link escapes are rejected. HMG does not recursively search the Minecraft instance, resource packs, Flan packs, or neighboring HMG packs.
 
 Item icons can also use the concise `Texture,akm_icon.png`; sight overlays can use `ScopeTexture,scope.png,...`. The checked-in packs use these clean categories so their references do not depend on legacy fallback lookup.
 
-`UseModelIcon,true` is an explicit opt-in for packs that cannot ship deterministic item art. HMG
-captures one canonical attachment-free inventory rendering only when the icon is first requested,
-writes a schema-versioned PNG under the Minecraft directory's `cache/hmg/icons/`, and reuses it on
-later launches. The cache identity includes the definition, resolved model/item/model-texture file
-size and modification time, inventory transforms, content ID, and cache schema. Corrupt entries are
-ignored and regenerated; generation failure falls back to the legacy live renderer. Set the JVM
-property `-Dhmg.debugIconCache=true` for periodic aggregate counters without per-frame logging.
+Unless explicitly disabled, HMG captures one canonical attachment-free, unskinned, time-zero idle
+rendering when a model-backed gun icon is first requested. It checks a matching shipped PNG first,
+then the persistent Minecraft-directory `cache/hmg/icons/` cache, and only then queues a model capture.
+The cache identity hashes actual definition, model, texture, imported-project external texture, and
+animation bytes together with inventory transforms, renderer identity, content ID, and cache schema.
+Pending or failed captures use the authored sprite and never invoke the live gun renderer each frame.
+Set `-Dhmg.debugIconCache=true` for aggregate diagnostics or `-Dhmg.bakeIcons=true` to export the same
+generator output below `cache/hmg/icons/export/assets/handmadeguns/textures/icons/`.
 
 Resolution is deterministic: the matching logical category wins, followed by the known legacy folders for that asset type. Clean `models/`, `textures/models/`, `textures/items/`, `textures/misc/`, and `sounds/` files are mirrored into the pack's registered `assets/handmadeguns` resource tree during startup; this is an internal compatibility detail rather than an authoring requirement.
 

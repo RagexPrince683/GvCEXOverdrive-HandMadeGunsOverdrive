@@ -78,10 +78,10 @@ IconTexture,my_rifle_icon.png
 Animations,my_rifle.json
 ```
 
-`IconTexture` (or the legacy `Texture` spelling) uses the supplied normal item sprite directly and
-is the default inventory behavior. Packs that explicitly set `UseModelIcon,true` opt into one lazy
-canonical model capture, persistently cached under `cache/hmg/icons` instead of redrawing the gun
-model for every inventory, creative-tab, GUI, or NEI pass.
+Model-backed guns use one lazy canonical capture by default, persistently cached under
+`cache/hmg/icons` instead of redrawing the gun for every inventory, hotbar, creative-tab, GUI, or NEI
+pass. `IconTexture` (or the legacy `Texture` spelling) explicitly selects the authored sprite instead;
+`UseModelIcon,false` is the direct override for packs that do not want generated model art.
 
 Or it can load a native Blockbench project, including its embedded model and animations:
 
