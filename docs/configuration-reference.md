@@ -24,6 +24,9 @@ persistent `cache/hmg/icons/` cache. `IconTexture` selects the authored sprite a
 `UseModelIcon,false` explicitly disables generated model art; this does not
 change equipped, first-person, dropped, placed, skin, or attachment rendering. `InventoryScale`
 and `InventoryOffset` participate in the cache identity, so changing either regenerates that icon.
+Generated icons retain the canonical inventory orientation but are finally centered and scaled from
+their projected nontransparent silhouette; these settings are capture inputs rather than a way to
+force the cached silhouette against an icon edge.
 
 Imported Bedrock guns can opt into authored mechanical audio and HMG-owned
 per-shell presentation stages:

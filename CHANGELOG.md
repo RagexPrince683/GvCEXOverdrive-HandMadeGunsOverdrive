@@ -293,3 +293,16 @@ Developer/backend
 - Each save creates the cache parent, encodes and verifies a sibling `.tmp`, attempts atomic replace
   with a normal replace fallback, verifies the final PNG, and retains the in-memory READY icon if disk
   persistence fails. `DebugGunIconCache` exposes opt-in cache and write diagnostics.
+
+2026-09-21 23:25 — Normalize generated gun icon framing
+
+- Replaced raw-canvas-relative icon placement with projected alpha-silhouette normalization. Generated
+  guns are centered with their longest rendered axis at 80% of the 128×128 cached icon, leaving about
+  10% transparent padding on that axis regardless of model length, origin, or authored raw scale.
+- Increased the reusable capture target to 512×512 with a wider orthographic field. Captures that still
+  approach an edge are retried with progressively more overscan; a silhouette that cannot be captured
+  safely falls back to the authored sprite instead of caching visibly clipped geometry.
+- Preserved the canonical pose, lighting, queue, persistent cache, and fallback lifecycle. Downsampling
+  now uses premultiplied-alpha bicubic filtering, and the cache schema was bumped so older framing is
+  regenerated. Java 8 offline `:HMG:compileJava` passed; inventory, hotbar, and NEI framing still
+  require in-game visual validation across pistols, rifles, launchers, and unusually offset pack models.

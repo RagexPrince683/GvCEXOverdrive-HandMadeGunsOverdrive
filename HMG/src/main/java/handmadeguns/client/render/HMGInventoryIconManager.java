@@ -30,8 +30,13 @@ import handmadeguns.items.guns.HMGItem_Unified_Guns;
 /** Model capture produces persistent pixels; ready inventory icons never draw geometry. */
 public final class HMGInventoryIconManager implements IResourceManagerReloadListener {
 
-    public static final int ICON_CACHE_VERSION = 3;
+    public static final int ICON_CACHE_VERSION = 4;
     private static final int SIZE = 128;
+    private static final int CAPTURE_SIZE = 512;
+    private static final int TARGET_LONG_AXIS = Math.round(SIZE * 0.80F);
+    private static final int CAPTURE_EDGE_GUARD = 4;
+    private static final int MAX_CAPTURE_ATTEMPTS = 4;
+    private static final float INITIAL_CAPTURE_SPAN = 32.0F;
     private static final long INTERVAL_MS = 350L;
     private static final Map<Object, Entry> ENTRIES = new IdentityHashMap<Object, Entry>();
     private static final LinkedHashMap<Object, Entry> QUEUE = new LinkedHashMap<Object, Entry>();
@@ -51,7 +56,7 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         }
     }, new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
     private static Framebuffer framebuffer;
-    private static final ByteBuffer PIXELS = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
+    private static final ByteBuffer PIXELS = BufferUtils.createByteBuffer(CAPTURE_SIZE * CAPTURE_SIZE * 4);
     private static long nextWork, lastReport, requests, duplicates, prebaked, hits, misses, captures, failures, loads;
     private static long captureNanos, loadNanos;
     private static int writerHighWater;
@@ -277,48 +282,24 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         GL11.glPushMatrix();
         try {
             OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-            if(framebuffer == null) framebuffer = new Framebuffer(SIZE, SIZE, true);
+            if(framebuffer == null) framebuffer = new Framebuffer(CAPTURE_SIZE, CAPTURE_SIZE, true);
             framebuffer.bindFramebuffer(true);
             framebuffer.checkFramebufferComplete();
-            GL11.glViewport(0, 0, SIZE, SIZE);
+            GL11.glViewport(0, 0, CAPTURE_SIZE, CAPTURE_SIZE);
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
             GL11.glColorMask(true, true, true, true);
             GL11.glDepthMask(true);
-            GL11.glClearColor(0, 0, 0, 0);
-            GL11.glClearDepth(1);
-            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-            GL11.glMatrixMode(GL11.GL_PROJECTION);
-            GL11.glLoadIdentity();
-            projection();
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glLoadIdentity();
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GL11.glDepthFunc(GL11.GL_LEQUAL);
-            GL11.glDisable(GL11.GL_CULL_FACE);
-            GL11.glDisable(GL11.GL_FOG);
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glEnable(GL11.GL_ALPHA_TEST);
-            GL11.glAlphaFunc(GL11.GL_GREATER, 0.01F);
-            GL11.glEnable(GL11.GL_BLEND);
-            OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GL11.glEnable(GL11.GL_NORMALIZE);
-            GL11.glShadeModel(GL11.GL_SMOOTH);
-            GL11.glColor4f(1, 1, 1, 1);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-            net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();
-            capturing = true;
-            renderCanonical(entry);
-            capturing = false;
-            PIXELS.clear();
-            GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
-            GL11.glReadPixels(0, 0, SIZE, SIZE, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, PIXELS);
-            BufferedImage image = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
-            for(int y = 0; y < SIZE; ++y) for(int x = 0; x < SIZE; ++x) {
-                int p = (x + y * SIZE) * 4;
-                image.setRGB(x, SIZE - y - 1, (PIXELS.get(p + 3) & 255) << 24
-                        | (PIXELS.get(p) & 255) << 16 | (PIXELS.get(p + 1) & 255) << 8 | PIXELS.get(p + 2) & 255);
+            float captureSpan = INITIAL_CAPTURE_SPAN;
+            Bounds bounds = null;
+            for(int attempt = 0; attempt < MAX_CAPTURE_ATTEMPTS; ++attempt) {
+                BufferedImage image = renderCapture(entry, captureSpan);
+                bounds = findBounds(image);
+                if(bounds != null && !bounds.touchesEdge(CAPTURE_SIZE, CAPTURE_EDGE_GUARD))
+                    return normalize(image, bounds);
+                captureSpan *= 2.0F;
             }
-            return cropAndPad(image);
+            if(bounds == null) throw new IOException("Empty model capture");
+            throw new IOException("Model capture still reaches the framebuffer edge after adaptive framing");
         } finally {
             capturing = false;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, previousLightX, previousLightY);
@@ -334,26 +315,97 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         }
     }
 
-    private static BufferedImage cropAndPad(BufferedImage source) throws IOException {
-        int minX = SIZE, minY = SIZE, maxX = -1, maxY = -1;
-        for(int y = 0; y < SIZE; ++y) for(int x = 0; x < SIZE; ++x) {
+    private static BufferedImage renderCapture(Entry entry, float captureSpan) {
+        GL11.glClearColor(0, 0, 0, 0);
+        GL11.glClearDepth(1);
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        projection(captureSpan);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glLoadIdentity();
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LEQUAL);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glDisable(GL11.GL_FOG);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glAlphaFunc(GL11.GL_GREATER, 0.01F);
+        GL11.glEnable(GL11.GL_BLEND);
+        OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_NORMALIZE);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
+        GL11.glColor4f(1, 1, 1, 1);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+        net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();
+        capturing = true;
+        renderCanonical(entry);
+        capturing = false;
+        PIXELS.clear();
+        GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
+        GL11.glReadPixels(0, 0, CAPTURE_SIZE, CAPTURE_SIZE, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, PIXELS);
+        // The framebuffer blend stores premultiplied RGB. Populate an ARGB_PRE raster directly so
+        // Java2D does not multiply translucent edge colors a second time during normalization.
+        BufferedImage image = new BufferedImage(CAPTURE_SIZE, CAPTURE_SIZE, BufferedImage.TYPE_INT_ARGB_PRE);
+        int[] imagePixels = ((java.awt.image.DataBufferInt)image.getRaster().getDataBuffer()).getData();
+        for(int y = 0; y < CAPTURE_SIZE; ++y) for(int x = 0; x < CAPTURE_SIZE; ++x) {
+            int p = (x + y * CAPTURE_SIZE) * 4;
+            imagePixels[x + (CAPTURE_SIZE - y - 1) * CAPTURE_SIZE] = (PIXELS.get(p + 3) & 255) << 24
+                    | (PIXELS.get(p) & 255) << 16 | (PIXELS.get(p + 1) & 255) << 8 | PIXELS.get(p + 2) & 255;
+        }
+        return image;
+    }
+
+    private static Bounds findBounds(BufferedImage source) {
+        int minX = source.getWidth(), minY = source.getHeight(), maxX = -1, maxY = -1;
+        for(int y = 0; y < source.getHeight(); ++y) for(int x = 0; x < source.getWidth(); ++x) {
             if((source.getRGB(x, y) >>> 24) != 0) {
                 minX = Math.min(minX, x); minY = Math.min(minY, y);
                 maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
             }
         }
-        if(maxX < minX) throw new IOException("Empty model capture");
-        // Trim transparent bounds without normalizing away author scale/offset controls.
-        // Uniform 8px canvas padding preserves relative sizes and displacements.
-        BufferedImage output = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
+        return maxX < minX ? null : new Bounds(minX, minY, maxX, maxY);
+    }
+
+    private static BufferedImage normalize(BufferedImage source, Bounds bounds) {
+        int sourceWidth = bounds.maxX - bounds.minX + 1;
+        int sourceHeight = bounds.maxY - bounds.minY + 1;
+        double scale = TARGET_LONG_AXIS / (double)Math.max(sourceWidth, sourceHeight);
+        int targetWidth = Math.max(1, (int)Math.round(sourceWidth * scale));
+        int targetHeight = Math.max(1, (int)Math.round(sourceHeight * scale));
+        int targetX = (SIZE - targetWidth) / 2;
+        int targetY = (SIZE - targetHeight) / 2;
+
+        // Filtering premultiplied colors prevents transparent texels from contributing dark fringes.
+        BufferedImage cropped = new BufferedImage(sourceWidth, sourceHeight, BufferedImage.TYPE_INT_ARGB_PRE);
+        java.awt.Graphics2D crop = cropped.createGraphics();
+        try {
+            crop.setComposite(java.awt.AlphaComposite.Src);
+            crop.drawImage(source, 0, 0, sourceWidth, sourceHeight,
+                    bounds.minX, bounds.minY, bounds.maxX + 1, bounds.maxY + 1, null);
+        } finally { crop.dispose(); }
+
+        BufferedImage output = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB_PRE);
         java.awt.Graphics2D g = output.createGraphics();
         try {
+            g.setComposite(java.awt.AlphaComposite.Src);
+            g.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
+            g.setRenderingHint(java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION, java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
             g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            g.drawImage(source, 8 + minX * 112 / SIZE, 8 + minY * 112 / SIZE,
-                    8 + (maxX + 1) * 112 / SIZE, 8 + (maxY + 1) * 112 / SIZE,
-                    minX, minY, maxX + 1, maxY + 1, null);
+            g.drawImage(cropped, targetX, targetY, targetX + targetWidth, targetY + targetHeight,
+                    0, 0, sourceWidth, sourceHeight, null);
         } finally { g.dispose(); }
         return output;
+    }
+
+    private static final class Bounds {
+        final int minX, minY, maxX, maxY;
+        Bounds(int minX, int minY, int maxX, int maxY) {
+            this.minX = minX; this.minY = minY; this.maxX = maxX; this.maxY = maxY;
+        }
+        boolean touchesEdge(int size, int guard) {
+            return minX < guard || minY < guard || maxX >= size - guard || maxY >= size - guard;
+        }
     }
 
     private static void resourceHash(MessageDigest digest, ResourceLocation location) throws IOException {
@@ -452,7 +504,10 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         String id = entry != null ? entry.contentId : "unknown";
         System.out.println("[HMG IconCache] " + id + " key=" + key + " " + message);
     }
-    private static void projection() { GL11.glOrtho(0, 16, 16, 0, -1000, 1000); }
+    private static void projection(float span) {
+        float half = span * 0.5F;
+        GL11.glOrtho(8.0F - half, 8.0F + half, 8.0F + half, 8.0F - half, -1000, 1000);
+    }
     private static void prepare(Entry entry) { ((HMGItem_Unified_Guns)entry.stack.getItem()).checkTags(entry.stack); }
     private static int capturePass;
     public static int capturePass() { return capturePass; }
@@ -476,7 +531,7 @@ public final class HMGInventoryIconManager implements IResourceManagerReloadList
         GunInfo info = (GunInfo)entry.identity;
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         String id = String.valueOf(Item.itemRegistry.getNameForObject(entry.stack.getItem()));
-        bytes(digest, "hmg-canonical-renderer-2|" + ICON_CACHE_VERSION + "|" + id + "|default-unskinned-unattached-t0|"
+        bytes(digest, "hmg-canonical-renderer-3|" + ICON_CACHE_VERSION + "|" + id + "|default-unskinned-unattached-t0|"
                 + info.modelscale + "|" + info.inventoryscale + "|" + info.inworldScale + "|"
                 + info.inventoryOffsetX + "|" + info.inventoryOffsetY + "|" + info.inventoryOffsetZ);
         bytes(digest, entry.renderer.getClass().getName());

@@ -110,6 +110,11 @@ Item icons can also use the concise `Texture,akm_icon.png`; sight overlays can u
 Unless explicitly disabled, HMG captures one canonical attachment-free, unskinned, time-zero idle
 rendering when a model-backed gun icon is first requested. It checks a matching shipped PNG first,
 then the persistent Minecraft-directory `cache/hmg/icons/` cache, and only then queues a model capture.
+The capture uses the established orthographic inventory pose at 512×512, expands its field if rendered
+pixels approach an edge, then measures the projected nontransparent silhouette. That silhouette is
+centered with its longest axis at 80% of the final 128×128 icon, providing about 10% minimum padding
+on that axis. Premultiplied-alpha bicubic downsampling keeps transparent edges clean. The generated
+icon is therefore framed from rendered pixels rather than from model-space size or author origin.
 The cache identity hashes actual definition, model, texture, imported-project external texture, and
 animation bytes together with inventory transforms, renderer identity, content ID, and cache schema.
 Pending or failed captures use the authored sprite and never invoke the live gun renderer each frame.
