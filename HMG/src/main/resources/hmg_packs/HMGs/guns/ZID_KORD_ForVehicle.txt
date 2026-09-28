@@ -25,7 +25,7 @@ ObjTexture,ZID_KORD.png
 ModelScala,0.5f
 InworldScale,1.5f
 ThirdModelEquipped,0,0,0
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 
 Canfix,false
 NeedFix,true

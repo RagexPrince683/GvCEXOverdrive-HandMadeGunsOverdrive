@@ -55,6 +55,6 @@ AddParts,mat3
     SetAsNormalParts
 BackParts
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,AIM-54
 RR,AIM-54

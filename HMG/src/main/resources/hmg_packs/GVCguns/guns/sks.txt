@@ -185,7 +185,7 @@ RenderCross,false
 RightType,1
 Automatic,false
 
-Tabname,HMG_GVCGuns
+WeaponClass,MARKSMAN_RIFLE
 Name,SKS
 //AR,SKS
 

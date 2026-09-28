@@ -79,10 +79,12 @@ BedrockModel,g36k_geo.json
 ModelTexture,g36k.png
 Animations,g36k.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:g36k/g36k_draw
+AnimationSound,put_away,tacz:g36k/g36k_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,CARBINE
 
 Name,TaCZ G36K
 AR,TaCZOfficial_G36K

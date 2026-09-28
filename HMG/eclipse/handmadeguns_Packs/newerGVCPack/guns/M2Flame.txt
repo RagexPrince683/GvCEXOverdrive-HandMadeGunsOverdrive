@@ -85,7 +85,7 @@ ReloadMotion
 BulletNameALL,byfrou01_Flame
 Cartridge,false
 guntype,5
-Tabname,HMG_GVCGuns
+WeaponClass,SPECIAL
 Name,M2 Flame Thrower
 Unified_guns,M2 Flame Thrower
 

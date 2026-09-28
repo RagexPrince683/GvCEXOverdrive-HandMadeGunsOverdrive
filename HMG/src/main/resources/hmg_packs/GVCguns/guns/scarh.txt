@@ -282,7 +282,7 @@ AddParts,Base_Sys
 			BackParts
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,BATTLE_RIFLE
 Name,SCAR-H
 GunSoundLV,165,1
 AR,SCARH

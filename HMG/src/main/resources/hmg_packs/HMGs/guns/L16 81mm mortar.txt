@@ -27,7 +27,7 @@ SimpleADSOffsetZ,5,5,5
 ModelEquipped,-0.7F,-1.8,2.5
 OnEntity_PlayerPosOffset,0,0,0
 OnEntity_Yoffset,0
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 SprintingPoint,0.0f,-2.0f,0.0f
 Motion,0.01
 

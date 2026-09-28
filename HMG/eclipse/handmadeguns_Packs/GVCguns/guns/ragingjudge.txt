@@ -576,6 +576,6 @@ AddParts,frame
 	BackParts
 BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,HANDGUN
 Name,Raging Judge
 HG,ragingjudge

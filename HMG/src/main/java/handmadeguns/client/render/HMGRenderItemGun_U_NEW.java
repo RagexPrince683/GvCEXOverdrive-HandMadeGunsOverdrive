@@ -213,43 +213,6 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		partsRender_gun.modelscala = this.modelscala = scala;
 	}
 
-	//NEW FUCKING BULLSHIT TO FIX THIS JAPSLOP MOD:
-
-	private void beginScopeGLState() {
-		// Save matrix + attribute bits so we can't leak state
-		GL11.glPushMatrix();
-		// Save enable/disable, color, depth, blend etc.
-		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_TRANSFORM_BIT);
-
-		// Typical overlay state for scope/2D rendering
-		GL11.glDisable(GL11.GL_LIGHTING);
-		GL11.glDisable(GL11.GL_CULL_FACE);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);           // overlay should draw on top
-		GL11.glDepthMask(false);                      // don't write to depth buffer
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glColor4f(1f, 1f, 1f, 1f);
-
-		// Make sure bright (so textures show up exactly)
-		try {
-			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
-		} catch (Throwable ignored) {}
-	}
-
-	private void endScopeGLState() {
-		// restore what we changed
-		GL11.glDepthMask(true);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		// restore attributes and matrix
-		GL11.glPopAttrib();
-		GL11.glPopMatrix();
-
-		// reset color to white (defensive)
-		GL11.glColor4f(1f, 1f, 1f, 1f);
-	}
-
 	public void setarmOffsetAndRotationR(float px,float py,float pz,float rx,float ry,float rz){
 		partsRender_gun.armoffsetxr = px;
 		partsRender_gun.armoffsetyr = py;
@@ -331,6 +294,12 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 			HMGInventoryIconManager.renderCachedIcon(gunstack);
 			return;
 		}
+		try (GunRenderState state = new GunRenderState(type, data)) {
+			renderItemScoped(type, gunstack, data);
+		}
+	}
+
+	private void renderItemScoped(ItemRenderType type, ItemStack gunstack, Object... data) {
 		if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel) {
 			ResourceLocation blockbenchTexture = ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).texture();
 			partsRender_gun.texture = guntexture = blockbenchTexture;
@@ -371,7 +340,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				e.printStackTrace();
 			}
 		}
-		if(!skipAfter)rendering(type,gunstack,data);
+		if(!skipAfter)renderingScoped(type,gunstack,data);
 		if(invocable != null){
 			try {
 				((Invocable)gunitem.gunInfo.script).invokeFunction("GunModelRender_New_post", this,gunitem,gunstack);
@@ -443,7 +412,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				boolean previousInventoryPreview = inventoryPreview;
 				inventoryPreview = true;
 				try {
-					rendering(ItemRenderType.ENTITY, previewStack, data);
+					renderingScoped(ItemRenderType.ENTITY, previewStack, data);
 				} finally {
 					inventoryPreview = previousInventoryPreview;
 				}
@@ -460,6 +429,12 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 
 	}
 	public void rendering(ItemRenderType type, ItemStack gunstack, Object... data){
+		try (GunRenderState state = new GunRenderState(type, data)) {
+			renderingScoped(type, gunstack, data);
+		}
+	}
+
+	private void renderingScoped(ItemRenderType type, ItemStack gunstack, Object... data){
 		if (partsRender_gun.animationDefinition == null || handmadeguns.client.animation.AnimationClient.scoped(partsRender_gun)) {
 			renderingContents(type, gunstack, data);
 			return;
@@ -706,6 +681,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 					if (pass == 0 || !(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel))
 						updateADSProgress(firstPerson_ADSState, firstPerson_SprintState, currentReloadState);
 					float adsBlend = getADSBlend(adsTransition);
+					partsRender_gun.firstPersonADSBlend = currentReloadState ? 0 : adsBlend;
 					float sprintBlend = getADSBlend(sprintTransition);
 					if (blockbenchPresentation)
 					{
@@ -1112,6 +1088,17 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		return colorBuffer;
 	}
 
+	private boolean authoredModelFire() {
+		if (!(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
+				|| partsRender_gun.animationDefinition == null) return false;
+		handmadeguns.animation.AnimationClip fire = partsRender_gun.animationDefinition.clips.get("fire");
+		if (fire == null) return false;
+		for (HMGGunParts part : partsRender_gun.partslist)
+			if ("root".equals(part.partsname) && (fire.tracks.containsKey(part.animationKey())
+					|| fire.tracks.containsKey(part.partsname))) return true;
+		return false;
+	}
+
 	public void rendering_situation(ItemStack gunstack,Entity entity, boolean isreloading){
 		rendering_situation(gunstack, entity, isreloading, nbt);
 	}
@@ -1178,7 +1165,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				state[0] = GunState.Cock;
 				partsRender_gun.partSidentification(state, cockingprogress, remainbullets);
 			} else if (!recoiled) {
-				GL11.glRotatef(jump * (10 - recoileprogress)/10, 1.0f, 0.0f, 0.0f);
+				if (!authoredModelFire()) GL11.glRotatef(jump * (10 - recoileprogress)/10, 1.0f, 0.0f, 0.0f);
 				state[0] = GunState.Recoil;
 				partsRender_gun.partSidentification(state, recoileprogress, remainbullets);
 			} else {
@@ -1195,7 +1182,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 					float cockingprogress = cockingtime + smooth;
 					partsRender_gun.partSidentification(new GunState[]{GunState.Cock}, cockingprogress, remainbullets);
 				} else if (!recoiled) {
-					GL11.glRotatef(jump * (10 - recoileprogress), 1.0f, 0.0f, 0.0f);
+					if (!authoredModelFire()) GL11.glRotatef(jump * (10 - recoileprogress), 1.0f, 0.0f, 0.0f);
 					partsRender_gun.partSidentification(new GunState[]{GunState.Recoil}, recoileprogress, remainbullets);
 				} else {
 					partsRender_gun.partSidentification(new GunState[]{GunState.Default}, (float) 0, remainbullets);

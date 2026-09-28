@@ -53,6 +53,6 @@ Magazine,0,HandmadeGuns,bullet_rr_hmgt4
 
 GunSoundLV,165,165
 
-Tabname,HMG_WW2Guns
+WeaponClass,LAUNCHER
 RR,70mm Type 4 AT Rocket Launcher
 Name,JP70mm Type 4 AT Rocket Launcher

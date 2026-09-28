@@ -96,6 +96,6 @@ SACLOS_Homing,true
 GunSoundLV,160,160
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,FGM-148 Javelin
 RR,FGM148

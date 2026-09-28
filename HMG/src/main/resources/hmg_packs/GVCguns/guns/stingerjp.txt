@@ -118,7 +118,7 @@ BackParts
 
 GunSoundLV,165,165
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,Type 91 Manpads
 RR,type91mp
 TechYear,1991

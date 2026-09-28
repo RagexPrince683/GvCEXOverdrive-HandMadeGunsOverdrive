@@ -71,6 +71,6 @@ RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,null
 
-Tabname,HMG_GVCGuns
+WeaponClass,SPECIAL
 Name,Stielhandgranate Concentrated Charge
 GL,Stielhandgranate Concentrated Charge

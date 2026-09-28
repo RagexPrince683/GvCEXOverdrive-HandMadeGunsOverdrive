@@ -195,6 +195,7 @@ DropCartridgeEndCocked,true
 Bursts,1
 Rates,2
 
+WeaponClass,SNIPER_RIFLE
 Unified_guns,SR_sample
 
 //addSmelting,SR_sample,1.0f,264

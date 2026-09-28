@@ -68,10 +68,12 @@ BedrockModel,ak74_geo.json
 ModelTexture,ak74.png
 Animations,ak_series.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,ccrp:m4/m4_raise
+AnimationSound,put_away,ccrp:m4/m4_drop
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_ClassicRCCRP
+WeaponClass,ASSAULT_RIFLE
 
 Name,ClassicRCCRP AK-74
 GunSoundLV,165,1

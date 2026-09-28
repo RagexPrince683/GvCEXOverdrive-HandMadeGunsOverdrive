@@ -25,7 +25,7 @@ ObjTexture,m1919a6.png
 ModelScala,0.5f
 InworldScale,1.8f
 ThirdModelEquipped,0,0.2,-0.4
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 
 attachRestriction,true
 allowattach,Bullet_AP

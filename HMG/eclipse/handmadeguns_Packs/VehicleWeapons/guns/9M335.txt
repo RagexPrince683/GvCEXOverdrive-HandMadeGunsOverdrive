@@ -40,6 +40,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,9M335
 RR,9M335

@@ -246,7 +246,7 @@ AddParts,mat1
 
 BulletNameALL,longbullet
 BulletNameCart,longcart
-Tabname,HMG_GVCGuns
+WeaponClass,SNIPER_RIFLE
 Name,Lynx GM6
 GunSoundLV,165,1
 SR,lynx

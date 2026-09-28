@@ -44,8 +44,17 @@ PerShellReloadIntroTime,9,43
 active imported animation for the owning player's first-person gun. It suppresses
 the generic HMG reload sound for that definition, but `shoot`/`fire` clips are
 always excluded so `GunSound` remains authoritative. `AnimationSound,<clip>,<id>`
-is a start-of-clip fallback only when that clip has no authored sound markers;
-the sound identifier must be namespaced and registered by the pack.
+is a start-of-clip fallback when that clip has no valid namespaced sound markers;
+bare upstream labels do not suppress it. Draw, inspect, cock/bolt and accepted
+reload actions use this same bridge. Whole-action files are copied from the source
+display's declared sound, never guessed from a similar marker or weapon. The sound
+identifier must be namespaced and registered by the pack. Explicit action requests
+can select put-away clips; switching weapons does not automatically play holster audio.
+
+`WeaponClass,<class>` selects a shared firearm creative tab independently of model
+format or legacy registration defaults. See [weapon-class tabs](content-packs.md#weapon-class-creative-tabs)
+for the supported values and external-pack fallback. `Tabname` is retained for
+non-firearm custom tabs.
 
 `PerShellReloadStages,true` is valid only with HMG's existing
 `PerShellReload,true` gameplay. It maps the accepted reload to

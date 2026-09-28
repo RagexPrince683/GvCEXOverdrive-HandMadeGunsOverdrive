@@ -665,6 +665,9 @@ public class HMGGunMaker {
 								for (int i = 0; i < 3; i++)
 									barrelattachrotation[i] = parseFloat(type[i + 1]);
 								break;
+							case "WeaponClass":
+								gunInfo.weaponClass = WeaponClass.parse(type[1]);
+								break;
 							case "Tabname":
 								tabname = type[1];
 								break;
@@ -1167,10 +1170,11 @@ public class HMGGunMaker {
 								newgun.setmodelADSPosAndRotation(modelwidthx + seatoffset[0],modelhigh + seatoffset[1],modelwidthz + seatoffset[2]);
 								newgun.setADSoffsetRed(modelwidthxr + seatoffset[0],modelhighr + seatoffset[1],modelwidthzr + seatoffset[2]);
 								newgun.setADSoffsetScope(modelwidthxs + seatoffset[0],modelhighs + seatoffset[1],modelwidthzs + seatoffset[2]);
-								if(tabname == null) newgun.setCreativeTab(HandmadeGunsCore.tabhmg);
-								else if(tabshmg.containsKey(tabname)){
-									newgun.setCreativeTab(tabshmg.get(tabname));
+								if (gunInfo.weaponClass == null) {
+									gunInfo.weaponClass = WeaponClass.legacy(type[0]);
+									System.err.println("[HMG] " + file1 + ": missing WeaponClass; using " + gunInfo.weaponClass);
 								}
+								newgun.setCreativeTab(gunInfo.weaponClass.tab(newgun));
 							}
 						}
 						if (type[0].equals("SWORD")) {
@@ -1210,10 +1214,7 @@ public class HMGGunMaker {
 										nox, noy, noz, mat31posx, mat31posy, mat31posz, 	mat31rotex, mat31rotey, mat31rotez
 										,mat32posx, mat32posy, mat32posz, mat32rotex, mat32rotey, mat32rotez));
 							}
-							if(tabname == null) newgun.setCreativeTab(HandmadeGunsCore.tabhmg);
-							else if(tabshmg.containsKey(tabname)){
-								newgun.setCreativeTab(tabshmg.get(tabname));
-							}
+							newgun.setCreativeTab(HMGAddTabs.resolve(tabname));
 							Guns.add(newgun);
 						} else if (type[0].equals("BP")) {
 							GunName = type[1];

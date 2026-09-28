@@ -166,7 +166,7 @@ AddParts,mat1
     BackParts
 BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 Name,M134 Mini-Gun
 GunSoundLV,170,1
 AR,M134

@@ -270,7 +270,7 @@ AddParts,Sys_Zero_in
 		    AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
 		BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,QBZ-97A/Type 97A Automatic Rifle
 GunSoundLV,165,1
 AR,QBZ97

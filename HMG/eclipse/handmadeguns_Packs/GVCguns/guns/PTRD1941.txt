@@ -199,6 +199,6 @@ AddParts,Body1
 BulletNameALL,14_5mmBullet
 BulletNameCart,14_5mmCart
 Name,PTRD-41
-Tabname,HMG_GVCGuns
+WeaponClass,SNIPER_RIFLE
 GunSoundLV,172,1
 SR,PTRD1941

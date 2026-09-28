@@ -66,10 +66,15 @@ BedrockModel,rpg7_geo.json
 ModelTexture,rpg7.png
 Animations,rpg7.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,reload_empty,tacz:rpg7/rpg7_reload
+AnimationSound,put_away,tacz:rpg7/rpg7_put_away
+AnimationSound,draw,tacz:rpg7/rpg7_draw
+AnimationSound,inspect_empty,tacz:rpg7/rpg7_inspect_empty
+AnimationSound,inspect,tacz:rpg7/rpg7_inspect
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,LAUNCHER
 
 Name,TaCZ RPG-7
 RR,TaCZOfficial_RPG7

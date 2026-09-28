@@ -44,10 +44,12 @@ BedrockModel,kar98_geo.json
 ModelTexture,kar98.png
 Animations,kar98.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:kar98/kar98_draw
+AnimationSound,put_away,tacz:kar98/kar98_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,BOLT_ACTION_RIFLE
 
 Name,TaCZ Kar98k
 SR,TaCZOfficial_Kar98k

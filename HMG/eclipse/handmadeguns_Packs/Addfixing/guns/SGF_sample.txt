@@ -43,6 +43,7 @@ RenderCross,false
 RightType,1
 Magazine,0,HandmadeGuns,bullet_shell_hmg
 
+WeaponClass,SHOTGUN
 SGF,SGF_sample
 
 //addRecipe,SGF_sample,1,abc,def,ghi,265,265,265,280,265,265,280,265,265

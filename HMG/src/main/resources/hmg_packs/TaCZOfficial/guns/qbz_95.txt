@@ -112,10 +112,12 @@ BedrockModel,qbz_95_geo.json
 ModelTexture,qbz_95.png
 Animations,qbz_95.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,put_away,tacz:qbz_95/qbz_95_put_away
+AnimationSound,draw,tacz:qbz_95/qbz_95_draw
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ QBZ-95
 AR,TaCZOfficial_qbz95

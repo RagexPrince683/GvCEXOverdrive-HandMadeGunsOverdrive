@@ -239,7 +239,7 @@ AddParts,mat1
 		AddPartsOnReloadOffsetAndRotation,0,0,0,0,0,0
 	BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SUBMACHINE_GUN
 Name,MP7
 HG,MP7
 

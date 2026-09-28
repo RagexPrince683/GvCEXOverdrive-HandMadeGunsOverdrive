@@ -44,7 +44,7 @@ ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_hmgp38
-Tabname,HMG_WW2Guns
+WeaponClass,HANDGUN
 
 AddParts,mat1
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

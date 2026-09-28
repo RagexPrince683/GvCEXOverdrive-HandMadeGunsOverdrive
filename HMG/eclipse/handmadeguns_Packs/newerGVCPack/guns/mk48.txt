@@ -386,7 +386,7 @@ AddParts,Base_Sys
 
 
 BulletNameALL,byfrou01_PinkTracer
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 Name,Mk48 Mod 1 LWMG
 GunSoundLV,165,1
 LMG,Mk48 Mod 1 LWMG

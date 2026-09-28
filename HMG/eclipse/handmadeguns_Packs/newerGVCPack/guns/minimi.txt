@@ -362,7 +362,7 @@ AddParts,Base_Sys
 
 
 BulletNameALL,byfrou01_PinkTracer
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 Name,FN Minimi (7.62)
 GunSoundLV,165,1
 LMG,FN Minimi (7.62)

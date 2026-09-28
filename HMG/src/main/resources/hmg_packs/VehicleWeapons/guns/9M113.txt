@@ -31,7 +31,7 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,9M113
 RR,9M113
 TechYear,1974

@@ -299,7 +299,7 @@ Magazine,0,HandmadeGuns,bullet_shell_hmgmag
 
 Automatic,false
 
-Tabname,HMG_GVCGuns
+WeaponClass,SHOTGUN
 
 
 Name,AR-12

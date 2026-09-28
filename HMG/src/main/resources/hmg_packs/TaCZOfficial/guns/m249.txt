@@ -104,10 +104,12 @@ BedrockModel,m249_geo.json
 ModelTexture,m249.png
 Animations,m249.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:m249/m249_draw
+AnimationSound,put_away,tacz:m249/m249_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,MACHINE_GUN
 
 Name,TaCZ M249
 LMG,TaCZOfficial_M249

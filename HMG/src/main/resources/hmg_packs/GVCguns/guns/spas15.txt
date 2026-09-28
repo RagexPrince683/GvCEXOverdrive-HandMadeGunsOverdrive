@@ -294,7 +294,7 @@ Magazine,0,HandmadeGuns,spas15mag
 
 Automatic,false
 
-Tabname,HMG_GVCGuns
+WeaponClass,SHOTGUN
 
 
 Name,SPAS-15

@@ -227,7 +227,7 @@ AddParts,mat1
 
 BulletNameALL,longbullet
 BulletNameCart,longcart
-Tabname,HMG_GVCGuns
+WeaponClass,SNIPER_RIFLE
 Name,Barrett M82
 GunSoundLV,172,1
 SR,Barrett M82

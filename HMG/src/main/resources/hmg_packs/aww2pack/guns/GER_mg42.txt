@@ -64,7 +64,7 @@ OnEntity_PlayerPosOffset,0,0,3
 RightType,0
 Magazine,0,HandmadeGuns,7.92mm bulletmg34
 MagazineItemCount,1
-Tabname,HMG_WW2Guns
+WeaponClass,MACHINE_GUN
 
 OnEntity_Yoffset,0.25189
 OnEntity_RotationPitchPoint,0,-0.25189,0.58355

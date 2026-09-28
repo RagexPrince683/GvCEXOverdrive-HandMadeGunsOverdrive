@@ -43,7 +43,7 @@ ModelArmRotationR,-1.57f,0f,-1.57f
 ModelArmOffsetR,0.5f,0.5f,0.5f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.1f,0.4f,-0.7f
-Tabname,HMG_WW2Guns
+WeaponClass,LAUNCHER
 
 ScopeTexture,misc/rr.png,misc/rr.png,misc/scope.png
 RenderCross,false

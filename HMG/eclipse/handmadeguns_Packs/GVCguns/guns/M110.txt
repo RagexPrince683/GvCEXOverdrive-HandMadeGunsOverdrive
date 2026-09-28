@@ -172,7 +172,7 @@ AddParts,Base_Sys
 
 BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,MARKSMAN_RIFLE
 Name,M110 SASS
 GunSoundLV,165,1
 SR,M110

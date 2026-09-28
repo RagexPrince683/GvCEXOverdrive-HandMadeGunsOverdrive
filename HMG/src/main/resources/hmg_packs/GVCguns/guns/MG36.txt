@@ -81,7 +81,7 @@ RenderCross,false
 MagazineSG,0,HandmadeGuns,bullet_shell_hmg
 MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 
 MultiMagazine,HandmadeGuns:5.56mm magazineg36,HandmadeGuns:bullet_lmg_hmg_CMag
 //,HandmadeGuns:5.56mm magazine20,HandmadeGuns:5.56mm magazine90

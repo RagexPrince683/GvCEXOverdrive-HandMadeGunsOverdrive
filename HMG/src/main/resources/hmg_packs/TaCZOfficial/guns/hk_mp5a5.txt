@@ -82,10 +82,12 @@ BedrockModel,hk_mp5a5_geo.json
 ModelTexture,hk_mp5a5.png
 Animations,hk_mp5a5.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:hk_mp5a5/hk_mp5a5_draw
+AnimationSound,put_away,tacz:hk_mp5a5/hk_mp5a5_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,SUBMACHINE_GUN
 
 Name,TaCZ MP5A5
 HG,TaCZOfficial_mp5

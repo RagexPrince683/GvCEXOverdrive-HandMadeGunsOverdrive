@@ -188,7 +188,7 @@ AddParts,mat1
 	muzzlepart
     BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SUBMACHINE_GUN
 Name,MAC-10
 HG,MAC-10
 

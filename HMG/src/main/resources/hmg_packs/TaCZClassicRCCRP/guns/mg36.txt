@@ -67,10 +67,12 @@ BedrockModel,mg36_geo.json
 ModelTexture,mg36.png
 Animations,mg36.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:g36k/g36k_draw
+AnimationSound,put_away,tacz:g36k/g36k_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_ClassicRCCRP
+WeaponClass,MACHINE_GUN
 
 Name,ClassicRCCRP MG36
 GunSoundLV,165,1

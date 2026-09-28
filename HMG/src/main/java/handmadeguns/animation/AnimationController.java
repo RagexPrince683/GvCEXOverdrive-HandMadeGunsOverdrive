@@ -14,6 +14,8 @@ public final class AnimationController {
     private long generation;
     private AnimationPose movementFrom;
     private double movementElapsed, movementDuration;
+    private AnimationPose additiveFrom;
+    private double additiveElapsed, additiveDuration;
 
     public AnimationController(AnimationDefinition definition) { this.definition = definition; }
 
@@ -34,6 +36,7 @@ public final class AnimationController {
             playbackLoop = clip.loop == AnimationClip.Loop.LOOP ? AnimationClip.Loop.HOLD : clip.loop;
         AnimationPlayback next = new AnimationPlayback(clip, ++generation, direction, playbackLoop);
         if (layer == Layer.MOVEMENT) beginMovementTransition(clip.fadeIn);
+        else if (layer == Layer.ADDITIVE) beginAdditiveTransition(clip.fadeIn);
         else beginTransition(clip.fadeIn);
         layers.put(layer, next);
         return true;
@@ -44,6 +47,7 @@ public final class AnimationController {
         AnimationPlayback old = layers.get(layer);
         if (old != null) {
             if (layer == Layer.MOVEMENT) beginMovementTransition(old.clip.fadeOut);
+            else if (layer == Layer.ADDITIVE) beginAdditiveTransition(old.clip.fadeOut);
             else beginTransition(old.clip.fadeOut);
             layers.remove(layer);
         }
@@ -82,6 +86,22 @@ public final class AnimationController {
                 movementDuration == 0 ? 1 : movementElapsed / movementDuration);
     }
 
+    private void beginAdditiveTransition(double duration) {
+        additiveFrom = duration == 0 ? null : additivePose();
+        additiveDuration = duration;
+        additiveElapsed = 0;
+    }
+
+    private AnimationPose additivePose() {
+        Map<String, AnimationPose.Transform> parts = new LinkedHashMap<String, AnimationPose.Transform>();
+        AnimationPlayback playback = layers.get(Layer.ADDITIVE);
+        if (playback != null) for (Map.Entry<String, AnimationTrack> track : playback.clip.tracks.entrySet())
+            parts.put(track.getKey(), track.getValue().sample(playback.time()));
+        AnimationPose target = new AnimationPose(parts);
+        return additiveFrom == null ? target : AnimationPose.blend(additiveFrom, target,
+                additiveDuration == 0 ? 1 : additiveElapsed / additiveDuration);
+    }
+
     public void advanceTo(double seconds, AnimationPlayback.EventSink sink) {
         if (!Double.isFinite(seconds)) throw new IllegalArgumentException("Invalid animation clock");
         if (Double.isNaN(clock)) clock = seconds;
@@ -96,6 +116,8 @@ public final class AnimationController {
             for (AnimationPlayback playback : layers.values()) playback.advance(step, sink);
             transitionElapsed += step;
             movementElapsed += step;
+            additiveElapsed += step;
+            if (additiveFrom != null && additiveElapsed >= additiveDuration) additiveFrom = null;
             if (movementFrom != null && movementElapsed >= movementDuration) movementFrom = null;
             if (transitionFrom != null && transitionElapsed >= transitionDuration) transitionFrom = null;
             boolean completed = false;
@@ -104,6 +126,7 @@ public final class AnimationController {
             for (Map.Entry<Layer, AnimationPlayback> entry : layers.entrySet()) if (entry.getValue().finished()) {
                 completed = true;
                 if (entry.getKey() == Layer.MOVEMENT) beginMovementTransition(entry.getValue().clip.fadeOut);
+                else if (entry.getKey() == Layer.ADDITIVE) beginAdditiveTransition(entry.getValue().clip.fadeOut);
                 else {
                     visibleCompletion = true;
                     fade = Math.max(fade, entry.getValue().clip.fadeOut);
@@ -130,6 +153,14 @@ public final class AnimationController {
     private AnimationPose compose() {
         Map<String, AnimationPose.Transform> result = new LinkedHashMap<String, AnimationPose.Transform>(legacy.parts);
         for (Layer layer : Layer.values()) {
+            if (layer == Layer.ADDITIVE) {
+                // Retrigger only the impulse; never capture/replay ADS, reload or movement.
+                for (Map.Entry<String, AnimationPose.Transform> track : additivePose().parts.entrySet()) {
+                    AnimationPose.Transform base = result.get(track.getKey());
+                    result.put(track.getKey(), base == null ? track.getValue() : base.add(track.getValue()));
+                }
+                continue;
+            }
             if (layer == Layer.MOVEMENT) {
                 // Blend movement alone: its exit must never capture/replay an ACTION pose.
                 if (!layers.containsKey(Layer.ACTION)) for (Map.Entry<String, AnimationPose.Transform> track : movementPose().parts.entrySet()) {
@@ -143,10 +174,7 @@ public final class AnimationController {
             // Actions own the whole pose, including channels/bones omitted by a sparse clip.
             for (Map.Entry<String, AnimationTrack> track : playback.clip.tracks.entrySet()) {
                 AnimationPose.Transform value = track.getValue().sample(playback.time());
-                if (layer == Layer.ADDITIVE) {
-                    AnimationPose.Transform base = result.get(track.getKey());
-                    if (base != null) value = base.add(value);
-                } else value = track.getValue().overlay(result.get(track.getKey()), value);
+                value = track.getValue().overlay(result.get(track.getKey()), value);
                 result.put(track.getKey(), value);
             }
         }

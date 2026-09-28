@@ -265,4 +265,5 @@ UnderBarrelWeapon,0
 RightType,0
 Magazine,0,HandmadeGuns,bullet_lmg_hmg
 
+WeaponClass,MACHINE_GUN
 LMG,LMG_sample

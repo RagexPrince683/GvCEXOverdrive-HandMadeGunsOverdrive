@@ -72,6 +72,6 @@ ReloadMotion
 
 GunSoundLV,188,188
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,Mk153 SMAW
 RR,Mk153 SMAW

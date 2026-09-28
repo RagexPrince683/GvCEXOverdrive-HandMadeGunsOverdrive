@@ -248,7 +248,7 @@ AddParts,mat1
 		BackParts
 	BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SNIPER_RIFLE
 Name,Remington Model 700 (.308 Winchester)
 GunSoundLV,165,1
 SR,Remington Model 700 308

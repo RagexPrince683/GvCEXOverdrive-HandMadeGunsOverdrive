@@ -43,7 +43,7 @@ NeedFix,true
 chunkLoaderBullet,true
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,R-27
 RR,R-27
 TechYear,1983

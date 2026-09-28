@@ -31,6 +31,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,Kh-31
 RR,Kh-31

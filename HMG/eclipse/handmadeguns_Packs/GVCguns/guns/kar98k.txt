@@ -217,7 +217,7 @@ AddParts,mat1
 		BackParts
 	BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,BOLT_ACTION_RIFLE
 Name,Kar-98k
 GunSoundLV,165,1
 SR,kar98k

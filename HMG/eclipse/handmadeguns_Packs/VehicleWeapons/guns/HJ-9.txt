@@ -31,6 +31,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,HJ-9
 RR,HJ-9

@@ -22,6 +22,8 @@ import static handmadeguns.HandmadeGunsCore.cfg_defaultknockback;
 import static handmadeguns.HandmadeGunsCore.cfg_defaultknockbacky;
 
 public class GunInfo {
+	/** Creative classification independent of gameplay's guntype. */
+	public WeaponClass weaponClass;
 	/** Optional real-world introduction/service year. Null preserves legacy unrestricted behavior. */
 	public Integer techYear;
 	/** Optional explicit tier override, stored as 0..10 half-steps; -1 means derive from techYear. */

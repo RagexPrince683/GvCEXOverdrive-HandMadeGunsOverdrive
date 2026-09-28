@@ -48,7 +48,7 @@ UnderBarrelWeapon,0
 RightType,0
 Magazine,0,HandmadeGuns,bren30
 MagazineItemCount,1
-Tabname,HMG_WW2Guns
+WeaponClass,MACHINE_GUN
 Bursts,-1,1,0
 Rates,2.18,2.18,2.18
 

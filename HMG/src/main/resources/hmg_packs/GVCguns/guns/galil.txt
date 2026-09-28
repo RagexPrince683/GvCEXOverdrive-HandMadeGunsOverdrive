@@ -300,7 +300,7 @@ AddParts,Base_Sys
 			    	BackParts
 			BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,IMI Galil (Stanag Variant)
 GunSoundLV,165,1
 AR,galil

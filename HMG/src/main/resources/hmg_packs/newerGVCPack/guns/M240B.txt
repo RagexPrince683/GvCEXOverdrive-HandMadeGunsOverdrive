@@ -303,7 +303,7 @@ AddParts,Base_Sys
 		BackParts
 
 BulletNameALL,byfrou01_PinkTracer
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 Name,M240B
 GunSoundLV,165,1
 LMG,M240B

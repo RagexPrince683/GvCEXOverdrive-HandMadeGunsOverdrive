@@ -81,10 +81,16 @@ BedrockModel,uzi_geo.json
 ModelTexture,uzi.png
 Animations,uzi.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:uzi/uzi_draw
+AnimationSound,put_away,tacz:uzi/uzi_put_away
+AnimationSound,reload,tacz:uzi/uzi_reload_tactical
+AnimationSound,reload_empty,tacz:uzi/uzi_reload_empty
+AnimationSound,inspect,tacz:uzi/uzi_inspect
+AnimationSound,inspect_empty,tacz:uzi/uzi_inspect_empty
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,SUBMACHINE_GUN
 
 Name,TaCZ Uzi
 HG,TaCZOfficial_uzi

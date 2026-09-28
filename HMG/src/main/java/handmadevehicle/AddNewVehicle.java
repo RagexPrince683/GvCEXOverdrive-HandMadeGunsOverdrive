@@ -15,7 +15,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static handmadeguns.HandmadeGunsCore.tabshmg;
 import static handmadevehicle.AddWeapon.prefab_turretHashMap;
 import static handmadevehicle.HMVehicle.tabHMV;
 import static java.lang.Boolean.parseBoolean;
@@ -294,8 +293,8 @@ public class AddNewVehicle extends HMGGunMaker {
 										Item itemVehicle;
 										GameRegistry.registerItem(itemVehicle = new ItemVehicle(dataName).setUnlocalizedName(dataName), dataName);
 										if(tabname == null) itemVehicle.setCreativeTab(tabHMV);
-										else if(tabshmg.containsKey(tabname)){
-											itemVehicle.setCreativeTab(tabshmg.get(tabname));
+										else {
+											itemVehicle.setCreativeTab(handmadeguns.HMGAddTabs.resolve(tabname));
 										}
 										itemVehicle.setTextureName("handmadevehicle:"+dataName);
 									}

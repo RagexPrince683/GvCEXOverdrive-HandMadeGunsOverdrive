@@ -103,6 +103,14 @@ For exported geometry, list local then shared animation sources as shown in the 
 
 With `ModelArm,true`, TaCZ `lefthand_pos`/`righthand_pos` placeholders drive Minecraft 1.7 player arms in first person under the complete imported bone transform. The locator frame follows TaCZ's local 180-degree Z arm rotation, and the arm mesh receives the same Blockbench-to-HMG size normalization as the gun. Authored locators take precedence over `ModelArmOffset*`/`ModelArmRotation*`; if either locator is absent or hidden, that hand falls back to the existing legacy arm settings. `ModelArm,false` suppresses imported locator arms. Legacy OBJ/MQO arm behavior is unchanged. The 1.7 arm mesh/skin layout differs from modern slim arms. Other TaCZ marker groups retain their names, UUIDs and transforms but do not automatically configure HMG attachments, camera recoil, shell/muzzle effects or extended-magazine selection. Ammunition visibility is limited to the generic HMG-count convention described above. `static_auto`, `static_semi`, `switch_auto`, `switch_semi` and extended-inspect names are callable, but TaCZ Lua state machines are not imported. Camera/constraint animation never changes authoritative aiming or movement.
 
+First-person ADS honors the numeric TaCZ `constraint` node as retained-motion
+coefficients. The renderer compares its rest and animated ancestor frames, then
+corrects displacement and rotation about the animated pivot according to ADS blend.
+Coefficient translations undo the import unit conversion rather than becoming model
+movement. Hip fire keeps the authored motion; internal bolt/slide/action tracks remain
+active. Reload presentation releases the ADS constraint. This is model presentation;
+animated camera transforms and TaCZ Lua are not applied to player aiming.
+
 Explicit HMG model/settings reload rereads the project and replaces its parts, animation definition and GPU resources. Replacement releases the old imported model's textures and mesh buffers on the existing client reload path. F3+T retains the existing HMG external-model reload semantics; use the HMG reload command after editing the project. Parsing/importing is client-only; dedicated servers do not need the project file.
 
 ### Reference AK audit
@@ -130,7 +138,7 @@ The AK uses position/rotation/scale channels, linear/Catmull–Rom interpolation
 
 ### Imported-Model Limits
 
-Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple geometry entries, and geometry versions outside the audited 1.12.0/1.21.0 pair are rejected. glTF, mesh/armature/billboard geometry, `.bbmodel` cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions remain unsupported. Animation controllers/Lua, particle playback, unregistered or unnamespaced external sounds, animated textures/PBR and TaCZ animated-camera/constraint/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the import instead of silently producing a partial weapon.
+Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple geometry entries, and geometry versions outside the audited 1.12.0/1.21.0 pair are rejected. glTF, mesh/armature/billboard geometry, `.bbmodel` cube rescale/stretch, bone bindings/reset, multi-file rigs, global/quaternion interpolation, plugin easing, and non-numeric Molang/timing expressions remain unsupported. Animation controllers/Lua, particle playback, unregistered or unnamespaced external sounds, animated textures/PBR and TaCZ animated-camera/attachment/ammunition logic are not implemented. Static `idle_view`, `iron_view`, `camera` and `thirdperson_hand` positioning paths are supported. The animation `override` flag follows HMG's layer precedence rather than resetting a Blockbench preview animation stack. Unsupported geometry/transform input fails the import instead of silently producing a partial weapon.
 
 Compilation and CPU audits do not prove visual acceptance. First-person fire/reload/inspect comparisons, UV orientation, player arms, hidden magazine variants, inventory/third-person views, resource reload, VBO/display-list/Angelica rendering and dedicated-server startup still require runtime validation.
 
@@ -192,7 +200,7 @@ Place them before gun registration. Do not duplicate parts that your gun already
 }
 ```
 
-`fire` is an additive layer: these values add to the underlying pose. If the same part already has legacy recoil motion, that motion also contributes. Author one source of recoil displacement, or provide a BASE `idle` track for that part to establish the intended underlying pose. A BASE track takes precedence over the legacy state transform for that named part. Untracked parts continue to use legacy state motion.
+`fire` is an additive layer: these values add to the underlying pose. Imported models with a tracked `root` fire clip suppress HMG's separate whole-gun procedural kick, avoiding doubled recoil. Internal bolt/slide tracks remain active, and OBJ/MQO guns retain the legacy kick. Imported `fire`/`shoot` clips use a 35 ms additive fade on restart and return, so rapid shots transition from the current impulse without capturing ADS or reload. If the same part already has legacy part recoil motion, that motion still contributes. Author one source of recoil displacement, or provide a BASE `idle` track for that part to establish the intended underlying pose. A BASE track takes precedence over the legacy state transform for that named part. Untracked parts continue to use legacy state motion.
 
 The [complete example](examples/animations/foundation.json) includes `idle`, `fire`, `reload`, and `inspect`, bolt and magazine tracks, fades, and presentation markers. It is an opt-in development example, not installed on any production gun. Copy it into a test pack with matching part names (or rename its tracks). Its displacement scale and 2.4-second reload are illustrative; choose values and durations appropriate to your gun.
 
@@ -233,7 +241,7 @@ Legacy TXT time scales, recoil frames, cock/reload tick units, angle wrapping ch
 
 Each instance has BASE, MOVEMENT, ACTION and ADDITIVE layers. BASE and ACTION replace the channels of named tracks; MOVEMENT and ADDITIVE add transform components. ACTION suppresses the complete MOVEMENT layer for its lifetime, so absent action tracks inherit BASE or the current legacy transform. These are rigid-part offsets, not skeletal animation masks.
 
-BASE, ACTION, and ADDITIVE requests use the final-pose crossfade envelope. A new request captures the current composite pose, including any unfinished fade. It blends toward the incoming layers over `transition.in`; normal completion or explicit stop fades toward the remaining layers/legacy pose over `transition.out`. MOVEMENT uses a separate additive-only envelope, preventing a locomotion change from capturing and replaying an ACTION. The incoming clip clock runs during its fade. Successive requests in one frame capture the same last evaluated pose. This preserves an interrupted inspect pose rather than jumping through idle. Changing only the legacy baseline with no active transition retains legacy timing; the framework does not globally smooth old TXT states.
+BASE and ACTION requests use the final-pose crossfade envelope. A new request captures the current composite pose, including any unfinished fade. It blends toward the incoming layers over `transition.in`; normal completion or explicit stop fades toward the remaining layers/legacy pose over `transition.out`. MOVEMENT and ADDITIVE each use a separate envelope for their own layer, preventing locomotion changes or repeated fire from capturing and replaying an ACTION or the other additive layer. The incoming clip clock runs during its fade. Successive requests in one frame capture the same last evaluated pose. This preserves an interrupted inspect pose rather than jumping through idle. Changing only the legacy baseline with no active transition retains legacy timing; the framework does not globally smooth old TXT states.
 
 The controller supports named play, restart, stop, looping/hold, reverse playback, activity/progress queries and same-layer priorities. Arbitrary names are supported. A rejected replacement leaves the current clip and its event cursor intact. Reverse progress measures elapsed traversal (0 to 1), while sampling runs from duration toward zero.
 
@@ -242,7 +250,7 @@ Presentation triggers use the following request paths:
 | Trigger | Request |
 | --- | --- |
 | First observation of an instance/context | BASE `idle`; first-person ACTION `draw` if present. Equip/draw is forced to one shot because TaCZ normally relies on its state machine to stop source clips authored as loop/hold. |
-| Observed recoil start/reset or ammo decrease while recoiling | ADDITIVE `fire`; cancels ACTION `inspect`/`inspect_empty`. |
+| Observed recoil start/reset or ammunition decrease after initialization | ADDITIVE `fire`; cancels ACTION `inspect`/`inspect_empty`. |
 | Server accepts a manual reload | Send the owning client one slot/item/event-identified presentation event. Ordinary guns select ACTION `reload_empty` from the accepted-start ammo snapshot when empty, or `reload_tactical` when nonempty, with `reload` as the existing fallback. A staged per-shell definition instead selects `reload_intro_empty`/`reload_intro`, then `reload_loop`. Cancels the previous action. |
 | HMG commits one per-shell round | Keep the committed round authoritative, open the existing interrupt boundary, then request one new `reload_loop` only if HMG resumes reloading. The imported insert is forced to one cycle plus hold even when the source clip declares a loop. |
 | Per-shell reload completes or is interrupted | Request `reload_end`; if absent, stop the held insert. The finish action is presentation-only and cannot block a legal HMG shot. |

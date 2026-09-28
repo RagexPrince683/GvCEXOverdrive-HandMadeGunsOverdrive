@@ -44,7 +44,7 @@ RightType,1
 Automatic,true
 MagazineItemCount,1
 DropMagazine,false
-Tabname,HMG_WW2Guns
+WeaponClass,SNIPER_RIFLE
 
 Magazine,0,HandmadeGuns,14.5mm Ammoclip
 

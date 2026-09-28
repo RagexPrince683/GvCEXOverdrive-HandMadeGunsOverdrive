@@ -259,7 +259,7 @@ AddParts,Sys_Zero_in
 		    AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
 		BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SUBMACHINE_GUN
 Name,Steyr AUG A3 9mm XS
 GunSoundLV,160,1
 AR,Steyr AUG A3 (9mm)

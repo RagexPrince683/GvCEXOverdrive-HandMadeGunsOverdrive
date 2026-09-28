@@ -24,6 +24,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,SPECIAL
 Name,mk84
 GL,mk84

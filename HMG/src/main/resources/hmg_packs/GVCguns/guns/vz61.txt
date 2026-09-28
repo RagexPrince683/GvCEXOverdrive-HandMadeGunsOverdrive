@@ -245,7 +245,7 @@ AddParts,mat1
         AddReloadMotionKey,24,0,0,0,0,0,0,          30,0,0,0,0,0,0
     BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SUBMACHINE_GUN
 Name,Skorpion VZ 61
 HG,vz61
 

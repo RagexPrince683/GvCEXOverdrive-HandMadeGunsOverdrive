@@ -50,7 +50,7 @@ Automatic,true
 //Magazine,0,HandmadeGuns,carbine15
 MultiMagazine,HandmadeGuns:carbine15,HandmadeGuns:carbine30
 MagazineItemCount,1
-Tabname,HMG_WW2Guns
+WeaponClass,CARBINE
 
 AddParts,mat1
 	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

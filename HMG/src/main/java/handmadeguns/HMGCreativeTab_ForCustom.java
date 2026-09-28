@@ -26,12 +26,12 @@ public class HMGCreativeTab_ForCustom extends CreativeTabs
 	@SideOnly(Side.CLIENT)
 	public Item getTabIconItem()
 	{
-		if(tabitem == null) {
+		if(tabitem == null && itemName != null && itemName.contains(":")) {
 			String[] type = itemName.split(":");
 			tabitem = GameRegistry.findItem(type[0], type[1]);
-			System.out.println("debug" + tabitem);
+
 		}
-		return tabitem;
+		return tabitem == null ? HandmadeGunsCore.hmg_bullet : tabitem;
 	}
  
 	@Override

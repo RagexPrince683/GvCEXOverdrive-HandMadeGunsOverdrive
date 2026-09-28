@@ -59,10 +59,12 @@ BedrockModel,hk416_geo.json
 ModelTexture,hk416.png
 Animations,hk416.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:hk416d/hk416d_draw
+AnimationSound,put_away,tacz:hk416d/hk416d_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_ClassicRCCRP
+WeaponClass,ASSAULT_RIFLE
 
 Name,ClassicRCCRP HK416
 GunSoundLV,165,1

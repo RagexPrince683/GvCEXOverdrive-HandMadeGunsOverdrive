@@ -438,7 +438,7 @@ AddParts,Base_Sys
 			BackParts
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,M16A4
 GunSoundLV,165,1
 AR,M16A4

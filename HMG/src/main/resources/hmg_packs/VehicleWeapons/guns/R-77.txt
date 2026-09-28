@@ -44,7 +44,7 @@ NeedFix,true
 chunkLoaderBullet,true
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,R-77
 RR,R-77
 TechYear,2002

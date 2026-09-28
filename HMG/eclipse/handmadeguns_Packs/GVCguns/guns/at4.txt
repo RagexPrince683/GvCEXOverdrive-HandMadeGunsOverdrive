@@ -66,6 +66,6 @@ Magazine,0,HandmadeGuns,null
 
 GunSoundLV,185,185
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,AT-4
 RR,at4

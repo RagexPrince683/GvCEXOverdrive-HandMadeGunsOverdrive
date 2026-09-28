@@ -26,7 +26,7 @@ ModelEquipped,-0.7F,-8.5,3.5
 OnEntity_PlayerPosOffset,0,0,-1
 OnEntity_Yoffset,0.2
 Motion,0.01
-Tabname,HMG_GVCGuns
+WeaponClass,SPECIAL
 
 
 CustomFlash,CannonMuzzleFlash,3

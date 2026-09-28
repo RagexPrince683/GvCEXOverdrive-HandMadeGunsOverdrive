@@ -49,7 +49,7 @@ RenderCross,false
 Automatic,false
 Magazine,0,HandmadeGuns,7.5mm bulletmas
 MagazineItemCount,1
-Tabname,HMG_WW2Guns
+WeaponClass,BOLT_ACTION_RIFLE
 
 AddParts,mat1
 	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

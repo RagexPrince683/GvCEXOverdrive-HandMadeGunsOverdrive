@@ -83,7 +83,7 @@ ReloadMotion
 GunSoundLV,185,185
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,RPG-29
 RR,RPG29
 TechYear,1989

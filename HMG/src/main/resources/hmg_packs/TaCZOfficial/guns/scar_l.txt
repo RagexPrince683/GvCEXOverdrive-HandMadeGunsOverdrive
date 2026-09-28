@@ -99,7 +99,7 @@ AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ SCAR-L
 AR,TaCZOfficial_scarl

@@ -156,7 +156,7 @@ RenderCross,false
 RightType,1
 Automatic,true
 
-Tabname,HMG_WW2Guns
+WeaponClass,BATTLE_RIFLE
 
 GunSoundLV,165,1
 SR,SVT-40

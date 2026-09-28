@@ -3,6 +3,9 @@ package handmadeguns;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import net.minecraft.creativetab.CreativeTabs;
 
 import static handmadeguns.HandmadeGunsCore.tabshmg;
 
@@ -10,6 +13,16 @@ public class HMGAddTabs
 {
 	public static List Attach = new ArrayList();
 	public static List Magazines = new ArrayList();
+	private static final Map<String, String> declaredIcons = new HashMap<String, String>();
+
+	/** Instantiate only tabs actually requested by non-firearm content. */
+	public static CreativeTabs resolve(String name) {
+		if (name == null) return HandmadeGunsCore.tabhmg;
+		if (!tabshmg.containsKey(name) && declaredIcons.containsKey(name))
+			tabshmg.put(name, new HMGCreativeTab_ForCustom(name, declaredIcons.get(name)));
+		CreativeTabs tab = tabshmg.get(name);
+		return tab == null ? HandmadeGunsCore.tabhmg : tab;
+	}
 
 	public static void load( boolean isClient, File file)
 	{
@@ -32,7 +45,7 @@ public class HMGAddTabs
 						iconname = type[1];
 					}
 					else if(type[0].equals("End")){
-						tabshmg.put(tabname,new HMGCreativeTab_ForCustom(tabname,iconname));
+						declaredIcons.put(tabname, iconname);
 					}
 
 					}

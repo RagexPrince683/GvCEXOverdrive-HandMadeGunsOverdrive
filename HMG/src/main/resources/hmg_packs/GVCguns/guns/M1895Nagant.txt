@@ -629,7 +629,7 @@ AddParts,frame
 	BackParts
 BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,HANDGUN
 Name,M1895 Nagant Revolver
 HG,M1895Nagant
 TechYear,1895

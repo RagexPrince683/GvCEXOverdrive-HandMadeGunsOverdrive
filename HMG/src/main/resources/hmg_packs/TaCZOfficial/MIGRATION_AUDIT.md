@@ -33,8 +33,8 @@ Latest static migration date: 2026-09-19. Minecraft was not launched.
 | HK416 | `hk416d` | directly compatible D variant | HMG HK416 gameplay remains unchanged |
 | M14 | `mk14` | directly compatible Mk 14 EBR variant | HMG M14 gameplay remains unchanged |
 
-Every definition is separately registered in the player-facing `HMG TaCZ Guns`
-tab (internal key `HMG_Bedrock_TaCZ`). HMG retains
+Every definition remains separately registered and joins its shared weapon-class
+creative tab alongside legacy models. HMG retains
 damage, projectile behavior, recoil, spread, fire rate, magazine/ammunition,
 attachments, restrictions, reload gameplay, and firing sounds. Official TaCZ
 supplies unchanged geometry, texture, local/shared animation, marker timing,
@@ -46,13 +46,17 @@ mechanical audio, hand/view nodes, and first/third-person presentation.
 client reload-sound path only for the local first-person owner. Marker playback is
 clocked by the imported clip; skipped-frame markers retain the existing animation
 event ordering. `shoot` and `fire` clip markers are rejected. The pack contains
-only the actually referenced non-fire OGG dependencies plus sound registrations.
+the referenced non-fire marker dependencies and source-declared whole-action OGG
+dependencies with matching sound registrations.
 
-M320's authored reload clips have no markers, so its definition uses the generic
-`AnimationSound` clip-start fallback. This is the only content-specific audio
-override. The upstream M1014 animation references `tacz:m1014/cloth_move_3`, but
-the official source tree has no corresponding OGG; that one marker is deliberately
-silent rather than replaced with an approximate sound.
+The generic `AnimationSound` clip-start fallback also covers source-declared draw,
+inspect, bolt and reload clips whose markers are absent or only bare labels. M320's
+whole reload sound uses the same path. The 2026-09-28 follow-up restored exact source
+files rather than inventing aliases for bare labels; see the repository's focused
+compatibility audit for combined official/add-on counts. The upstream M1014 marker
+`tacz:m1014/cloth_move_3` at 0.3 seconds in `reload_intro_empty` has no corresponding
+OGG in the official source tree. That individual marker remains unresolved with no
+substitution; other namespaced markers in that clip still play.
 
 M870 and M1014 keep their original HMG eight-item shell magazines and 25-tick
 per-shell commit time. Kar98k previously used one five-round clip item, which

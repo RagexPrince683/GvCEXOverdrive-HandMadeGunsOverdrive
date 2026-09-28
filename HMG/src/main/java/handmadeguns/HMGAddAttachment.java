@@ -21,7 +21,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.model.IModelCustom;
 
-import static handmadeguns.HandmadeGunsCore.tabshmg;
 //import static handmadeguns.client.render.HMGRenderItemGun_U_NEW.isentitysprinting;
 import static java.lang.Integer.parseInt;
 
@@ -654,8 +653,8 @@ public class HMGAddAttachment
 										+ attach3dmodel + "): " + e.getMessage());
 							}
 							if(tabname == null) newitem.setCreativeTab(HandmadeGunsCore.tabhmg);
-							else if(tabshmg.containsKey(tabname)){
-								newitem.setCreativeTab(tabshmg.get(tabname));
+							else {
+								newitem.setCreativeTab(HMGAddTabs.resolve(tabname));
 							}
 							if(newitem instanceof HMGItemCustomMagazine){
 								((HMGItemCustomMagazine)newitem).damagemodify = damagemodify;

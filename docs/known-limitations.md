@@ -12,7 +12,7 @@ Unsupported or intentionally unimplemented features include:
 - glTF, Bedrock `poly_mesh`, texture meshes, locator objects, bone bindings, multiple geometry entries, and geometry versions outside 1.12.0/1.21.0.
 - `.bbmodel` cube rescale/stretch, bone bindings/reset, and multi-file rigs.
 - Global or quaternion interpolation, plugin easing, and nonnumeric Molang or timing expressions.
-- TaCZ Lua state machines, animated-camera constraints, and automatic attachment or ammunition state logic.
+- TaCZ Lua state machines, animated camera transforms, and automatic attachment or ammunition state logic. Numeric model ADS constraints are supported.
 - Executing imported scripts or author-machine sound paths.
 - Gameplay changes driven by animation events.
 
@@ -22,11 +22,21 @@ Unchanged numeric Bedrock `.animation.json` can animate either imported geometry
 
 Packs containing `recursion/taczpack.dat` or a root `taczpack.dat` are rejected with an unsupported packed/obfuscated-payload diagnostic. HMG does not decode, unpack, or inspect that private container. This is a format blacklist only; readable TaCZ assets in other packs remain eligible for the generic importers.
 
+## Source audio gaps
+
+Two namespaced markers in migrated packs have no exact original asset:
+`tacz:m1014/cloth_move_3` during `reload_intro_empty` at 0.3 seconds and
+`ccrp:sr25/sr25_inspect_xmag_magslide` in the M110's shared `reload_empty` at
+1.7917 seconds (also referenced by source inspect variants). Neither is substituted.
+Whole-action fallbacks cover source-declared clips without valid namespaced markers;
+they do not conceal missing individual namespaced markers. See the
+[focused follow-up audit](tacz-asset-compatibility-audit.md#held-lighting-class-tabs-audio-and-model-recoil-follow-up).
+
 ## Runtime Validation Still Required
 
 Compilation and non-OpenGL tests do not prove visual acceptance. New or converted packs should be checked in game for:
 
-- First-person idle, ADS, fire, tactical reload, empty reload, inspect, and interruption.
+- First-person idle, ADS, fire, tactical reload, empty reload, inspect, and interruption. Check day/night lighting, rapid-fire return, ADS receiver clearance and item switching on both legacy and imported pistols, rifles, shotguns, bolt-action rifles and high-rate guns.
 - Directional walking, ADS walking, sprint entrance/loop/airborne hold/exit, and transitions between movement and action clips.
 - Authored hand placement, UV orientation, hidden magazine variants, and attachment states.
 - Third-person, inventory/GUI, dropped-item, nested gun, mounted, and placed-gun rendering.

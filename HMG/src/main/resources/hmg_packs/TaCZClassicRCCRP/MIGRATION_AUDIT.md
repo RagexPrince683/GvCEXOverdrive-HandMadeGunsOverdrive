@@ -11,17 +11,21 @@ Static migration date: 2026-09-19. Minecraft was not launched.
 | ClassicRCCRP M110 | `ccrp:m110` (`ccrp:sr25_data`) | `GVCguns/guns/M110.txt` | ClassicRCCRP 1.1.6 hotfix 2 |
 | ClassicRCCRP MG36 | `ccrp:mg36` | `GVCguns/guns/MG36.txt` | ClassicRCCRP 1.1.6 hotfix 2 |
 
-All six are separate items in the player-facing `HMG ClassicRCCRP Guns` tab.
+All six remain separate items and join shared weapon-class tabs alongside their
+legacy and official counterparts.
 Their HMG gameplay directives
 are retained; only legacy model transforms/part motions are replaced. The copied
-audio set is dependency-derived from non-fire animation markers. Firing clips are
+audio set is dependency-derived from non-fire animation markers and source-declared
+whole-action sounds for clips without valid namespaced markers. Firing clips are
 blocked by the generic handler, so all firing audio remains HMG's.
 
 The M110 display intentionally points at ClassicRCCRP's shared `sr25` data and
-animation while retaining HMG's M110 gameplay. One optional extended-magazine
-inspect marker, `ccrp:sr25/sr25_inspect_xmag_magslide`, has no matching OGG in the
-source archive and is left silent rather than substituted. HMG does not select
-the source pack's extended-magazine-specific inspect clip automatically.
+animation while retaining HMG's M110 gameplay. The marker
+`ccrp:sr25/sr25_inspect_xmag_magslide` has no matching OGG in the source archive.
+It is referenced by the active `reload_empty` clip at 1.7917 seconds as well as
+source inspect variants, so this is an unresolved reload dependency too. It is not
+substituted. HMG does not select the source pack's extended-magazine-specific
+inspect clip automatically.
 
 Each migrated item uses a `CopyRecipe` mapping to its exact HMG gameplay
 counterpart. Recipe copies resolve after every pack recipe has loaded and therefore

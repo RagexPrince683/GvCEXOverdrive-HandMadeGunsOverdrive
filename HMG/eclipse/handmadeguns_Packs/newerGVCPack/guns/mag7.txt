@@ -76,7 +76,7 @@ Magazine,0,HandmadeGuns,mag7mag
 
 //MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_slug
 
-Tabname,HMG_GVCGuns
+WeaponClass,SHOTGUN
 guntype,1
 GunSoundLV,161,1
 Unified_guns,Mag-7

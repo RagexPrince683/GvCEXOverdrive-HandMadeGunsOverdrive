@@ -32,7 +32,7 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,9K114
 RR,9K114
 TechYear,1976

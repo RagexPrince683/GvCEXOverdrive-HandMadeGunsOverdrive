@@ -453,6 +453,12 @@ public class HMGRenderItemGun_U implements IItemRenderer {
 			HMGInventoryIconManager.renderCachedIcon(item);
 			return;
 		}
+		try (GunRenderState state = new GunRenderState(type, data)) {
+			renderItemScoped(type, item, data);
+		}
+	}
+
+	private void renderItemScoped(ItemRenderType type, ItemStack item, Object... data) {
 		gunSkinTexture = HMGGunSkinTextures.available(HMGGunSkinRegistry.appliedTexture(item));
 		GL11.glEnable(GL_BLEND);
 		GL11.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

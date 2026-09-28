@@ -42,7 +42,7 @@ ModelArmRotationR,-1.57f,-0.2f,-1.57f
 ModelArmOffsetR,0.3f,0.3f,0.3f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.3f,0.4f,0.1f
-Tabname,HMG_WW2Guns
+WeaponClass,SUBMACHINE_GUN
 AddParts,mat1
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0
     RenderOnNormal

@@ -244,7 +244,7 @@ AddParts,mat1
 		
 	BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SNIPER_RIFLE
 Name,Accuracy International Arctic Warfare (L96/AWP)
 GunSoundLV,165,1
 SR,L96

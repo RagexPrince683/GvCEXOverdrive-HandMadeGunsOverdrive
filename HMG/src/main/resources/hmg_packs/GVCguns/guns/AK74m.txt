@@ -192,7 +192,7 @@ AddParts,mat1
 
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,AK-74M
 GunSoundLV,165,1
 AR,AK74M

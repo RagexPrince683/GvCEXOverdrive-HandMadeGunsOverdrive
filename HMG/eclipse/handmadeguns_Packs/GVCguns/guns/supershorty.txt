@@ -82,7 +82,7 @@ Automatic,false
 MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_slug,HandmadeGuns:bullet_shell_bird,HandmadeGuns:bullet_shell_bird6
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,SHOTGUN
 guntype,1
 GunSoundLV,161,1
 Unified_guns,Serbu Super-Shorty

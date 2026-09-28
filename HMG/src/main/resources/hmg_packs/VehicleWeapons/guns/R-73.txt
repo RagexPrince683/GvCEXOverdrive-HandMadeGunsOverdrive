@@ -41,7 +41,7 @@ NeedFix,true
 Turretanglelimit,0,0,0,0
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,R-73
 RR,R-73
 TechYear,1984

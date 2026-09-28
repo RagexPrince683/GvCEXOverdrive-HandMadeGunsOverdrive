@@ -294,7 +294,7 @@ AddParts,Sys_Zero_in
 		    AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
 		BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 UseUnderGun'smodel,true
 UnderGunRotation,-90f,0,0
 UnderGunOffset,0f,0.5639,5.6004

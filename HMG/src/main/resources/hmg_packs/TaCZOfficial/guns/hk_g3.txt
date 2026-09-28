@@ -87,10 +87,12 @@ BedrockModel,hk_g3_geo.json
 ModelTexture,hk_g3.png
 Animations,hk_g3.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:hk_g3/hk_g3_draw
+AnimationSound,put_away,tacz:hk_g3/hk_g3_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,BATTLE_RIFLE
 
 Name,TaCZ G3
 AR,TaCZOfficial_g3

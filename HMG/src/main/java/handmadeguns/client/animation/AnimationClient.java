@@ -269,13 +269,16 @@ public final class AnimationClient {
         int cock = tag == null ? 0 : tag.getInteger("CockingTime");
         int bolt = tag == null ? 0 : tag.getByte("Bolt");
         boolean recoil = states[0] == GunState.Recoil;
-        boolean shot = recoil && (!entry.recoil || bolt > entry.bolt || ammunition < entry.ammunition);
+        boolean shot = (recoil && (!entry.recoil || bolt > entry.bolt))
+                || (entry.initialized && ammunition < entry.ammunition);
         if (!entry.initialized) {
             entry.play(AnimationController.Layer.BASE, "idle", false);
-            if (scope.context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON)
-                entry.play(AnimationController.Layer.ACTION, "draw", false, AnimationClip.Loop.ONCE);
+            if (scope.context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON
+                    && entry.play(AnimationController.Layer.ACTION, "draw", false, AnimationClip.Loop.ONCE))
+                addFallbackActionSound(scope, entry, "draw", markers);
         }
         if (entry.reloadRequest != null) {
+            entry.controller.stop(AnimationController.Layer.ADDITIVE);
             entry.controller.stop(AnimationController.Layer.ACTION);
             if (entry.reloadRequest.stop) {
                 entry.reloadBridge.finishNaturally();
@@ -285,13 +288,14 @@ public final class AnimationClient {
                 boolean playbackStarted = entry.play(entry.reloadRequest.layer, reloadClip,
                         entry.reloadRequest.restart, entry.reloadRequest.loop);
                 entry.reloadBridge.started(playbackStarted);
-                if (playbackStarted) addFallbackReloadSound(scope, entry, reloadClip, markers);
+                if (playbackStarted) addFallbackActionSound(scope, entry, reloadClip, markers);
             }
             entry.reloadRequest = null;
         }
         if (!reload && cock > 0 && entry.cock == 0) {
             entry.controller.stop(AnimationController.Layer.ACTION);
-            entry.play(AnimationController.Layer.ACTION, entry.definition.clips.containsKey("cock") ? "cock" : "bolt", true);
+            String clip = entry.definition.clips.containsKey("cock") ? "cock" : "bolt";
+            if (entry.play(AnimationController.Layer.ACTION, clip, true)) addFallbackActionSound(scope, entry, clip, markers);
         }
         if (shot && !reload) {
             if (entry.reloadBridge.finishing()) {
@@ -304,7 +308,12 @@ public final class AnimationClient {
             entry.play(AnimationController.Layer.ADDITIVE, "fire", true);
         }
         if (entry.request != null) {
-            if (!reload && cock == 0 && !shot) entry.play(entry.requestLayer, entry.request, entry.requestRestart);
+            if (!reload && cock == 0 && !shot) {
+                boolean starting = entry.requestRestart || !entry.request.equals(entry.controller.current(entry.requestLayer));
+                if (entry.play(entry.requestLayer, entry.request, entry.requestRestart)
+                        && starting && entry.requestLayer == AnimationController.Layer.ACTION)
+                    addFallbackActionSound(scope, entry, entry.request, markers);
+            }
             entry.request = null;
         }
         updateLocomotion(scope, entry, states, tag, reload, cock);
@@ -317,13 +326,13 @@ public final class AnimationClient {
         for (HMGAnimationEvent marker : markers) MinecraftForge.EVENT_BUS.post(marker);
     }
 
-    private static void addFallbackReloadSound(Scope scope, Entry entry, String clip,
+    private static void addFallbackActionSound(Scope scope, Entry entry, String clip,
                                                List<HMGAnimationEvent> markers) {
         if (!(scope.stateStack.getItem() instanceof HMGItem_Unified_Guns)) return;
         AnimationClip selected = entry.definition.clips.get(clip);
         if (selected == null) return;
         for (AnimationEvent event : selected.events)
-            if ("bedrock_sound".equals(event.name)) return;
+            if ("bedrock_sound".equals(event.name) && TaCZAnimationSoundHandler.markerSound(event.data) != null) return;
         HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)scope.stateStack.getItem();
         String sound = gun.gunInfo.animationSounds.get(clip);
         if (sound == null || sound.isEmpty()) return;
@@ -387,6 +396,14 @@ public final class AnimationClient {
         if (scope == null || scope.renderer != renderer || scope.entry == null) return legacy;
         String key = scope.entry.pose.parts.containsKey(part.animationKey()) ? part.animationKey() : part.partsname;
         return LegacyMotionAdapter.apply(scope.entry.pose, key, legacy);
+    }
+
+    public static void applyFirstPersonConstraint(PartsRender_Gun renderer, float ads) {
+        Scope scope = ACTIVE.get();
+        if (scope == null || scope.renderer != renderer || scope.entry == null
+                || scope.context != IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON) return;
+        ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)renderer.model)
+                .applyAnimationConstraint(scope.entry.pose, ads, renderer.gunPartsScale);
     }
 
     public static boolean ammunitionVisible(PartsRender_Gun renderer, String part) {

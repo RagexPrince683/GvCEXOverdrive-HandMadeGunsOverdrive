@@ -154,6 +154,6 @@ AddParts,mat1
 
 GunSoundLV,165,165
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 GL,M-79
 TechYear,1961

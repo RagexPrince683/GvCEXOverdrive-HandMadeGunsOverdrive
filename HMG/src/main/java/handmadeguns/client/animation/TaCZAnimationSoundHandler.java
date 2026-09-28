@@ -20,15 +20,20 @@ public final class TaCZAnimationSoundHandler {
                 || event.stack == null || !(event.stack.getItem() instanceof HMGItem_Unified_Guns)) return;
         HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)event.stack.getItem();
         if (!gun.gunInfo.animationEventSounds) return;
-        String effect = effect(event.marker.data);
-        if (effect == null) return;
+        String sound = markerSound(event.marker.data);
+        if (sound != null) HMG_proxy.playsoundatEntity_reload(sound, 1.0F, 1.0F, event.owner, false);
+    }
+
+    /** Bare upstream editor labels have no asset identity and must not block declared clip audio. */
+    static String markerSound(String data) {
+        String effect = effect(data);
+        if (effect == null) return null;
         int separator = effect.indexOf(':');
-        if (separator <= 0 || separator == effect.length() - 1) return;
+        if (separator <= 0 || separator == effect.length() - 1) return null;
         String namespace = effect.substring(0, separator);
         String path = effect.substring(separator + 1);
-        if (!namespace.matches("[a-z0-9_.-]+") || !path.matches("[a-z0-9_./-]+")) return;
-        HMG_proxy.playsoundatEntity_reload("handmadeguns:" + namespace + "/" + path,
-                1.0F, 1.0F, event.owner, false);
+        if (!namespace.matches("[a-z0-9_.-]+") || !path.matches("[a-z0-9_./-]+")) return null;
+        return "handmadeguns:" + namespace + "/" + path;
     }
 
     private static boolean isFireClip(String clip) {

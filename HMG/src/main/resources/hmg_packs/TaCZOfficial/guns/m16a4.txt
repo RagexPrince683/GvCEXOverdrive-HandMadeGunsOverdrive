@@ -76,10 +76,16 @@ BedrockModel,m16a4_geo.json
 ModelTexture,m16a4.png
 Animations,m16a4.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:m16a4/m16a4_draw
+AnimationSound,put_away,tacz:m16a4/m16a4_put_away
+AnimationSound,reload,tacz:m16a4/m16a4_reload_tactical
+AnimationSound,reload_empty,tacz:m16a4/m16a4_reload_empty
+AnimationSound,inspect,tacz:m16a4/m16a4_inspect
+AnimationSound,inspect_empty,tacz:m16a4/m16a4_inspect_empty
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ M16A4
 AR,TaCZOfficial_M16A4

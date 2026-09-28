@@ -33,6 +33,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,Kh-25ML
 RR,Kh-25ML

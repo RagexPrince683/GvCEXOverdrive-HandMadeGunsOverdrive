@@ -97,10 +97,16 @@ BedrockModel,rpk_geo.json
 ModelTexture,rpk.png
 Animations,rpk.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:rpk/rpk_draw
+AnimationSound,put_away,tacz:rpk/rpk_put_away
+AnimationSound,reload,tacz:rpk/rpk_reload_tactical
+AnimationSound,reload_empty,tacz:rpk/rpk_reload_empty
+AnimationSound,inspect,tacz:rpk/rpk_inspect
+AnimationSound,inspect_empty,tacz:rpk/rpk_inspect_empty
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,MACHINE_GUN
 
 Name,TaCZ RPK
 AR,TaCZOfficial_RPK

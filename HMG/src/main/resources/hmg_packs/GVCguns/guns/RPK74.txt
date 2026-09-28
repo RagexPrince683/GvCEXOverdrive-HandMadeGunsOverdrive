@@ -202,7 +202,7 @@ AddParts,SYS_Base
 			AddReloadMotionKey,65,0,0,0,0,0,0,		  75,0,0,0,0,0,0
 		BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 Name,RPK-74
 AR,RPK74
 TechYear,1974

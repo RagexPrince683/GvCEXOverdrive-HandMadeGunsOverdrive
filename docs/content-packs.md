@@ -149,7 +149,7 @@ Third-party or older packs may continue using `attachment/`, `addmodel/`, `addte
 | `bullets/` | Bullet/projectile definitions parsed by `HMGAddBullets`. |
 | `attachments/` | Recommended attachment definitions parsed by `HMGAddAttachment`; legacy `attachment/` remains a fallback. |
 | `addpackrecipe/` | Recipes parsed directly into the canonical Gun Smithing Table registry (and exposed to NEI without a vanilla crafting copy). |
-| `addTab/` | Creative-tab definitions. |
+| `addTab/` | Lazily instantiated custom tabs for non-firearm content. |
 | `models/` | Recommended OBJ, MQO, Blockbench project, and exported Bedrock geometry location. |
 | `textures/models/` | PNG and source-texture location for OBJ, MQO, Blockbench, Bedrock geometry, and skin rendering. |
 | `textures/items/` | PNG location for inventory and hotbar item icons. |
@@ -217,6 +217,31 @@ repeats and space-filled empty slots), so `aaa` / `cbc` / `   ` becomes
 `A,A,A,C,B,C,empty,empty,empty`. Missing item/block definitions or non-space shape
 symbols without a resolved `ItemA`-`ItemI` value are logged and rejected instead of
 creating a malformed recipe.
+
+## Weapon-class creative tabs
+
+Every unified firearm selects one shared class tab through `WeaponClass,<class>`.
+Rendering format, pack, nation, era, ammunition and fire mode do not create separate
+firearm tabs. The supported values are `ASSAULT_RIFLE`, `BATTLE_RIFLE`, `CARBINE`,
+`SUBMACHINE_GUN`, `MACHINE_GUN`, `SHOTGUN`, `SNIPER_RIFLE`, `BOLT_ACTION_RIFLE`,
+`MARKSMAN_RIFLE`, `HANDGUN`, `LAUNCHER` and `SPECIAL`. Unscoped bolt-action service
+rifles use Bolt-action Rifles; `SPECIAL` includes grenades, bombs, bows, flamethrowers
+and unusual heavy weapons. These are presentation classes, independent of legacy
+registration codes and gameplay defaults.
+
+All 228 bundled gun definitions and their 196 development counterparts have explicit
+metadata. Imported and legacy versions appear together. The metadata corrects cases
+where legacy `HG`, `AR` or `SR` codes described defaults rather than the real class:
+MP5/P90 are submachine guns, MG36/RPK are machine guns, M14 is a battle rifle, M110 is
+a marksman rifle, and AKS-74U is a carbine. No bundled classification remains unresolved.
+
+External definitions without `WeaponClass` receive a diagnostic and a conservative
+registration-code fallback in `WeaponClass.legacy`; unknown codes use `SPECIAL`.
+Those external classifications need author review, especially guns registered as
+`HG` or `SR` for their defaults. `Tabname` no longer categorizes unified firearms.
+Existing `addTab` names remain compatible for swords, attachments and vehicles;
+unused source/model tabs are never instantiated. Ammunition, crafting equipment and
+other non-firearm items retain their existing equipment tabs.
 
 ## `additionalSettings.txt`
 

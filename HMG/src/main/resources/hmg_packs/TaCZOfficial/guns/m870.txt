@@ -40,7 +40,7 @@ RenderCross,false
 RightType,1
 Automatic,false
 MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_slug,HandmadeGuns:bullet_shell_bird,HandmadeGuns:bullet_shell_bird6
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,SHOTGUN
 guntype,1
 GunSoundLV,161,1
 
@@ -48,6 +48,7 @@ BedrockModel,m870_geo.json
 ModelTexture,m870.png
 Animations,m870.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,put_away,tacz:m870/m870_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true

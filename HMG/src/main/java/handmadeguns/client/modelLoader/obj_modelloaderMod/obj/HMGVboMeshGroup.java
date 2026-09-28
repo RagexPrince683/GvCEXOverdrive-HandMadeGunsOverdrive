@@ -3,6 +3,7 @@ package handmadeguns.client.modelLoader.obj_modelloaderMod.obj;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import handmadeguns.HandmadeGunsCore;
+import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -122,6 +123,12 @@ final class HMGVboMeshGroup {
             }
 
             HMGVboModelCache.bindArrayBuffer(bufferId);
+            // Meshes supply position, normals and base UVs only. Inherited color or
+            // lightmap arrays would read the caller's chunk data instead of world light.
+            GL11.glDisableClientState(GL11.GL_COLOR_ARRAY);
+            OpenGlHelper.setClientActiveTexture(OpenGlHelper.lightmapTexUnit);
+            GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
             GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
             GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);

@@ -45,10 +45,12 @@ BedrockModel,aks74u_geo.json
 ModelTexture,aks74u.png
 Animations,aks74u.animation.json,rifle_tac_rush_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:ak47/ak47_draw
+AnimationSound,put_away,tacz:ak47/ak47_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_ClassicRCCRP
+WeaponClass,CARBINE
 
 Name,ClassicRCCRP AKS-74U
 GunSoundLV,165,4

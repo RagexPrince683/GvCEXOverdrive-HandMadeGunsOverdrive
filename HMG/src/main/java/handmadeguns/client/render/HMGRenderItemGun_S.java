@@ -105,6 +105,12 @@ public class HMGRenderItemGun_S implements IItemRenderer {
 
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack item, Object... data) {
+		try (GunRenderState state = new GunRenderState(type, data)) {
+			renderItemScoped(type, item, data);
+		}
+	}
+
+	private void renderItemScoped(ItemRenderType type, ItemStack item, Object... data) {
 		float scala = this.modelscala;
 		float scala2 = this.modelscala;
 

@@ -81,7 +81,7 @@ MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_slug,Handm
 
 //MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_slug
 
-Tabname,HMG_GVCGuns
+WeaponClass,SHOTGUN
 guntype,1
 GunSoundLV,161,1
 Unified_guns,Mossberg M590

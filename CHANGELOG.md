@@ -306,3 +306,23 @@ Developer/backend
   now uses premultiplied-alpha bicubic filtering, and the cache schema was bumped so older framing is
   regenerated. Java 8 offline `:HMG:compileJava` passed; inventory, hotbar, and NEI framing still
   require in-game visual validation across pistols, rifles, launchers, and unusually offset pack models.
+
+2026-09-28 14:55 — Correct held lighting, class tabs and TaCZ model presentation
+
+- Held gun renderers preserve caller lighting, matrices and lightmap state, use entity
+  world brightness and normalize scaled normals. MQO materials no longer replace
+  scene lights; VBOs isolate base UV/normal/position arrays from inherited color and
+  lightmap arrays. Authored emissive parts, reticles and icon capture remain supported.
+- Centralized unified firearms into 12 weapon-class tabs with explicit metadata for
+  all 228 bundled guns and 196 development counterparts. Legacy/imported variants
+  share classes; external definitions receive a diagnosed registration-code fallback.
+  Non-firearm custom tabs remain compatible and are instantiated only when used.
+- Restored 88 original TaCZ/ClassicRCCRP action OGG files and events with 91 clip
+  declarations. Bare source markers no longer suppress declared whole-action audio;
+  draw, inspect, bolt and reload share the fallback path. Two missing original marker
+  assets remain unresolved without substitution. HMG firing sounds remain authoritative.
+- Imported root fire no longer stacks with the legacy whole-gun kick. Fire restarts
+  and returns through a separate additive fade, shots also follow ammunition changes,
+  and reload clears that layer. Numeric TaCZ ADS constraints limit model motion about
+  the authored pivot while retaining internal bolt/slide animation. Camera and gameplay
+  recoil, aiming, spread, movement and server authority are unchanged.

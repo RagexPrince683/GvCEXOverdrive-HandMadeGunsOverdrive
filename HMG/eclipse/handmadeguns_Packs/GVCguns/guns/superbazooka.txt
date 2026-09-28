@@ -56,7 +56,7 @@ RenderCross,false
 UnderBarrelWeapon,0
 RightType,0
 Magazine,0,HandmadeGuns,bullet_rr_hmgsbaz
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 
 GunSoundLV,163,163
 

@@ -34,7 +34,7 @@ SimpleADSOffsetZ,0.92,0.92,0.92
 ModelRotationX,180f,180f,180f
 ModelRotationY,45f,45f,45
 ModelRotationZ,180f,180f,180f
-Tabname,HMG_WW2Guns
+WeaponClass,SUBMACHINE_GUN
 
 ModelArm,true
 ModelArmRotationR,-1.57f,-0.2f,-1.57f

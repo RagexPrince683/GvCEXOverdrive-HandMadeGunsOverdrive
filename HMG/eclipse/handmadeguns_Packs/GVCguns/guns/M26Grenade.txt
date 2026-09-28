@@ -72,6 +72,6 @@ RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,null
 
-Tabname,HMG_GVCGuns
+WeaponClass,SPECIAL
 Name,M26 Grenade
 GL,M26 Frag Grenade

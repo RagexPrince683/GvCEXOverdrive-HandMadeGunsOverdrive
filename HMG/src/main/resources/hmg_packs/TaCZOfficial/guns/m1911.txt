@@ -87,10 +87,12 @@ BedrockModel,m1911_geo.json
 ModelTexture,m1911.png
 Animations,m1911.animation.json,pistol_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:m1911/m1911_draw
+AnimationSound,put_away,tacz:m1911/m1911_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,HANDGUN
 
 Name,TaCZ M1911
 HG,TaCZOfficial_M1911

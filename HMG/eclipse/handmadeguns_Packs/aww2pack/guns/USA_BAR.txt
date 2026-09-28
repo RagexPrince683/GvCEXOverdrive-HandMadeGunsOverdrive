@@ -49,7 +49,7 @@ MagazineItemCount,1
 Bursts,1,-1,0
 Rates,2,1.845,4
 
-Tabname,HMG_WW2Guns
+WeaponClass,MACHINE_GUN
 
 
 AddParts,mat1

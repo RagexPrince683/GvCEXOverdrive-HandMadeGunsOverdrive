@@ -437,7 +437,7 @@ AddParts,Base_Sys
 			    	BackParts
 			BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,HANDGUN
 Name,AR Pistol
 GunSoundLV,165,1
 AR,ARP

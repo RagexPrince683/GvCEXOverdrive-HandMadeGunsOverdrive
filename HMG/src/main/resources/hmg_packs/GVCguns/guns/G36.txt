@@ -79,7 +79,7 @@ MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 MultiMagazine,HandmadeGuns:5.56mm magazineg36,HandmadeGuns:bullet_lmg_hmg_CMag
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 
 AddParts,Base_Sys
 	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

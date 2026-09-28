@@ -234,7 +234,7 @@ AddParts,mat1
         AddReloadMotionKey,24,0,0,0,0,0,0,          30,0,0,0,0,0,0
     BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SUBMACHINE_GUN
 Name,HK UMP-45
 HG,ump45
 

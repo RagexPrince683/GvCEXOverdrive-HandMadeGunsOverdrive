@@ -45,7 +45,7 @@ ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,longue8rd
-Tabname,HMG_WW2Guns
+WeaponClass,HANDGUN
 
 GunSoundLV,160,1
 HG,Pistolet Automatic Model 1935A

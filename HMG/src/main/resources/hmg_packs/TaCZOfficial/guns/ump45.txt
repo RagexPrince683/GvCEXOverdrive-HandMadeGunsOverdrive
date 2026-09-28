@@ -82,10 +82,16 @@ BedrockModel,ump45_geo.json
 ModelTexture,ump45.png
 Animations,ump45.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:ump45/ump45_draw
+AnimationSound,put_away,tacz:ump45/ump45_put_away
+AnimationSound,reload,tacz:ump45/ump45_reload_tactical
+AnimationSound,reload_empty,tacz:ump45/ump45_reload_empty
+AnimationSound,inspect,tacz:ump45/ump45_inspect
+AnimationSound,inspect_empty,tacz:ump45/ump45_inspect_empty
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,SUBMACHINE_GUN
 
 Name,TaCZ UMP45
 HG,TaCZOfficial_ump45

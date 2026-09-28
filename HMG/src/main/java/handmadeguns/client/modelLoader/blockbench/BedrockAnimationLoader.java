@@ -129,6 +129,7 @@ public final class BedrockAnimationLoader {
         if (duration == 0 && loop == AnimationClip.Loop.LOOP) loop = AnimationClip.Loop.HOLD;
         double fade = name.equals("idle") || name.startsWith("walk") || name.startsWith("run")
                 || name.startsWith("sprint") ? 0.12 : 0;
+        if ("shoot".equals(name) || "fire".equals(name)) fade = 0.035;
         return new AnimationClip(name, duration, loop, tracks, events, fade, fade, 0, true);
     }
 

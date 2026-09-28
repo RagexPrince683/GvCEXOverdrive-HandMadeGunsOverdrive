@@ -275,7 +275,7 @@ AddParts,Base_Sys
 
 
 BulletNameALL,byfrou01_GreenTracer
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 Name,IWI Negev
 GunSoundLV,165,1
 LMG,IWI Negev

@@ -8,5 +8,5 @@ Static organization date: 2026-09-19. Minecraft was not launched.
 
 The definition and model moved from `GVCguns` into this pack. The icon and scope
 remain in GVCguns because legacy content still references them; byte-identical
-pack-local copies make this pack self-contained. The item now appears only in the
-player-facing `HMG Blockbench Guns` tab.
+pack-local copies make this pack self-contained. The item now appears in the shared
+Assault Rifles tab alongside legacy and exported-Bedrock AK variants.

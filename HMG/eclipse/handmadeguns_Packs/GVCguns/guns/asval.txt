@@ -195,7 +195,7 @@ AddParts,mat1
 
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,AS-VAL
 GunSoundLV,130,1
 AR,asval

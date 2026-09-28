@@ -225,7 +225,7 @@ AddParts,mat1
         AddReloadMotionKey,22,0,0,-0.4,0,0,0,       24,0,0,0,0,0,0
         AddReloadMotionKey,24,0,0,0,0,0,0,          30,0,0,0,0,0,0
     BackParts
-Tabname,HMG_GVCGuns
+WeaponClass,HANDGUN
 Name,Glock-18
 HG,G18
 

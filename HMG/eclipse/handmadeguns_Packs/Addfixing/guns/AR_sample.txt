@@ -192,6 +192,7 @@ GripSetAngle,0F,0F,0F
 
 
 Name,アサルトライフル_サンプル
+WeaponClass,ASSAULT_RIFLE
 AR,AR_sample
 
 //addRecipe,AR_sample,1,abc,0ef,000,265,265,265,280,265,280,280,280,280

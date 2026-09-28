@@ -23,6 +23,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,SPECIAL
 Name,FAB-250
 GL,FAB-250

@@ -185,7 +185,7 @@ MultiMagazine,HandmadeGuns:5.45mm magazine,HandmadeGuns:5.45mm long magazine,Han
 MagazineSG,0,HandmadeGuns,bullet_shell_hmg
 MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 
-Tabname,HMG_GVCGuns
+WeaponClass,CARBINE
 Name,AKS-74U
 AR,AKS74U
 

@@ -48,7 +48,7 @@ RightType,0
 Magazine,0,HandmadeGuns,mas38mag
 MagazineSG,0,HandmadeGuns,bullet_shell_hmg
 MagazineGL,0,HandmadeGuns,bullet_rr_hmg
-Tabname,HMG_WW2Guns
+WeaponClass,SUBMACHINE_GUN
 
 AddParts,mat1
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

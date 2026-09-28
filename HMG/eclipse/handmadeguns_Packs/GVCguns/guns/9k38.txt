@@ -109,6 +109,6 @@ BackParts
 
 GunSoundLV,165,165
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,9K38 Igla
 RR,9k38

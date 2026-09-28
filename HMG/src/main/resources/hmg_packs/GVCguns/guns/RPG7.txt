@@ -76,7 +76,7 @@ ReloadMotion
 GunSoundLV,182,182
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,RPG-7
 RR,RPG7
 TechYear,1961

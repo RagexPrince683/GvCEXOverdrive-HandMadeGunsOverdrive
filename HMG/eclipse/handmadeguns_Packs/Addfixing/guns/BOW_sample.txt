@@ -38,4 +38,5 @@ RenderCross,true
 RightType,0
 Magazine,262
 
+WeaponClass,SPECIAL
 BOW,BOW_sample

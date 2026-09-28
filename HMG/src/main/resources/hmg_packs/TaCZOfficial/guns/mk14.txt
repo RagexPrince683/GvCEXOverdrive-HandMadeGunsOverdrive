@@ -39,10 +39,16 @@ BedrockModel,mk14_geo.json
 ModelTexture,mk14.png
 Animations,mk14.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:mk14/mk14_draw
+AnimationSound,put_away,tacz:mk14/mk14_put_away
+AnimationSound,reload,tacz:mk14/mk14_reload_tactical
+AnimationSound,reload_empty,tacz:mk14/mk14_reload_empty
+AnimationSound,inspect,tacz:mk14/mk14_inspect
+AnimationSound,inspect_empty,tacz:mk14/mk14_inspect_empty
 ModelScala,0.5f
 InworldScale,1.65f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,MARKSMAN_RIFLE
 
 Name,TaCZ Mk 14 EBR
 SR,TaCZOfficial_Mk14

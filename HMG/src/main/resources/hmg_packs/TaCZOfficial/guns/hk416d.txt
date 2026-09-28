@@ -37,10 +37,12 @@ BedrockModel,hk416d_geo.json
 ModelTexture,hk416d.png
 Animations,hk416d.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:hk416d/hk416d_draw
+AnimationSound,put_away,tacz:hk416d/hk416d_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ HK416D
 AR,TaCZOfficial_HK416D

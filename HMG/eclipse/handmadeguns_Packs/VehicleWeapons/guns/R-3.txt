@@ -42,6 +42,6 @@ NeedFix,true
 Turretanglelimit,0,0,0,0
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,R-3
 RR,R-3

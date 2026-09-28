@@ -77,7 +77,7 @@ MultiMagazine,HandmadeGuns:5.56mm magazineg36
 //,HandmadeGuns:bullet_lmg_hmg_CMag
 //,HandmadeGuns:5.56mm magazine20,HandmadeGuns:5.56mm magazine90
 
-Tabname,HMG_GVCGuns
+WeaponClass,CARBINE
 
 SightSetPoint,0F,2.0,0.771F
 LightSetPoint,0f,1.45f,4.60f

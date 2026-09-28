@@ -99,10 +99,12 @@ BedrockModel,ak47_geo.json
 ModelTexture,ak47.png
 Animations,ak47.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:ak47/ak47_draw
+AnimationSound,put_away,tacz:ak47/ak47_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ AK-47
 AR,TaCZOfficial_AK47

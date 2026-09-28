@@ -38,7 +38,7 @@ RenderCross,false
 RightType,1
 Automatic,false
 MultiMagazine,HandmadeGuns:bullet_shell_hmg,HandmadeGuns:bullet_shell_slug,HandmadeGuns:bullet_shell_bird,HandmadeGuns:bullet_shell_bird6
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,SHOTGUN
 guntype,1
 GunSoundLV,161,1
 
@@ -46,6 +46,8 @@ BedrockModel,m1014_geo.json
 ModelTexture,m1014.png
 Animations,m1014.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:m1014/m1014_draw
+AnimationSound,put_away,tacz:m1014/m1014_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true

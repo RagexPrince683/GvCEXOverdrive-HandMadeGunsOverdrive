@@ -1234,5 +1234,65 @@
     "sounds": [
       "tacz/victor45/victor_reload_empty_maghit"
     ]
+  },
+  "ccrp/m4/m4_raise": {
+    "category": "player",
+    "sounds": [
+      "ccrp/m4/m4_raise"
+    ]
+  },
+  "ccrp/m4/m4_drop": {
+    "category": "player",
+    "sounds": [
+      "ccrp/m4/m4_drop"
+    ]
+  },
+  "tacz/ak47/ak47_draw": {
+    "category": "player",
+    "sounds": [
+      "tacz/ak47/ak47_draw"
+    ]
+  },
+  "tacz/ak47/ak47_put_away": {
+    "category": "player",
+    "sounds": [
+      "tacz/ak47/ak47_put_away"
+    ]
+  },
+  "tacz/hk416d/hk416d_draw": {
+    "category": "player",
+    "sounds": [
+      "tacz/hk416d/hk416d_draw"
+    ]
+  },
+  "tacz/hk416d/hk416d_put_away": {
+    "category": "player",
+    "sounds": [
+      "tacz/hk416d/hk416d_put_away"
+    ]
+  },
+  "ccrp/sr25/sr25_draw": {
+    "category": "player",
+    "sounds": [
+      "ccrp/sr25/sr25_draw"
+    ]
+  },
+  "ccrp/sr25/sr25_put_away": {
+    "category": "player",
+    "sounds": [
+      "ccrp/sr25/sr25_put_away"
+    ]
+  },
+  "tacz/g36k/g36k_draw": {
+    "category": "player",
+    "sounds": [
+      "tacz/g36k/g36k_draw"
+    ]
+  },
+  "tacz/g36k/g36k_put_away": {
+    "category": "player",
+    "sounds": [
+      "tacz/g36k/g36k_put_away"
+    ]
   }
 }

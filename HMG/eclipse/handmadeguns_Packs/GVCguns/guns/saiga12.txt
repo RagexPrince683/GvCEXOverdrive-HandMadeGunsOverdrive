@@ -298,7 +298,7 @@ Magazine,0,HandmadeGuns,bullet_shell_hmgmagsaiga
 
 Automatic,false
 
-Tabname,HMG_GVCGuns
+WeaponClass,SHOTGUN
 
 
 Name,Saiga-12

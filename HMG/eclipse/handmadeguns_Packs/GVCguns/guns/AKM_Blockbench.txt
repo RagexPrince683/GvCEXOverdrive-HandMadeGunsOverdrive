@@ -72,7 +72,7 @@ MultiMagazine,HandmadeGuns:7.62mm magazine 30Round,HandmadeGuns:7.62mm long maga
 MagazineSG,0,HandmadeGuns,bullet_shell_hmg
 MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 UseUnderGun'smodel,true
 UnderGunRotation,-90f,0,0
 UnderGunOffset,0f,0.5639,5.6004

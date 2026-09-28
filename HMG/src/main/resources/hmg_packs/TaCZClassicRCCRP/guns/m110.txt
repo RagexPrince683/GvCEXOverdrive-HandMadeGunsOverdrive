@@ -62,10 +62,12 @@ BedrockModel,m110_geo.json
 ModelTexture,m110.png
 Animations,sr25.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,ccrp:sr25/sr25_draw
+AnimationSound,put_away,ccrp:sr25/sr25_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_ClassicRCCRP
+WeaponClass,MARKSMAN_RIFLE
 
 Name,ClassicRCCRP M110
 GunSoundLV,165,1

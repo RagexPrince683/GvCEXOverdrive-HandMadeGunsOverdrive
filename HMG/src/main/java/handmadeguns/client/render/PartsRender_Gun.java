@@ -26,6 +26,7 @@ public class PartsRender_Gun extends PartsRender {
 	public static Entity curretnEntity;
 	public GunTemp guntemp = new GunTemp();//TODO readPropertyFromNBTで銃の状態に同期
 	public float modelscala;
+	public float firstPersonADSBlend;
 	private static ModelBiped modelBipedMain = new ModelBiped(0.5F);;
 	
 	public float muzzleattachoffset[] = new float[3];
@@ -70,6 +71,7 @@ public class PartsRender_Gun extends PartsRender {
 		if (importedRoot) {
 			GL11.glPushMatrix();
 			handmadeguns.client.modelLoader.blockbench.BlockbenchTransform.presentationFrame();
+			if (isfirstperson) handmadeguns.client.animation.AnimationClient.applyFirstPersonConstraint(this, firstPersonADSBlend);
 		}
 		try {
 		for (HMGGunParts parts : partslist_temp) {

@@ -143,6 +143,67 @@ All 57 displays have a complete readable ordinary-presentation set after their d
   one round at a time and controls interruption, while imported clips provide an
   intro, one held insertion per commit cycle, and an optional finish action.
 
+## Held Lighting, Class Tabs, Audio and Model Recoil Follow-up
+
+Source/fix pass: 2026-09-28. The held-gun appearance came from fixed-function
+lighting and inherited render state, not a standalone HMG weapon shader.
+`MQO_GroupObject` replaced world item lights/ambient and restored hard-coded values.
+The VBO path could inherit a previous renderer's color/lightmap arrays. Held render
+entry points now scope caller attributes, matrices and lightmap bookkeeping, set
+entity world brightness, and normalize scaled normals. MQO retains its authored
+material properties/emission without replacing scene lights; VBO geometry selects
+only its own base UV/normal/position arrays. Explicit light parts, reticles and
+inventory-icon capture retain their intentional emissive/full-bright behavior.
+
+`WeaponClass` is the shared creative classification authority for unified firearms.
+All 228 bundled guns and 196 development counterparts now carry explicit metadata
+across 12 actual weapon classes, independent of source, model format, nation or era.
+The bundled audit has no unresolved classes. External packs without the field are
+reported and conservatively classified from registration codes; those defaults
+need author review. Non-firearm custom tabs are instantiated on demand.
+
+Audio was traced from each imported display to the original `tacz_sounds` tree,
+animation markers, HMG registration and first-person dispatch. Namespaced references
+had no case, extension or namespace resolver defect in this inspected set. Many
+source clips instead use bare labels with no corresponding original marker file;
+the display declares a whole-action recording. Such labels previously suppressed
+the fallback while being rejected by playback. The generic action fallback now
+checks valid namespaced markers, and draw, inspect, cock/bolt and reload use it.
+Across the official and ClassicRCCRP packs, 88 byte-identical source OGG files/events
+and 91 clip declarations were restored for 30 definitions. Existing HMG firing and
+suppressed-fire audio remain authoritative. Put-away declarations are available to
+explicit action requests; automatic weapon switching does not schedule a holster clip.
+
+Two exact dependencies remain unavailable in their original inspected sources:
+
+| Original marker | Active use | Finding |
+| --- | --- | --- |
+| `tacz:m1014/cloth_move_3` | M1014 `reload_intro_empty`, 0.3 s | No exact OGG in the official tree; nearby numbered cloth files are not an authorized mapping. |
+| `ccrp:sr25/sr25_inspect_xmag_magslide` | M110 shared `reload_empty`, 1.7917 s; source inspect variants | No exact OGG in ClassicRCCRP 1.1.6 hotfix 2. The earlier inspect-only description was incomplete. |
+
+Neither marker is aliased or substituted. Shared AK-series `ts:grenade` GP-25
+markers belong to unselected under-barrel actions and remain outside HMG's migrated
+standalone weapon presentation.
+
+Imported root fire was stacked with HMG's bolt-countdown whole-gun kick, while rapid
+fire restarted a zero-fade additive clip through the composite transition path.
+Root-authored imported fire now owns the whole-gun motion; internal bolt/slide tracks
+remain active and legacy OBJ/MQO guns keep their kick. Fire has a separate 35 ms
+additive restart/return envelope, and ammunition decreases detect shots even when
+a render misses the short recoil state. Reload stops the fire layer. TaCZ's numeric
+ADS constraint was previously ignored: first-person model presentation now applies
+its retained-motion coefficients around the animated ancestor pivot as ADS blends.
+No camera, aiming, spread, movement, ballistic or server-authority code was changed.
+
+Java 8 compilation and the existing animation/repository asset checks passed during
+this pass. The asset check still reports 72 pre-existing logical references (36 each
+in bundled and development legacy content). No Minecraft visual acceptance was
+performed for these changes. Check legacy and imported pistols, rifles, shotguns,
+bolt-action rifles and high-rate guns under day/night light, hip/ADS, rapid fire,
+movement transitions, reload interruption and item switching. Representative imported
+Glock 17, M4A1, M870, Kar98k and MP5 cover those presentation classes. Third-person,
+emissive parts and following rendered items need the same lighting/state checks.
+
 ## Deliberate Exclusions and Remaining Limits
 
 The following are not necessary for ordinary weapon presentation and were deliberately not imported:
@@ -151,7 +212,7 @@ The following are not necessary for ordinary weapon presentation and were delibe
 - Under-barrel/GP-25 switching, selection, ammunition, and networking. The official
   M320 is migrated only as HMG's existing standalone launcher.
 - Pack-specific fire selectors, inspect variants, tactical-rush logic, or custom run scripts.
-- Dynamic attachment/refit selection, non-default extended-magazine state, bullet visibility, optics, laser, muzzle, shell, and camera-constraint logic.
+- Dynamic attachment/refit selection, non-default extended-magazine state, bullet visibility, optics, laser, muzzle, shell, and animated camera transforms. Numeric first-person model ADS constraints are supported.
 - Ballistics, recoil authority, movement rules, stamina, inventory, reload gameplay, or server authority changes.
 - Decoding, unpacking, reverse-engineering, or importing Warzone's private `taczpack.dat` payload.
 

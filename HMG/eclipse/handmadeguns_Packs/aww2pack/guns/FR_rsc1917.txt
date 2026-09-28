@@ -156,7 +156,7 @@ AddParts,mat1
         AddReloadMotionKey,41,0,0,-0.6,0,0,0,       45,0,0,0,0,0,0
         AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
     BackParts
-Tabname,HMG_WW2Guns
+WeaponClass,BATTLE_RIFLE
 
 GunSoundLV,165,1
 SR,Fusil Automatique Rifle Model 1917

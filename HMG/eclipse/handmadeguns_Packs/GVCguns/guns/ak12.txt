@@ -197,7 +197,7 @@ AddParts,mat1
 
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,AK-12
 GunSoundLV,165,1
 AR,AK12

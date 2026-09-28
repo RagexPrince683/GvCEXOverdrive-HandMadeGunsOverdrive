@@ -54,5 +54,6 @@ RightType,1
 Automatic,true
 Magazine,0,HandmadeGuns,bullet_hmg
 
+WeaponClass,SNIPER_RIFLE
 AMR,AMR_sample
 TechYear,2000

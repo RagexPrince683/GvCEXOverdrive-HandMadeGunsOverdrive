@@ -49,7 +49,7 @@ Automatic,false
 Magazine,0,HandmadeGuns,12.7mm Magazineboys
 CockingTime,40
 
-Tabname,HMG_WW2Guns
+WeaponClass,SNIPER_RIFLE
 
 
 AddParts,mat1

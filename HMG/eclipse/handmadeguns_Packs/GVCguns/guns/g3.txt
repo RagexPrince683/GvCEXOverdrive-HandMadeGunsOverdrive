@@ -286,7 +286,7 @@ AddParts,Base_Sys
 			BackParts
 
 
-Tabname,HMG_GVCGuns
+WeaponClass,BATTLE_RIFLE
 Name,G3A3
 GunSoundLV,165,1
 AR,G3A3

@@ -243,7 +243,7 @@ AddParts,mat1
 		
 	BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,SNIPER_RIFLE
 Name,M40A1
 GunSoundLV,165,1
 SR,m40a1

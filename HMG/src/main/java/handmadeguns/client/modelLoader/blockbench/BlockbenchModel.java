@@ -23,6 +23,7 @@ public final class BlockbenchModel implements IModelCustom_HMG {
     private final Map<String, List<Part>> byName = new LinkedHashMap<String, List<Part>>();
     private final ResourceLocation[] textures;
     private HMGGroupObject current = NO_GEOMETRY;
+    private final List<Part> constraintPath;
     private static final net.minecraft.client.model.ModelBiped HANDS = new net.minecraft.client.model.ModelBiped(0);
 
     public static final class Part extends HMGGunParts {
@@ -47,6 +48,7 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         this.project = project;
         textures = new ResourceLocation[project.textures.size()];
         for (BlockbenchProject.Node node : project.roots) parts.add(part(node, null));
+        constraintPath = path("constraint");
     }
     private Part part(BlockbenchProject.Node node, Part parent) {
         Part part = new Part(node, project.bedrock); part.mother = parent;
@@ -150,6 +152,11 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         if (idle == null) idle = path("camera");
         List<Part> aiming = path("iron_view");
         BlockbenchTransform.applyPositioning(idle, aiming, ads, units);
+    }
+
+    public void applyAnimationConstraint(AnimationPose pose, float ads, float units) {
+        if (constraintPath != null && ads > 0)
+            BlockbenchTransform.applyConstraint(constraintPath, pose, ads, units, project.bedrock);
     }
     /** TaCZ third-person item placement aligns this authored node with the hand origin. */
     public void applyThirdPersonPosition(float units) {

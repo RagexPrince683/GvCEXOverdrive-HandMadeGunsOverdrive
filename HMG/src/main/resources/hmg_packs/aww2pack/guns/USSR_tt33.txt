@@ -45,7 +45,7 @@ SprintingPoint,0.0f,-0.5f,-0.1f
 ScopeTexture,misc/hg.png,misc/hgred.png,misc/scope.png
 RenderCross,false
 RightType,0
-Tabname,HMG_WW2Guns
+WeaponClass,HANDGUN
 Magazine,0,HandmadeGuns,bullet_hg_hmgtt33
 
 AddParts,mat1

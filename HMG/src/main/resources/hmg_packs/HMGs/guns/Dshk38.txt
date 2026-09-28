@@ -43,7 +43,7 @@ InworldScale,1.8f
 ModelHigh,0.35,-0.0087,0.35
 SimpleADSOffsetZ,3,3,3
 ModelEquipped,-0.5F,0.35,3.0
-Tabname,HMG_GVCGuns
+WeaponClass,MACHINE_GUN
 
 CustomFlash,CannonMuzzleFlash,3
 ScopeTexture,misc/ironsight.png,misc/reddot.png,misc/scope.png

@@ -254,7 +254,7 @@ AddParts,Body
         BackParts
     BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,HANDGUN
 Name,SIG Sauer P226
 HG,P226
 

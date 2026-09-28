@@ -50,7 +50,7 @@ MultiMagazine,HandmadeGuns:bullet_hg_hmg19117,HandmadeGuns:bullet_hg_hmg19118
 
 //HandmadeGuns:bullet_hg_hmg19118,HandmadeGuns:bullet_hg_hmg19119,HandmadeGuns:bullet_hg_hmg191110,HandmadeGuns:bullet_hg_hmg191112
 
-Tabname,HMG_WW2Guns
+WeaponClass,HANDGUN
 
 AddParts,mat1
     AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

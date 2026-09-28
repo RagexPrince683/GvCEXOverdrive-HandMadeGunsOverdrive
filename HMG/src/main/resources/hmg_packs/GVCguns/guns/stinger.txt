@@ -117,7 +117,7 @@ BackParts
 
 GunSoundLV,165,165
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,FIM-92 Stinger
 RR,stinger
 TechYear,1981

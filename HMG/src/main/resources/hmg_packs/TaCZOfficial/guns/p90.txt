@@ -81,10 +81,12 @@ BedrockModel,p90_geo.json
 ModelTexture,p90.png
 Animations,p90.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:p90/p90_draw
+AnimationSound,put_away,tacz:p90/p90_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,SUBMACHINE_GUN
 
 Name,TaCZ P90
 HG,TaCZOfficial_p90

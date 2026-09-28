@@ -93,6 +93,77 @@ public final class BlockbenchTransform {
         GL11.glMultMatrix(buffer);
     }
 
+    /** TaCZ's constraint channels are dimensionless retained-motion coefficients.
+     * Compare the rest and animated ancestor frames, excluding the coefficient node
+     * itself, then correct about its animated pivot. Internal action bones stay intact.
+     */
+    public static void applyConstraint(List<BlockbenchModel.Part> path, AnimationPose pose,
+                                       float ads, float units, boolean bedrock) {
+        applyMatrix(constraintMatrix(path, pose, ads, units, bedrock));
+    }
+
+    public static float[] constraintMatrix(List<BlockbenchModel.Part> path, AnimationPose pose,
+                                           float ads, float units, boolean bedrock) {
+        if (path == null || path.isEmpty()) return identity();
+        float weight = Math.max(0, Math.min(1, ads));
+        float[] rest = pathMatrix(path, AnimationPose.EMPTY, units, bedrock);
+        float[] animated = pathMatrix(path, pose, units, bedrock);
+        BlockbenchModel.Part node = path.get(path.size()-1);
+        AnimationPose.Transform coefficients = partPose(pose, node);
+        // Undo only the import unit/axis conversion: these are limits, not offsets.
+        float cx = coefficients.x / (float)(bedrock ? HMG_UNITS_PER_PIXEL : -HMG_UNITS_PER_PIXEL);
+        float cy = coefficients.y / (float)-HMG_UNITS_PER_PIXEL;
+        float cz = coefficients.z / (float)HMG_UNITS_PER_PIXEL;
+        float rx = bedrock ? coefficients.rx : -coefficients.rx;
+        float ry = bedrock ? coefficients.ry : -coefficients.ry;
+        float rz = coefficients.rz;
+        float[] a = eulerZYX(animated), b = eulerZYX(rest);
+        float[] correction = translation((rest[12]-animated[12])*(1-cx)*weight,
+                (rest[13]-animated[13])*(1-cy)*weight,
+                (rest[14]-animated[14])*(1-cz)*weight);
+        correction = multiply(correction, translation(animated[12],animated[13],animated[14]));
+        correction = multiply(correction, rotationX(angleDifference(a[0],b[0])*(rx-1)*weight));
+        correction = multiply(correction, rotationY(angleDifference(a[1],b[1])*(ry-1)*weight));
+        correction = multiply(correction, rotationZ(angleDifference(a[2],b[2])*(rz-1)*weight));
+        return multiply(correction, translation(-animated[12],-animated[13],-animated[14]));
+    }
+
+    private static AnimationPose.Transform partPose(AnimationPose pose, BlockbenchModel.Part part) {
+        return pose.get(pose.parts.containsKey(part.animationKey()) ? part.animationKey() : part.partsname);
+    }
+
+    private static float[] pathMatrix(List<BlockbenchModel.Part> path, AnimationPose pose,
+                                       float units, boolean bedrock) {
+        float[] matrix = identity();
+        for (int i=0;i<path.size();i++) {
+            BlockbenchModel.Part part = path.get(i);
+            AnimationPose.Transform value = i == path.size()-1 ? AnimationPose.Transform.IDENTITY : partPose(pose,part);
+            matrix = multiply(matrix,translation((part.localOrigin[0]+value.x)*units,
+                    (part.localOrigin[1]+value.y)*units,(part.localOrigin[2]+value.z)*units));
+            matrix = multiply(matrix,rotationZ(part.restRotation[2]+(bedrock ? 0 : value.rz)));
+            matrix = multiply(matrix,rotationY(part.restRotation[1]+(bedrock ? 0 : value.ry)));
+            matrix = multiply(matrix,rotationX(part.restRotation[0]+(bedrock ? 0 : value.rx)));
+            if (bedrock) {
+                matrix = multiply(matrix,rotationZ(value.rz));
+                matrix = multiply(matrix,rotationY(value.ry));
+                matrix = multiply(matrix,rotationX(value.rx));
+            }
+        }
+        return matrix;
+    }
+
+    private static float[] eulerZYX(float[] matrix) {
+        double y = Math.asin(Math.max(-1,Math.min(1,-matrix[2])));
+        double x = Math.abs(Math.cos(y)) > 0.00001 ? Math.atan2(matrix[6],matrix[10]) : 0;
+        double z = Math.abs(Math.cos(y)) > 0.00001 ? Math.atan2(matrix[1],matrix[0]) : Math.atan2(-matrix[4],matrix[5]);
+        return new float[]{(float)Math.toDegrees(x),(float)Math.toDegrees(y),(float)Math.toDegrees(z)};
+    }
+
+    private static float angleDifference(float a,float b) {
+        float difference = (a-b)%360;
+        return difference > 180 ? difference-360 : difference < -180 ? difference+360 : difference;
+    }
+
     private static float[] inversePath(List<BlockbenchModel.Part> path, float units) {
         float[] matrix = identity();
         for (int i=path.size()-1;i>=0;i--) {

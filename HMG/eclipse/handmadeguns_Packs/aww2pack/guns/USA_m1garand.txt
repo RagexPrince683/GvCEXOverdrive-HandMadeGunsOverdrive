@@ -44,7 +44,7 @@ RenderCross,false
 Automatic,true
 Magazine,0,HandmadeGuns,7.62x63mm bulletclip
 MagazineItemCount,1
-Tabname,HMG_WW2Guns
+WeaponClass,BATTLE_RIFLE
 
 AddParts,mat1
 	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

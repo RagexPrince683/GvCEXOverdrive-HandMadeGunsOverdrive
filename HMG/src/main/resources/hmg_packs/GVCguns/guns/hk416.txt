@@ -446,7 +446,7 @@ AddParts,Base_Sys
 			    	BackParts
 			BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,HK416
 GunSoundLV,165,1
 AR,HK416

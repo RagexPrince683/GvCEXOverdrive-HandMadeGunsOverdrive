@@ -77,6 +77,6 @@ Magazine,0,HandmadeGuns,null
 
 GunSoundLV,178,178
 
-Tabname,HMG_GVCGuns
+WeaponClass,LAUNCHER
 Name,Panzerfaust 100
 RR,panzerfaust

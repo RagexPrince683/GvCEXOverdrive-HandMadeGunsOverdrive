@@ -38,7 +38,7 @@ Motion,0.95
 Mat25Point,0.0f,0.688f,1.3f
 Mat25Rotation,0f,0f,0f
 CockingTime,10
-Tabname,HMG_WW2Guns
+WeaponClass,BOLT_ACTION_RIFLE
 Magazine,0,HandmadeGuns,enfieldmag
 MagazineItemCount,1
 

@@ -47,6 +47,6 @@ chunkLoaderBullet,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,R-37
 RR,R-37

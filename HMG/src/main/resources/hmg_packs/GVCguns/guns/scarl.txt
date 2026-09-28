@@ -444,7 +444,7 @@ AddParts,Base_Sys
 			    	BackParts
 			BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,SCAR-L
 GunSoundLV,165,1
 AR,SCARL

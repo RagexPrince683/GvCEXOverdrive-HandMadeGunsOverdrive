@@ -253,7 +253,7 @@ AddParts,Sys_Zero_in
 		    AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
 		BackParts
 
-Tabname,HMG_GVCGuns
+WeaponClass,ASSAULT_RIFLE
 Name,SA-80 L8581
 GunSoundLV,165,1
 AR,L8581

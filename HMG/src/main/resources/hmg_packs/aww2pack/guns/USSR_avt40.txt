@@ -34,7 +34,7 @@ ModelArmRotationR,-1.57f,-0.2f,-1.57f
 ModelArmOffsetR,0.2f,0.5f,0.4f
 ModelArmRotationL,-0.0f,-2.3f,2.0f
 ModelArmOffsetL,0.2f,0.6f,-0.2f
-Tabname,HMG_WW2Guns
+WeaponClass,BATTLE_RIFLE
 Magazine,0,HandmadeGuns,7.62mmR bulletsvt
 MagazineItemCount,1
 Bursts,1,-1

@@ -33,12 +33,16 @@ BedrockModel,m320_geo.json
 ModelTexture,m320.png
 Animations,m320.animation.json,rifle_default.animation.json
 AnimationEventSounds,true
+AnimationSound,draw,tacz:m320/m320_draw
+AnimationSound,put_away,tacz:m320/m320_put_away
+AnimationSound,inspect,tacz:m320/m320_inspect
+AnimationSound,inspect_empty,tacz:m320/m320_inspect
 AnimationSound,reload_empty,tacz:m320/m320_reload_empty
 AnimationSound,reload_tactical,tacz:m320/m320_reload_tactical
 ModelScala,0.5f
 InworldScale,2f
 ModelArm,true
-Tabname,HMG_Bedrock_TaCZ
+WeaponClass,LAUNCHER
 
 Name,TaCZ M320
 GL,TaCZOfficial_M320

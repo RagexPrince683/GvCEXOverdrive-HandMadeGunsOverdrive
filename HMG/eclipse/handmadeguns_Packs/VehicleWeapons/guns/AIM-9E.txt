@@ -41,6 +41,6 @@ NeedFix,true
 
 
 
-Tabname,VehicleWeapons
+WeaponClass,LAUNCHER
 Name,AIM-9E
 RR,AIM-9E
