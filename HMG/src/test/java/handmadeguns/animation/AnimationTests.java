@@ -30,8 +30,58 @@ public final class AnimationTests {
             LOADER.invalidate(new File(args[0]));
             check(LOADER.load(new File(args[0])) != example, "cache invalidation");
         }
-        if (args.length > 1) blockbenchReload(new File(args[1]));
+        if (args.length > 1) {
+            File reference = new File(args[1]);
+            blockbenchReload(reference);
+            renderStateOwnership(reference.getParentFile().getParentFile());
+        }
         System.out.println("HMG animation: " + checks + " checks passed (HMG/Bedrock parsers, evaluator, layers, locomotion, events, isolation, reload bridge).");
+    }
+
+    /** Source guards for the Angelica attribute leak; no GL context or mock renderer required. */
+    private static void renderStateOwnership(File module) throws IOException {
+        File source = new File(module, "src/main/java/handmadeguns/client");
+        String scope = renderSource(source, "render/GunRenderState.java");
+        check(!scope.contains("GL_ATTRIB_STACK_DEPTH"), "attribute ownership does not query Angelica's native stack depth");
+        check(occurrences(scope, "GL11.glPushAttrib(") == 1 && occurrences(scope, "GL11.glPopAttrib()") == 1,
+                "gun boundary owns exactly one attribute push and unconditional pop");
+        String mesh = renderSource(source, "modelLoader/blockbench/BlockbenchModel.java");
+        check(!mesh.contains("glPushAttrib") && !mesh.contains("glPopAttrib"),
+                "Blockbench meshes and hands never consume attribute stack entries");
+        check(mesh.contains("glBindTexture(GL11.GL_TEXTURE_2D, previousTexture)")
+                        && mesh.contains("if (!normalize) GL11.glDisable(GL11.GL_NORMALIZE)"),
+                "mesh preserves its only owned texture and normalization state");
+        String unified = renderSource(source, "render/HMGRenderItemGun_U_NEW.java");
+        check(!unified.contains("glPushAttrib") && !unified.contains("glPopAttrib"),
+                "unified renderer has no duplicate model-level attribute scope");
+        check(unified.indexOf("renderCachedIcon(gunstack)") < unified.indexOf("new GunRenderState"),
+                "cached inventory icons remain outside the gun state boundary");
+        String legacy = renderSource(source, "render/HMGRenderItemGun_U.java");
+        check(occurrences(legacy, "GL11.glPushAttrib(") == occurrences(legacy, "GL11.glPopAttrib()"),
+                "legacy fallback overlays balance attributes before the outer boundary closes");
+        String parts = renderSource(source, "render/PartsRender_Gun.java");
+        check(parts.indexOf("if (!OffsetAndRotation.renderOnOff) return;") < parts.indexOf("boolean backUp = isfirstperson;"),
+                "skipped under-gun returns before acquiring its matrix");
+        for (String path : Arrays.asList("render/PartsRender.java", "render/PartsRender_Gun.java",
+                "render/HMGAttachmentModelRenderer.java", "render/HMGRenderItemCustom.java")) {
+            String text = renderSource(source, path);
+            check(occurrences(text, "GL11.glPushAttrib(") == occurrences(text, "GL11.glPopAttrib()"),
+                    "balanced attribute ownership in " + path);
+            check(occurrences(text, "GL11.glPushMatrix()") == occurrences(text, "GL11.glPopMatrix()"),
+                    "balanced recursive matrix ownership in " + path);
+        }
+    }
+
+    private static String renderSource(File source, String path) throws IOException {
+        return new String(java.nio.file.Files.readAllBytes(new File(source, path).toPath()),
+                java.nio.charset.StandardCharsets.UTF_8)
+                .replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("(?m)//[^\\r\\n]*", "");
+    }
+
+    private static int occurrences(String text, String value) {
+        int count = 0;
+        for (int start = 0; (start = text.indexOf(value, start)) >= 0; start += value.length()) count++;
+        return count;
     }
 
     private static void blockbenchReload(File file) throws Exception {

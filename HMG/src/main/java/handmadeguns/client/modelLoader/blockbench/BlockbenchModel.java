@@ -104,14 +104,20 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         @Override public void render() { renderTextured(null); }
         public void renderTextured(ResourceLocation override) {
             if (handPlaceholder || batches.isEmpty()) return;
-            GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT);
+            // Batches only change the current texture binding and normal normalization.
+            // Blend/alpha/depth/lighting/material state belongs to the render pass.
+            int previousTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            boolean normalize = GL11.glIsEnabled(GL11.GL_NORMALIZE);
             try {
                 GL11.glEnable(GL11.GL_NORMALIZE);
                 for (Map.Entry<Integer,HMGGroupObject> entry : batches.entrySet()) {
                     Minecraft.getMinecraft().getTextureManager().bindTexture(override == null ? texture(entry.getKey()) : override);
                     entry.getValue().render();
                 }
-            } finally { GL11.glPopAttrib(); }
+            } finally {
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, previousTexture);
+                if (!normalize) GL11.glDisable(GL11.GL_NORMALIZE);
+            }
         }
         @Override public void releaseVbo() { for (HMGGroupObject batch : batches.values()) batch.releaseVbo(); }
     }
@@ -127,14 +133,18 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         if (!left && !"righthand_pos".equals(part.partsname)) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return;
-        GL11.glPushMatrix(); GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
+        int previousTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        GL11.glPushMatrix();
         try {
             float scale = units * BlockbenchTransform.modelNormalization();
             GL11.glScalef(scale,scale,scale);
             BlockbenchTransform.playerArmFrame();
             mc.getTextureManager().bindTexture(mc.thePlayer.getLocationSkin());
             (left ? HANDS.bipedLeftArm : HANDS.bipedRightArm).render(1.0f/16);
-        } finally { GL11.glPopAttrib(); GL11.glPopMatrix(); }
+        } finally {
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, previousTexture);
+            GL11.glPopMatrix();
+        }
     }
     public boolean hasHandLocator(boolean left) {
         List<Part> candidates = byName.get(left ? "lefthand_pos" : "righthand_pos");

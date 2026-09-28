@@ -384,6 +384,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 
 				GL11.glPushMatrix();
 
+				try {
 				// State hygiene
 				GL11.glDisable(GL11.GL_COLOR_MATERIAL);
 				GL11.glColor4f(1f, 1f, 1f, 1f);
@@ -417,9 +418,11 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 					inventoryPreview = previousInventoryPreview;
 				}
 
-				GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-				RenderHelper.disableStandardItemLighting();
-				GL11.glPopMatrix();
+				} finally {
+					GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+					RenderHelper.disableStandardItemLighting();
+					GL11.glPopMatrix();
+				}
 
 				return; // STOP vanilla rendering
 			}
@@ -482,9 +485,9 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 			}
 		}
 
-		GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 		GL11.glShadeModel(GL11.GL_SMOOTH);
 		GL11.glPushMatrix();
+		try {
 //		GL11.glColor4f(1, 1, 1, 1);
 		switch (type) {
 			case INVENTORY:
@@ -509,6 +512,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 					mc.renderEngine.bindTexture(guntexture);
 
 					GL11.glPushMatrix();
+					try {
 
 
 
@@ -546,14 +550,12 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 						{
 							if (((HMGItemSightBase) itemstackSight.getItem()).scopeonly)
 							{
-								GL11.glPopMatrix();
 								break;
 							}
 							else if (itemstackSight.getItem() instanceof HMGItemAttachment_reddot)
 							{
 								if (!gunitem.gunInfo.zoomrer)
 								{
-									GL11.glPopMatrix();
 									break;
 								}
 							}
@@ -561,7 +563,6 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 							{
 								if (!gunitem.gunInfo.zoomres)
 								{
-									GL11.glPopMatrix();
 									break;
 								}
 							}
@@ -570,7 +571,6 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 						{
 							if (!gunitem.gunInfo.zoomren)
 							{
-								GL11.glPopMatrix();
 								break;
 							}
 						}
@@ -716,7 +716,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 								.applyFirstPersonPosition(currentReloadState ? 0 : adsBlend, partsRender_gun.gunPartsScale);
 					rendering_situation(gunstack, entity, currentReloadState, reloadTag);
 
-					GL11.glPopMatrix();
+					} finally { GL11.glPopMatrix(); }
 					isfirstperson = false;
 				}
 				break;
@@ -730,6 +730,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				PartsRender_Gun.curretnEntity = entity;
 				Minecraft.getMinecraft().renderEngine.bindTexture(guntexture);
 				GL11.glPushMatrix();
+				try {
 				GL11.glScalef(1f / 2f, 1f / 2f, 1f / 2f);
 				boolean blockbenchPresentation = model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel;
 				if (entity instanceof EntityPlayer && blockbenchPresentation) {
@@ -752,7 +753,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				if (!(entity instanceof EntityPlayer && blockbenchPresentation))
 					GL11.glScalef(gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale);
 				rendering_situation(gunstack,entity, currentReloadState);
-				GL11.glPopMatrix();
+				} finally { GL11.glPopMatrix(); }
 				break;
 			}
 			case ENTITY: {
@@ -762,21 +763,21 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				isfirstperson = false;
 				Minecraft.getMinecraft().renderEngine.bindTexture(guntexture);
 				GL11.glPushMatrix();
+				try {
 				HMGDroppedGunRenderHelper.applyGroundTransform(data);
 				GL11.glScalef(0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1), 0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1), 0.4f * scala * gunitem.gunInfo.inworldScale * (isPlacedGun ? gunitem.gunInfo.onTurretScale : 1));
 				if (inventoryPreview && model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
 					((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model)
 							.applyInventoryPosition(partsRender_gun.gunPartsScale);
 				rendering_situation(gunstack,null, currentReloadState);
-				GL11.glPopMatrix();
+				} finally { GL11.glPopMatrix(); }
 				smoothing = HandmadeGunsCore.smooth;
 				break;
 			}
 			case FIRST_PERSON_MAP:
 				break;
 		}
-		GL11.glPopMatrix();
-		GL11.glPopAttrib();
+		} finally { GL11.glPopMatrix(); }
 	}
 
 

@@ -11,21 +11,24 @@ public final class GunRenderState implements AutoCloseable {
     private final int matrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
     private final int modelDepth = GL11.glGetInteger(GL11.GL_MODELVIEW_STACK_DEPTH);
     private final int projectionDepth = GL11.glGetInteger(GL11.GL_PROJECTION_STACK_DEPTH);
-    private final int attributeDepth = GL11.glGetInteger(GL11.GL_ATTRIB_STACK_DEPTH);
 
     public GunRenderState(ItemRenderType type, Object[] data) {
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glEnable(GL11.GL_NORMALIZE);
-        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        if ((type == ItemRenderType.EQUIPPED_FIRST_PERSON || type == ItemRenderType.EQUIPPED)
-                && data != null && data.length > 1 && data[1] instanceof Entity) {
-            int light = ((Entity)data[1]).getBrightnessForRender(handmadeguns.HandmadeGunsCore.smooth);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
-        }
+        boolean initialized = false;
+        try {
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPushMatrix();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPushMatrix();
+            GL11.glEnable(GL11.GL_NORMALIZE);
+            OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            if ((type == ItemRenderType.EQUIPPED_FIRST_PERSON || type == ItemRenderType.EQUIPPED)
+                    && data != null && data.length > 1 && data[1] instanceof Entity) {
+                int light = ((Entity)data[1]).getBrightnessForRender(handmadeguns.HandmadeGunsCore.smooth);
+                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
+            }
+            initialized = true;
+        } finally { if (!initialized) close(); }
     }
 
     @Override public void close() {
@@ -33,7 +36,10 @@ public final class GunRenderState implements AutoCloseable {
         while (GL11.glGetInteger(GL11.GL_MODELVIEW_STACK_DEPTH) > modelDepth) GL11.glPopMatrix();
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         while (GL11.glGetInteger(GL11.GL_PROJECTION_STACK_DEPTH) > projectionDepth) GL11.glPopMatrix();
-        while (GL11.glGetInteger(GL11.GL_ATTRIB_STACK_DEPTH) > attributeDepth) GL11.glPopAttrib();
+        // Angelica emulates attributes without pushing the native driver stack;
+        // GL_ATTRIB_STACK_DEPTH therefore cannot tell us whether to pop. This
+        // boundary owns exactly one attribute entry, independent of recursion.
+        GL11.glPopAttrib();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightX, lightY);
         GL11.glMatrixMode(matrixMode);
     }

@@ -45,6 +45,7 @@ public abstract class PartsRender {
 		if (parts instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part
 				&& !((handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part)parts).visible) return;
 		FMLClientHandler.instance().getWorldClient().theProfiler.startSection("partRender");
+		try {
 		if(!parts.initialized){
 			/*
 			 * renderPart_getInstance() is only exposed through the model API after a
@@ -78,6 +79,7 @@ public abstract class PartsRender {
 		HMGGunParts_Motion_PosAndRotation rotationCenterAndRotation = parts.getRenderinfCenter();
 		if(OffsetAndRotation != null && !OffsetAndRotation.renderOnOff)return;
 		GL11.glPushMatrix();
+		try {
 		if (parts instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part) {
 			handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part bone =
 					(handmadeguns.client.modelLoader.blockbench.BlockbenchModel.Part)parts;
@@ -92,15 +94,15 @@ public abstract class PartsRender {
 
 
 		FMLClientHandler.instance().getWorldClient().theProfiler.startSection("renderPart");
+		try {
 		boolean renderPartGeometry = shouldRenderPartGeometry(parts);
 		if(!partModel_render(parts, state, flame, remainbullets, OffsetAndRotation)) {
 			renderPartHook(parts, state, flame, remainbullets, OffsetAndRotation);
 			if (renderPartGeometry) partSidentification(parts.childs,state,flame,remainbullets);
 		}
-		FMLClientHandler.instance().getWorldClient().theProfiler.endSection();
-
-		GL11.glPopMatrix();
-		FMLClientHandler.instance().getWorldClient().theProfiler.endSection();
+		} finally { FMLClientHandler.instance().getWorldClient().theProfiler.endSection(); }
+		} finally { GL11.glPopMatrix(); }
+		} finally { FMLClientHandler.instance().getWorldClient().theProfiler.endSection(); }
 
 	}
 
@@ -170,6 +172,7 @@ public abstract class PartsRender {
 				else parts.currentGroup_parts.render();
 				if (gunSkinTexture != null && renderGunSkinOverlay && shouldApplyGunSkin(parts)) {
 					GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_POLYGON_BIT);
+					try {
 					FMLClientHandler.instance().getClient().getTextureManager().bindTexture(gunSkinTexture);
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -182,12 +185,12 @@ public abstract class PartsRender {
 					if (model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
 						((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).renderGeometry(parts,gunPartsScale,gunSkinTexture);
 					else parts.currentGroup_parts.render();
-					GL11.glPopAttrib();
-					FMLClientHandler.instance().getClient().getTextureManager().bindTexture(texture);
+					} finally {
+						GL11.glPopAttrib();
+						FMLClientHandler.instance().getClient().getTextureManager().bindTexture(texture);
+					}
 				}
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-				parts.currentGroup_light.render();
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) lastBrightnessX, (float) lastBrightnessY);
+				renderPartLight(parts);
 			}
 			try {
 				if(parts.script_global!=null && !HMGInventoryIconManager.isCapturing())((Invocable)parts.script_global).invokeFunction("ModelUpdate_Post",this);
@@ -200,6 +203,7 @@ public abstract class PartsRender {
 						| GL11.GL_DEPTH_BUFFER_BIT
 						| GL11.GL_CURRENT_BIT
 						| GL11.GL_STENCIL_BUFFER_BIT);
+				try {
 //				FBO.start();
 //				FBO.attachMotherDepth();
 //				GL11.glPushMatrix();
@@ -291,12 +295,22 @@ public abstract class PartsRender {
 //				GL11.glPopMatrix();
 
 
-				FMLClientHandler.instance().getClient().getTextureManager().bindTexture(this.texture);
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-				GL11.glPopAttrib();
+				} finally {
+					OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
+					GL11.glPopAttrib();
+					FMLClientHandler.instance().getClient().getTextureManager().bindTexture(this.texture);
+				}
 			}
 		}
 		return skip;
+	}
+
+	private void renderPartLight(HMGGunParts parts) {
+		float lightX = OpenGlHelper.lastBrightnessX, lightY = OpenGlHelper.lastBrightnessY;
+		try {
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+			parts.currentGroup_light.render();
+		} finally { OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightX, lightY); }
 	}
 
 	public void renderParts_Bullet(HMGGunParts parts, float flame, int remainbullets, HMGGunParts_Motion_PosAndRotation rotationCenterAndRotation) {
@@ -306,15 +320,12 @@ public abstract class PartsRender {
 					HMGGunParts_Motion_PosAndRotation bulletoffset = parts.getBulletposition(i - flame);
 					if (bulletoffset != null && bulletoffset.renderOnOff) {
 						GL11.glPushMatrix();
+						try {
 						transformParts(rotationCenterAndRotation, bulletoffset, parts);
 						parts.currentGroup_parts.render();
 						parts.currentGroup_parts.render();
-						float lastBrightnessX = OpenGlHelper.lastBrightnessX;
-						float lastBrightnessY = OpenGlHelper.lastBrightnessY;
-						OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-						parts.currentGroup_light.render();
-						OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-						GL11.glPopMatrix();
+						renderPartLight(parts);
+						} finally { GL11.glPopMatrix(); }
 					}
 				}
 			} else {
@@ -329,11 +340,7 @@ public abstract class PartsRender {
 					for (int i = 0; i < parts.Maximum_number_of_bullets && i < remainbullets; i++) {
 						transformParts(rotationCenterAndRotation, bulletoffset, parts);
 						parts.currentGroup_parts.render();
-						float lastBrightnessX = OpenGlHelper.lastBrightnessX;
-						float lastBrightnessY = OpenGlHelper.lastBrightnessY;
-						OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-						parts.currentGroup_light.render();
-						OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
+						renderPartLight(parts);
 					}
 				}
 			}
@@ -341,14 +348,11 @@ public abstract class PartsRender {
 			HMGGunParts_Motion_PosAndRotation bulletoffset = parts.getBulletposition(remainbullets + flame);
 			if (bulletoffset != null && bulletoffset.renderOnOff) {
 				GL11.glPushMatrix();
+				try {
 				transformParts(rotationCenterAndRotation, bulletoffset, parts);
 				parts.currentGroup_parts.render();
-				float lastBrightnessX = OpenGlHelper.lastBrightnessX;
-				float lastBrightnessY = OpenGlHelper.lastBrightnessY;
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-				parts.currentGroup_light.render();
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-				GL11.glPopMatrix();
+				renderPartLight(parts);
+				} finally { GL11.glPopMatrix(); }
 			}
 		} else {
 			HMGGunParts_Motion_PosAndRotation bulletoffset = parts.getRenderinfOfBullet();
@@ -362,11 +366,7 @@ public abstract class PartsRender {
 				for (int i = 0; i < parts.Maximum_number_of_bullets && i < remainbullets; i++)
 					transformParts(rotationCenterAndRotation, bulletoffset, parts);
 				parts.currentGroup_parts.render();
-				float lastBrightnessX = OpenGlHelper.lastBrightnessX;
-				float lastBrightnessY = OpenGlHelper.lastBrightnessY;
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-				parts.currentGroup_light.render();
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
+				renderPartLight(parts);
 			}
 		}
 	}

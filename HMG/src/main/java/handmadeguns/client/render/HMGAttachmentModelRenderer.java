@@ -31,8 +31,9 @@ public final class HMGAttachmentModelRenderer {
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT
                     | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_LIGHTING_BIT | GL11.GL_TEXTURE_BIT
                     | GL11.GL_STENCIL_BUFFER_BIT | GL11.GL_CURRENT_BIT);
-            GL11.glPushMatrix();
             try {
+                GL11.glPushMatrix();
+                try {
                 // PartsRender expresses every gun-local position in scaled model units.
                 boolean numbered = gun.gunInfo.hasAttachmentLocations[slot];
                 if (numbered || gun.gunInfo.hasAttachmentLocation) GL11.glTranslatef(
@@ -43,8 +44,8 @@ public final class HMGAttachmentModelRenderer {
                 if (numbered || gun.gunInfo.hasAttachmentLocation) GL11.glRotatef(
                         numbered ? gun.gunInfo.attachmentLocationRotations[slot] : gun.gunInfo.attachmentLocationRotation, 0, 1, 0);
                 ((HMGRenderItemCustom) renderer).renderaspart(pass, slot);
+                } finally { GL11.glPopMatrix(); }
             } finally {
-                GL11.glPopMatrix();
                 GL11.glPopAttrib();
                 // Texture attributes are restored above; bind explicitly for subsequent gun parts.
                 Minecraft.getMinecraft().renderEngine.bindTexture(gunTexture);

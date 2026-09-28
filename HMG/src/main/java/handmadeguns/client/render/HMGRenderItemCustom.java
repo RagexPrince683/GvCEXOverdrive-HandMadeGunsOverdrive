@@ -3,7 +3,6 @@ package handmadeguns.client.render;
 import cpw.mods.fml.client.FMLClientHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
 import handmadeguns.items.HMGItemAttachmentBase;
@@ -109,6 +108,7 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 	public void renderItem(ItemRenderType type, ItemStack item, Object... data) {
 		if (attachmentMode) GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT
 				| GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_LIGHTING_BIT | GL11.GL_TEXTURE_BIT);
+		try {
 		GL11.glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glColor4f(1, 1, 1, 1F);
@@ -151,13 +151,14 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 			case ENTITY:
 				if (!renderInventory) break;
 				GL11.glPushMatrix();
+				try {
 				if (attachmentMode) {
 					GL11.glScalef(0.35F, 0.35F, 0.35F);
 					GL11.glRotatef(180F, 1, 0, 0);
 				} else GL11.glRotatef(180F, 1, 0, 0);
 				Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 				modeling.renderAll();
-				GL11.glPopMatrix();
+				} finally { GL11.glPopMatrix(); }
 				break;
 			case EQUIPPED_FIRST_PERSON:
 			{
@@ -173,6 +174,7 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 				fovScale = Math.max(0.7F, Math.min(1.3F, fovScale));
 
 				GL11.glPushMatrix();
+				try {
 
 				// FOV compensation (ONE LINE FIX)
 				GL11.glScalef(fovScale, fovScale, fovScale);
@@ -184,17 +186,18 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 				mc.renderEngine.bindTexture(texture);
 				modeling.renderAll();
 
-				GL11.glPopMatrix();
+				} finally { GL11.glPopMatrix(); }
 				break;
 			}
 			case EQUIPPED://thrid
 				GL11.glPushMatrix();
+				try {
 				GL11.glRotatef(180F, 1.0F, 0.0F, 0.0F);
 				GL11.glRotatef(50F, 0.0F, 1.0F, 0.0F);
 				GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
 				Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 				modeling.renderAll();
-				GL11.glPopMatrix();//glend1
+				} finally { GL11.glPopMatrix(); }
 				break;
 
 			case FIRST_PERSON_MAP:
@@ -203,7 +206,7 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 
 		GL11.glDepthMask(true);
 		GL11.glDisable(GL_BLEND);
-		if (attachmentMode) GL11.glPopAttrib();
+		} finally { if (attachmentMode) GL11.glPopAttrib(); }
 	}
 
 	public void renderaspart() {
@@ -241,13 +244,14 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 
 
 		boolean lightingEnabled = GL11.glIsEnabled(GL11.GL_LIGHTING);
-		RenderHelper.disableStandardItemLighting();
 		float lastBrightnessX = OpenGlHelper.lastBrightnessX;
 		float lastBrightnessY = OpenGlHelper.lastBrightnessY;
+		try {
+		GL11.glDisable(GL11.GL_LIGHTING);
 		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 		selectedModel.renderPart("light");
 		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)lastBrightnessX, (float)lastBrightnessY);
-		if (lightingEnabled) RenderHelper.enableStandardItemLighting();
+		if (lightingEnabled) GL11.glEnable(GL11.GL_LIGHTING);
 		else GL11.glDisable(GL11.GL_LIGHTING);
 
 
@@ -391,5 +395,10 @@ public class HMGRenderItemCustom extends RenderItem implements IItemRenderer {
 		}
 
 		GL11.glDepthMask(true);
+		} finally {
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
+			if (lightingEnabled) GL11.glEnable(GL11.GL_LIGHTING);
+			else GL11.glDisable(GL11.GL_LIGHTING);
+		}
 	}
 }

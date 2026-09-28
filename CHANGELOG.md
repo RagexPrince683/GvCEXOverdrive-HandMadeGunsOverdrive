@@ -326,3 +326,15 @@ Developer/backend
   and reload clears that layer. Numeric TaCZ ADS constraints limit model motion about
   the authored pivot while retaining internal bolt/slide animation. Camera and gameplay
   recoil, aiming, spread, movement and server authority are unchanged.
+
+2026-09-28 18:34 — Balance gun render state with Angelica
+
+- Fixed the held-gun scope leaking Angelica-managed attribute entries by issuing
+  one pop for its one push, independent of the native attribute-depth query.
+  Removed the redundant unified-model scope and Blockbench mesh/hand attribute
+  pushes; meshes preserve only texture binding and normal normalization.
+- Guarded recursive part, attachment, skin and reticle cleanup with `finally`,
+  including the under-gun skip path and nested view flags. Attachment emissive
+  passes preserve inherited scene lights instead of replacing them with GUI lights.
+  World light, authored materials, ADS/recoil and cached inventory icons retain
+  their existing ownership. Added focused source guards to the existing suite.
