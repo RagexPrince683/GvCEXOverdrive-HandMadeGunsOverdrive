@@ -23,7 +23,7 @@ NeedFix,true
 
 
 
-WeaponClass,SPECIAL
+WeaponClass,VEHICLE_WEAPON
 Name,FAB-100
 GL,FAB-100
 TechYear,1940

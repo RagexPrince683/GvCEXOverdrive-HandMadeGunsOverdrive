@@ -98,12 +98,16 @@ public class MQO_GroupObject extends HMGGroupObject
 					}
 
 				if (currentMaterial != null) {
+					// Material alpha is independent of diffuse strength. Unlit light/
+					// reticle passes use current color instead of the diffuse material.
+					// The existing narrow scope restores both before the next batch.
+					GL11.glDisable(GL11.GL_COLOR_MATERIAL);
+					GL11.glColor4f(1.0F, 1.0F, 1.0F, currentMaterial.alpha);
 					GL11.glMaterial(GL_FRONT_AND_BACK, GL11.GL_DIFFUSE, currentMaterial.dif_Buf);
 					GL11.glMaterial(GL_FRONT_AND_BACK, GL11.GL_AMBIENT, currentMaterial.amb_Buf);
 					GL11.glMaterial(GL_FRONT_AND_BACK, GL11.GL_SPECULAR, currentMaterial.spc_Buf);
 					GL11.glMaterial(GL_FRONT_AND_BACK, GL11.GL_EMISSION, currentMaterial.emi_Buf);
 					GL11.glMaterialf(GL_FRONT_AND_BACK, GL11.GL_SHININESS, currentMaterial.power);
-					GL11.glDisable(GL11.GL_COLOR_MATERIAL);
 				}
 				} finally {
 					try { tessellator.draw(); } finally { GL11.glPopAttrib(); }

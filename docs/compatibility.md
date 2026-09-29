@@ -10,6 +10,21 @@ OBJ and MQO display-list compilation uses model-local Tessellators instead of th
 
 The VBO renderer scopes and restores the caller's client-array state, array-buffer binding, and matrix mode. This applies to normal HMG rendering as well as compatibility renderers such as NEI. The behavior does not require a hard Angelica dependency, and disabling `Render.enableVBOModelRendering` retains the legacy display-list fallback.
 
+MQO opacity comes from the fourth component of `col(R G B A)`, defaulting to 1
+when `col` is missing or contains only RGB. The scalar `dif`, `amb`, `spc` and
+`emi` values remain RGB lighting strengths; `dif(0.8)` does not make a gun
+20 percent transparent. The legacy coefficient-based RGB appearance is retained.
+Each MQO material batch disables color-material tracking before applying its
+material and sets current color to white with that material's opacity, so unlit
+reticles and fullbright parts also use authored opacity. The existing narrow
+lighting/enable/current scope restores caller materials, color and tracking after
+each batch; no additional attribute-stack entries or scene-light overrides are
+introduced. Blend factors, alpha tests, depth writes and texture binding remain
+owned by the gun/attachment pass: opaque texels use the existing alpha-equals-1
+pass, while translucent material/texture alpha uses the alpha-less-than-1 blend
+pass. Texture glass, emissive RGB and authored translucent opacity remain supported.
+OBJ/Techne and Blockbench/TaCZ geometry do not apply these MQO material buffers.
+
 ## Combatives camera and aim recoil
 
 ### Authoritative point of aim

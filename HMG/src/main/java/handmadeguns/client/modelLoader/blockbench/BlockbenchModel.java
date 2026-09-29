@@ -156,6 +156,17 @@ public final class BlockbenchModel implements IModelCustom_HMG {
         }
         return false;
     }
+    /** Exported bbmodel projects retain the same named TaCZ placement/constraint groups. */
+    public boolean isTaCZPresentation() {
+        return project.bedrock || (byName.containsKey("root") && byName.containsKey("camera")
+                && byName.containsKey("constraint") && byName.containsKey("idle_view"));
+    }
+    public String animationKey(String name, Set<String> targets) {
+        List<Part> candidates = byName.get(name);
+        if (candidates == null || candidates.isEmpty()) return null;
+        String id = candidates.get(0).animationKey();
+        return targets.contains(id) ? id : name;
+    }
     /** TaCZ first-person placement is authored by inverse camera/view nodes. */
     public void applyFirstPersonPosition(float ads, float units) {
         List<Part> idle = path("idle_view");

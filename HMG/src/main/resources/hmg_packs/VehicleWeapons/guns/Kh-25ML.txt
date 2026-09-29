@@ -33,7 +33,7 @@ NeedFix,true
 
 
 
-WeaponClass,LAUNCHER
+WeaponClass,VEHICLE_WEAPON
 Name,Kh-25ML
 RR,Kh-25ML
 TechYear,1975

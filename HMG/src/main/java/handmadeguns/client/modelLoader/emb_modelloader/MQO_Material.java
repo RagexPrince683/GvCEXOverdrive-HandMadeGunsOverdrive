@@ -10,6 +10,8 @@ public class MQO_Material {
 	float emi;
 	float spc;
 	float power;
+	// MQO col(R G B A) owns opacity; lighting coefficients only scale RGB.
+	float alpha = 1.0F;
 	FloatBuffer dif_Buf;
 	FloatBuffer amb_Buf;
 	FloatBuffer emi_Buf;
@@ -17,10 +19,10 @@ public class MQO_Material {
 	FloatBuffer power_Buf;
 
 	public void setUp(){
-		dif_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{dif,dif,dif,dif});
-		amb_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{amb,amb,amb,amb});
-		emi_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{emi,emi,emi,emi});
-		spc_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{spc,spc,spc,spc});
+		dif_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{dif,dif,dif,alpha});
+		amb_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{amb,amb,amb,1.0F});
+		emi_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{emi,emi,emi,1.0F});
+		spc_Buf = GLAllocation.createDirectFloatBuffer(16).put(new float[]{spc,spc,spc,1.0F});
 		dif_Buf.flip();
 		amb_Buf.flip();
 		emi_Buf.flip();

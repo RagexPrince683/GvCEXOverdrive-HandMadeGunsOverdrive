@@ -87,7 +87,7 @@ AnimationEventSounds,true
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-WeaponClass,BATTLE_RIFLE
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ SCAR-H
 AR,TaCZOfficial_scarh

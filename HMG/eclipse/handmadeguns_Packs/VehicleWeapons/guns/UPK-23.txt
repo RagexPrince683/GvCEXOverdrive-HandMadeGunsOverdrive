@@ -24,7 +24,7 @@ NeedFix,true
 Turretanglelimit,0,0,0,0
 
 
-WeaponClass,SPECIAL
+WeaponClass,VEHICLE_WEAPON
 Name,UPK-23
 GunSoundLV,180,1
 Unified_guns,UPK-23

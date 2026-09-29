@@ -41,7 +41,7 @@ NeedFix,true
 
 
 
-WeaponClass,LAUNCHER
+WeaponClass,VEHICLE_WEAPON
 Name,AIM-9E
 RR,AIM-9E
 TechYear,1967

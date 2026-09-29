@@ -155,12 +155,26 @@ material properties/emission without replacing scene lights; VBO geometry select
 only its own base UV/normal/position arrays. Explicit light parts, reticles and
 inventory-icon capture retain their intentional emissive/full-bright behavior.
 
-`WeaponClass` is the shared creative classification authority for unified firearms.
-All 228 bundled guns and 196 development counterparts now carry explicit metadata
-across 12 actual weapon classes, independent of source, model format, nation or era.
-The bundled audit has no unresolved classes. External packs without the field are
-reported and conservatively classified from registration codes; those defaults
-need author review. Non-firearm custom tabs are instantiated on demand.
+The subsequent legacy transparency regression came from MQO's diffuse buffer
+using `dif` for alpha as well as RGB, while ignoring authored `col` opacity.
+Disabling color-material tracking exposed that buffer; the older renderer enabled
+tracking and restored hard-coded opaque materials after drawing. All 543 bundled
+MQO material declarations specify opacity 1, but 535 have `dif(0.8)`. MQO now
+separates opacity from RGB lighting strengths, reads explicit `col` alpha with an
+opaque default for missing/RGB-only definitions, and applies the same opacity to
+unlit passes. Its existing per-material scope restores color/material state.
+Blending, texture alpha, emission, scene lighting and the Blockbench path retain
+their existing owners; the old scene-light approximation is not restored.
+
+`WeaponClass` is the shared creative classification authority. The final 11 tabs
+and counts are documented in [content packs](content-packs.md#weapon-class-creative-tabs).
+All 228 bundled guns, 196 development counterparts and both sample sword definitions
+have explicit metadata. Carbines (8) and battle rifles (13) now use Assault Rifles;
+marksman entries (7) split into Assault Rifles (2 SKS variants) and Sniper Rifles (5).
+Nine bolt-action service-rifle entries justify keeping that category. Sample Weapons
+isolates 13 guns plus a sample sword, and Vehicle Weapons isolates 20 vehicle-only
+ordnance/weapon items. Vehicle magazines remain ammunition. No bundled classifications
+remain ambiguous; obsolete external class names are input aliases to current classes.
 
 Audio was traced from each imported display to the original `tacz_sounds` tree,
 animation markers, HMG registration and first-person dispatch. Namespaced references
@@ -185,18 +199,61 @@ Neither marker is aliased or substituted. Shared AK-series `ts:grenade` GP-25
 markers belong to unselected under-barrel actions and remain outside HMG's migrated
 standalone weapon presentation.
 
-Imported root fire was stacked with HMG's bolt-countdown whole-gun kick, while rapid
-fire restarted a zero-fade additive clip through the composite transition path.
-Root-authored imported fire now owns the whole-gun motion; internal bolt/slide tracks
-remain active and legacy OBJ/MQO guns keep their kick. Fire has a separate 35 ms
-additive restart/return envelope, and ammunition decreases detect shots even when
-a render misses the short recoil state. Reload stops the fire layer. TaCZ's numeric
-ADS constraint was previously ignored: first-person model presentation now applies
-its retained-motion coefficients around the animated ancestor pivot as ADS blends.
-No camera, aiming, spread, movement, ballistic or server-authority code was changed.
+The firing follow-up traced the original TaCZ geometry, animation JSON, default
+Lua gun-kick track, animation listeners and `FirstPersonRenderGunEvent` through
+HMG's import/bind, layers, part traversal, ADS constraints and final model frame:
 
-Java 8 compilation and the existing animation/repository asset checks passed during
-this pass. The asset check still reports 72 pre-existing logical references (36 each
+- Empty organizational roots remain real parts. Position and rotation tracks are
+  retained, including nested roots and UUID-addressed bbmodel groups; transforms
+  apply before descending into child geometry. `fire` aliases `shoot`; local clips
+  win over shared locomotion fallbacks. Pixel/axis conversion and rest/animated
+  ZYX composition retain the source's conventions.
+- The synthetic 35 ms fade softened early peaks. Native and bbmodel importers now
+  retain zero-transition firing. TaCZ's default state machine allocates a separate
+  additive track per shot, so HMG retains overlapping tails instead of restarting
+  its only clip. Firing composes after BASE/ACTION fades with full weight.
+- Numeric constraint listeners blend by component maximum, not addition. HMG now
+  follows that rule in authored coordinates for native and bbmodel imports. ADS
+  corrects whole-root motion about the authored pivot; internal bolt/slide/pump
+  tracks retain their own motion. Reload releases the ADS weight.
+- TaCZ has a procedural root effect outside JSON: X sway in [-0.2, 0.2] pixels
+  (400 ms noise period), +0.1 pixel Y lift, and post-multiplied yaw in
+  [-0.0136, 0.0136] radians (100 ms period). A 300 ms cubic envelope resets per
+  shot. Translation fades with ADS; yaw passes through authored constraints.
+  HMG reproduces those constants on its paused partial-tick presentation clock
+  with per-instance shot time. No per-gun display/recoil parameters exist for it.
+- Generic HMG whole-model kick is suppressed for TaCZ models even without root
+  firing tracks. Other imported projects with firing clips own their model kick
+  too. Gameplay/camera recoil, aiming, spread and legacy OBJ/MQO presentation stay
+  separate. Sounds, materials, icon capture and attachments retain their paths.
+
+Representative source census (absolute authored-key extrema before ADS;
+interpolated curves may overshoot a key):
+
+| Weapon | Shoot length (s) | Peak root X rotation (degrees) | Peak root Z movement (pixels) | Findings |
+| --- | ---: | ---: | ---: | --- |
+| Glock 17 | 0.6000 | 20.96 | 1.17 | Substantial root kick; barrel/slide/bullet tracks retained. |
+| AK-47 | 0.7667 | 1.7469 | 1.5523 | Mild angular kick by design; bolt track retained. |
+| M870 | 1.0333 | 12.0356 | 4.345 | Substantial root kick; pump uses separate bolt/action clips. |
+| Kar98 | 1.1833 | 5.1669 | 2.2375 | Root kick plus chamber/hammer tracks; separate bolt action retained. |
+| P90 | 1.1333 | 0.586 | 1.2515 | High-rate gun with small angular kick; bolt track retained. |
+| UMP45 | 1.1333 | 0.586 | 1.064 | Small angular kick; no shoot constraint track. |
+| Mk 14 | 0.8333 | 2.4695 | 2.2875 | Moderate root kick, bolt/charger tracks; no shoot constraint track. |
+| Classic AKS-74U | 0.5667 | 1.82 | 1.59 | Mild angular kick, bolt track and explicit ADS coefficients. |
+
+The seven official `shoot` objects above match original JSON exactly; Classic
+AKS-74U retains its original ClassicRCCRP clip. Source-supported contributors to
+stiffness include deliberately small angular kick, HMG's former fade/restart,
+authored ADS suppression and the missing procedural effect. A root being empty
+does not discard its motion. The user did not name a specific stiff weapon, and
+source inspection alone does not establish a visual diagnosis.
+
+Java 8 compilation passed, with 4,660 existing animation checks, 55 resolver checks,
+5,599 repository asset checks and 975 direct CPU checks of imported firing,
+overlapping shots, constraint coefficients, action-fade independence, procedural
+rotation matrices and bbmodel root/fade retention. Classification completeness and
+mirror/isolation checks passed across all 228 bundled and 196 development guns.
+The asset check still reports 72 pre-existing logical references (36 each
 in bundled and development legacy content). No Minecraft visual acceptance was
 performed for these changes. Check legacy and imported pistols, rifles, shotguns,
 bolt-action rifles and high-rate guns under day/night light, hip/ADS, rapid fire,

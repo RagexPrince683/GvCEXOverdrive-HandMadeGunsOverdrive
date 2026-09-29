@@ -48,7 +48,7 @@ Automatic,true
 //Magazine,0,HandmadeGuns,carbine15
 MultiMagazine,HandmadeGuns:carbine15,HandmadeGuns:carbine30
 MagazineItemCount,1
-WeaponClass,CARBINE
+WeaponClass,ASSAULT_RIFLE
 
 AddParts,mat1
 	AddPartsRotationCenterAndRotationAmount,0,0,0,0,0,0

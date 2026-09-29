@@ -67,7 +67,7 @@ AnimationSound,put_away,ccrp:sr25/sr25_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-WeaponClass,MARKSMAN_RIFLE
+WeaponClass,SNIPER_RIFLE
 
 Name,ClassicRCCRP M110
 GunSoundLV,165,1

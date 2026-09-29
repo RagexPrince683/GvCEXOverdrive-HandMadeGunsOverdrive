@@ -240,6 +240,12 @@ public final class AnimationClient {
         Entry entry = scope.entry;
         if (entry.preparedAt == seconds) return;
         entry.preparedAt = seconds;
+        handmadeguns.client.modelLoader.blockbench.BlockbenchModel imported =
+                renderer.model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel
+                        ? (handmadeguns.client.modelLoader.blockbench.BlockbenchModel)renderer.model : null;
+        boolean tacz = imported != null && imported.isTaCZPresentation();
+        if (tacz) entry.controller.useTaCZConstraints(imported.animationKey("constraint", entry.definition.partNames),
+                imported.project.bedrock);
         AnimationPose legacy = LegacyMotionAdapter.sample(renderer.partslist, entry.definition.partNames, states, legacyTime);
         if(handmadeguns.client.render.HMGInventoryIconManager.isCapturing()) {
             // Sample directly: no fade-in, world clock, action playback or event dispatch.
@@ -305,7 +311,9 @@ public final class AnimationClient {
             }
             String action = entry.controller.current(AnimationController.Layer.ACTION);
             if ("inspect".equals(action) || "inspect_empty".equals(action)) entry.controller.stop(AnimationController.Layer.ACTION);
-            entry.play(AnimationController.Layer.ADDITIVE, "fire", true);
+            if (tacz && entry.definition.clips.containsKey("fire")) entry.controller.playAdditiveShot("fire");
+            else entry.play(AnimationController.Layer.ADDITIVE, "fire", true);
+            entry.shotAt = seconds;
         }
         if (entry.request != null) {
             if (!reload && cock == 0 && !shot) {
@@ -323,7 +331,56 @@ public final class AnimationClient {
         entry.controller.advanceTo(seconds, sink);
         entry.observeReloadCompletion();
         entry.pose = entry.controller.sample(legacy);
+        if (tacz && scope.context == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON)
+            entry.pose = shootPresentation(entry.pose, entry.shotAt, renderer.firstPersonADSBlend,
+                    imported.animationKey("root", entry.definition.partNames), imported.project.bedrock);
         for (HMGAnimationEvent marker : markers) MinecraftForge.EVENT_BUS.post(marker);
+    }
+
+    private static final ShootNoise SHOOT_X_NOISE = new ShootNoise(-0.2f, 0.2f, 0.4);
+    private static final ShootNoise SHOOT_YAW_NOISE = new ShootNoise(-0.0136f, 0.0136f, 0.1);
+
+    /** FirstPersonRenderGunEvent's separate root presentation, in imported HMG units.
+     * No per-gun parameters exist upstream. This never changes player aim or gameplay.
+     */
+    private static AnimationPose shootPresentation(AnimationPose pose, double shotAt, float ads,
+                                                   String root, boolean nativeGeometry) {
+        if (Double.isNaN(shotAt) || root == null) return pose;
+        double remaining = Math.max(0, 1-(seconds-shotAt)/0.3);
+        if (remaining == 0) return pose;
+        float progress = (float)(1-Math.pow(1-remaining, 3));
+        float hip = 1-Math.max(0, Math.min(1, ads));
+        AnimationPose.Transform sway = new AnimationPose.Transform(
+                SHOOT_X_NOISE.sample(seconds)*3f/16*progress*hip*(nativeGeometry ? 1 : -1),
+                0.1f*3f/16*progress*hip, 0, 0,
+                (float)Math.toDegrees(SHOOT_YAW_NOISE.sample(seconds)*progress)*(nativeGeometry ? 1 : -1), 0);
+        Map<String, AnimationPose.Transform> parts = new LinkedHashMap<String, AnimationPose.Transform>(pose.parts);
+        parts.put(root, pose.get(root).addBedrock(sway));
+        return new AnimationPose(parts);
+    }
+
+    /** Upstream PerlinNoise's random endpoints and cubic interpolation, on the paused render clock. */
+    private static final class ShootNoise {
+        private final Random random = new Random();
+        private final float low, high;
+        private final double period;
+        private double previousTime;
+        private float previous, next;
+        ShootNoise(float low, float high, double period) {
+            this.low = low; this.high = high; this.period = period;
+            previous = number(); next = number();
+        }
+        private float number() { return low+random.nextFloat()*(high-low); }
+        float sample(double time) {
+            if (time < previousTime) previousTime = time;
+            long repeats = (long)((time-previousTime)/period);
+            previousTime += repeats*period;
+            if (repeats == 1) { previous = next; next = number(); }
+            else if (repeats > 1) { previous = number(); next = number(); }
+            double fraction = (time-previousTime)/period;
+            double weight = fraction*fraction*(3-2*fraction);
+            return (float)(previous*(1-weight)+next*weight);
+        }
     }
 
     private static void addFallbackActionSound(Scope scope, Entry entry, String clip,
@@ -442,7 +499,7 @@ public final class AnimationClient {
         final AnimationDefinition definition;
         final AnimationController controller;
         final Set<String> ammunitionBones;
-        double lastSeen = seconds, preparedAt = Double.NaN, reloadPlaybackEndedAt = Double.NaN;
+        double lastSeen = seconds, preparedAt = Double.NaN, reloadPlaybackEndedAt = Double.NaN, shotAt = Double.NaN;
         AnimationPose pose = AnimationPose.EMPTY;
         final ReloadAnimationBridge.State reloadBridge = new ReloadAnimationBridge.State();
         final LocomotionAnimationBridge.State locomotion = new LocomotionAnimationBridge.State();

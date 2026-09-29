@@ -42,7 +42,7 @@ NeedFix,true
 Turretanglelimit,0,0,0,0
 
 
-WeaponClass,LAUNCHER
+WeaponClass,VEHICLE_WEAPON
 Name,R-3
 RR,R-3
 TechYear,1961

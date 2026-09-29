@@ -3,6 +3,9 @@ package handmadeguns.animation;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /** Small client-independent pose mixer. Call advanceTo once per clock value, sample as often as needed. */
 public final class AnimationController {
@@ -16,8 +19,22 @@ public final class AnimationController {
     private double movementElapsed, movementDuration;
     private AnimationPose additiveFrom;
     private double additiveElapsed, additiveDuration;
+    private final List<AnimationPlayback> additiveShots = new ArrayList<AnimationPlayback>();
+    private String constraintPart;
+    private boolean nativeConstraints;
 
     public AnimationController(AnimationDefinition definition) { this.definition = definition; }
+
+    /** Numeric TaCZ constraint listeners combine limits by maximum, not addition. */
+    public void useTaCZConstraints(String part, boolean nativeGeometry) {
+        constraintPart = part; nativeConstraints = nativeGeometry;
+    }
+
+    /** TaCZ allocates an independent additive kick track per shot; older tails keep playing. */
+    public void playAdditiveShot(String name) {
+        AnimationClip clip = definition.requireClip(name);
+        additiveShots.add(new AnimationPlayback(clip, ++generation, 1, AnimationClip.Loop.ONCE));
+    }
 
     public boolean play(Layer layer, String name) { return play(layer, name, false, 1, null); }
 
@@ -44,6 +61,7 @@ public final class AnimationController {
 
     /** Explicit owner invalidation bypasses request priority. Natural one-shot completion needs no stop. */
     public void stop(Layer layer) {
+        if (layer == Layer.ADDITIVE) additiveShots.clear();
         AnimationPlayback old = layers.get(layer);
         if (old != null) {
             if (layer == Layer.MOVEMENT) beginMovementTransition(old.clip.fadeOut);
@@ -54,6 +72,7 @@ public final class AnimationController {
     }
 
     public boolean active(String name) {
+        for (AnimationPlayback playback : additiveShots) if (playback.clip.name.equals(name)) return true;
         for (AnimationPlayback playback : layers.values()) if (playback.clip.name.equals(name)) return true;
         return false;
     }
@@ -65,7 +84,7 @@ public final class AnimationController {
     private void beginTransition(double duration) {
         // Evaluate before changing layers. Each pose is immutable, so subsequent
         // samples cannot change this source (including back-to-back requests).
-        transitionFrom = duration == 0 ? null : compose();
+        transitionFrom = duration == 0 ? null : composeBase();
         transitionDuration = duration;
         transitionElapsed = 0;
     }
@@ -98,8 +117,16 @@ public final class AnimationController {
         if (playback != null) for (Map.Entry<String, AnimationTrack> track : playback.clip.tracks.entrySet())
             parts.put(track.getKey(), track.getValue().sample(playback.time()));
         AnimationPose target = new AnimationPose(parts);
-        return additiveFrom == null ? target : AnimationPose.blend(additiveFrom, target,
+        AnimationPose blended = additiveFrom == null ? target : AnimationPose.blend(additiveFrom, target,
                 additiveDuration == 0 ? 1 : additiveElapsed / additiveDuration);
+        if (additiveShots.isEmpty()) return blended;
+        parts = new LinkedHashMap<String, AnimationPose.Transform>(blended.parts);
+        for (AnimationPlayback shot : additiveShots) for (Map.Entry<String, AnimationTrack> track : shot.clip.tracks.entrySet()) {
+            AnimationPose.Transform value = track.getValue().sample(shot.time());
+            AnimationPose.Transform base = parts.get(track.getKey());
+            parts.put(track.getKey(), base == null ? value : add(track.getKey(), base, value));
+        }
+        return new AnimationPose(parts);
     }
 
     public void advanceTo(double seconds, AnimationPlayback.EventSink sink) {
@@ -114,6 +141,11 @@ public final class AnimationController {
             for (AnimationPlayback playback : layers.values())
                 if (playback.loop == AnimationClip.Loop.ONCE) step = Math.min(step, playback.remaining());
             for (AnimationPlayback playback : layers.values()) playback.advance(step, sink);
+            for (Iterator<AnimationPlayback> shots = additiveShots.iterator(); shots.hasNext();) {
+                AnimationPlayback shot = shots.next();
+                shot.advance(step, sink);
+                if (shot.finished()) shots.remove();
+            }
             transitionElapsed += step;
             movementElapsed += step;
             additiveElapsed += step;
@@ -150,22 +182,17 @@ public final class AnimationController {
         return compose();
     }
 
-    private AnimationPose compose() {
+    private AnimationPose composeBase() {
         Map<String, AnimationPose.Transform> result = new LinkedHashMap<String, AnimationPose.Transform>(legacy.parts);
         for (Layer layer : Layer.values()) {
             if (layer == Layer.ADDITIVE) {
-                // Retrigger only the impulse; never capture/replay ADS, reload or movement.
-                for (Map.Entry<String, AnimationPose.Transform> track : additivePose().parts.entrySet()) {
-                    AnimationPose.Transform base = result.get(track.getKey());
-                    result.put(track.getKey(), base == null ? track.getValue() : base.add(track.getValue()));
-                }
                 continue;
             }
             if (layer == Layer.MOVEMENT) {
                 // Blend movement alone: its exit must never capture/replay an ACTION pose.
                 if (!layers.containsKey(Layer.ACTION)) for (Map.Entry<String, AnimationPose.Transform> track : movementPose().parts.entrySet()) {
                     AnimationPose.Transform base = result.get(track.getKey());
-                    result.put(track.getKey(), base == null ? track.getValue() : base.add(track.getValue()));
+                    result.put(track.getKey(), base == null ? track.getValue() : add(track.getKey(), base, track.getValue()));
                 }
                 continue;
             }
@@ -181,5 +208,30 @@ public final class AnimationController {
         AnimationPose target = new AnimationPose(result);
         return transitionFrom == null ? target : AnimationPose.blend(transitionFrom, target,
                 transitionDuration == 0 ? 1 : transitionElapsed / transitionDuration);
+    }
+
+    private AnimationPose compose() {
+        AnimationPose basePose = composeBase();
+        Map<String, AnimationPose.Transform> result = new LinkedHashMap<String, AnimationPose.Transform>(basePose.parts);
+        // A draw/ADS/action transition must never attenuate or capture the firing layer.
+        for (Map.Entry<String, AnimationPose.Transform> track : additivePose().parts.entrySet()) {
+            AnimationPose.Transform base = result.get(track.getKey());
+            result.put(track.getKey(), base == null ? track.getValue() : add(track.getKey(), base, track.getValue()));
+        }
+        return new AnimationPose(result);
+    }
+
+    private AnimationPose.Transform add(String part, AnimationPose.Transform base, AnimationPose.Transform value) {
+        if (part.equals(constraintPart))
+            // Undo the Y sign when taking component maxima; these are coefficients,
+            // not additive translations/rotations. TaCZ initializes blended limits to zero.
+            return new AnimationPose.Transform(nativeConstraints ? Math.max(0, Math.max(base.x, value.x))
+                    : Math.min(0, Math.min(base.x, value.x)),
+                    Math.min(0, Math.min(base.y, value.y)), Math.max(0, Math.max(base.z, value.z)),
+                    nativeConstraints ? Math.max(0, Math.max(base.rx, value.rx)) : Math.min(0, Math.min(base.rx, value.rx)),
+                    nativeConstraints ? Math.max(0, Math.max(base.ry, value.ry)) : Math.min(0, Math.min(base.ry, value.ry)),
+                    Math.max(0, Math.max(base.rz, value.rz)), base.sx*value.sx, base.sy*value.sy, base.sz*value.sz);
+        // ModelRotateListener accumulates Euler components before constructing its quaternion.
+        return base.add(value);
     }
 }

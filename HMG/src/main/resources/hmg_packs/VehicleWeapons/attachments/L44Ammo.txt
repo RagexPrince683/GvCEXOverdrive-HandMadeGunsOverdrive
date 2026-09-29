@@ -1,5 +1,5 @@
 Texture,items/bullet_L44.png
 Stack,64
-Tabname,VehicleWeapons
+Tabname,HMG_Ammo
 Name,L44Ammo
 Magazine,L44Ammo

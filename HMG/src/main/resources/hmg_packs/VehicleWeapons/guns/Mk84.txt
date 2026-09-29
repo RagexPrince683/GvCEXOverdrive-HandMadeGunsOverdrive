@@ -24,7 +24,7 @@ NeedFix,true
 
 
 
-WeaponClass,SPECIAL
+WeaponClass,VEHICLE_WEAPON
 Name,mk84
 GL,mk84
 TechYear,1950

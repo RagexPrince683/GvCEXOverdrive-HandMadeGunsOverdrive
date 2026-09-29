@@ -38,6 +38,6 @@ RenderCross,true
 RightType,0
 Magazine,262
 
-WeaponClass,SPECIAL
+WeaponClass,SAMPLE_WEAPON
 BOW,BOW_sample
 TechYear,2000

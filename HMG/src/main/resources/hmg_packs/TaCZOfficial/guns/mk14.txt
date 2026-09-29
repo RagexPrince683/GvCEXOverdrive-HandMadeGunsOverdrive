@@ -48,7 +48,7 @@ AnimationSound,inspect_empty,tacz:mk14/mk14_inspect_empty
 ModelScala,0.5f
 InworldScale,1.65f
 ModelArm,true
-WeaponClass,MARKSMAN_RIFLE
+WeaponClass,SNIPER_RIFLE
 
 Name,TaCZ Mk 14 EBR
 SR,TaCZOfficial_Mk14

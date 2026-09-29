@@ -129,7 +129,8 @@ public final class BedrockAnimationLoader {
         if (duration == 0 && loop == AnimationClip.Loop.LOOP) loop = AnimationClip.Loop.HOLD;
         double fade = name.equals("idle") || name.startsWith("walk") || name.startsWith("run")
                 || name.startsWith("sprint") ? 0.12 : 0;
-        if ("shoot".equals(name) || "fire".equals(name)) fade = 0.035;
+        // TaCZ's gun-kick track starts each shot with zero transition time.
+        // A synthetic fade suppresses the early authored recoil/slide peak.
         return new AnimationClip(name, duration, loop, tracks, events, fade, fade, 0, true);
     }
 

@@ -156,7 +156,7 @@ RenderCross,false
 RightType,1
 Automatic,true
 
-WeaponClass,BATTLE_RIFLE
+WeaponClass,ASSAULT_RIFLE
 
 GunSoundLV,165,1
 SR,SVT-40

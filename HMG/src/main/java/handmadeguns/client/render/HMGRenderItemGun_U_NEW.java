@@ -1090,14 +1090,12 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 	}
 
 	private boolean authoredModelFire() {
-		if (!(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)
-				|| partsRender_gun.animationDefinition == null) return false;
-		handmadeguns.animation.AnimationClip fire = partsRender_gun.animationDefinition.clips.get("fire");
-		if (fire == null) return false;
-		for (HMGGunParts part : partsRender_gun.partslist)
-			if ("root".equals(part.partsname) && (fire.tracks.containsKey(part.animationKey())
-					|| fire.tracks.containsKey(part.partsname))) return true;
-		return false;
+		if (!(model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel)) return false;
+		// TaCZ may author only internal parts, or use a nested/named weapon root.
+		// Minimal authored kick is not permission to substitute legacy HMG recoil.
+		return ((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model).isTaCZPresentation()
+				|| (partsRender_gun.animationDefinition != null
+				&& partsRender_gun.animationDefinition.clips.containsKey("fire"));
 	}
 
 	public void rendering_situation(ItemStack gunstack,Entity entity, boolean isreloading){

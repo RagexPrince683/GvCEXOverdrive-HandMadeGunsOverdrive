@@ -1,5 +1,5 @@
 Texture,items/155mm_APBC.png
 Stack,64
-Tabname,VehicleWeapons
+Tabname,HMG_Ammo
 Name,155mm_APBC
 Magazine,155mm_APBC

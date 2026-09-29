@@ -461,7 +461,7 @@ AddParts,Base_Sys
 			    	BackParts
 			BackParts
 
-WeaponClass,CARBINE
+WeaponClass,ASSAULT_RIFLE
 Name,M4A1
 GunSoundLV,165,1
 AR,M4A1

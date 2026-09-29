@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import handmadeguns.client.render.IModelCustom_HMG;
 import handmadeguns.client.modelLoader.obj_modelloaderMod.obj.HMGGroupObject;
@@ -31,6 +33,7 @@ public class MQO_MetasequoiaObject implements IModelCustom_HMG
 	public ArrayList<MQO_GroupObject>	groupObjects	= new ArrayList<MQO_GroupObject>();
 	private MQO_GroupObject				currentGroupObject	= null;
 	public MQO_Material[] materials = null;
+	private static final Pattern MATERIAL_COLOR = Pattern.compile("(?:^|\\s)col\\(([^)]*)\\)");
 	private String						fileName;
 	private int							vertexNum = 0;
 	private int							faceNum = 0;
@@ -710,6 +713,13 @@ public class MQO_MetasequoiaObject implements IModelCustom_HMG
 				try {
 					matLine = reader.readLine();
 					matLine = matLine.replaceAll("\\s+", " ").trim();
+					// The token loop below reads scalar lighting properties. col() spans
+					// several tokens, and RGB-only/missing colors must remain opaque.
+					Matcher color = MATERIAL_COLOR.matcher(matLine);
+					if (color.find()) {
+						String[] rgba = color.group(1).trim().split("\\s+");
+						if (rgba.length == 4) currentMat.alpha = parseFloat(rgba[3]);
+					}
 					String[] matInfo = matLine.split(" ");
 					for (String ainfo : matInfo) {
 						ainfo = ainfo.replace('(',',');

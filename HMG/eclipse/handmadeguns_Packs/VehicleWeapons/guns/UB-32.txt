@@ -25,6 +25,6 @@ NeedFix,true
 
 Turretanglelimit,0,0,0,0
 
-WeaponClass,LAUNCHER
+WeaponClass,VEHICLE_WEAPON
 Name,UB-32
 RR,UB-32

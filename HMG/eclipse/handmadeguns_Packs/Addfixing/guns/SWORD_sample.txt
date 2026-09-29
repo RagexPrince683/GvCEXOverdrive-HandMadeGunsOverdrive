@@ -21,4 +21,5 @@ RenderCross,true
 UnderBarrelWeapon,0
 RightType,0
 Name,SampleSword
+WeaponClass,SAMPLE_WEAPON
 SWORD,SWORD_Sample

@@ -107,9 +107,22 @@ First-person ADS honors the numeric TaCZ `constraint` node as retained-motion
 coefficients. The renderer compares its rest and animated ancestor frames, then
 corrects displacement and rotation about the animated pivot according to ADS blend.
 Coefficient translations undo the import unit conversion rather than becoming model
-movement. Hip fire keeps the authored motion; internal bolt/slide/action tracks remain
+movement. Blended constraint coefficients take per-axis maxima in authored coordinates,
+matching TaCZ listeners, rather than accumulating as ordinary motion. Hip fire keeps
+the authored motion; internal bolt/slide/action tracks remain
 active. Reload presentation releases the ADS constraint. This is model presentation;
 animated camera transforms and TaCZ Lua are not applied to player aiming.
+
+TaCZ's separate first-person procedural firing presentation is also applied to the
+root before ADS constraints: random X sway in [-0.2, 0.2] pixels over 400 ms,
++0.1 pixel model-Y lift, and random post-multiplied Y rotation in [-0.0136, 0.0136]
+radians over 100 ms. Each shot resets a 300 ms cubic envelope. Translation scales
+by `(1 - ADS)`; yaw continues under the authored ADS constraints. These constants
+come from TaCZ `FirstPersonRenderGunEvent` and `PerlinNoise`, not gun recoil JSON.
+The paused HMG partial-tick render clock and per-instance shot time replace the
+upstream wall clock so switching, world unload and paused frames stay isolated.
+The effect never drives camera/mouse recoil, spread or aiming, and inventory icon
+capture remains a canonical static pose.
 
 Explicit HMG model/settings reload rereads the project and replaces its parts, animation definition and GPU resources. Replacement releases the old imported model's textures and mesh buffers on the existing client reload path. F3+T retains the existing HMG external-model reload semantics; use the HMG reload command after editing the project. Parsing/importing is client-only; dedicated servers do not need the project file.
 
@@ -200,7 +213,7 @@ Place them before gun registration. Do not duplicate parts that your gun already
 }
 ```
 
-`fire` is an additive layer: these values add to the underlying pose. Imported models with a tracked `root` fire clip suppress HMG's separate whole-gun procedural kick, avoiding doubled recoil. Internal bolt/slide tracks remain active, and OBJ/MQO guns retain the legacy kick. Imported `fire`/`shoot` clips use a 35 ms additive fade on restart and return, so rapid shots transition from the current impulse without capturing ADS or reload. If the same part already has legacy part recoil motion, that motion still contributes. Author one source of recoil displacement, or provide a BASE `idle` track for that part to establish the intended underlying pose. A BASE track takes precedence over the legacy state transform for that named part. Untracked parts continue to use legacy state motion.
+`fire` is an additive layer: these values add to the underlying pose after BASE/ACTION transitions. Imported TaCZ/Bedrock models suppress HMG's separate whole-gun kick even when the firing clip has no root track; other imported projects with a firing clip suppress it too. Internal bolt/slide tracks remain active; OBJ/MQO guns retain the legacy kick. Imported `fire`/`shoot` clips have no synthetic firing fade. TaCZ models (native Bedrock or bbmodel projects retaining the root/camera/constraint/view groups) allocate an independent additive one-shot per shot, matching the default TaCZ gun-kick track rather than restarting and discarding older tails. Completed kicks are released and reload clears the kick tracks. Generic HMG animation requests retain their single-layer restart semantics. If the same part has legacy part recoil motion, that motion still contributes; author one source or use a BASE `idle` track to establish the pose.
 
 The [complete example](examples/animations/foundation.json) includes `idle`, `fire`, `reload`, and `inspect`, bolt and magazine tracks, fades, and presentation markers. It is an opt-in development example, not installed on any production gun. Copy it into a test pack with matching part names (or rename its tracks). Its displacement scale and 2.4-second reload are illustrative; choose values and durations appropriate to your gun.
 

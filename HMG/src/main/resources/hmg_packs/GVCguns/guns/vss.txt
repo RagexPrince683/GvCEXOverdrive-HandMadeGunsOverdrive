@@ -200,7 +200,7 @@ AddParts,mat1
 
 
 
-WeaponClass,MARKSMAN_RIFLE
+WeaponClass,SNIPER_RIFLE
 Name,VSS Vintorez
 GunSoundLV,130,1
 AR,vss

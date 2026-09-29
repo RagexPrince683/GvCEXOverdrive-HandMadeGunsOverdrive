@@ -282,7 +282,7 @@ AddParts,Base_Sys
 			BackParts
 
 
-WeaponClass,BATTLE_RIFLE
+WeaponClass,ASSAULT_RIFLE
 Name,SCAR-H
 GunSoundLV,165,1
 AR,SCARH

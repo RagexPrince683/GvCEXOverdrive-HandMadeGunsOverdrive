@@ -1214,7 +1214,8 @@ public class HMGGunMaker {
 										nox, noy, noz, mat31posx, mat31posy, mat31posz, 	mat31rotex, mat31rotey, mat31rotez
 										,mat32posx, mat32posy, mat32posz, mat32rotex, mat32rotey, mat32rotez));
 							}
-							newgun.setCreativeTab(HMGAddTabs.resolve(tabname));
+							newgun.setCreativeTab(gunInfo.weaponClass == null ? HMGAddTabs.resolve(tabname)
+									: gunInfo.weaponClass.tab(newgun));
 							Guns.add(newgun);
 						} else if (type[0].equals("BP")) {
 							GunName = type[1];

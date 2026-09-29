@@ -84,7 +84,7 @@ AnimationSound,put_away,tacz:g36k/g36k_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-WeaponClass,CARBINE
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ G36K
 AR,TaCZOfficial_G36K

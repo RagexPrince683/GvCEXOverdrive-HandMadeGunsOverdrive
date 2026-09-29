@@ -222,26 +222,66 @@ creating a malformed recipe.
 
 Every unified firearm selects one shared class tab through `WeaponClass,<class>`.
 Rendering format, pack, nation, era, ammunition and fire mode do not create separate
-firearm tabs. The supported values are `ASSAULT_RIFLE`, `BATTLE_RIFLE`, `CARBINE`,
-`SUBMACHINE_GUN`, `MACHINE_GUN`, `SHOTGUN`, `SNIPER_RIFLE`, `BOLT_ACTION_RIFLE`,
-`MARKSMAN_RIFLE`, `HANDGUN`, `LAUNCHER` and `SPECIAL`. Unscoped bolt-action service
-rifles use Bolt-action Rifles; `SPECIAL` includes grenades, bombs, bows, flamethrowers
-and unusual heavy weapons. These are presentation classes, independent of legacy
-registration codes and gameplay defaults.
+firearm tabs. Explicit metadata also places the sample sword in Sample Weapons.
+The bundled census is 228 unified definitions plus that sword:
 
-All 228 bundled gun definitions and their 196 development counterparts have explicit
-metadata. Imported and legacy versions appear together. The metadata corrects cases
-where legacy `HG`, `AR` or `SR` codes described defaults rather than the real class:
-MP5/P90 are submachine guns, MG36/RPK are machine guns, M14 is a battle rifle, M110 is
-a marksman rifle, and AKS-74U is a carbine. No bundled classification remains unresolved.
+| Metadata | Creative label | Bundled items |
+| --- | --- | ---: |
+| `ASSAULT_RIFLE` | Assault Rifles | 55 |
+| `SUBMACHINE_GUN` | Submachine Guns | 22 |
+| `MACHINE_GUN` | Machine Guns | 30 |
+| `SHOTGUN` | Shotguns | 15 |
+| `SNIPER_RIFLE` | Sniper Rifles | 14 |
+| `BOLT_ACTION_RIFLE` | Bolt-Action Rifles | 9 |
+| `HANDGUN` | Pistols | 22 |
+| `LAUNCHER` | Launchers | 23 |
+| `SPECIAL` | Other / Special Weapons | 5 |
+| `VEHICLE_WEAPON` | Vehicle Weapons | 20 |
+| `SAMPLE_WEAPON` | Sample Weapons | 14 |
+
+The nine bolt-action entries cover Gewehr 98, MAS-36, Type 38, Lee-Enfield,
+SMLE, M1917, Mosin and two Kar98 presentations. They form a useful service-rifle
+category rather than treating every bolt gun as a sniper. Precision bolt rifles
+already classified as snipers remain there.
+
+Eight carbines and 13 battle rifles moved to Assault Rifles. Of seven marksman
+entries, SKS and modern SKS moved to Assault Rifles; M110 (legacy and imported),
+SVD, VSS and scoped Mk 14 moved to Sniper Rifles. M14 remains an assault/battle
+platform in Assault Rifles. Cartridge alone does not determine placement.
+No bundled class remains unresolved. Legacy and imported variants share categories.
+
+Sample status takes precedence over mechanical class: the twelve Addfixing sample
+guns, experimental Blockbench AKM and sample sword use `SAMPLE_WEAPON`. This
+isolates 13 guns previously in normal classes and the sword previously in its
+custom support tab. Items remain registered and accessible; recipes and gameplay
+are unchanged. Sample kits, attachments and projectile definitions remain support
+content rather than being mistaken for firearm definitions.
+
+Vehicle Weapons contains only the 20 definitions with `NeedFix,true` and no
+`Canfix,true`: four aircraft bombs, thirteen missiles, UB-32 rocket pod, UPK-23 gun
+pod and the vehicle-only KORD variant. HMG's firing gate requires fixation, and
+ordinary placement requires the separate `Canfix` capability. Functional placed
+Bofors, Flakvierling, DShK and mortar weapons keep their normal classes. Handheld
+launchers stay in Launchers. The twelve vehicle ammunition/magazine definitions
+use existing `HMG_Ammo`; ordinary ammunition never enters Vehicle Weapons.
+
+All 228 bundled guns and 196 development counterparts have explicit metadata,
+and both sample swords are explicitly classified too. The development Blockbench
+AKM mirror lives under GVCguns but still uses Sample Weapons. Only metadata and
+creative placement change; registry IDs, legacy gun codes and gameplay defaults
+retain their owners.
 
 External definitions without `WeaponClass` receive a diagnostic and a conservative
 registration-code fallback in `WeaponClass.legacy`; unknown codes use `SPECIAL`.
-Those external classifications need author review, especially guns registered as
-`HG` or `SR` for their defaults. `Tabname` no longer categorizes unified firearms.
-Existing `addTab` names remain compatible for swords, attachments and vehicles;
-unused source/model tabs are never instantiated. Ammunition, crafting equipment and
-other non-firearm items retain their existing equipment tabs.
+Those defaults need author review. External `CARBINE` and `BATTLE_RIFLE` fields
+parse into `ASSAULT_RIFLE`; `MARKSMAN_RIFLE` and `DMR` parse into `SNIPER_RIFLE`.
+These are input aliases only; no removed class tab is instantiated. Authors should
+explicitly choose the new category when an accurized rifle belongs in Assault Rifles.
+
+`Tabname` continues to support non-firearm custom tabs, unless that item explicitly
+selects `WeaponClass`. Ammunition/magazines use `HMG_Ammo`, attachments use
+`HMG_Attachments`, and crafting/components and other support items keep HandmadeGuns
+and their existing used custom tabs. Unused pack/model tabs are not instantiated.
 
 ## `additionalSettings.txt`
 

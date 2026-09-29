@@ -92,7 +92,7 @@ AnimationSound,put_away,tacz:hk_g3/hk_g3_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-WeaponClass,BATTLE_RIFLE
+WeaponClass,ASSAULT_RIFLE
 
 Name,TaCZ G3
 AR,TaCZOfficial_g3

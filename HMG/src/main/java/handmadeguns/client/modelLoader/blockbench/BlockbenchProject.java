@@ -282,7 +282,7 @@ public final class BlockbenchProject {
             }
             // A zero-length looping static pose is a hold, not a cursor that repeatedly wraps at zero.
             if (duration == 0 && loop == AnimationClip.Loop.LOOP) loop = AnimationClip.Loop.HOLD;
-            double fireFade = "shoot".equals(name) || "fire".equals(name) ? 0.035 : 0;
+            double fireFade = 0;
             if (clips.put(name, new AnimationClip(name, duration, loop, tracks, events, fireFade, fireFade, 0, true)) != null)
                 throw new IOException("Duplicate animation name " + name);
         }

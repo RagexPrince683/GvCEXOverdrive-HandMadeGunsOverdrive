@@ -1,5 +1,5 @@
 Texture,items/bullet_M39.png
 Stack,64
-Tabname,VehicleWeapons
+Tabname,HMG_Ammo
 Name,M39Ammo
 Magazine,M39Ammo

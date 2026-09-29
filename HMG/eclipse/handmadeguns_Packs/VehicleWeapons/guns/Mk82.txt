@@ -24,6 +24,6 @@ NeedFix,true
 
 
 
-WeaponClass,SPECIAL
+WeaponClass,VEHICLE_WEAPON
 Name,mk82
 GL,mk82

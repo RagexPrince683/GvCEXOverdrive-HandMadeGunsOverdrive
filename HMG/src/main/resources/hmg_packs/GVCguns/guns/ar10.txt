@@ -278,7 +278,7 @@ AddParts,Base_Sys
 			BackParts
 
 
-WeaponClass,BATTLE_RIFLE
+WeaponClass,ASSAULT_RIFLE
 Name,AR-10 (STANDARD MAG)
 GunSoundLV,165,1
 AR,AR10

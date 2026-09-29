@@ -57,7 +57,7 @@ RenderCross,false
 RightType,0
 Magazine,0,HandmadeGuns,bullet_hg_hmg
 
-WeaponClass,HANDGUN
+WeaponClass,SAMPLE_WEAPON
 HG,HGR_sample
 
 //addRecipe,HGR_sample,1,ab0,00f,000,265,265,0,0,0,265,0,0,0

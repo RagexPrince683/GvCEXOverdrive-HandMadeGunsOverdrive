@@ -63,7 +63,7 @@ RightType,1
 Automatic,false
 MultiMagazine,HandmadeGuns:12g_birdshot,HandmadeGuns:12g_buckshot,HandmadeGuns:12g_slug
 
-WeaponClass,SHOTGUN
+WeaponClass,SAMPLE_WEAPON
 Unified_guns,SG_sample
 
 //addRecipe,SG_sample,1,abc,def,000,265,265,280,280,265,280,280,280,280

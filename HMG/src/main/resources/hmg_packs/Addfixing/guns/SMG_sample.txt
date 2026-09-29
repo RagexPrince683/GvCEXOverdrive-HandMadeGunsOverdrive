@@ -43,7 +43,7 @@ Magazine,0,HandmadeGuns,bullet_hg_hmg
 DropMagazine,true
 Cartridge,false
 
-WeaponClass,SUBMACHINE_GUN
+WeaponClass,SAMPLE_WEAPON
 AR,SMG_sample
 
 //addRecipe,SMG_sample,1,abc,00f,000,265,265,265,280,280,280,280,280,280

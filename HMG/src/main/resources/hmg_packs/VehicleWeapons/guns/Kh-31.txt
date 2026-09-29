@@ -31,7 +31,7 @@ NeedFix,true
 
 
 
-WeaponClass,LAUNCHER
+WeaponClass,VEHICLE_WEAPON
 Name,Kh-31
 RR,Kh-31
 TechYear,1988

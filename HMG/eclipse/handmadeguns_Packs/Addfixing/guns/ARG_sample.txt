@@ -48,7 +48,7 @@ MagazineSG,0,HandmadeGuns,bullet_shell_hmg
 MagazineGL,0,HandmadeGuns,bullet_rr_hmg
 
 
-WeaponClass,ASSAULT_RIFLE
+WeaponClass,SAMPLE_WEAPON
 AR,ARG_sample
 
 //addRecipe,AR_sample,1,abc,0ef,000,265,265,265,280,265,280,280,280,280

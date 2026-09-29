@@ -1,5 +1,5 @@
 Texture,items/bullet_ShVAK.png
 Stack,64
-Tabname,VehicleWeapons
+Tabname,HMG_Ammo
 Name,ShVAKAmmo
 Magazine,ShVAKAmmo

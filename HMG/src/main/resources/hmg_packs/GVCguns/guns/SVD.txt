@@ -196,7 +196,7 @@ AddParts,mat1
         AddReloadMotionKey,45,0,0,0,0,0,0,          50,0,0,0,0,0,0
     BackParts
 
-WeaponClass,MARKSMAN_RIFLE
+WeaponClass,SNIPER_RIFLE
 Name,SVD Dragonov
 GunSoundLV,165,1
 SR,SVD

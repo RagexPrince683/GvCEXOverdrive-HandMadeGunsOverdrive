@@ -50,7 +50,7 @@ AnimationSound,put_away,tacz:ak47/ak47_put_away
 ModelScala,0.5f
 InworldScale,1.8f
 ModelArm,true
-WeaponClass,CARBINE
+WeaponClass,ASSAULT_RIFLE
 
 Name,ClassicRCCRP AKS-74U
 GunSoundLV,165,4

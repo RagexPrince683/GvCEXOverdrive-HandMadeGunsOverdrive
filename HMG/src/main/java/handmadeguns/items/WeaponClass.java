@@ -9,10 +9,11 @@ import java.util.Locale;
 
 /** Presentation classification; never changes legacy gun type or gameplay defaults. */
 public enum WeaponClass {
-    ASSAULT_RIFLE("Assault Rifles"), BATTLE_RIFLE("Battle Rifles"), CARBINE("Carbines"),
+    ASSAULT_RIFLE("Assault Rifles"),
     SUBMACHINE_GUN("Submachine Guns"), MACHINE_GUN("Machine Guns"), SHOTGUN("Shotguns"),
-    SNIPER_RIFLE("Sniper Rifles"), BOLT_ACTION_RIFLE("Bolt-action Rifles"), MARKSMAN_RIFLE("Marksman Rifles"),
-    HANDGUN("Handguns"), LAUNCHER("Launchers"), SPECIAL("Other / Special Weapons");
+    SNIPER_RIFLE("Sniper Rifles"), BOLT_ACTION_RIFLE("Bolt-Action Rifles"),
+    HANDGUN("Pistols"), LAUNCHER("Launchers"), SPECIAL("Other / Special Weapons"),
+    VEHICLE_WEAPON("Vehicle Weapons"), SAMPLE_WEAPON("Sample Weapons");
 
     public final String label;
     private CreativeTabs tab;
@@ -21,7 +22,11 @@ public enum WeaponClass {
     WeaponClass(String label) { this.label = label; }
 
     public static WeaponClass parse(String value) {
-        return valueOf(value.trim().toUpperCase(Locale.ROOT).replace(' ', '_').replace('-', '_'));
+        String key = value.trim().toUpperCase(Locale.ROOT).replace(' ', '_').replace('-', '_');
+        // External pack compatibility terminates at the broad, canonical categories.
+        if ("CARBINE".equals(key) || "BATTLE_RIFLE".equals(key)) return ASSAULT_RIFLE;
+        if ("MARKSMAN_RIFLE".equals(key) || "DMR".equals(key)) return SNIPER_RIFLE;
+        return valueOf(key);
     }
 
     /** Conservative compatibility for external packs without the new metadata. */

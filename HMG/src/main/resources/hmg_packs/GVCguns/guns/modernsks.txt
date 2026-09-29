@@ -217,7 +217,7 @@ RenderCross,false
 RightType,1
 Automatic,false
 
-WeaponClass,MARKSMAN_RIFLE
+WeaponClass,ASSAULT_RIFLE
 Name,Modern SKS
 //AR,SKSM
 

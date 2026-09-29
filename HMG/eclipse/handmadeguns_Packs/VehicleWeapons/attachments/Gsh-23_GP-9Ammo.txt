@@ -1,5 +1,5 @@
 Texture,items/bullet_Gsh-23_GP-9.png
 Stack,64
-Tabname,VehicleWeapons
+Tabname,HMG_Ammo
 Name,Gsh-23_GP-9Ammo
 Magazine,Gsh-23_GP-9Ammo

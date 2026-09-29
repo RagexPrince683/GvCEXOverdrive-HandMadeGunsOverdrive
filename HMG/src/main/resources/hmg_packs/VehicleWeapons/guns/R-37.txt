@@ -47,7 +47,7 @@ chunkLoaderBullet,true
 
 
 
-WeaponClass,LAUNCHER
+WeaponClass,VEHICLE_WEAPON
 Name,R-37
 RR,R-37
 TechYear,2019

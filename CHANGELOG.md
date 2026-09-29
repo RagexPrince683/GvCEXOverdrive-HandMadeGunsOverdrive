@@ -338,3 +338,36 @@ Developer/backend
   passes preserve inherited scene lights instead of replacing them with GUI lights.
   World light, authored materials, ADS/recoil and cached inventory icons retain
   their existing ownership. Added focused source guards to the existing suite.
+
+2026-09-28 19:07 — Separate legacy MQO opacity from lighting strength
+
+- Fixed MQO diffuse buffers using the lighting coefficient as alpha, which made
+  opaque materials with `dif(0.8)` translucent after the lighting cleanup. Opacity
+  now comes from `col` alpha and defaults to 1 for missing or RGB-only definitions;
+  diffuse, ambient, specular and emission strengths retain their RGB behavior.
+- Apply material opacity to unlit legacy parts as well as lit geometry, disable
+  color-material tracking before material application, and restore caller color
+  and materials through the existing narrow batch scope. Authored texture/material
+  transparency, emissive parts and the existing blend passes remain supported.
+  No extra attribute entries, scene-light overrides or Blockbench changes are added.
+
+2026-09-28 19:41 — Preserve TaCZ firing fidelity and simplify weapon tabs
+
+- Removed synthetic imported firing fades, retained independent TaCZ additive shot
+  tails, and composed firing after draw/ADS/action transitions. Numeric constraint
+  coefficients combine by authored-axis maxima. Empty/nested weapon roots and
+  internal bolt/slide tracks remain animated; all TaCZ model paths suppress legacy
+  HMG whole-gun kick, including clips with no root track.
+- Reproduced TaCZ's separate first-person root sway/lift/yaw using its exact constants,
+  cubic shot envelope and quaternion multiplication. Native Bedrock and named TaCZ
+  bbmodel imports share this presentation under the existing instance/render clock;
+  gameplay/camera recoil, aiming, sound, materials and inventory icons retain their owners.
+- Removed standalone Carbine, Battle Rifle and Marksman tabs. Reclassified 8 carbines
+  and 13 battle rifles into Assault Rifles; 7 marksman entries split into 2 Assault
+  Rifles and 5 Sniper Rifles. Kept 9 bolt-action service-rifle entries separate.
+- Isolated 13 sample/demo guns and the sample sword in Sample Weapons. Added Vehicle
+  Weapons for 20 vehicle-only items: bombs, missiles, rocket/gun pods and a vehicle-only
+  KORD variant. Functional placed guns and handheld launchers retain their classes;
+  12 vehicle magazine definitions use the existing ammunition tab. Bundled definitions
+  and development mirrors have explicit matching classifications; old external class
+  names parse into canonical broad categories without recreating the removed tabs.

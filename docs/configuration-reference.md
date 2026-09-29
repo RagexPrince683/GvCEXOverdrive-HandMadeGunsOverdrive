@@ -54,7 +54,8 @@ can select put-away clips; switching weapons does not automatically play holster
 `WeaponClass,<class>` selects a shared firearm creative tab independently of model
 format or legacy registration defaults. See [weapon-class tabs](content-packs.md#weapon-class-creative-tabs)
 for the supported values and external-pack fallback. `Tabname` is retained for
-non-firearm custom tabs.
+non-firearm custom tabs unless the item explicitly selects `WeaponClass`, as the
+sample sword does. Removed class names remain external-input aliases only.
 
 `PerShellReloadStages,true` is valid only with HMG's existing
 `PerShellReload,true` gameplay. It maps the accepted reload to

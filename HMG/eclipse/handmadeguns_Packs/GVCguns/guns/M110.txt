@@ -172,7 +172,7 @@ AddParts,Base_Sys
 
 BackParts
 
-WeaponClass,MARKSMAN_RIFLE
+WeaponClass,SNIPER_RIFLE
 Name,M110 SASS
 GunSoundLV,165,1
 SR,M110
