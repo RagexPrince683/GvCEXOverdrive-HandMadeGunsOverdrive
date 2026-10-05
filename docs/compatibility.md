@@ -33,7 +33,24 @@ For handheld player-fired projectiles and their lock-on ray, HMG optionally cons
 
 The ray intentionally does not include Combatives' rendered camera shake, bob, lean, translation, or other presentation effects. HMG still applies its existing weapon elevation adjustment before resolving the ray, retains the half-block forward spawn, and applies the existing projectile spread afterward. ADS does not select a different gameplay ray; its existing spread multiplier remains unchanged.
 
-This integration is reflected and cached on the common side. If Combatives is absent, its class or method shape is incompatible, or invocation fails, HMG uses its exact legacy `getEyeHeight()` and `GunsUtils.getLook()` behavior. Placed guns, connected turrets, vehicles, NPCs, and unrelated `GunsUtils.getLook()` callers are not changed.
+This integration is reflected and cached on the common side. If Combatives is absent, its class or method shape is incompatible, or invocation fails, HMG uses its legacy `getEyeHeight()` and `GunsUtils.getLook()` aim inputs. Placed guns, connected turrets, vehicles, NPCs, and unrelated `GunsUtils.getLook()` callers do not consume this optional ray.
+
+HMG firearm projectile heading and velocity setters derive initial yaw/pitch from the completed velocity,
+after spread and any inherited shooter motion: yaw is `-atan2(motionX, motionZ)`
+and pitch is `-atan2(motionY, horizontalSpeed)`, in degrees. Native HMG and
+Combatives therefore share the flight-update convention; firing callers no longer
+replace projectile orientation with the shooter's unspread aim. Placed-gun muzzle
+positioning retains these launch angles, and connected turrets initialize them
+after adding vehicle velocity. Initial velocity, speed and spread calculations
+retain their existing behavior.
+
+Rocket thrust follows the projectile's yaw/pitch axis, initialized along its actual
+launch velocity. Guidance and stability retain ownership of subsequent steering,
+and the existing flight-angle smoothing, gravity and drag remain in effect.
+Custom projectile models retain their +Z-forward contract and transform order
+(`Y(-yaw)` then `X(pitch)`). Both built-in rocket fallback cases use one geometry
+path with a local `Y(-90 degrees)` correction from +X to +Z, with wrapped yaw and
+partial-tick pitch interpolation. Custom models require no new corrective rotation.
 
 HMG-Overdrive supports an optional two-layer first-person recoil integration with Combatives. When Combatives is installed, `Compatibility.enableCombativesRecoilIntegration` is enabled, and the Combatives camera API accepts the base shot impulse, HMG submits visual weapon recoil as named Combatives camera impulses under separate kick, punch, and sustained source IDs.
 

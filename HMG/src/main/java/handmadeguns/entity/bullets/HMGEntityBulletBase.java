@@ -255,9 +255,7 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 		this.motionX = par1;
 		this.motionY = par3;
 		this.motionZ = par5;
-		float f3 = MathHelper.sqrt_double(par1 * par1 + par5 * par5);
-		this.prevRotationYaw = this.rotationYaw = (float)(atan2(par1, par5) * 180.0D / Math.PI);
-		this.prevRotationPitch = this.rotationPitch = (float)(atan2(par3, (double)f3) * 180.0D / Math.PI);
+		setRotationFromMotion();
 		this.ticksInGround = 0;
 	}
 	
@@ -274,9 +272,6 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 		par1 *= (double)par7;
 		par3 *= (double)par7;
 		par5 *= (double)par7;
-		float f3 = MathHelper.sqrt_double(par1 * par1 + par5 * par5);
-		this.prevRotationYaw = this.rotationYaw = (float)(atan2(par1, par5) * 180.0D / Math.PI);
-		this.prevRotationPitch = this.rotationPitch = (float)(atan2(par3, (double)f3) * 180.0D / Math.PI);
 		if(shooter!= null) {
 			double motionlength = sqrt(shooter.motionX * shooter.motionX + shooter.motionY * shooter.motionY + shooter.motionZ * shooter.motionZ);
 			if (motionlength > 0.01) {
@@ -288,7 +283,15 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 		this.motionX = par1;
 		this.motionY = par3;
 		this.motionZ = par5;
+		setRotationFromMotion();
 		this.ticksInGround = 0;
+	}
+
+	/** Launch orientation uses the same +Z-forward, negative yaw/pitch convention as flight. */
+	private void setRotationFromMotion() {
+		if (motionX == 0 && motionY == 0 && motionZ == 0) return;
+		this.prevRotationYaw = this.rotationYaw = wrapAngleTo180_float((float) (-atan2(motionX, motionZ) * 180.0D / Math.PI));
+		this.prevRotationPitch = this.rotationPitch = (float) (-atan2(motionY, sqrt(motionX * motionX + motionZ * motionZ)) * 180.0D / Math.PI);
 	}
 	
 	@Override
@@ -298,9 +301,7 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 		this.motionZ = par5;
 		
 		{
-			float var7 = MathHelper.sqrt_double(par1 * par1 + par5 * par5);
-			this.prevRotationYaw = this.rotationYaw = (float)(atan2(par1, par5) * 180.0D / Math.PI);
-			this.prevRotationPitch = this.rotationPitch = (float)(atan2(par3, (double)var7) * 180.0D / Math.PI);
+			setRotationFromMotion();
 			this.setLocationAndAngles(this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch);
 			this.ticksInGround = 0;
 		}
@@ -312,7 +313,6 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 		if(look == null) {
 		}else {
 			this.setThrowableHeading(look.xCoord, look.yCoord, look.zCoord, velocity, inaccuracy);
-			this.prevRotationPitch = this.rotationPitch = entityThrower.rotationPitch;
 		}
 	}
 	public void setHeadingFromThrower(float rotationPitchIn, float rotationYawIn, float pitchOffset, float velocity, float inaccuracy)
@@ -940,8 +940,8 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 		resistance = lpbuf.readFloat();
 		fuse = lpbuf.readInt();
 		canbounce = lpbuf.readBoolean();
-		rotationYaw = lpbuf.readFloat();
-		rotationPitch = lpbuf.readFloat();
+		prevRotationYaw = rotationYaw = lpbuf.readFloat();
+		prevRotationPitch = rotationPitch = lpbuf.readFloat();
 
 		this.lastTickPosX2 = lpbuf.readDouble();
 		this.lastTickPosY2 = lpbuf.readDouble();
@@ -1066,19 +1066,22 @@ public class HMGEntityBulletBase extends Entity implements IEntityAdditionalSpaw
 	
 	
 	public boolean applyacceleration(){
-		{
-//			Vec3 bulletVec = getLook(1,rotationYaw,rotationPitch);
-			Vector3d bulletVec = new Vector3d(0,0,1);
-			RotateVectorAroundX(bulletVec,-rotationPitch);
-			RotateVectorAroundY(bulletVec,-rotationYaw);
-			if(NaNCheck(bulletVec))bulletVec = new Vector3d(0,0,1);
-
-			if(accelerationDelay < ticksInAir && (accelerationFuse == -1 || accelerationFuse > ticksInAir)) {
-				this.motionX += bulletVec.x * acceleration;
-				this.motionY += bulletVec.y * acceleration;
-				this.motionZ += bulletVec.z * acceleration;
+		if(accelerationDelay < ticksInAir && (accelerationFuse == -1 || accelerationFuse > ticksInAir)) {
+			// Guidance/stability own orientation after launch; thrust follows that steered axis.
+			// At launch this axis is initialized from the actual velocity, including spread.
+			double yaw = toRadians(rotationYaw);
+			double pitch = toRadians(rotationPitch);
+			double horizontal = cos(pitch);
+			double thrustX = -sin(yaw) * horizontal;
+			double thrustY = -sin(pitch);
+			double thrustZ = cos(yaw) * horizontal;
+			if (Double.isNaN(thrustX) || Double.isNaN(thrustY) || Double.isNaN(thrustZ)) {
+				thrustX = thrustY = 0;
+				thrustZ = 1;
 			}
-//				worldObj.playSoundAtEntity(this, "handmadeguns:handmadeguns." + flyingSound,flyingSoundLV, flyingSoundSP);
+			this.motionX += thrustX * acceleration;
+			this.motionY += thrustY * acceleration;
+			this.motionZ += thrustZ * acceleration;
 		}
 		return false;
 	}

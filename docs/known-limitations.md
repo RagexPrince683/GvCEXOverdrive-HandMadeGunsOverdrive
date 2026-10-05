@@ -46,6 +46,43 @@ Compilation and non-OpenGL tests do not prove visual acceptance. New or converte
 
 The repository's automated animation and resolver tests cover parser, interpolation, ownership, reload-event, path, and pack-isolation behavior. They are not screenshots or an in-game rendering test suite.
 
+## Projectile rotation verification
+
+Launch orientation, rocket thrust and the rocket fallback renderer share the same
+world-space convention. Mathematical direction/transform checks cover the matrix
+below; actual firing, hit locations and rendering still require an in-game pass.
+Use matching definitions on client and dedicated server, and repeat handheld cases
+with native HMG aiming and Combatives installed. Also check placed guns and moving
+vehicle turrets, whose launch orientation now includes spread and inherited motion,
+and the GVC MGAX55's vertical missile launcher.
+
+| Projectile/path | Directions and conditions | In-game acceptance |
+| --- | --- | --- |
+| Non-accelerating rifle bullet | +X, -X, +Z, -Z, all four diagonals; upward/downward and near-vertical pitch; yaw across +/-180 degrees | Nose, motion and aim agree at launch; hits follow the existing spread and ballistics. |
+| RPG-7 accelerating rocket | Same directions, pitched shots, first powered tick and long flight | No direction-dependent launch bend; initial thrust aligns with motion. Existing gravity, drag, orientation smoothing and intentional steering remain. |
+| `byfrou01_Rocket` without a custom model | Cardinal/diagonal/pitched flight and yaw wrap; both absent-model fallback cases | Nose follows the same interpolated axis as a +Z-forward custom model, without a constant 90-degree offset. |
+| Equivalent native/Combatives aim | Same world aim and spread settings, including ADS and steep shots | Equivalent launch orientation and velocity, allowing for existing native lookup-table precision and randomized spread. |
+
+The server owns gameplay state; clients independently simulate flight from spawn
+data and local defaults, with corrections for flagged changes. Source inspection
+found the following transfer boundaries:
+
+| Property | Spawn transfer | Runtime transfer and client simulation |
+| --- | --- | --- |
+| Position, motion, yaw/pitch | Yes | Corrections send current values when flagged; clients simulate and interpolate locally. Previous angles now initialize from spawn angles without a wire-format change. |
+| Gravity, air resistance, acceleration and its delay/fuse | Yes | Clients apply the transferred values; no parameter-update packet. |
+| `bulletStability` | No | Server stability flags motion/orientation corrections; client uses its default stability. |
+| `resistanceinwater` | No | Client uses its local default/subclass value; water drag alone does not flag a correction. |
+| Entity/block homing targets and steering settings | No | Server homing flags motion/orientation corrections; client has no transferred target/settings. |
+| SACLOS guidance | No | Client defaults to disabled; SACLOS-only steering does not flag a correction. |
+
+These are existing synchronization gaps, not runtime-confirmed effects of the
+rotation fix; their packet behavior is unchanged.
+
+The separate finite-fuse terminal tick still advances to its endpoint and detonates
+without sweeping that final segment. Normal flight uses swept collision. Collision
+handling is unchanged by the rotation fix.
+
 ## Reload Boundaries
 
 HMG's reload commands reread registered external gun and attachment settings, with different model-cache behavior. They do not guarantee a clean rebuild of every registry entry, recipe, script, creative tab, sound registration, or client/server state. Use a full restart for release validation and structural pack changes.

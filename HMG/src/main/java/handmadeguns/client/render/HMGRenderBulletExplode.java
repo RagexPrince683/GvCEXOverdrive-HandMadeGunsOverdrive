@@ -13,6 +13,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import static handmadeguns.HMGAddBullets.modellist;
+import static net.minecraft.util.MathHelper.wrapAngleTo180_float;
 
 @SideOnly(Side.CLIENT)
 public class HMGRenderBulletExplode extends Render
@@ -30,11 +31,17 @@ public class HMGRenderBulletExplode extends Render
     {
         GL11.glPushMatrix();
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-        if(entity.modelid == -1) {
+        float yaw = entity.prevRotationYaw + wrapAngleTo180_float(entity.rotationYaw - entity.prevRotationYaw) * partialTicks;
+        float pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
+        GL11.glTranslatef((float)p_180551_2_, (float)p_180551_4_, (float)p_180551_6_);
+        // Custom models face +Z; apply world orientation before adapting fallback geometry.
+        GL11.glRotatef(-yaw, 0.0F, 1.0F, 0.0F);
+        GL11.glRotatef(pitch, 1.0F, 0.0F, 0.0F);
+        ModelSetAndData modelSetAndData = entity.modelid == -1 ? null : modellist.get(entity.modelid);
+        if (modelSetAndData == null) {
             this.bindEntityTexture(entity);
-            GL11.glTranslatef((float)p_180551_2_, (float)p_180551_4_, (float)p_180551_6_);
-            GL11.glRotatef(-90 - (entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks), 0.0F, 1.0F, 0.0F);
-            GL11.glRotatef(-(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch)), 0.0F, 0.0F, 1.0F);
+            // The fallback's nose faces +X. Rotate it onto the custom-model +Z axis.
+            GL11.glRotatef(-90.0F, 0.0F, 1.0F, 0.0F);
             Tessellator tessellator = Tessellator.instance;
             byte b0 = 0;
             float f2 = 0.0F;
@@ -79,73 +86,16 @@ public class HMGRenderBulletExplode extends Render
                 tessellator.draw();
             }
 
-            GL11.glDisable(GL12.GL_RESCALE_NORMAL);
         } else {
-            ModelSetAndData modelSetAndData = modellist.get(entity.modelid);
-            if (modelSetAndData != null) {
-                GL11.glTranslatef((float)p_180551_2_, (float)p_180551_4_, (float)p_180551_6_);
-                GL11.glRotatef( - (entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks), 0.0F, 1.0F, 0.0F);
-                GL11.glRotatef(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, 1.0F, 0.0F, 0.0F);
-                GL11.glScalef(0.1f,0.1f,0.1f);
-                this.bindTexture(modelSetAndData.texture);
-                IModelCustom custom = modelSetAndData.model;
-                GL11.glScalef(modelSetAndData.scale,modelSetAndData.scale,modelSetAndData.scale);
-                if (custom != null) {
-                    custom.renderAll();
-                }
-            }else{
-                GL11.glTranslatef((float)p_180551_2_, (float)p_180551_4_, (float)p_180551_6_);
-                this.bindEntityTexture(entity);
-                GL11.glRotatef( - (entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks), 0.0F, 1.0F, 0.0F);
-                GL11.glRotatef(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, 1.0F, 0.0F, 0.0F);
-                Tessellator tessellator = Tessellator.instance;
-                byte b0 = 0;
-                float f2 = 0.0F;
-                float f3 = 0.5F;
-                float f4 = (float)(0 + b0 * 10) / 32.0F;
-                float f5 = (float)(5 + b0 * 10) / 32.0F;
-                float f6 = 0.0F;
-                float f7 = 0.15625F;
-                float f8 = (float)(5 + b0 * 10) / 32.0F;
-                float f9 = (float)(10 + b0 * 10) / 32.0F;
-                float f10 = 0.05625F;
-                GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-
-
-                GL11.glRotatef(45.0F, 1.0F, 0.0F, 0.0F);
-                GL11.glScalef(f10, f10, f10);
-                GL11.glTranslatef(-4.0F, 0.0F, 0.0F);
-                GL11.glNormal3f(f10, 0.0F, 0.0F);
-                tessellator.startDrawingQuads();
-                tessellator.addVertexWithUV(-7.0D, -2.0D, -2.0D, (double)f6, (double)f8);
-                tessellator.addVertexWithUV(-7.0D, -2.0D, 2.0D, (double)f7, (double)f8);
-                tessellator.addVertexWithUV(-7.0D, 2.0D, 2.0D, (double)f7, (double)f9);
-                tessellator.addVertexWithUV(-7.0D, 2.0D, -2.0D, (double)f6, (double)f9);
-                tessellator.draw();
-                GL11.glNormal3f(-f10, 0.0F, 0.0F);
-                tessellator.startDrawingQuads();
-                tessellator.addVertexWithUV(-7.0D, 2.0D, -2.0D, (double)f6, (double)f8);
-                tessellator.addVertexWithUV(-7.0D, 2.0D, 2.0D, (double)f7, (double)f8);
-                tessellator.addVertexWithUV(-7.0D, -2.0D, 2.0D, (double)f7, (double)f9);
-                tessellator.addVertexWithUV(-7.0D, -2.0D, -2.0D, (double)f6, (double)f9);
-                tessellator.draw();
-
-                for (int i = 0; i < 4; ++i)
-                {
-                    GL11.glRotatef(90.0F, 1.0F, 0.0F, 0.0F);
-                    GL11.glNormal3f(0.0F, 0.0F, f10);
-                    tessellator.startDrawingQuads();
-                    tessellator.addVertexWithUV(-8.0D, -2.0D, 0.0D, (double)f2, (double)f4);
-                    tessellator.addVertexWithUV(8.0D, -2.0D, 0.0D, (double)f3, (double)f4);
-                    tessellator.addVertexWithUV(8.0D, 2.0D, 0.0D, (double)f3, (double)f5);
-                    tessellator.addVertexWithUV(-8.0D, 2.0D, 0.0D, (double)f2, (double)f5);
-                    tessellator.draw();
-                }
-
-                GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+            GL11.glScalef(0.1f,0.1f,0.1f);
+            this.bindTexture(modelSetAndData.texture);
+            IModelCustom custom = modelSetAndData.model;
+            GL11.glScalef(modelSetAndData.scale,modelSetAndData.scale,modelSetAndData.scale);
+            if (custom != null) {
+                custom.renderAll();
             }
-
         }
+        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 
         GL11.glPopMatrix();
 

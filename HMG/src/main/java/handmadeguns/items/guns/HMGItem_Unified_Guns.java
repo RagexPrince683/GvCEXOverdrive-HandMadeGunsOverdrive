@@ -1234,10 +1234,6 @@ public class HMGItem_Unified_Guns extends Item {
 						bulletBase.VTWidth = gunInfo.VTWidth;
 						bulletBase.seekerwidth = gunInfo.seekerSize_bullet;
 						bulletBase.resistanceinwater = firetemp.resistanceInWater;
-						if (guntemp.currentConnectedTurret == null && !bulletBase.authoritativePlayerAim) {
-							bulletBase.prevRotationYaw = bulletBase.rotationYaw = wrapAngleTo180_float(entity.getRotationYawHead());
-							bulletBase.prevRotationPitch = bulletBase.rotationPitch = entity.rotationPitch;
-						}
 						bulletBase.SACLOS_Homing = gunInfo.SACLOS_Homing;
 						bulletBase.chunkLoaderBullet = gunInfo.chunkLoaderBullet;
 
@@ -1312,7 +1308,7 @@ public class HMGItem_Unified_Guns extends Item {
 			iy = vec.yCoord;
 			iz = vec.zCoord;
 			if (entity.riddenByEntity != null) bulletBase.thrower = entity.riddenByEntity;
-			bulletBase.setLocationAndAngles(entity.posX + ix, entity.posY + entity.getEyeHeight() + iy, entity.posZ + iz, ((PlacedGunEntity) entity).rotationYawGun, entity.rotationPitch);
+			bulletBase.setLocationAndAngles(entity.posX + ix, entity.posY + entity.getEyeHeight() + iy, entity.posZ + iz, bulletBase.rotationYaw, bulletBase.rotationPitch);
 		} else {
 			int barrelId = nbt.getInteger("barrelId");
 			barrelId++;
@@ -1332,7 +1328,7 @@ public class HMGItem_Unified_Guns extends Item {
 			iy = vec.yCoord;
 			iz = vec.zCoord;
 			if (entity.riddenByEntity != null) bulletBase.thrower = entity.riddenByEntity;
-			bulletBase.setLocationAndAngles(entity.posX + ix, entity.posY + entity.getEyeHeight() + iy, entity.posZ + iz, ((PlacedGunEntity) entity).rotationYawGun, entity.rotationPitch);
+			bulletBase.setLocationAndAngles(entity.posX + ix, entity.posY + entity.getEyeHeight() + iy, entity.posZ + iz, bulletBase.rotationYaw, bulletBase.rotationPitch);
 			nbt.setInteger("barrelId", barrelId);
 		}
 	}

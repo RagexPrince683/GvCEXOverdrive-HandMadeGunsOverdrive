@@ -1448,9 +1448,7 @@ public class EntityMGAX55 extends Entity implements I_SPdamageHandle {
 					, this.posY + xVector.y * gunpos[pos][0] + yVector.y * (gunpos[pos][1]) + pilotseatoffsety + zVector.y * gunpos[pos][2]
 					, this.posZ + xVector.z * gunpos[pos][0] + yVector.z * (gunpos[pos][1]) + zVector.z * gunpos[pos][2]
 					, bodyrotationYaw, 90);
-			missile.motionY = 2 + this.motionY;
-			missile.motionX = 0 + this.motionX;
-			missile.motionZ = 0 + this.motionZ;
+			missile.setVelocity(this.motionX, 2 + this.motionY, this.motionZ);
 			missile.acceleration = 0.1f;
 			missile.induction_precision = 10f;
 			missile.seekerwidth = 360;

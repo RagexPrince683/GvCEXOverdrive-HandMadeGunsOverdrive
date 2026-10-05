@@ -371,3 +371,18 @@ Developer/backend
   12 vehicle magazine definitions use the existing ammunition tab. Bundled definitions
   and development mirrors have explicit matching classifications; old external class
   names parse into canonical broad categories without recreating the removed tabs.
+
+2026-10-04 22:50 — Align projectile launch orientation and rocket rendering
+
+- Initialize projectile yaw/pitch and previous angles from the completed launch
+  velocity using the existing flight convention, including spread and inherited
+  shooter motion. Remove handheld and turret angle replacements, preserve launch
+  angles during placed-gun positioning, and initialize GVC MGAX55 vertical missiles
+  from their unchanged velocity. Spawn readers now initialize previous angles too.
+- Retain yaw/pitch as the rocket thrust and guidance/stability axis, with an
+  equivalent scalar thrust calculation that avoids the temporary direction vector.
+  Launch speed, spread, gravity, drag, steering and collision rules remain intact.
+- Share rocket fallback geometry and world transforms, apply its +X-to-+Z axis
+  correction in both fallback cases, and interpolate pitch and wrapped yaw. Preserve
+  the existing +Z-forward custom-model contract and document direction ownership
+  and existing synchronization/collision boundaries.

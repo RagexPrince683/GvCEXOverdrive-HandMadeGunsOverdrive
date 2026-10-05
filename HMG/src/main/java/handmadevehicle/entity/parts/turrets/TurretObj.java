@@ -1279,8 +1279,6 @@ public class TurretObj {
 		for (HMGEntityBulletBase abullet : bullets) {
 			abullet.setPosition(cannonPos.x,cannonPos.y,cannonPos.z);
 			abullet.setThrowableHeading(lookVec.x, lookVec.y, lookVec.z, gunItem.gunInfo.speed, gunItem.gunInfo.spread_setting * gunItem.gunInfo.ads_spread_cof, motherEntity);
-			abullet.prevRotationYaw = abullet.rotationYaw = (float)(-atan2(lookVec.x, lookVec.z) * 180.0D / Math.PI);
-			abullet.prevRotationPitch = abullet.rotationPitch = (float)(-atan2(lookVec.y, (double)sqrt(lookVec.x * lookVec.x + lookVec.z * lookVec.z)) * 180.0D / Math.PI);
 			if(gunItem.gunInfo.semiActive){
 //		        System.out.println("debug");
 				abullet.isSemiActive = true;
