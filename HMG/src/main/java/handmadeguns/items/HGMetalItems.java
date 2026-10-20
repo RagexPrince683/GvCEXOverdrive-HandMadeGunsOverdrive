@@ -2,11 +2,8 @@ package handmadeguns.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
-import handmadeguns.compat.HGMetalCompat;
 
 public class HGMetalItems {
 
@@ -53,7 +50,7 @@ public class HGMetalItems {
         GameRegistry.registerItem(ironInfusedCoal, "ironInfusedCoal");
 
         // === OREDICT REGISTRATION ===
-        OreDictionary.registerOre("ingotSteel", steelIngot);
+        // Fallback steel is a private weapon material, not a certified industrial steel grade.
         OreDictionary.registerOre("ingotCopper", copperIngot);
         OreDictionary.registerOre("ingotAluminum", aluminumIngot);
     }

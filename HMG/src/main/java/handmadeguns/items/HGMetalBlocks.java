@@ -1,6 +1,7 @@
 package handmadeguns.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import handmadeguns.compat.HGMetalCompat;
 import net.minecraft.block.BlockOre;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.BlockCompressed;
@@ -67,7 +68,10 @@ public class HGMetalBlocks {
 
     public static void registerRecipes() {
         GameRegistry.addSmelting(copperOre, new ItemStack(HGMetalItems.copperIngot), 0.7f);
-        GameRegistry.addSmelting(aluminumOre, new ItemStack(HGMetalItems.aluminumIngot), 0.7f);
+        // RealSim owns aluminum refining, including ore left in older worlds.
+        if (!HGMetalCompat.industrialProviderLoaded()) {
+            GameRegistry.addSmelting(aluminumOre, new ItemStack(HGMetalItems.aluminumIngot), 0.7f);
+        }
 
         GameRegistry.addRecipe(new ItemStack(copperBlock),
                 "III",

@@ -386,3 +386,21 @@ Developer/backend
   correction in both fallback cases, and interpolate pitch and wrapped yaw. Preserve
   the existing +Z-forward custom-model contract and document direction ownership
   and existing synchronization/collision boundaries.
+
+2026-10-18 13:59 — Isolate HMG synthetic materials from industrial commodities
+
+- Remove HMG furniture polymer's global plastic alias, fallback steel's industrial
+  steel alias, and GVC's plastic alias for HMG `Prastic`. Preserve registered items,
+  metadata and private weapon/armor production for existing saves and standalone play.
+- Replace all HMG component steel inputs and ordinary pack steel/polymer inputs
+  with private recipe groups. Accept RTM/HBM ordinary steel and explicit full
+  polyethylene, Bakelite and polycarbonate ingots locally, without exporting HMG
+  synthetics or merging steel grades, plates, rubber or industrial feedstocks.
+  Preserve ingredient quantities, component yields and explicit exact requirements.
+- Remove bidirectional ingot conversions. Disable HMG fallback steel production
+  and direct aluminum-ore smelting when HBM/RealSim owns industrial processing;
+  retain legitimate copper/aluminum commodity entries and nine-ingot storage recipes.
+- Finalize provider/fallback decisions after post-initialization, retain live recipe
+  input lists for late registrations, and exclude HMG's own ores from external-provider
+  detection. Add standalone and cross-provider material regression checks and update
+  the material compatibility and pack-authoring documentation.

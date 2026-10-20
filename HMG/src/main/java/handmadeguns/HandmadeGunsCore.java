@@ -716,6 +716,7 @@ public class HandmadeGunsCore {
 	@EventHandler
 	public void init(FMLInitializationEvent pEvent) {
 
+		handmadeguns.compat.HGMetalCompat.initializeRecipeInputs();
 		HGBaseItems.registerRecipes();
 		HGMetalBlocks.registerRecipes();
 		HGGunRecipes.init();
@@ -1126,8 +1127,6 @@ public class HandmadeGunsCore {
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		HGMetalRecipes.init();
-		HGWorldGenConfig.init();
 //		System.out.println("debug");
 		islmmloaded = Loader.isModLoaded("lmmx");
 		isgvcloaded = Loader.isModLoaded("GVCMob");
@@ -1150,6 +1149,14 @@ public class HandmadeGunsCore {
 		//TODO:INJECT_FUNCTION
 		//AddRecipe
 		HMG_proxy.setUpModels();
+	}
+
+	@EventHandler
+	public void loadComplete(cpw.mods.fml.common.event.FMLLoadCompleteEvent event) {
+		// All mods have finished registering materials; existing recipes hold the live input lists.
+		handmadeguns.compat.HGMetalCompat.initializeRecipeInputs();
+		HGMetalRecipes.init();
+		HGWorldGenConfig.init();
 	}
 
 	//Recipe loading

@@ -2,6 +2,42 @@
 
 This document records maintained cross-mod and rendering behavior. These integrations are optional unless a server or pack explicitly depends on the other mod.
 
+## Industrial materials and RTM/RealSim
+
+RTM/RealSim integration is optional and uses the shared `hbm` mod ID and item
+registry names, without loading HBM classes. Copper and aluminum ingots and
+nine-ingot storage blocks retain their commodity OreDictionary entries. HMG's
+fallback steel, furniture polymer, and pack-defined `Prastic` have no global
+industrial steel/plastic aliases. Existing item IDs, metadata and saved stacks
+remain valid.
+
+HMG component recipes and ordinary pack ingredient references to `steelIngot`
+use `hmgInputSteel`: HMG fallback steel, RTM/HBM ordinary `item.ingot_steel`,
+and third-party ordinary `ingotSteel` ingredients. Known HBM alloy grades and
+MCHeli synthetic items are excluded from generic discovery. Stainless, weapon,
+dusted and other special steel grades are not mapped. `polymer` references use
+`hmgInputPolymer`: HMG furniture polymer plus RTM/HBM `item.ingot_polymer`
+(polyethylene), `item.ingot_bakelite`, and `item.ingot_pc` (polycarbonate).
+These full-ingot alternatives serve HMG furniture recipes; they are not assertions
+of chemical equivalence or routes to convert materials. Ingredient counts and
+weapon/component yields retain their existing values. Tagged ingredients and
+explicit `exact:` pack requirements remain exact.
+
+There are no HMG bidirectional ingot conversion recipes. When `hbm` is loaded,
+HMG does not register iron/coal fallback steel production (including infused-coal
+smelting), or direct aluminum-ore smelting. RTM retains its industrial processing
+routes; old HMG aluminum ore retains its ore identity for RTM processing. HMG's
+slime/reeds furniture polymer and coal/reeds `Prastic` production stay practical
+private weapon/armor supplies, with no industrial feedstock export. Copper ore
+smelting and exact nine-ingot block packing/unpacking remain available.
+
+Input groups are established before HMG recipes are normalized and refreshed
+after all mods' post-initialization. Forge crafting, the Gun Smithing Table and
+NEI consume the same live lists, including later provider entries. Fallback steel
+and ore-generation decisions run after post-initialization; HMG's own ores do not
+count as an external provider. With RTM installed its ores suppress HMG duplicate
+generation. No entries owned by other mods are removed.
+
 ## Angelica and Celeritas rendering
 
 HMG parses models during Forge initialization but creates model display lists, VBOs, and Blockbench texture uploads lazily on the first normal render. This avoids issuing rendering or texture-manager work before Angelica has entered a managed render frame or before Minecraft has constructed its texture manager.

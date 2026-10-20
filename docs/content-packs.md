@@ -164,8 +164,11 @@ Third-party or older packs may continue using `attachment/`, `addmodel/`, `addte
 
 Gun Smithing Table recipes loaded from `addpackrecipe/` automatically use Forge's
 Ore Dictionary when an ordinary referenced item is registered there. For example,
-`Slot1,HandmadeGuns:steel_ingot` accepts every `ingotSteel` alternative when that
-item is registered as `ingotSteel`; packs do not need to opt in with a prefix.
+`Slot1,HandmadeGuns:copperIngot` accepts `ingotCopper` alternatives; packs do not
+need to opt in with a prefix. HMG's `steelIngot` and `polymer` instead select
+the private `hmgInputSteel` and `hmgInputPolymer` recipe groups. These accept
+audited external ingredients for HMG crafting without exporting HMG synthetics
+as industrial steel or plastic. See [material compatibility](compatibility.md#industrial-materials-and-rtmrealsim).
 
 An explicit Ore Dictionary key can still override automatic selection in a `SlotN`
 line:
@@ -194,7 +197,7 @@ be registered, and a target that already has a recipe is not duplicated.
 Supported prefixes are `ore:`, `oredict:`, and `OreDictionary:`. Prefix matching is case-insensitive, and the ore dictionary key after the prefix is preserved. A final numeric suffix may be used for the required amount, as in `ore:ingotCopper:5`; otherwise the slot requires one matching item.
 
 If Forge registers an item under multiple keys, automatic conversion deterministically
-uses the first ID returned by Forge, matching MCHO behavior. To require the literal
+uses the first ID returned by Forge, except for the private HMG materials above. To require the literal
 item instead, use `exact:modid:item[:metadata[:count]]`. Exact inputs retain metadata
 and NBT matching; metadata `32767` has Forge wildcard semantics. Tagged programmatic
 recipe inputs also stay exact so normalization cannot discard an NBT requirement.

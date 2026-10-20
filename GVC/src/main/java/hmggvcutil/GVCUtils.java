@@ -25,7 +25,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.EnumHelper;
-import net.minecraftforge.oredict.OreDictionary;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IFuelHandler;
 import cpw.mods.fml.common.Mod;
@@ -270,7 +269,7 @@ public class GVCUtils {
 		fn_box	= new GVCItemBox().setUnlocalizedName("box").setTextureName("gvcguns:box").setMaxStackSize(64);
 		GameRegistry.registerItem(fn_box, "box");
 		fn_pra	= GameRegistry.findItem("HandmadeGuns", "Prastic");
-		OreDictionary.registerOre("ingotPlastic", new ItemStack(fn_pra, 1, 0));
+		// HMG's coal/reeds plastic is private armor stock, not industrial plastic feedstock.
 
 //		fn_torch	= new GVCItemtorch().setUnlocalizedName("torch").setTextureName("gvcguns:gustorch");
 //		GameRegistry.registerItem(fn_torch, "torch");

@@ -2,6 +2,7 @@ package handmadeguns.gunsmithing;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 import handmadeguns.HandmadeGunsCore;
+import handmadeguns.compat.HGMetalCompat;
 import handmadeguns.items.HMGItemCustomMagazine;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import net.minecraft.item.Item;
@@ -238,11 +239,15 @@ public final class GunSmithRecipeRegistry {
 
     /**
      * MCHO-style normalization for every ordinary Gun Smithing Table stack input.
-     * The first Forge ore ID is authoritative, matching Forge's deterministic
-     * registration order. Tagged stacks remain exact so NBT requirements are not lost.
+     * Private synthetic materials use explicit recipe inputs before considering ore IDs.
+     * Tagged stacks remain exact so NBT requirements are not lost.
      */
     public static GunTableIngredient normalizeIngredient(ItemStack stack) {
         if (stack == null) return null;
+        String materialInput = HGMetalCompat.recipeInput(stack);
+        if (materialInput != null) {
+            return new OreDictionaryIngredient(materialInput, Math.max(1, stack.stackSize));
+        }
         if (!stack.hasTagCompound()) {
             int[] oreIds = OreDictionary.getOreIDs(stack);
             if (oreIds != null) {

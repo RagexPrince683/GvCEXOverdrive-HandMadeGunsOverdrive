@@ -2,9 +2,7 @@ package handmadeguns.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.oredict.OreDictionary;
 import handmadeguns.compat.HGMetalCompat;
 
 public class HGMetalRecipes {
@@ -12,7 +10,7 @@ public class HGMetalRecipes {
     public static void init() {
 
         // === Existing fallback steel logic ===
-        if (!HGMetalCompat.externalSteelExists()) {
+        if (!HGMetalCompat.industrialProviderLoaded() && !HGMetalCompat.externalSteelExists()) {
 
             // Iron Infused Coal
             GameRegistry.addShapelessRecipe(
@@ -29,25 +27,6 @@ public class HGMetalRecipes {
             );
         }
 
-        // === Cross-mod conversion recipes ===
-        addOreConversions("ingotSteel", HGMetalItems.steelIngot);
-        addOreConversions("ingotCopper", HGMetalItems.copperIngot);
-        addOreConversions("ingotAluminum", HGMetalItems.aluminumIngot);
-    }
-
-    private static void addOreConversions(String oreName, Item targetItem) {
-        for (ItemStack oreStack : OreDictionary.getOres(oreName)) {
-            if (oreStack != null && !oreStack.getItem().equals(targetItem)) {
-                // Add shapeless recipes both ways
-                GameRegistry.addShapelessRecipe(
-                        new ItemStack(targetItem, 1, 0),
-                        oreStack.copy()
-                );
-                GameRegistry.addShapelessRecipe(
-                        oreStack.copy(),
-                        new ItemStack(targetItem, 1, 0)
-                );
-            }
-        }
+        // Equivalent copper/aluminum remain ore ingredients; never mint another provider's item.
     }
 }

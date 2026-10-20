@@ -1,6 +1,7 @@
 package handmadeguns.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import handmadeguns.compat.HGMetalCompat;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -19,7 +20,7 @@ public class HGGunRecipes {
                 " S ",
                 " I ",
                 " S ",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'I', "ingotIron"
         ));
 
@@ -29,7 +30,7 @@ public class HGGunRecipes {
                 " S ",
                 " S ",
                 " S ",
-                'S', "ingotSteel"
+                'S', HGMetalCompat.STEEL_INPUT
         ));
 
         // trigger assembly — fire control group, now outputs 2
@@ -40,7 +41,7 @@ public class HGGunRecipes {
                 " S ",
                 'P', HGGunItems.springSet,
                 'I', "ingotIron",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'R', Items.redstone
         ));
 
@@ -54,7 +55,7 @@ public class HGGunRecipes {
                 " S ",
                 "IRI",
                 " S ",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'I', "ingotIron",
                 'R', Items.redstone
         ));
@@ -80,7 +81,7 @@ public class HGGunRecipes {
                 "SSS",
                 "STS",
                 "SSS",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'T', HGGunItems.triggerAssembly
         ));
 
@@ -106,7 +107,7 @@ public class HGGunRecipes {
                 "SF ",
                 " S ",
                 'P', HGGunItems.springSet,
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'F', HGGunItems.firingPin
         ));
 
@@ -119,7 +120,7 @@ public class HGGunRecipes {
                 'P', HGGunItems.springSet,
                 'X', HGGunItems.precisionComponents,
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'F', HGGunItems.firingPin
         ));
 
@@ -131,7 +132,7 @@ public class HGGunRecipes {
                 " S ",
                 'P', HGGunItems.springSet,
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'F', HGGunItems.firingPin
         ));
 
@@ -143,7 +144,7 @@ public class HGGunRecipes {
                 'P', HGGunItems.springSet,
                 'X', HGGunItems.precisionComponents,
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'F', HGGunItems.firingPin
         ));
 
@@ -157,7 +158,7 @@ public class HGGunRecipes {
                 " S ",
                 " M ",
                 " S ",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'M', HGGunItems.machinedParts
         ));
 
@@ -167,7 +168,7 @@ public class HGGunRecipes {
                 " M ",
                 " S ",
                 " M ",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'M', HGGunItems.machinedParts
         ));
 
@@ -179,7 +180,7 @@ public class HGGunRecipes {
                 " S ",
                 'P', HGGunItems.precisionComponents,
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel"
+                'S', HGMetalCompat.STEEL_INPUT
         ));
 
         // =====================================================
@@ -223,7 +224,7 @@ public class HGGunRecipes {
                 "SMS",
                 "M M",
                 "SMS",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'M', HGGunItems.machinedParts
         ));
 
@@ -232,7 +233,7 @@ public class HGGunRecipes {
                 " S ",
                 "M M",
                 " P ",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'M', HGGunItems.machinedParts,
                 'P', HGGunItems.springSet
         ));
@@ -246,7 +247,7 @@ public class HGGunRecipes {
                 " S ",
                 " S ",
                 " S ",
-                'S', "ingotSteel"
+                'S', HGMetalCompat.STEEL_INPUT
         ));
 
         GameRegistry.addRecipe(new ShapedOreRecipe(
@@ -265,7 +266,7 @@ public class HGGunRecipes {
                 "MSM",
                 " M ",
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel"
+                'S', HGMetalCompat.STEEL_INPUT
         ));
 
         //=====================================================
@@ -279,7 +280,7 @@ public class HGGunRecipes {
                 " S ",
                 'P', HGGunItems.springSet,
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'F', HGGunItems.firingPin
         ));
 
@@ -291,7 +292,7 @@ public class HGGunRecipes {
                 'P', HGGunItems.springSet,
                 'X', HGGunItems.precisionComponents,
                 'M', HGGunItems.machinedParts,
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'F', HGGunItems.firingPin
         ));
 
@@ -304,7 +305,7 @@ public class HGGunRecipes {
                 "S S",
                 " M ",
                 "S S",
-                'S', "ingotSteel",
+                'S', HGMetalCompat.STEEL_INPUT,
                 'M', HGGunItems.machinedParts
         ));
 

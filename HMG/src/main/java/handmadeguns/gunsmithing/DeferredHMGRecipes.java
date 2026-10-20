@@ -1,6 +1,7 @@
 package handmadeguns.gunsmithing;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import handmadeguns.compat.HGMetalCompat;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -85,9 +86,11 @@ public final class DeferredHMGRecipes {
             ArrayList<Object> args = new ArrayList<Object>();
             for (String row : rows) args.add(row);
             for (int i = 0; i < symbols.length; i++) if (symbols[i] != null) {
-                args.add(Character.valueOf((char) ('a' + i))); args.add(symbols[i]);
+                args.add(Character.valueOf((char) ('a' + i)));
+                String materialInput = HGMetalCompat.recipeInput(new ItemStack(symbols[i]));
+                args.add(materialInput == null ? symbols[i] : materialInput);
             }
-            GameRegistry.addRecipe(output, args.toArray(new Object[args.size()]));
+            GameRegistry.addRecipe(new ShapedOreRecipe(output, args.toArray(new Object[args.size()])));
         }
     }
 

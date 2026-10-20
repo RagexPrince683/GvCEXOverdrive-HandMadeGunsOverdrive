@@ -313,7 +313,16 @@ task repositoryPackAssetTest(type: JavaExec, dependsOn: testClasses) {
 	args rootProject.file('HMG/eclipse/handmadeguns_Packs').absolutePath,
 			rootProject.file('HMG/src/main/resources/hmg_packs').absolutePath
 }
-test.dependsOn animationTest, packResolverTest, repositoryPackAssetTest
+task materialCompatibilityTest(type: JavaExec, dependsOn: testClasses) {
+	main = 'handmadeguns.compat.HMGMaterialCompatibilityTests'
+	classpath = sourceSets.test.runtimeClasspath
+}
+task standaloneMaterialTest(type: JavaExec, dependsOn: testClasses) {
+	main = 'handmadeguns.compat.HMGMaterialCompatibilityTests'
+	classpath = sourceSets.test.runtimeClasspath
+	args 'standalone'
+}
+test.dependsOn animationTest, packResolverTest, repositoryPackAssetTest, materialCompatibilityTest, standaloneMaterialTest
 
 tasks.withType(JavaExec) {
 	if (name == "runClient") {
