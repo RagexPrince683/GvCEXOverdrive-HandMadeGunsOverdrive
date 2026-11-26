@@ -731,9 +731,23 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				Minecraft.getMinecraft().renderEngine.bindTexture(guntexture);
 				GL11.glPushMatrix();
 				try {
-				GL11.glScalef(1f / 2f, 1f / 2f, 1f / 2f);
+				boolean bipedHand = HMGBipedGunRender.ownsHand(entity, gunstack);
+				if (!bipedHand) GL11.glScalef(1f / 2f, 1f / 2f, 1f / 2f);
 				boolean blockbenchPresentation = model instanceof handmadeguns.client.modelLoader.blockbench.BlockbenchModel;
-				if (entity instanceof EntityPlayer && blockbenchPresentation) {
+				if (bipedHand) {
+					HMGBipedGunRender.applyHandFrame();
+					GL11.glScalef(scala * gunitem.gunInfo.inworldScale, scala * gunitem.gunInfo.inworldScale,
+							scala * gunitem.gunInfo.inworldScale);
+					if (blockbenchPresentation) {
+						((handmadeguns.client.modelLoader.blockbench.BlockbenchModel)model)
+								.applyThirdPersonPosition(partsRender_gun.gunPartsScale);
+					} else {
+						GL11.glRotatef(thirdmodelRotationY, 0, 1, 0);
+						GL11.glRotatef(thirdmodelRotationX, 1, 0, 0);
+						GL11.glRotatef(thirdmodelRotationZ, 0, 0, 1);
+						GL11.glTranslatef(thirdmodelPosX / 2, thirdmodelPosY / 2, thirdmodelPosZ / 2);
+					}
+				} else if (entity instanceof EntityPlayer && blockbenchPresentation) {
 					glMatrixForRenderBlockbenchEntityPlayer();
 					GL11.glScalef(scala, scala, scala);
 					GL11.glScalef(gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale);
@@ -750,7 +764,7 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 				//todo: add a way to move the gun forwards or backwards in third person so the player is
 				// at least holding the grip in third person pov,
 				// or just translate the first person pov so that it scales properly
-				if (!(entity instanceof EntityPlayer && blockbenchPresentation))
+				if (!bipedHand && !(entity instanceof EntityPlayer && blockbenchPresentation))
 					GL11.glScalef(gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale, gunitem.gunInfo.inworldScale);
 				rendering_situation(gunstack,entity, currentReloadState);
 				} finally { GL11.glPopMatrix(); }

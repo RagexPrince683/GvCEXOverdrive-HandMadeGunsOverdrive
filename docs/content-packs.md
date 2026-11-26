@@ -91,7 +91,7 @@ handmadeguns_Packs/
     additionalSettings.txt
 ```
 
-The asset resolver is always bound to the pack containing the definition. A simple name is looked up in its logical folder first, so a gun can use:
+The asset resolver is always bound to the pack containing the definition. It rejects absolute paths, parent-directory traversal, and canonical or symbolic-link escapes. A simple name is looked up in its logical folder first, so a gun can use:
 
 ```text
 Model,akm.mqo

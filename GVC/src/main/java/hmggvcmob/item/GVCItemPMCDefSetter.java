@@ -1,133 +1,102 @@
 package hmggvcmob.item;
 
-import handmadeguns.Util.GunsUtils;
-import handmadevehicle.entity.EntityDummy_rider;
 import handmadevehicle.entity.parts.Modes;
-import hmggvcmob.entity.friend.*;
-import net.minecraft.entity.Entity;
+import hmggvcmob.entity.friend.EntityPMCBase;
+import hmggvcmob.entity.util.PlatoonOBJ;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-import javax.vecmath.Vector3d;
-import java.util.ArrayList;
-import java.util.List;
-
-import static handmadevehicle.Utils.*;
 import static hmggvcmob.GVCMobPlus.tabgvcm;
 import static hmggvcutil.GVCUtils.platoonMatched;
 
 public class GVCItemPMCDefSetter extends Item {
-    int mode = 0;
-    public GVCItemPMCDefSetter(){
-        this.setCreativeTab(tabgvcm);
+    private static final String ORDER_MODE = "GVCOrderMode";
+    private static final Modes[] ORDERS = {Modes.Go, Modes.Follow, Modes.Patrol, Modes.Defend, Modes.Attack};
+
+    public GVCItemPMCDefSetter() {
+        setCreativeTab(tabgvcm);
         setMaxStackSize(64);
     }
-    /**
-     * Called whenever this item is equipped and the right mouse button is pressed. Args: itemStack, world, entityPlayer
-     */
-    public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer)
-    {
-        if(!world.isRemote) {
-            if (entityPlayer.isSneaking()) {
-                if (mode == 0) {
-                    mode = 1;
-                    entityPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                            "Tracking command mode"));
-                } else if(mode == 1){
-                    mode = 2;
-                    entityPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                            "LZ set mode"));
-                }else if(mode == 2){
-                    mode = 0;
-                    entityPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                            "Position setter mode"));
-                }
-            }else {
-                EntityPMCBase target = searchEntity(itemStack, entityPlayer, world);
-                if (target != null) {
-                    String platoonName = itemStack.hasDisplayName() ? itemStack.getDisplayName() :null;
-                    if(platoonName != null)target.platoonName = platoonName;
-//                    System.out.println("" + target.platoonName);
-                    if (target.getPlatoon() == null)target.makePlatoon();
-                    else {
-                        target.enlistPlatoon(false);
-                        if( target.getPlatoon().leader != null)
-                            target = (EntityPMCBase) target.getPlatoon().leader.entity;
-                    }
-                    switch (mode) {
-                        case 1:
-                            target.getPlatoon().platoonTargetEntity = entityPlayer;
-                            target.leaderEntity_name = entityPlayer.getCommandSenderName();
-                            target.changePlatoonOrder(Modes.Follow);
-                            entityPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                                    "Follow"));
-                            break;
-                        case 0:
-                            Vector3d frontVec = getjavaxVecObj(getLook(1,entityPlayer.getRotationYawHead(),entityPlayer.rotationPitch));
-                            frontVec.scale(-1);
-                            Vec3 vec3 = Vec3.createVectorHelper(entityPlayer.posX, entityPlayer.posY + entityPlayer.getEyeHeight(), entityPlayer.posZ);
-                            Vec3 playerlook = getMinecraftVecObj(frontVec);
-                            playerlook.xCoord *= -1;
-                            playerlook.yCoord *= -1;
-                            playerlook.zCoord *= -1;
 
-                            playerlook = Vec3.createVectorHelper(playerlook.xCoord * 256, playerlook.yCoord * 256, playerlook.zCoord * 256);
+    @Override
+    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
+        if (world.isRemote) return stack;
+        NBTTagCompound tag = stack.getTagCompound();
+        int index = tag == null ? 0 : tag.getInteger(ORDER_MODE);
+        // The previous index 2 meant vehicle landing.
+        if (tag == null || !tag.getBoolean("GVCInfantryOrders") || index < 0 || index >= ORDERS.length) {
+            index = index == 1 ? 1 : 0;
+        }
+        if (player.isSneaking()) {
+            if (tag == null) {
+                tag = new NBTTagCompound();
+                stack.setTagCompound(tag);
+            }
+            index = (index + 1) % ORDERS.length;
+            tag.setBoolean("GVCInfantryOrders", true);
+            tag.setInteger(ORDER_MODE, index);
+            player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.selected", title(ORDERS[index])));
+            return stack;
+        }
 
-                            Vec3 vec31 = Vec3.createVectorHelper(entityPlayer.posX + playerlook.xCoord, entityPlayer.posY + entityPlayer.getEyeHeight() + playerlook.yCoord, entityPlayer.posZ + playerlook.zCoord);
-                            MovingObjectPosition movingobjectposition = GunsUtils.getmovingobjectPosition_forBlock(world,vec3, vec31);//è’ìÀÇ∑ÇÈÉuÉçÉbÉNÇí≤Ç◊ÇÈ
-                            if(movingobjectposition != null && movingobjectposition.hitVec != null) {
-                                target.getPlatoon().setPlatoonTargetPos(new double[]{movingobjectposition.blockX,
-                                        movingobjectposition.blockY,
-                                        movingobjectposition.blockZ});
-                            }else {
-                                target.getPlatoon().setPlatoonTargetPos(new double[]{vec31.xCoord,
-                                        vec31.yCoord,
-                                        vec31.zCoord});
-                            }
-                            target.changePlatoonOrder(Modes.Go);
-                            entityPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                                    "MoveToTargetPos : " + target.getPlatoon().PlatoonTargetPos));
-                            break;
-                        case 2:
-                            target.changePlatoonOrder(Modes.Land);
-                            entityPlayer.addChatComponentMessage(new ChatComponentTranslation(
-                                    "Landing"));
-                            break;
-                    }
-                }
+        EntityPMCBase unit = searchEntity(stack, player, world);
+        if (unit == null) {
+            player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.no_squad"));
+            return stack;
+        }
+        Modes order = ORDERS[index];
+        MovingObjectPosition point = null;
+        if (order != Modes.Follow) {
+            Vec3 look = player.getLook(1);
+            Vec3 start = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+            point = world.rayTraceBlocks(start, start.addVector(look.xCoord * 80, look.yCoord * 80, look.zCoord * 80));
+            if (point == null) {
+                player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.no_destination"));
+                return stack;
             }
         }
-        return itemStack;
+
+        PlatoonOBJ.restore(unit);
+        if (stack.hasDisplayName()) unit.platoonName = stack.getDisplayName();
+        if (unit.getPlatoon() == null) unit.makePlatoon();
+        else unit.enlistPlatoon(false);
+        PlatoonOBJ platoon = unit.getPlatoon();
+        if (order == Modes.Follow) {
+            platoon.follow(player);
+            player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.follow"));
+        } else {
+            int x = point.blockX;
+            int y = point.blockY + 1;
+            int z = point.blockZ;
+            platoon.order(order, x + 0.5, y, z + 0.5);
+            player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.destination", title(order), x, y, z));
+        }
+        return stack;
     }
 
-    public EntityPMCBase searchEntity(ItemStack itemStack , EntityPlayer entityPlayer, World world)
-    {
-        if(!world.isRemote) {
-            List list = world.getEntitiesWithinAABBExcludingEntity(entityPlayer, entityPlayer.boundingBox.expand(80, 80, 80));
-            if (list != null && !list.isEmpty()) {
-                for (Object o : list) {
-                    Entity PMC = (Entity) o;
-                    if (PMC instanceof EntityPMCBase && platoonMatched(itemStack.hasDisplayName() ? itemStack.getDisplayName() :null, (EntityPMCBase) PMC) && canMoveEntity(PMC)) {
-                        return (EntityPMCBase) PMC;
-                    }
-                }
-            }
-            list = world.loadedEntityList;
-            if (list != null && !list.isEmpty()) {
-                for (Object o : list) {
-                    Entity PMC = (Entity) o;
-                    if (PMC instanceof EntityPMCBase && platoonMatched(itemStack.hasDisplayName() ? itemStack.getDisplayName() :null, (EntityPMCBase) PMC) && canMoveEntity(PMC)) {
-                        return (EntityPMCBase) PMC;
-                    }
-                }
+    private static ChatComponentTranslation title(Modes order) {
+        return new ChatComponentTranslation("gvc.order.mode." + order.name());
+    }
+
+    public EntityPMCBase searchEntity(ItemStack stack, EntityPlayer player, World world) {
+        if (world.isRemote) return null;
+        String name = stack.hasDisplayName() ? stack.getDisplayName() : null;
+        double best = 80 * 80;
+        EntityPMCBase nearest = null;
+        for (Object nearby : world.getEntitiesWithinAABB(EntityPMCBase.class, player.boundingBox.expand(80, 16, 80))) {
+            EntityPMCBase unit = (EntityPMCBase)nearby;
+            double distance = player.getDistanceSqToEntity(unit);
+            if (unit.isEntityAlive() && unit.ridingEntity == null && distance < best && platoonMatched(name, unit)) {
+                best = distance;
+                nearest = unit;
             }
         }
-        return null;
+        return nearest;
     }
-
 }

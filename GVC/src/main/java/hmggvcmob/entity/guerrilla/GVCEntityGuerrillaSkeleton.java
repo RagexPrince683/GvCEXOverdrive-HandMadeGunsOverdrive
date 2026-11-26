@@ -40,7 +40,7 @@ public class GVCEntityGuerrillaSkeleton extends EntityGBase
         super.addRandomArmor();
         Random rnd = new Random();
 
-        this.setCurrentItemOrArmor(0, new ItemStack((Item)Guns_BoltR.get(rnd.nextInt(Guns_BoltR.size()))));
+        this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_BoltR, rnd));
     }
 
     /**

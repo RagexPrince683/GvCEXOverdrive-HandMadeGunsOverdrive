@@ -258,25 +258,8 @@ public class GVCEntityGuerrillaM extends EntityMob
                 return false;//視線が通る範囲にプレイヤーが居るならキャンセルする。視界内にスポーンするのがクソゲだったので
             }
         }
-        {
-            double dist = 9216;
-            TileEntityFlag closestFlag = null;
-            for (Object obj : this.worldObj.loadedTileEntityList) {
-                if (obj instanceof TileEntityFlag) {
-                    TileEntityFlag tileEntity = (TileEntityFlag) obj;
-                    if (tileEntity.flagHeight >= tileEntity.campObj.maxFlagHeight / 2 && tileEntity.campObj == forPlayer) {
-                        double tempDist = tileEntity.getDistanceFrom(this.posX, tileEntity.yCoord, this.posZ);
-                        if (tempDist < dist || dist == -1) {
-                            dist = tempDist;
-                            closestFlag = tileEntity;
-                        }
-                    }
-                }
-            }
-            if (closestFlag != null) {
-                return false;
-            }
-        }
+        if (TileEntityFlag.findNearest(worldObj, posX, posY, posZ, 96, true,
+                flag -> flag.isActiveBeacon() && flag.campObj == forPlayer) != null) return false;
         return super.getCanSpawnHere();
     }
 
@@ -358,7 +341,7 @@ public class GVCEntityGuerrillaM extends EntityMob
     public void addRandomArmor()
     {
         super.addRandomArmor();
-        this.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_ak74));
+        this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_ak74, hmggvcmob.GVCMobPlus.Guns_AR, worldObj.rand));
     }
 
     public IEntityLivingData onSpawnWithEgg(IEntityLivingData par1EntityLivingData)

@@ -1,8 +1,10 @@
-sourceSets.main {
-    java.srcDirs project.projectDir.name
-    resources.srcDirs project.projectDir.name
+version = '14.22'
+
+dependencies {
+    compile files(project(':GVC').sourceSets.main.output)
+    compile files(project(':HMG').sourceSets.main.output)
 }
-version = "14.22"
-tasks.withType(Jar) {compileJava.options.encoding = 'UTF-8'}
-tasks.withType(Jar) {compileApiJava.options.encoding = 'UTF-8'}
-dependencies { compile project(':GVC')}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

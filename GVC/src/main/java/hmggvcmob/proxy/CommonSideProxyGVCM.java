@@ -34,6 +34,10 @@ public class CommonSideProxyGVCM {
 	
 	public void registerClientInfo(){}
 
+	public void registerClientEvents() {}
+
+	public void scheduleClientPacket(java.util.function.Consumer<World> action) {}
+
 	public void registerTileEntity() {
 //		GameRegistry.registerTileEntity(GVCTileEntityMobSpawner.class, "GVCTile_MobSpawner");
 		GameRegistry.registerTileEntity(TileEntityFlag.class, "FlagTile");

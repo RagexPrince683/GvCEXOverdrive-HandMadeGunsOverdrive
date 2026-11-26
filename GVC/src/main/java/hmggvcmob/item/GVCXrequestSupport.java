@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import static hmggvcmob.GVCMobPlus.tabgvcm;
+import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
 
 public class GVCXrequestSupport extends Item {
     public int type;
@@ -15,16 +16,15 @@ public class GVCXrequestSupport extends Item {
         super();
         this.maxStackSize = 64;
         type = t;
-        this.setCreativeTab(tabgvcm);
+        if (t == 0 || VEHICLES_ENABLED) this.setCreativeTab(tabgvcm);
     }
     public ItemStack onItemRightClick(ItemStack p_77659_1_, World world, EntityPlayer entityplayer)
     {
-        if (!world.isRemote) {
+        if (!world.isRemote && (type == 0 || VEHICLES_ENABLED)) {
             EntitySupportTGT var8 = new EntitySupportTGT(world, (EntityLivingBase) entityplayer, 20.0F);
             var8.type = type;
-            world.spawnEntityInWorld(var8);
+            hmggvcmob.util.GVCUtil.spawnFromItem(world, var8, entityplayer, p_77659_1_);
         }
-        p_77659_1_.stackSize--;
         return p_77659_1_;
     }
 }

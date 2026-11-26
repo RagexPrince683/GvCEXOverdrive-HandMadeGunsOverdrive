@@ -23,7 +23,7 @@ public class GVCEntityGuerrillaRPG extends EntityGBase implements IHasVehicleGac
     {
         super(par1World);
         this.setSize(0.6F, 1.8F);
-        if(cfg_blockdestory)this.tasks.addTask(1,new AIBuilder(this,worldForPathfind));
+        if(cfg_blockdestory)this.tasks.addTask(1,new AIBuilder(this));
     }
     protected void applyEntityAttributes()
     {
@@ -39,7 +39,7 @@ public class GVCEntityGuerrillaRPG extends EntityGBase implements IHasVehicleGac
         super.addRandomArmor();
         if(rnd.nextInt(10)!=-0) {
             //TODO AAミソを対地で使うと強すぎる
-            this.setCurrentItemOrArmor(0, new ItemStack((Item) Guns_RR.get(rnd.nextInt(Guns_RR.size()))));
+            this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_RR, rnd));
         }
     }
 

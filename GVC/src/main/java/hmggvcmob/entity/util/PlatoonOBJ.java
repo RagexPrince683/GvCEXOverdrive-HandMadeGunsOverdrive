@@ -1,432 +1,377 @@
 package hmggvcmob.entity.util;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import handmadevehicle.entity.EntityDummy_rider;
-import handmadevehicle.entity.EntityVehicle;
-//import handmadevehicle.entity.parts.IDriver;
+import handmadeguns.entity.IFF;
 import handmadevehicle.entity.parts.Modes;
-import handmadevehicle.entity.parts.Type;
-import handmadevehicle.entity.parts.logics.BaseLogic;
+import hmggvcmob.ai.AIInfantryTarget;
+import hmggvcmob.entity.IGVCmob;
 import hmggvcmob.entity.IPlatoonable;
-import net.minecraft.entity.Entity;
+import hmggvcmob.entity.friend.EntityPMCBase;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.server.gui.IUpdatePlayerListBox;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldSavedData;
 
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import static handmadevehicle.Utils.canMoveEntity;
-import static handmadevehicle.entity.parts.Type.*;
+public class PlatoonOBJ {
+    public static final int MAX_MEMBERS = 8;
+    private static final double SPACING = 2.4;
+    private static final String SAVE_KEY = "GVCPlatoon";
 
-public class PlatoonOBJ implements IUpdatePlayerListBox {
-	public ArrayList<EntityAndPos> platoonMembers = new ArrayList<>();
-	public ArrayList<EntityAndPos> removeQue = new ArrayList<>();
+    private final UUID id;
+    private final Set<UUID> members = new HashSet<>();
+    private final List<EntityAndPos> loadedMembers = new ArrayList<>();
+    private final Data data;
+    public EntityAndPos leader;
+    private UUID leaderId;
+    private UUID playerId;
+    private String legacyPlayerName;
+    private long nextUpdate;
+    private boolean scheduled;
+    private final Vector3d patrolOrigin = new Vector3d();
+    private boolean patrolOutbound = true;
+    private boolean currentCamp;
+    private final Vector3d heading = new Vector3d();
+    private boolean hasHeading;
 
-	public int lastUpdatedTick = 0;
-	public EntityAndPos leader;
-	public Modes platoonMode = Modes.Wait;
-	public Type platoonType = Infantry;
-	public Entity platoonTargetEntity = null;
-	ArrayList<EntityAndPos> vehicleDriver = new ArrayList<EntityAndPos>();
-	ArrayList<EntityAndPos> planeDriver = new ArrayList<EntityAndPos>();
-	ArrayList<EntityAndPos> normalSoldier = new ArrayList<EntityAndPos>();
+    public Modes platoonMode = Modes.Wait;
+    public final Vector3d PlatoonTargetPos = new Vector3d();
 
-	public int pathUpdateCool = 0;
-	public boolean randMiser = false;
-	public Random random;
-	public PlatoonOBJ(){
-		random = new Random();
-		randMiser = random.nextBoolean();
-	}
+    private PlatoonOBJ(Data data, UUID id) {
+        this.data = data;
+        this.id = id;
+    }
 
-	public Vector3d PlatoonTargetPos = new Vector3d();
+    public static PlatoonOBJ create(EntityLiving owner) {
+        Data data = Data.get(owner.worldObj);
+        PlatoonOBJ platoon = new PlatoonOBJ(data, UUID.randomUUID());
+        platoon.PlatoonTargetPos.set(owner.posX, owner.boundingBox.minY, owner.posZ);
+        platoon.patrolOrigin.set(platoon.PlatoonTargetPos);
+        data.platoons.put(platoon.id, platoon);
+        data.markDirty();
+        return platoon;
+    }
 
-	public void setPlatoonTargetPos(int[] targetPos){
-		PlatoonTargetPos.set(targetPos[0],targetPos[1],targetPos[2]);
-	}
-	public void setPlatoonTargetPos(double[] targetPos){
-		PlatoonTargetPos.set(targetPos[0],targetPos[1],targetPos[2]);
-	}
-	public void setPlatoonTargetPos(Entity target){
-		if(target.ridingEntity == null)PlatoonTargetPos.set(target.posX,target.posY,target.posZ);
-		else if(target.ridingEntity instanceof EntityDummy_rider){
-			EntityVehicle targetVehicle = ((EntityDummy_rider) target.ridingEntity).linkedBaseLogic.mc_Entity;
-			PlatoonTargetPos.set(targetVehicle.posX,targetVehicle.posY,targetVehicle.posZ);
-		}else {
-			Entity targetEntity = target.ridingEntity;
-			PlatoonTargetPos.set(targetEntity.posX,targetEntity.posY,targetEntity.posZ);
-		}
-	}
+    public static void save(EntityLiving member, NBTTagCompound tag) {
+        PlatoonOBJ platoon = ((IPlatoonable)member).getPlatoon();
+        if (platoon != null) tag.setString(SAVE_KEY, platoon.id.toString());
+        else if (member.getEntityData().hasKey(SAVE_KEY)) {
+            tag.setString(SAVE_KEY, member.getEntityData().getString(SAVE_KEY));
+        }
+    }
 
-	Vector3d platoonHeading = null;
-	private void PlatoonFormationUpdate(){
-		lastUpdatedTick = FMLCommonHandler.instance().getMinecraftServerInstance().getTickCounter();
+    public static void read(EntityLiving member, NBTTagCompound tag) {
+        if (tag.hasKey(SAVE_KEY)) member.getEntityData().setString(SAVE_KEY, tag.getString(SAVE_KEY));
+        if (tag.getIntArray("platoonTargetPos").length == 3) {
+            member.getEntityData().setIntArray("platoonTargetPos", tag.getIntArray("platoonTargetPos"));
+        }
+    }
 
-		vehicleDriver.clear();
-		planeDriver.clear();
-		normalSoldier.clear();
-		if(leader != null && leader.entity.ridingEntity instanceof EntityDummy_rider &&
-				((EntityDummy_rider) leader.entity.ridingEntity).linkedSeatID != ((EntityDummy_rider) leader.entity.ridingEntity).linkedBaseLogic.getpilotseatid()){
-			leader = null;
-		}
-		int cnt = 0;
-		for(EntityAndPos entityAndPos : platoonMembers){
-			sortMember(entityAndPos);
-		}
+    public static boolean pending(EntityLiving member) {
+        return member.getEntityData().hasKey(SAVE_KEY) || member.getEntityData().hasKey("platoonTargetPos");
+    }
 
-		platoonMembers.removeAll(removeQue);
-		for(EntityAndPos entityAndPos : removeQue){
-			if(canMoveEntity(entityAndPos.entity) && entityAndPos.entity instanceof IPlatoonable){
-				((IPlatoonable) entityAndPos.entity).setPlatoon(null);
-				break;
-			}
-		}
-		removeQue.clear();
+    public static void restore(EntityLiving member) {
+        IPlatoonable unit = (IPlatoonable)member;
+        if (unit.getPlatoon() != null || !pending(member)) return;
+        NBTTagCompound tag = member.getEntityData();
+        UUID id = parseId(tag.getString(SAVE_KEY));
+        PlatoonOBJ platoon = id == null ? null : Data.get(member.worldObj).platoons.get(id);
+        int[] oldPosition = tag.getIntArray("platoonTargetPos");
+        tag.removeTag(SAVE_KEY);
+        tag.removeTag("platoonTargetPos");
+        if (platoon != null && platoon.members.contains(member.getUniqueID())) {
+            unit.setPlatoon(platoon);
+        } else if (oldPosition.length == 3) {
+            // Older saves did not store that unit's squad ID. Use its saved order without
+            // merging neighboring squads just because they were moving toward the same flag.
+            platoon = create(member);
+            unit.setPlatoon(platoon);
+            platoon.order(Modes.Go, oldPosition[0] + 0.5, oldPosition[1], oldPosition[2] + 0.5);
+            if (member instanceof EntityPMCBase) {
+                String name = ((EntityPMCBase)member).leaderEntity_name;
+                if (name != null && !name.isEmpty()) {
+                    platoon.legacyPlayerName = name;
+                    platoon.setMode(Modes.Follow);
+                }
+            }
+        }
+    }
 
+    public boolean hasRoom() {
+        return members.size() < MAX_MEMBERS;
+    }
 
-		int cnt_soldier = 0;
-		Vector3d soldier_leaderPos = null;
+    public void addMember(EntityLiving entity) {
+        for (EntityAndPos member : loadedMembers) {
+            if (member.entity == entity) return;
+        }
+        if (members.add(entity.getUniqueID())) data.markDirty();
+        EntityAndPos member = new EntityAndPos(entity);
+        loadedMembers.add(member);
+        ((IPlatoonable)entity).setPosObj(member);
+        if (leader == null || entity.getUniqueID().equals(leaderId)) leader = member;
+        if (leaderId == null) {
+            leaderId = entity.getUniqueID();
+            data.markDirty();
+        }
+        scheduled = false;
+    }
 
-		float radius = 6;
-		boolean Fixed_radius = false;
-		boolean oneWay = false;
-		float offSet = 0;
-		float interval = 3;
-		float positionUpdateSensitivity = 4;
-		if(platoonType==Tank){
-			interval = 16;
-			radius = 8;
-			positionUpdateSensitivity = 25;
-		}else
-		if(platoonType==Plane){
-			Fixed_radius = true;
-			interval = 32;
-			radius = 64;
-			positionUpdateSensitivity = 0;
-			oneWay = true;
-			offSet = 64;
-		}
-		for (EntityAndPos entityAndPos : normalSoldier) {
-//			System.out.println("    " + platoonType.name());
-//			System.out.println("    " + cnt_soldier);
-//			System.out.println("----");
-			if (cnt_soldier == 0) {
-				Vector3d leaderTargetPos = new Vector3d();
-				soldier_leaderPos = new Vector3d();
+    public void removeMember(EntityLiving entity, boolean permanent) {
+        loadedMembers.removeIf(member -> member.entity == entity);
+        if (permanent && members.remove(entity.getUniqueID())) {
+            if (entity.getUniqueID().equals(leaderId)) leaderId = null;
+            if (members.isEmpty()) data.platoons.remove(id);
+            data.markDirty();
+        }
+        if (leader != null && leader.entity == entity) leader = null;
+        if (leader == null && !loadedMembers.isEmpty()) electLeader();
+        scheduled = false;
+    }
 
-				soldier_leaderPos.set(entityAndPos.entity.posX, entityAndPos.entity.posY, entityAndPos.entity.posZ);
-				leaderTargetPos.sub(PlatoonTargetPos, soldier_leaderPos);
+    private void electLeader() {
+        for (EntityAndPos member : loadedMembers) {
+            if (!member.entity.isEntityAlive()) continue;
+            if (leader == null || member.entity.getUniqueID().equals(leaderId)) leader = member;
+        }
+        if (leaderId == null && leader != null) {
+            leaderId = leader.entity.getUniqueID();
+            data.markDirty();
+        }
+    }
 
-				if(Fixed_radius || leaderTargetPos.lengthSquared() > radius * radius) {
+    public void setMode(Modes mode) {
+        if (platoonMode == mode) return;
+        platoonMode = mode;
+        scheduled = false;
+        data.markDirty();
+    }
 
-					platoonHeading = new Vector3d();
+    public void order(Modes mode, double x, double y, double z) {
+        if (platoonMode == mode && PlatoonTargetPos.x == x && PlatoonTargetPos.y == y
+                && PlatoonTargetPos.z == z) return;
+        if (mode == Modes.Patrol && leader != null) {
+            patrolOrigin.set(leader.entity.posX, leader.entity.boundingBox.minY, leader.entity.posZ);
+            patrolOutbound = true;
+        }
+        playerId = null;
+        legacyPlayerName = null;
+        PlatoonTargetPos.set(x, y, z);
+        setMode(mode);
+        scheduled = false;
+        data.markDirty();
+    }
 
-					platoonHeading.sub(PlatoonTargetPos, soldier_leaderPos);
-					platoonHeading.y = 0;
+    public void follow(EntityPlayer player) {
+        playerId = player.getUniqueID();
+        legacyPlayerName = null;
+        setMode(Modes.Follow);
+        scheduled = false;
+        data.markDirty();
+    }
 
-					leaderTargetPos.normalize();
-					leaderTargetPos.scale(-radius);
-					Vector3d leaderTargetPos_cross = new Vector3d(leaderTargetPos);
-					leaderTargetPos_cross.y = 0;
-					double x = leaderTargetPos_cross.x;
-					if (randMiser) {
-						leaderTargetPos_cross.x = leaderTargetPos_cross.z;
-						leaderTargetPos_cross.z = -x;
-					} else {
-						leaderTargetPos_cross.x = -leaderTargetPos_cross.z;
-						leaderTargetPos_cross.z = x;
-					}
-					leaderTargetPos_cross.normalize();
-					leaderTargetPos_cross.scale(offSet);
+    public boolean hasCurrentCamp() {
+        return currentCamp;
+    }
 
-					leaderTargetPos.add(leaderTargetPos_cross);
-					leaderTargetPos.add(PlatoonTargetPos);
-					platoonHeading.set(leaderTargetPos);
-					platoonHeading.sub(soldier_leaderPos);
-					{
-						Vector3d toNewPos = new Vector3d();
-						toNewPos.sub(entityAndPos.pos, leaderTargetPos);
-						if (toNewPos.lengthSquared() > positionUpdateSensitivity){
-							entityAndPos.set(leaderTargetPos, 0.8);
-						}
-						else entityAndPos.update();
-					}
-				}
-			} else {
-				if (entityAndPos == leader) continue;
-				if(platoonHeading != null) {
-					Vector3d targetPossoldier = new Vector3d(platoonHeading);
-					targetPossoldier.normalize();
-					targetPossoldier.scale(interval);
-					double x = targetPossoldier.x;
-					if(oneWay){
-						if (randMiser) {
-							targetPossoldier.x = targetPossoldier.z;
-							targetPossoldier.z = -x;
-						} else {
-							targetPossoldier.x = -targetPossoldier.z;
-							targetPossoldier.z = x;
-						}
-					}else {
-						if (cnt_soldier % 2 == 0) {
-							targetPossoldier.x = targetPossoldier.z;
-							targetPossoldier.z = -x;
-						} else if (cnt_soldier % 2 == 1) {
-							targetPossoldier.x = -targetPossoldier.z;
-							targetPossoldier.z = x;
-						}
-					}
-					targetPossoldier.scale(cnt_soldier);
-					targetPossoldier.add(soldier_leaderPos);
-					{
-						Vector3d toNewPos = new Vector3d();
-						toNewPos.sub(entityAndPos.pos, targetPossoldier);
-						if (toNewPos.lengthSquared() > positionUpdateSensitivity){
-//							System.out.println("debug" + targetPossoldier);
-							entityAndPos.set(targetPossoldier, 1);
-						}
-						else entityAndPos.update();
-					}
-				}
-			}
-			if(entityAndPos.entity.ridingEntity instanceof EntityDummy_rider){
-				((EntityDummy_rider) entityAndPos.entity.ridingEntity).linkedBaseLogic.currentHeading = platoonHeading;
-			}
-			cnt_soldier++;
-		}
-//		{
-//			int cnt_plane = 0;
-//			Vector3d plane_leaderPos = null;
-//			Vector3d plane_leaderPos_to_TargetPos = null;
-//			Vector3d plane_leaderHeadingVector = null;
-//			Vector3d plane_OrthogonalVector = null;
-//			for (EntityAndPos entityAndPos : planeDriver) {
-//				if (cnt_plane == 0) {
-//					plane_leaderPos = new Vector3d();
-//					plane_leaderHeadingVector = new Vector3d();
-//					plane_leaderHeadingVector.set(entityAndPos.entity.motionX, entityAndPos.entity.motionY, entityAndPos.entity.motionZ);
-//					plane_leaderPos_to_TargetPos = new Vector3d();
-//					plane_leaderPos.set(entityAndPos.entity.posX, entityAndPos.entity.posY, entityAndPos.entity.posZ);
-//					plane_leaderPos_to_TargetPos.sub(PlatoonTargetPos, plane_leaderPos);
-//					Vector3d cross = new Vector3d(plane_leaderPos_to_TargetPos);
-//					Vector3d straight = new Vector3d(plane_leaderPos_to_TargetPos);
-//					cross.y = 0;
-//					straight.y = 0;
-//					cross.normalize();
-//					straight.normalize();
-//					cross.scale(16);
-//					straight.scale(-64);
-//					double x = cross.x;
-//					if (randMiser) {
-//						cross.x = cross.z;
-//						cross.z = -x;
-//					} else {
-//						cross.x = -cross.z;
-//						cross.z = x;
-//					}
-//					plane_OrthogonalVector = new Vector3d(cross);
-//					cross.add(PlatoonTargetPos);
-//					cross.add(straight);
-//
-//					entityAndPos.set(cross, 1);
-//					//todo 目標地点周囲を周回飛行
-//				} else {
-//					Vector3d cross = new Vector3d(plane_leaderHeadingVector);
-//					cross.y = 0;
-//					cross.normalize();
-//					cross.scale(32);
-//					double x = cross.x;
-//					if (randMiser) {
-//						cross.x = cross.z;
-//						cross.z = -x;
-//					} else {
-//						cross.x = -cross.z;
-//						cross.z = x;
-//					}
-//					Vector3d headingVector_Temp = new Vector3d(plane_leaderHeadingVector);
-//					headingVector_Temp.normalize();
-//					headingVector_Temp.scale(-16);
-//					Vector3d targetPosPlane = new Vector3d(plane_OrthogonalVector);
-//					targetPosPlane.add(headingVector_Temp);
-//					targetPosPlane.add(cross);
-//					targetPosPlane.scale(cnt_plane);
-//					targetPosPlane.add(plane_leaderPos);
-//					entityAndPos.set(targetPosPlane, 1);
-//				}
-//				//todo 僚機は斜行陣を敷く。
-//				cnt_plane++;
-//			}
-//		}
-//
-//
-//		{
-//			int cnt_soldier = 0;
-//			Vector3d soldier_leaderPos = null;
-//			Vector3d platoonHeading = null;//PMC等はオーバーライドできるようにしておこう
-//			for (EntityAndPos entityAndPos : normalSoldier) {
-//				if (cnt_soldier == 0) {
-//					soldier_leaderPos = new Vector3d();
-//					platoonHeading = new Vector3d();
-//					soldier_leaderPos.set(entityAndPos.entity.posX, entityAndPos.entity.posY, entityAndPos.entity.posZ);
-//					platoonHeading.sub(PlatoonTargetPos, soldier_leaderPos);
-//					Vector3d leaderTargetPos = new Vector3d(platoonHeading);
-//					leaderTargetPos.normalize();
-//					leaderTargetPos.scale(-6);
-//					leaderTargetPos.add(PlatoonTargetPos);
-//					entityAndPos.set(leaderTargetPos, 1);
-//				} else {
-//					if (entityAndPos == leader) continue;
-//					Vector3d targetPossoldier = new Vector3d(platoonHeading);
-//					targetPossoldier.normalize();
-//					targetPossoldier.scale(3);
-//					double x = targetPossoldier.x;
-//					if (cnt_soldier % 2 == 0) {
-//						targetPossoldier.x = targetPossoldier.z;
-//						targetPossoldier.z = -x;
-//					} else if (cnt_soldier % 2 == 1) {
-//						targetPossoldier.x = -targetPossoldier.z;
-//						targetPossoldier.z = x;
-//					}
-//					targetPossoldier.scale(cnt_soldier);
-//					targetPossoldier.add(soldier_leaderPos);
-//					entityAndPos.set_withRand(targetPossoldier, 1);
-//				}
-//				cnt_soldier++;
-//			}
-//
-//
-//
-//			int cnt_vehicle = 0;
-//			Vector3d vehicle_leaderPos = null;
-//			Vector3d vehicle_leaderPos_to_TargetPos = null;
-//			for(EntityAndPos entityAndPos : vehicleDriver){
-//				if(cnt_vehicle == 0){
-//					vehicle_leaderPos = new Vector3d();
-//					vehicle_leaderPos_to_TargetPos = new Vector3d();
-//					vehicle_leaderPos.set(entityAndPos.entity.posX,entityAndPos.entity.posY,entityAndPos.entity.posZ);
-//					if(soldier_leaderPos != null) {
-//						Vector3d vehicleLeaderToSoldierLeader = new Vector3d();
-//						vehicleLeaderToSoldierLeader.sub(vehicle_leaderPos, soldier_leaderPos);
-//						if (vehicleLeaderToSoldierLeader.lengthSquared() > 256) {
-//							vehicleLeaderToSoldierLeader.normalize();
-//							vehicleLeaderToSoldierLeader.scale(16);
-//							vehicle_leaderPos.add(soldier_leaderPos, vehicle_leaderPos);
-//						}
-//					}
-//					vehicle_leaderPos_to_TargetPos.sub(PlatoonTargetPos,vehicle_leaderPos);
-//					Vector3d leaderTargetPos = new Vector3d(vehicle_leaderPos_to_TargetPos);
-//					leaderTargetPos.normalize();
-//					leaderTargetPos.scale(-16);
-//					leaderTargetPos.add(PlatoonTargetPos);
-//					entityAndPos.set(leaderTargetPos,1);
-//				}else
-//				{
-//					Vector3d targetPosvehicle = new Vector3d(vehicle_leaderPos_to_TargetPos);
-//					targetPosvehicle.normalize();
-//					targetPosvehicle.scale(12);
-//					double x = targetPosvehicle.x;
-//					if(randMiser) {
-//						targetPosvehicle.x = targetPosvehicle.z;
-//						targetPosvehicle.z = -x;
-//					}else {
-//						targetPosvehicle.x = -targetPosvehicle.z;
-//						targetPosvehicle.z = x;
-//					}
-//					targetPosvehicle.scale(cnt_vehicle);
-//					targetPosvehicle.add(vehicle_leaderPos);
-//					entityAndPos.set(targetPosvehicle,1);
-//				}
-//				cnt_vehicle++;
-//			}
-//		}
+    public void setCurrentCamp(boolean currentCamp) {
+        this.currentCamp = currentCamp;
+        data.markDirty();
+    }
 
-	}
-	public boolean addMember(EntityLiving entity){
-		//TODO 職種が違ったら弾くように変更しよう
-		EntityAndPos entityAndPos = new EntityAndPos(entity);
-		((IPlatoonable)entity).setPosObj(entityAndPos);
-		if(leader == null)leader = entityAndPos;
+    public boolean allowsEngagement(EntityLivingBase target) {
+        if (platoonMode == Modes.Defend) {
+            return target.getDistanceSq(PlatoonTargetPos.x, PlatoonTargetPos.y, PlatoonTargetPos.z) <= 24 * 24;
+        }
+        return leader == null || leader.entity.getDistanceSqToEntity(target) <= 48 * 48;
+    }
 
-		if(leader.entity.ridingEntity instanceof EntityDummy_rider){
-			if(((EntityDummy_rider) leader.entity.ridingEntity).linkedSeatID != ((EntityDummy_rider) leader.entity.ridingEntity).linkedBaseLogic.getpilotseatid()){
-				leader = null;
-				return false;
-			}
-			if(entity.ridingEntity instanceof EntityDummy_rider) {
-				BaseLogic baseLogic_Leader = ((EntityDummy_rider) leader.entity.ridingEntity).linkedBaseLogic;
-				BaseLogic baseLogic = ((EntityDummy_rider) entity.ridingEntity).linkedBaseLogic;
-				//if (baseLogic_Leader.prefab_vehicle.T_Land_F_Plane && baseLogic.prefab_vehicle.T_Land_F_Plane) {
-				//	platoonType = Tank;
-				//	//戦車分隊
-				//} else if(!baseLogic.prefab_vehicle.T_Land_F_Plane){
-				//	platoonType = Plane;
-				//	//航空小隊
-				//}
-			}else return false;
-		}
-		platoonMembers.add(entityAndPos);
-		return true;
-	}
-	boolean noPlatoonLeader;
-	public void sortMember(EntityAndPos entityAndPos){
-		EntityLiving entity = entityAndPos.entity;
-		if(entity instanceof IPlatoonable &&
-				((IPlatoonable) entity).getPlatoon() != this){
-			removeQue.add(entityAndPos);
-			return;
-		}
-		if(entity.ridingEntity instanceof EntityDummy_rider && ((EntityDummy_rider) entity.ridingEntity).linkedSeatID != ((EntityDummy_rider) entity.ridingEntity).linkedBaseLogic.getpilotseatid()){
-			removeQue.add(entityAndPos);
-			return;
-		}
-		if(!entity.isDead && canMoveEntity(entity)){
-			if(entityAndPos == leader) {
-				platoonType = Infantry;
-				//if (((IDriver) entity).getLinkedVehicle() != null) {
-				//	if(((IDriver) entity).getLinkedVehicle().prefab_vehicle.T_Land_F_Plane) {
-				//		platoonType = Tank;
-				//	}else {
-				//		platoonType = Plane;
-				//	}
-				//}
-				noPlatoonLeader = false;
-			}else if(noPlatoonLeader){
-				leader = entityAndPos;
-				platoonType = Infantry;
-				//if (((IDriver) entity).getLinkedVehicle() != null) {
-				//	if(((IDriver) entity).getLinkedVehicle().prefab_vehicle.T_Land_F_Plane) {
-				//		platoonType = Tank;
-				//	}else {
-				//		platoonType = Plane;
-				//	}
-				//}
-				noPlatoonLeader = false;
-			}
-			{
-					if (platoonType == Infantry) {
-						normalSoldier.add(entityAndPos);
-					} else {
-						removeQue.add(entityAndPos);
-					}
+    public void update(EntityLiving caller) {
+        long tick = caller.worldObj.getTotalWorldTime();
+        if (scheduled && tick < nextUpdate) return;
+        nextUpdate = tick + 10 + (id.hashCode() & 7);
+        scheduled = true;
+        if (leader == null || !leader.entity.isEntityAlive()) {
+            leader = null;
+            electLeader();
+        }
+        if (leader == null) return;
 
-			}
-		}else{
-			removeQue.add(entityAndPos);
-			if(entityAndPos == leader) {
-				leader = null;
-				noPlatoonLeader = true;
-			}
-		}
+        EntityLiving captain = leader.entity;
+        boolean hold = platoonMode == Modes.Wait || platoonMode == Modes.Land;
+        Vector3d anchor = platoonMode == Modes.Patrol && !patrolOutbound ? patrolOrigin : PlatoonTargetPos;
+        if (platoonMode == Modes.Patrol && horizontalDistance(captain, anchor) < 9) {
+            patrolOutbound = !patrolOutbound;
+            anchor = patrolOutbound ? PlatoonTargetPos : patrolOrigin;
+            data.markDirty();
+        }
+        if (platoonMode == Modes.Follow) {
+            EntityPlayer player = playerId == null ? null : caller.worldObj.func_152378_a(playerId);
+            if (player == null && legacyPlayerName != null) {
+                player = caller.worldObj.getPlayerEntityByName(legacyPlayerName);
+                if (player != null) follow(player);
+            }
+            if (player == null || !player.isEntityAlive()) {
+                hold = true;
+            } else {
+                anchor = new Vector3d(player.posX, player.boundingBox.minY, player.posZ);
+            }
+        }
 
-	}
+        double dx = anchor.x - captain.posX;
+        double dz = anchor.z - captain.posZ;
+        double length = Math.sqrt(dx * dx + dz * dz);
+        if (length > 3 && !hold) {
+            heading.set(dx / length, 0, dz / length);
+            hasHeading = true;
+        } else if (!hasHeading) {
+            double yaw = Math.toRadians(captain.renderYawOffset);
+            heading.set(-Math.sin(yaw), 0, Math.cos(yaw));
+            hasHeading = true;
+        }
+        double forwardX = heading.x;
+        double forwardZ = heading.z;
+        double stopRange = platoonMode == Modes.Attack ? 4 : platoonMode == Modes.Follow ? 5 : 2;
+        if (hold || (length < stopRange && Math.abs(anchor.y - captain.boundingBox.minY) < 1.1)) {
+            leader.set(captain.posX, captain.boundingBox.minY, captain.posZ);
+        } else {
+            double offset = length < stopRange + 1 ? 0 : stopRange;
+            leader.set(anchor.x - forwardX * offset, anchor.y, anchor.z - forwardZ * offset);
+        }
 
-	@Override
-	public void update() {
-		PlatoonFormationUpdate();
-	}
+        int slot = 0;
+        for (EntityAndPos member : loadedMembers) {
+            if (member == leader) continue;
+            int row = 1 + slot / 2;
+            double side = (slot++ % 2 == 0 ? -1 : 1) * SPACING;
+            EntityLiving soldier = member.entity;
+            double behind = row * SPACING;
+            double x = captain.posX - forwardX * behind + forwardZ * side;
+            double z = captain.posZ - forwardZ * behind - forwardX * side;
+            if (((IGVCmob)soldier).getMoveToPositionMng().isBlocked()) {
+                // A narrow entrance may not admit the formation abreast.
+                x = captain.posX - forwardX * slot * 1.7;
+                z = captain.posZ - forwardZ * slot * 1.7;
+            }
+            member.set(x, captain.boundingBox.minY, z);
+        }
 
-	public boolean checkLeaderAlive() {
-		return leader == null || leader.entity.isDead;
-	}
+        EntityLivingBase contact = null;
+        for (EntityAndPos member : loadedMembers) {
+            EntityLivingBase target = member.entity.getAttackTarget();
+            if (target != null && target.isEntityAlive() && member.entity.getEntitySenses().canSee(target)) {
+                contact = target;
+                break;
+            }
+        }
+        if (contact == null) return;
+        for (EntityAndPos member : loadedMembers) {
+            EntityLiving soldier = member.entity;
+            if (soldier.getAttackTarget() != null || !soldier.isEntityAlive()
+                    || ((IFF)soldier).is_this_entity_friend(contact)) continue;
+            double range = soldier.getEntityAttribute(SharedMonsterAttributes.followRange).getAttributeValue();
+            if (AIInfantryTarget.canEngage(soldier, contact, range) && soldier.getEntitySenses().canSee(contact)) {
+                soldier.setAttackTarget(contact);
+            }
+        }
+    }
+
+    private static double horizontalDistance(EntityLiving entity, Vector3d point) {
+        double x = entity.posX - point.x;
+        double z = entity.posZ - point.z;
+        return x * x + z * z;
+    }
+
+    private static UUID parseId(String value) {
+        if (value.isEmpty()) return null;
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    public static class Data extends WorldSavedData {
+        private static final String NAME = "GVC_Platoons";
+        private final Map<UUID, PlatoonOBJ> platoons = new HashMap<>();
+
+        public Data(String name) {
+            super(name);
+        }
+
+        private static Data get(World world) {
+            Data data = (Data)world.perWorldStorage.loadData(Data.class, NAME);
+            if (data == null) {
+                data = new Data(NAME);
+                world.perWorldStorage.setData(NAME, data);
+            }
+            return data;
+        }
+
+        @Override
+        public void readFromNBT(NBTTagCompound tag) {
+            platoons.clear();
+            NBTTagList list = tag.getTagList("Platoons", 10);
+            for (int i = 0; i < list.tagCount(); i++) {
+                NBTTagCompound entry = list.getCompoundTagAt(i);
+                UUID id = parseId(entry.getString("Id"));
+                if (id == null) continue;
+                PlatoonOBJ squad = new PlatoonOBJ(this, id);
+                squad.leaderId = parseId(entry.getString("Leader"));
+                squad.playerId = parseId(entry.getString("Player"));
+                squad.legacyPlayerName = entry.hasKey("PlayerName") ? entry.getString("PlayerName") : null;
+                int mode = entry.getInteger("Mode");
+                if (mode >= 0 && mode < Modes.values().length) squad.platoonMode = Modes.values()[mode];
+                squad.PlatoonTargetPos.set(entry.getDouble("X"), entry.getDouble("Y"), entry.getDouble("Z"));
+                squad.patrolOrigin.set(entry.getDouble("PatrolX"), entry.getDouble("PatrolY"), entry.getDouble("PatrolZ"));
+                squad.patrolOutbound = entry.getBoolean("Outbound");
+                squad.currentCamp = entry.getBoolean("Camp");
+                NBTTagList roster = entry.getTagList("Members", 8);
+                for (int j = 0; j < roster.tagCount() && squad.hasRoom(); j++) {
+                    UUID member = parseId(roster.getStringTagAt(j));
+                    if (member != null) squad.members.add(member);
+                }
+                if (!squad.members.isEmpty()) platoons.put(id, squad);
+            }
+        }
+
+        @Override
+        public void writeToNBT(NBTTagCompound tag) {
+            NBTTagList list = new NBTTagList();
+            for (PlatoonOBJ squad : platoons.values()) {
+                NBTTagCompound entry = new NBTTagCompound();
+                entry.setString("Id", squad.id.toString());
+                if (squad.leaderId != null) entry.setString("Leader", squad.leaderId.toString());
+                if (squad.playerId != null) entry.setString("Player", squad.playerId.toString());
+                if (squad.legacyPlayerName != null) entry.setString("PlayerName", squad.legacyPlayerName);
+                entry.setInteger("Mode", squad.platoonMode.ordinal());
+                entry.setDouble("X", squad.PlatoonTargetPos.x);
+                entry.setDouble("Y", squad.PlatoonTargetPos.y);
+                entry.setDouble("Z", squad.PlatoonTargetPos.z);
+                entry.setDouble("PatrolX", squad.patrolOrigin.x);
+                entry.setDouble("PatrolY", squad.patrolOrigin.y);
+                entry.setDouble("PatrolZ", squad.patrolOrigin.z);
+                entry.setBoolean("Outbound", squad.patrolOutbound);
+                entry.setBoolean("Camp", squad.currentCamp);
+                NBTTagList roster = new NBTTagList();
+                for (UUID member : squad.members) roster.appendTag(new NBTTagString(member.toString()));
+                entry.setTag("Members", roster);
+                list.appendTag(entry);
+            }
+            tag.setTag("Platoons", list);
+        }
+    }
 }

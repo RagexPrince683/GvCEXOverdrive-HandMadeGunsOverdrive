@@ -235,3 +235,30 @@ The legacy constructor without configured damage (used by GVC's guerrilla bomber
 retains its previous spherical damage formula. Explosion damage remains server-owned;
 block destruction is unchanged. These rules have compilation and mathematical
 validation; in-game height, cover and dedicated-server checks remain outstanding.
+
+
+## GVC infantry and structure modules
+
+Use Minecraft 1.7.10, Forge 10.13.4.1614, and Java 8 with matching HMG and GVC JARs on both sides. GVC keeps the `GVCGuns` and `GVCMob` registry IDs. HMG runs independently. Dungeon Generator Base requires both HMG and GVC and remains optional for compatible structure packs. See [GVC installation](gvc/README.md#getting-started) and the [structure pack guide](gvc/dungeon-generator.md).
+
+GVC camp reinforcements use nearby loaded entities. Raids choose positions in
+already loaded chunks, attempt at most 50 positions per group and cap each
+area at 48 raiders. Protected territory, flag progress and raid timing are
+saved with the world. Flag state is sent to chunk watchers. Squad membership and orders are stored per dimension, with each infantry entity carrying its squad ID. Existing position-only records are readable. See the [GVC squad guide](gvc/README.md#squads-and-orders) and the [firearm registry report](gvc/legacy-firearms.md).
+
+### Future vehicle adapter
+
+GVC vehicle items retain their registry IDs for saves. Vehicle eggs and
+air-support requests are inert during infantry play. Vehicle-configured old
+one-time spawners stay dormant, and dungeon-pack vehicle markers are skipped.
+Infantry factions still use HMG firearms and stationary placed guns.
+
+A future MCHeli adapter should own vehicle creation and boarding for natural
+encounters, the one-time spawner, outgoing support requests and dungeon pack
+markers. The legacy integration points are `EntityGBases`, `EntitySoBases`,
+`AIAttackManager`, `EntitySupportTGT`, `TileEntityMobSpawner_OneTime` and
+`ComponentDungeonBase`. Keep faction selection, raid spawning, platoon orders
+and infantry navigation in GVC. Infantry uses Minecraft's walking navigator and retains the platoon order enum from HMG's bundled `handmadevehicle` package. Use the legacy
+seat code as a reference for the adapter's server-owned pilot and gunner
+state. The MGAX55 packet IDs are reserved. A replacement control handler must
+validate the sender's active seat and execute on the server thread.

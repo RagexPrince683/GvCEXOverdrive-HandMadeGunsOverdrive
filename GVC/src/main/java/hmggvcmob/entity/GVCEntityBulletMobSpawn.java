@@ -102,25 +102,25 @@ public class GVCEntityBulletMobSpawn extends EntityThrowable
     			   ||this.worldObj.rand.nextInt(pa) == 2){
     	   GVCEntityGuerrilla entityskeleton = new GVCEntityGuerrilla(worldObj);
            entityskeleton.setLocationAndAngles(this.posX+i+x-5, this.posY+y, this.posZ+j+z-5, this.rotationYaw, 0.0F);
-           entityskeleton.setCurrentItemOrArmor(0, new ItemStack((Item)Guns_AR.get(new Random().nextInt(Guns_AR.size()))));
+           entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_AR, new Random()));
            worldObj.spawnEntityInWorld(entityskeleton);
                }
     	   if(this.worldObj.rand.nextInt(pa) == 4){
         	   GVCEntityGuerrillaRPG entityskeleton = new GVCEntityGuerrillaRPG(worldObj);
                entityskeleton.setLocationAndAngles(this.posX+i+x-5, this.posY+y, this.posZ+j+z-5, this.rotationYaw, 0.0F);
-               entityskeleton.setCurrentItemOrArmor(0,  new ItemStack((Item)Guns_RR.get(new Random().nextInt(Guns_RR.size()))));
+               entityskeleton.setCurrentItemOrArmor(0,  hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_RR, new Random()));
                worldObj.spawnEntityInWorld(entityskeleton);
                }
     	   if(this.worldObj.rand.nextInt(pa) == 5){
         	   GVCEntityGuerrillaMG entityskeleton = new GVCEntityGuerrillaMG(worldObj);
                entityskeleton.setLocationAndAngles(this.posX+i+x-5, this.posY+y-5, this.posZ+j+z-5, this.rotationYaw, 0.0F);
-               entityskeleton.setCurrentItemOrArmor(0,  new ItemStack((Item)Guns_LMG.get(new Random().nextInt(Guns_LMG.size()))));
+               entityskeleton.setCurrentItemOrArmor(0,  hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_LMG, new Random()));
                worldObj.spawnEntityInWorld(entityskeleton);
                }
     	   if(this.worldObj.rand.nextInt(pa) == 6){
         	   GVCEntityGuerrillaSP entityskeleton = new GVCEntityGuerrillaSP(worldObj);
                entityskeleton.setLocationAndAngles(this.posX+i+x-5, this.posY+y-5, this.posZ+j+z-5, this.rotationYaw, 0.0F);
-               entityskeleton.setCurrentItemOrArmor(0,  new ItemStack((Item)Guns_SR.get(new Random().nextInt(Guns_SR.size()))));
+               entityskeleton.setCurrentItemOrArmor(0,  hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_SR, new Random()));
                worldObj.spawnEntityInWorld(entityskeleton);
                }
     	   if(this.worldObj.rand.nextInt(pa) == 7){

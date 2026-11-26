@@ -33,7 +33,11 @@ public class AIHurtByTarget extends EntityAITarget
     public boolean shouldExecute()
     {
         int i = this.taskOwner.func_142015_aE();
-        return i != this.field_142052_b && this.isSuitableTarget(this.taskOwner.getAITarget(), false);
+        net.minecraft.entity.EntityLivingBase attacker = taskOwner.getAITarget();
+        return attacker != null && i != field_142052_b && !taskOwner.isPotionActive(Potion.blindness)
+                && (!(taskOwner instanceof IFF) || !((IFF) taskOwner).is_this_entity_friend(attacker))
+                && (!(taskOwner instanceof EntitySoBases) || !ignoreSoTargetEntity.containsKey(EntityList.getEntityString(attacker)))
+                && isSuitableTarget(attacker, false);
     }
 
     /**
@@ -44,21 +48,15 @@ public class AIHurtByTarget extends EntityAITarget
         this.field_142052_b = this.taskOwner.func_142015_aE();
 
 
-        if(!this.taskOwner.isPotionActive(Potion.blindness) && (!(this.taskOwner instanceof IFF)|| !((IFF) this.taskOwner).is_this_entity_friend(this.taskOwner.getAITarget())) && (!(this.taskOwner instanceof EntitySoBases)|| !ignoreSoTargetEntity.containsKey(EntityList.getEntityString(this.taskOwner.getAITarget())))) {
-            if (this.entityCallsForHelp)
-            {
-                double d0 = 16;
-                List list = this.taskOwner.worldObj.getEntitiesWithinAABB(this.taskOwner.getClass(), AxisAlignedBB.getBoundingBox(this.taskOwner.posX, this.taskOwner.posY, this.taskOwner.posZ, this.taskOwner.posX + 1.0D, this.taskOwner.posY + 1.0D, this.taskOwner.posZ + 1.0D).expand(d0, 10.0D, d0));
-                Iterator iterator = list.iterator();
-
-                while (iterator.hasNext()) {
-                    EntityCreature entitycreature = (EntityCreature) iterator.next();
-
-                    if (this.taskOwner != entitycreature && entitycreature.getAttackTarget() == null && !entitycreature.isOnSameTeam(this.taskOwner.getAITarget())) {
-                        entitycreature.setAttackTarget(this.taskOwner.getAITarget());
-                    }
+        this.taskOwner.setAttackTarget(this.taskOwner.getAITarget());
+        if (entityCallsForHelp) {
+            AxisAlignedBB bounds = taskOwner.boundingBox.expand(16, 10, 16);
+            for (Object nearby : taskOwner.worldObj.getEntitiesWithinAABB(taskOwner.getClass(), bounds)) {
+                EntityCreature ally = (EntityCreature) nearby;
+                if (ally != taskOwner && ally.getAttackTarget() == null
+                        && !ally.isOnSameTeam(taskOwner.getAITarget())) {
+                    ally.setAttackTarget(taskOwner.getAITarget());
                 }
-                this.taskOwner.setAttackTarget(this.taskOwner.getAITarget());
             }
         }
 

@@ -1,43 +1,50 @@
 package hmggvcmob.event;
 
-import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import hmggvcmob.entity.EntityMGAX55;
+import hmggvcmob.entity.IPlatoonable;
+import hmggvcmob.entity.util.PlatoonOBJ;
 import hmggvcmob.tile.TileEntityFlag;
 import hmggvcutil.GVCUtils;
-import hmggvcmob.entity.TU95;
 import hmggvcmob.entity.guerrilla.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelFormatException;
-import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static hmggvcmob.GVCMobPlus.*;
 
 public class GVCMXEntityEvent {
-    public static List<Entity> soundedentity = new ArrayList<>();
+	@SubscribeEvent
+	public void leaveChunk(ChunkEvent.Unload event) {
+		if (event.world.isRemote) return;
+		for (java.util.List section : event.getChunk().entityLists) {
+			for (Object entry : section) {
+				if (!(entry instanceof IPlatoonable) || !(entry instanceof EntityLiving)) continue;
+				PlatoonOBJ platoon = ((IPlatoonable)entry).getPlatoon();
+				if (platoon != null) platoon.removeMember((EntityLiving)entry, false);
+			}
+		}
+	}
 
+	@SubscribeEvent
+	public void joinWorld(EntityJoinWorldEvent event) {
+		if (!event.world.isRemote && event.entity instanceof IPlatoonable && event.entity instanceof EntityLiving) {
+			PlatoonOBJ platoon = ((IPlatoonable)event.entity).getPlatoon();
+			if (platoon != null) platoon.addMember((EntityLiving)event.entity);
+		}
+	}
 
-    @SubscribeEvent
-    public void canupdate(EntityEvent.CanUpdate event){
-        if(event.entity instanceof TU95){
-            event.entity.setDead();
-        }
-    }
-	
 	@SubscribeEvent
 	public void targetevent(LivingSetAttackTargetEvent event){
 		EntityLivingBase targeted = event.target;
@@ -91,21 +98,9 @@ public class GVCMXEntityEvent {
 	{
 		EntityLivingBase entity = event.entityLiving;
 
-		if(entity instanceof EntityPlayer) {
-			double dist = 16384;
-			TileEntityFlag closestFlag = null;
-			for(Object obj : entity.worldObj.loadedTileEntityList){
-				if(obj instanceof TileEntityFlag) {
-					TileEntityFlag tileEntity = (TileEntityFlag) obj;
-					if(tileEntity.flagHeight >= tileEntity.campObj.maxFlagHeight/2 && tileEntity.campObj.playerIsFriend) {
-						double tempDist = tileEntity.getDistanceFrom(entity.posX, entity.posY, entity.posZ);
-						if (tempDist < dist || dist == -1) {
-							dist = tempDist;
-							closestFlag = tileEntity;
-						}
-					}
-				}
-			}
+		if(entity instanceof EntityPlayer && !entity.worldObj.isRemote) {
+			TileEntityFlag closestFlag = TileEntityFlag.findNearest(entity.worldObj, entity.posX,
+					entity.posY, entity.posZ, 128, false, flag -> flag.isActiveBeacon() && flag.campObj.playerIsFriend);
 			if(closestFlag != null){
 				entity.setHealth(20);
 				((EntityPlayer) entity).getFoodStats().addStats(20,20);
@@ -120,7 +115,7 @@ public class GVCMXEntityEvent {
 	{
 		EntityLivingBase entity = event.entityLiving;
 
-		if ((entity != null && entity.ridingEntity instanceof EntityMGAX55)) {
+		if (VEHICLES_ENABLED && entity.ridingEntity instanceof EntityMGAX55) {
 			event.ammount = 0;
 			event.setCanceled(true);
 		}

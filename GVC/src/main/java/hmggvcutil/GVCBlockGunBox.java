@@ -53,16 +53,16 @@ public class GVCBlockGunBox extends Block
         		switch (world.rand.nextInt(4))
                 {
                 case 0:
-        		this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_ak74, 1));
+                if (GVCUtils.fn_ak74 != null) this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_ak74, 1));
         		break;
                 case 1:
-            		this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_m16a4, 1));
+                if (GVCUtils.fn_m16a4 != null) this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_m16a4, 1));
             		break;
                 case 2:
-            		this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_g36, 1));
+                if (GVCUtils.fn_g36 != null) this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_g36, 1));
             		break;
                 case 3:
-            		this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_m1911, 1));
+                if (GVCUtils.fn_m1911 != null) this.dropBlockAsItem(world, x, y+1, z, new ItemStack(GVCUtils.fn_m1911, 1));
             		break;
                 }
         	//player.dropItem(Items.apple, 2);

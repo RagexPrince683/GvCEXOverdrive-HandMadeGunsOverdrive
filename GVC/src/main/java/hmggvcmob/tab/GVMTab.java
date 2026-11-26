@@ -24,7 +24,7 @@ public class GVMTab extends CreativeTabs
     @SideOnly(Side.CLIENT)
     public String getTranslatedTabLabel()
     {
-        return "GVCmobs";
+        return super.getTranslatedTabLabel();
     }
 
 }

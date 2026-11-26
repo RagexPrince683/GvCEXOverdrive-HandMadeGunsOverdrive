@@ -1260,9 +1260,13 @@ public class HMGRenderItemGun_U implements IItemRenderer {
 						boltoffsetcof = cycle - (cycle - boltprogress);//�{���g�O�i��
 					if (boltoffsetcof < 0) boltoffsetcof = 0;
 					GL11.glPushMatrix();//glstart1
-					GL11.glScalef(1f/2f, 1f/2f, 1f/2f);
+					boolean bipedHand = HMGBipedGunRender.ownsHand(data[1], item);
+					if (!bipedHand) GL11.glScalef(1f/2f, 1f/2f, 1f/2f);
 					Minecraft.getMinecraft().renderEngine.bindTexture(guntexture);
-					if (data[1] instanceof EntityPlayer) {
+					if (bipedHand) {
+						HMGBipedGunRender.applyHandFrame();
+						GL11.glScalef(scala, scala, scala);
+					} else if (data[1] instanceof EntityPlayer) {
 						glMatrixForRenderInEntityPlayer(-0.75f);
 						GL11.glScalef(scala, scala, scala);
 					} else {

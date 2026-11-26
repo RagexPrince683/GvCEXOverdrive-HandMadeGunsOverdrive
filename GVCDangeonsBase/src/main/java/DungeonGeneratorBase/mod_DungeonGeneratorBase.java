@@ -16,7 +16,9 @@ import static handmadeguns.HandmadeGunsCore.HMG_proxy;
 @Mod(
         modid	= "DungeonGeneratorBase",
         name	= "DungeonGeneratorBase",
-        version	= "1.7.x-srg-1"
+        version	= "1.7.x-srg-1",
+        useMetadata = true,
+        dependencies = "required-after:GVCMob;required-after:HandmadeGuns"
 )
 public class mod_DungeonGeneratorBase {
     public static Item dangeonSelector;
@@ -34,6 +36,7 @@ public class mod_DungeonGeneratorBase {
         packdir.mkdirs();
     
         File[] packlist = packdir.listFiles();
+        if (packlist == null) packlist = new File[0];
         Arrays.sort(packlist, new Comparator<File>() {
             public int compare(File file1, File file2){
                 return file1.getName().compareTo(file2.getName());

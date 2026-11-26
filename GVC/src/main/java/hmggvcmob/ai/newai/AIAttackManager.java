@@ -8,6 +8,7 @@ import net.minecraft.entity.ai.EntityAIBase;
 import javax.vecmath.Vector3d;
 
 import static hmggvcmob.util.GVCUtil.getRidingType;
+import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
 
 public class AIAttackManager extends EntityAIBase {
 	private final EntityLiving shooter;
@@ -23,14 +24,21 @@ public class AIAttackManager extends EntityAIBase {
 
 	public AIAttackManager(EntityLiving shooter) {
 		this.shooter = shooter;
+		setMutexBits(3);
 		toEntity_Inf = new AIAttackEntityByGun(shooter,this);
-		toEntity_Tank = new AIAttackEntityByTank(shooter,this);
-		toEntity_airPlane = new AIAttackEntityByAirPlane(shooter,this);
-		toEntity_Heli = new AIAttackEntityByHeli(shooter,this);
+		if (VEHICLES_ENABLED) {
+			toEntity_Tank = new AIAttackEntityByTank(shooter,this);
+			toEntity_airPlane = new AIAttackEntityByAirPlane(shooter,this);
+			toEntity_Heli = new AIAttackEntityByHeli(shooter,this);
+		}
 	}
 
 	@Override
 	public boolean shouldExecute() {
+		if (!VEHICLES_ENABLED) {
+			currentAI = toEntity_Inf;
+			return currentAI.shouldExecute();
+		}
 		currentAI = null;
 		EntityRidingState type = getRidingType(shooter);
 		switch (type){
@@ -53,6 +61,16 @@ public class AIAttackManager extends EntityAIBase {
 			return currentAI.shouldExecute();
 		}
 		return false;
+	}
+
+	@Override
+	public boolean continueExecuting() {
+		return currentAI != null && currentAI.continueExecuting();
+	}
+
+	@Override
+	public void startExecuting() {
+		if (currentAI != null) currentAI.startExecuting();
 	}
 
 	public Vector3d getAimingPoint(){

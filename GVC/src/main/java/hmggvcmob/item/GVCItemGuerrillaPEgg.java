@@ -37,7 +37,7 @@ public class GVCItemGuerrillaPEgg extends Item
             int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
             GVCEntityGuerrillaP entityskeleton = new GVCEntityGuerrillaP(par3World);
             entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, var12, 0.0F);
-            entityskeleton.setCurrentItemOrArmor(0,  new ItemStack((Item)Guns_AR.get(new Random().nextInt(Guns_AR.size()))));
+            entityskeleton.setCurrentItemOrArmor(0,  hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_AR, new Random()));
             
             /*GVCEntityparas entityskeleton1 = new GVCEntityparas(par3World);
             entityskeleton1.setLocationAndAngles(par4, par5, par6, var12, 0.0F);

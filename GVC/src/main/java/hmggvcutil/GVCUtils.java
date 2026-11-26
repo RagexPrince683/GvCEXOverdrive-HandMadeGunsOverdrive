@@ -1,5 +1,7 @@
 package hmggvcutil;
 
+import handmadeguns.items.guns.HMGItem_Unified_Guns;
+
 
 import cpw.mods.fml.common.registry.VillagerRegistry;
 import hmggvcmob.entity.friend.EntityPMCBase;
@@ -40,6 +42,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 		modid	= "GVCGuns",
 		name	= "GVCGuns",
 		version	= "1.7.x-srg-1",
+		useMetadata = true,
 		dependencies="required-after:HandmadeGuns"
 )
 public class GVCUtils {
@@ -120,6 +123,7 @@ public class GVCUtils {
 
 
 
+	private static final java.util.Map<Item, Item> LEGACY_FIREARMS = new java.util.IdentityHashMap<>();
 	public static Item fn_ak74;
 	public static Item fn_ak74sp;
 	public static Item fn_rpk74;
@@ -569,74 +573,53 @@ public class GVCUtils {
 
 
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","AK74")),new ItemStack(fn_ak74, 1));
-		fn_ak74 = GameRegistry.findItem("HandmadeGuns","AK74");
+		fn_ak74 = resolveLegacyGun("AK74", fn_ak74);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","RPK74")),new ItemStack(fn_rpk74, 1));
-		fn_rpk74 = GameRegistry.findItem("HandmadeGuns","RPK74");
+		fn_rpk74 = resolveLegacyGun("RPK74", fn_rpk74);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","AKS74U")),new ItemStack(fn_aks74u, 1));
-		fn_aks74u = GameRegistry.findItem("HandmadeGuns","AKS74U");
+		fn_aks74u = resolveLegacyGun("AKS74U", fn_aks74u);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M10")),new ItemStack(fn_m10, 1));
-		fn_m10 = GameRegistry.findItem("HandmadeGuns","M10");
+		fn_m10 = resolveLegacyGun("MAC-10", fn_m10);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M870")),new ItemStack(fn_m870, 1));
-		fn_m870 = GameRegistry.findItem("HandmadeGuns","M870");
+		fn_m870 = resolveLegacyGun("Remington Model 870", fn_m870);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","SVD")),new ItemStack(fn_svd, 1));
-		fn_svd = GameRegistry.findItem("HandmadeGuns","SVD");
+		fn_svd = resolveLegacyGun("SVD", fn_svd);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","PKM")),new ItemStack(fn_pkm, 1));
-		fn_pkm = GameRegistry.findItem("HandmadeGuns","PKM");
+		fn_pkm = resolveLegacyGun("PKM", fn_pkm);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M16A4")),new ItemStack(fn_m16a4, 1));
-		fn_m16a4 = GameRegistry.findItem("HandmadeGuns","M16A4");
+		fn_m16a4 = resolveLegacyGun("M16A4", fn_m16a4);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M4A1")),new ItemStack(fn_m4a1, 1));
-		fn_m4a1 = GameRegistry.findItem("HandmadeGuns","M4A1");
+		fn_m4a1 = resolveLegacyGun("M4A1", fn_m4a1);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M9")),new ItemStack(fn_m9, 1));
-		fn_m9 = GameRegistry.findItem("HandmadeGuns","M9");
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M1911")),new ItemStack(fn_m1911, 1));
-		fn_m1911 = GameRegistry.findItem("HandmadeGuns","M9");
+		fn_m9 = resolveLegacyGun("Beretta M9", fn_m9);
+		fn_m1911 = resolveLegacyGun("M1911", fn_m1911);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","G17")),new ItemStack(fn_g17, 1));
-		fn_g17 = GameRegistry.findItem("HandmadeGuns","G17");
+		fn_g17 = resolveLegacyGun("G17", fn_g17);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","G18")),new ItemStack(fn_g18, 1));
-		fn_g18 = GameRegistry.findItem("HandmadeGuns","G18");
+		fn_g18 = resolveLegacyGun("G18C", fn_g18);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M110")),new ItemStack(fn_m110, 1));
-		fn_m110 = GameRegistry.findItem("HandmadeGuns","M110");
+		fn_m110 = resolveLegacyGun("M110", fn_m110);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M240B")),new ItemStack(fn_m240b, 1));
-		fn_m240b = GameRegistry.findItem("HandmadeGuns","M240B");
+		fn_m240b = resolveLegacyGun("M240B", fn_m240b);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","R700")),new ItemStack(fn_r700, 1));
-		fn_r700 = GameRegistry.findItem("HandmadeGuns","R700");
+		fn_r700 = resolveLegacyGun("Remington Model 700", fn_r700);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M82A3")),new ItemStack(fn_m82a3, 1));
-		fn_m82a3 = GameRegistry.findItem("HandmadeGuns","M82A3");
+		fn_m82a3 = resolveLegacyGun("Barrett M82", fn_m82a3);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","G36")),new ItemStack(fn_g36, 1));
-		fn_g36 = GameRegistry.findItem("HandmadeGuns","G36");
+		fn_g36 = resolveLegacyGun("G36", fn_g36);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","G36K")),new ItemStack(fn_g36c, 1));
-		fn_g36c = GameRegistry.findItem("HandmadeGuns","G36K");
+		fn_g36c = resolveLegacyGun("G36K", fn_g36c);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","MG36")),new ItemStack(fn_mg36, 1));
-		fn_mg36 = GameRegistry.findItem("HandmadeGuns","MG36");
+		fn_mg36 = resolveLegacyGun("MG36", fn_mg36);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","RPG7")),new ItemStack(fn_rpg7, 1));
-		fn_rpg7 = GameRegistry.findItem("HandmadeGuns","RPG7");
+		fn_rpg7 = resolveLegacyGun("RPG7", fn_rpg7);
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","SMAW")),new ItemStack(fn_smaw, 1));
-		fn_smaw = GameRegistry.findItem("HandmadeGuns","SMAW");
+		fn_smaw = resolveLegacyGun("Mk153 SMAW", fn_smaw);
 		
 
-		GameRegistry.addShapelessRecipe(new ItemStack(GameRegistry.findItem("HandmadeGuns","M134")),new ItemStack(fn_m134, 1));
-		fn_m134 = GameRegistry.findItem("HandmadeGuns","M134");
+		fn_m134 = resolveLegacyGun("M134", fn_m134);
+		fn_m249 = resolveLegacyGun("FN M249 (Minimi)", fn_m249);
+		fn_m2f = resolveLegacyGun("M2 Flame Thrower", fn_m2f);
 		fn_missile = GameRegistry.findItem("HandmadeGuns","missile");
 		
 		fn_ptrk = GameRegistry.findItem("HandmadeGuns","PTRK2041");
@@ -672,7 +655,6 @@ public class GVCUtils {
 		//NetworkRegistry.INSTANCE.registerGuiHandler(this, new GVCGuiHandler());
 		proxy.reisterRenderers();
 		proxy.registerTileEntity();
-		proxy.getCilentMinecraft();
 
 		GameRegistry.registerFuelHandler(new IFuelHandler(){
 			@Override
@@ -693,5 +675,23 @@ public class GVCUtils {
 
 	public static boolean platoonMatched(String platoonName, EntityPMCBase PMC){
 		return platoonName == null || PMC.platoonName == null || PMC.platoonName.equals(platoonName);
+	}
+	private Item resolveLegacyGun(String name, Item legacyItem) {
+		Item gun = GameRegistry.findItem("HandmadeGuns", name);
+		if (!(gun instanceof HMGItem_Unified_Guns)) return null;
+		LEGACY_FIREARMS.put(legacyItem, gun);
+		GameRegistry.addShapelessRecipe(new ItemStack(gun),
+				new ItemStack(legacyItem, 1, net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE));
+		return gun;
+	}
+
+	public static void migrateNpcGun(net.minecraft.entity.EntityLiving npc) {
+		if (npc.getHeldItem() == null) return;
+		ItemStack old = npc.getHeldItem();
+		Item replacement = LEGACY_FIREARMS.get(old.getItem());
+		if (replacement == null) return;
+		ItemStack stack = new ItemStack(replacement);
+		if (old.hasDisplayName()) stack.setStackDisplayName(old.getDisplayName());
+		npc.setCurrentItemOrArmor(0, stack);
 	}
 }

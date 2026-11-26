@@ -1,6 +1,5 @@
 package hmggvcmob.ai;
 
-import handmadevehicle.SlowPathFinder.WorldForPathfind;
 import hmggvcmob.entity.IflagBattler;
 import hmggvcmob.entity.IGVCmob;
 import net.minecraft.block.Block;
@@ -20,14 +19,14 @@ import static java.lang.StrictMath.abs;
 public class AIBuilder extends EntityAIBase {
 	EntityLiving entityBuilder;
 	World worldObj;
-	WorldForPathfind worldForPathfind;
 
 	Vector3d targetPos;
 	private int digingLevel;
 
 	@Override
 	public boolean shouldExecute() {
-		if(entityBuilder.ridingEntity != null)return false;
+		if(entityBuilder.ridingEntity != null || entityBuilder.getAttackTarget() != null
+				|| !((IGVCmob)entityBuilder).getMoveToPositionMng().isBlocked()) return false;
 		if(((IflagBattler)entityBuilder).getTargetCampPosition() != null){
 			targetPos = getJavaxVecFromIntArray(((IflagBattler)entityBuilder).getTargetCampPosition());
 		}else if(entityBuilder.getAttackTarget() != null &&
@@ -47,10 +46,10 @@ public class AIBuilder extends EntityAIBase {
 	}
 	public void startExecuting() {
 	}
-	public AIBuilder(EntityLiving entityLiving, WorldForPathfind worldForPathfind){
+	public AIBuilder(EntityLiving entityLiving){
 		entityBuilder = entityLiving;
 		worldObj = entityLiving.worldObj;
-		this.worldForPathfind = worldForPathfind;
+		setMutexBits(1);
 	}
 
 	private int making = 0;

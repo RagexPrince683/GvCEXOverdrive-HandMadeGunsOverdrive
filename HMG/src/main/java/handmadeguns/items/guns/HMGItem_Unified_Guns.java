@@ -1089,6 +1089,7 @@ public class HMGItem_Unified_Guns extends Item {
 					e.printStackTrace();
 				}
 				entity.getEntityData().setFloat("GunshotLevel", guntemp.soundlevel);
+				entity.getEntityData().setLong("HMGGunshotTick", world.getTotalWorldTime());
 				HMG_proxy.playerSounded(entity);
 //            world.playSoundEffect(entity.posX,entity.posY,entity.posZ, sound, soundlevel, soundspeed);
 

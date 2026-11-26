@@ -10,7 +10,6 @@ import hmggvcmob.entity.IGVCmob;
 import hmggvcmob.entity.IflagBattler;
 import hmggvcmob.entity.util.PlatoonInfoData;
 import hmggvcmob.item.GVCItemPMCDefSetter;
-import hmggvcmob.network.GVCMPacketHandler;
 import hmggvcmob.network.GVCPacket_PlatoonInfoSync;
 import littleMaidMobX.LMM_EntityLittleMaid;
 import net.minecraft.entity.*;
@@ -75,19 +74,15 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	public void onUpdate()
 	{
-		if (platoonOBJ != null && platoonOBJ.platoonTargetEntity == null && leaderEntity_name != null) {
-			platoonOBJ.platoonTargetEntity = worldObj.getPlayerEntityByName(leaderEntity_name);
-		}
-		if(!worldObj.isRemote && getPlatoon()!=null){
-			platoonInfoData.isLeader = isPlatoonLeader();
-			platoonInfoData.isOnPlatoon = true;
-			platoonInfoData.target = new double[]{myPos.getPos().x,myPos.getPos().y,myPos.getPos().z};
-			platoonInfoData.mode = getPlatoon().platoonMode;
-			platoonInfoData.platoonName = platoonName;
-			GVCMPacketHandler.INSTANCE.sendToAll(new GVCPacket_PlatoonInfoSync(platoonInfoData,this));
-		}
-
 		super.onUpdate();
+		if (!worldObj.isRemote && (ticksExisted + getEntityId()) % 20 == 0
+				&& (platoonOBJ != null || platoonInfoData.isOnPlatoon)) {
+			platoonInfoData.isLeader = isPlatoonLeader();
+			platoonInfoData.isOnPlatoon = platoonOBJ != null;
+			platoonInfoData.target = myPos == null ? new double[]{posX, posY, posZ} : myPos.getArrayPos();
+			platoonInfoData.mode = getMobMode();
+			GVCPacket_PlatoonInfoSync.send(platoonInfoData, this);
+		}
 
 		if(rand.nextInt(10) == 0)this.addPotionEffect(new PotionEffect(Potion.regeneration.id, 1, 2));
     }
@@ -131,43 +126,27 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	@Override
 	public void makePlatoon() {
-		this.setPlatoon(new PlatoonOBJ());
-
-		this.enlistPlatoon(false);
+		if (worldObj.isRemote || getPlatoon() != null) return;
+		setPlatoon(PlatoonOBJ.create(this));
+		enlistPlatoon(false);
 	}
+
 	@Override
 	public void makePlatoon_OnLoading() {
-		this.setPlatoon(new PlatoonOBJ());
-
-		this.enlistPlatoon(true);
+		if (!worldObj.isRemote) PlatoonOBJ.restore(this);
 	}
+
 	@Override
 	public void enlistPlatoon(boolean force) {
-		ArrayList<EntityPMCBase> newComer = new ArrayList<>();
-		List nearEntities = worldObj.getEntitiesWithinAABBExcludingEntity(this,boundingBox.expand(32,32,32));
-
-		for(Object obj:nearEntities){
-			Entity entity = (Entity)obj;
-			if(entity instanceof EntityPMCBase && canMoveEntity(entity)){
-				newComer.add((EntityPMCBase) entity);
-			}
+		if (worldObj.isRemote || platoonOBJ == null || !platoonOBJ.hasRoom()) return;
+		for (Object nearby : worldObj.getEntitiesWithinAABB(EntityPMCBase.class, boundingBox.expand(18, 7, 18))) {
+			EntityPMCBase candidate = (EntityPMCBase)nearby;
+			if (!candidate.isEntityAlive() || !canMoveEntity(candidate) || candidate.getPlatoon() != null
+					|| PlatoonOBJ.pending(candidate) || !platoonMatched(platoonName, candidate)) continue;
+			candidate.setPlatoon(platoonOBJ);
+			candidate.platoonName = platoonName;
+			if (!platoonOBJ.hasRoom()) break;
 		}
-		List onVehicleEntity = worldObj.getEntitiesWithinAABBExcludingEntity(this,boundingBox.expand(512,512,512));
-
-		for(Object obj:onVehicleEntity){
-			Entity entity = (Entity)obj;
-			if(entity instanceof EntityPMCBase && entity.ridingEntity instanceof EntityDummy_rider && canMoveEntity(entity)){
-				newComer.add((EntityPMCBase) entity);
-			}
-		}
-		for(EntityPMCBase entityPMCBase : newComer){
-			//対象の分隊が同名or分隊に未所属時に徴発
-			if(platoonMatched(platoonName, (EntityPMCBase) entityPMCBase) &&(((EntityPMCBase) entityPMCBase).getPlatoon() == null || force)){
-				((EntityPMCBase) entityPMCBase).setPlatoon(this.platoonOBJ);
-				((EntityPMCBase) entityPMCBase).platoonName = platoonName;
-			}
-		}
-
 	}
 
 	@Override

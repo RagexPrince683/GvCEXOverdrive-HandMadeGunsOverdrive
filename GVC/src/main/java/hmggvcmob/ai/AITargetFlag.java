@@ -1,62 +1,55 @@
 package hmggvcmob.ai;
 
 import handmadeguns.entity.IFF;
+import handmadevehicle.entity.parts.Modes;
 import hmggvcmob.entity.IflagBattler;
-import hmggvcmob.camp.CampObjAndPos;
-import hmggvcmob.world.WorldSavedData_Flag;
-import net.minecraft.entity.Entity;
+import hmggvcmob.tile.TileEntityFlag;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.world.World;
-
-import java.util.*;
-
-import static java.lang.Math.abs;
 
 public class AITargetFlag extends EntityAIBase {
-    IflagBattler flagBattler;
-    EntityLiving flagBattlerBody;
-    IFF flagbattlerIFF;
-    int cool;
-    World world;
-    WorldSavedData_Flag worldSavedData_flag;
-    Random random = new Random();
+    private final IflagBattler battler;
+    private final EntityLiving entity;
+    private int cooldown;
+    private boolean checkedNearbySquad;
 
-    public AITargetFlag(IflagBattler flagBattler,EntityLiving entityLiving,IFF iff){
-        this.flagBattler = flagBattler;
-        this.flagBattlerBody = entityLiving;
-        this.flagbattlerIFF = iff;
-        this.world = flagBattlerBody.worldObj;
-        cool=new Random().nextInt(600);
+    public AITargetFlag(IflagBattler battler, EntityLiving entity, IFF iff) {
+        this.battler = battler;
+        this.entity = entity;
+        cooldown = entity.getRNG().nextInt(600);
     }
+
     @Override
     public boolean shouldExecute() {
-        cool--;
-        if(cool < 0 && (flagBattler.isPlatoonLeader() || flagBattler.isFree())){//•ª‘à‚É–¢Š‘®‚©A•ª‘à’·
-            cool = new Random().nextInt(20);
-            try {
-                if(worldSavedData_flag == null) worldSavedData_flag = WorldSavedData_Flag.get(world);
-                Iterator<CampObjAndPos> iterator = worldSavedData_flag.campObjHashMap.values().iterator();
-                CampObjAndPos nearest = null;
-                double dist = -1;
-                while (iterator.hasNext()){
-                    CampObjAndPos campObjAndPos = iterator.next();
-                    double currentDist = flagBattlerBody.getDistanceSq(campObjAndPos.flagPos[0],campObjAndPos.flagPos[1],campObjAndPos.flagPos[2]);
-                    if((flagBattler.isThisAttackAbleCamp(campObjAndPos.campObj) || (flagBattler.isThisFriendCamp(campObjAndPos.campObj) && campObjAndPos.attacked))
-                            && (dist == -1 || currentDist < dist )){
-                        dist = currentDist;
-                        nearest = campObjAndPos;
+        if (--cooldown > 0 || !(battler.isPlatoonLeader() || battler.isFree())) return false;
+        cooldown = 30 + entity.getRNG().nextInt(30);
+        TileEntityFlag flag = TileEntityFlag.findNearest(entity.worldObj, entity.posX, entity.posY,
+                entity.posZ, 128, false, camp -> battler.isThisAttackAbleCamp(camp.campObj)
+                        || (camp.isAttacked() && battler.isThisFriendCamp(camp.campObj)));
+        if (flag == null) {
+            if (battler.isFree() && !checkedNearbySquad) {
+                checkedNearbySquad = true;
+                for (Object entry : entity.worldObj.getEntitiesWithinAABB(EntityLiving.class,
+                        entity.boundingBox.expand(8, 3, 8))) {
+                    if (entry == entity || !(entry instanceof IflagBattler)) continue;
+                    IflagBattler ally = (IflagBattler)entry;
+                    if (ally.getCampObj() == battler.getCampObj() && ally.isFree()
+                            && ((EntityLiving)entry).isEntityAlive()) {
+                        battler.makePlatoon();
+                        break;
                     }
                 }
-                if(nearest != null){
-                    if(flagBattler.isFree())flagBattler.makePlatoon();
-                    flagBattler.setTargetCampPosition(nearest.flagPos);
-//                    System.out.println("debug Target:" + nearest.flagPos[0] + "," + nearest.flagPos[1] + "," + nearest.flagPos[2]);
-                    return true;
-                }
-            }catch (Exception e){
             }
+            if (battler.getPlatoon() != null && battler.getPlatoon().hasCurrentCamp()) {
+                battler.getPlatoon().setMode(Modes.Wait);
+                battler.getPlatoon().setCurrentCamp(false);
+            }
+            return false;
         }
-        return false;
+        if (battler.isFree()) battler.makePlatoon();
+        Modes order = battler.isThisAttackAbleCamp(flag.campObj) ? Modes.Attack : Modes.Defend;
+        battler.getPlatoon().order(order, flag.xCoord + 0.5, flag.yCoord + 1, flag.zCoord + 0.5);
+        if (!battler.getPlatoon().hasCurrentCamp()) battler.getPlatoon().setCurrentCamp(true);
+        return true;
     }
 }

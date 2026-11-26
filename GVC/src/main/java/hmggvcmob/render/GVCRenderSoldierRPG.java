@@ -1,16 +1,15 @@
 
 package hmggvcmob.render;
 
- 
 import hmggvcmob.GVCMobPlus;
-import hmggvcmob.render.model.GVCModelGuerrilla;
-import net.minecraft.client.renderer.entity.RenderBiped;
+
+
 import net.minecraft.entity.EntityLiving; 
 import net.minecraft.util.ResourceLocation; 
 
  
 
-public class GVCRenderSoldierRPG extends RenderBiped 
+public class GVCRenderSoldierRPG extends RenderInfantry
 { 
 	
 	private static final ResourceLocation skeletonTextures = new ResourceLocation("gvcmob:textures/mob/soliderrpg.png");
@@ -20,7 +19,7 @@ public class GVCRenderSoldierRPG extends RenderBiped
  	public GVCRenderSoldierRPG() 
 	{ 
  		
- 		super(new GVCModelGuerrilla(), 0.5F);
+        super();
 	} 
  
  

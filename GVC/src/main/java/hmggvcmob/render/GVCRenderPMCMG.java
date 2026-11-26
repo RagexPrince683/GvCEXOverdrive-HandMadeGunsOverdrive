@@ -1,15 +1,12 @@
 
 package hmggvcmob.render;
 
- 
-import hmggvcmob.render.model.GVCModelGuerrilla;
-import net.minecraft.client.renderer.entity.RenderBiped;
 import net.minecraft.entity.EntityLiving; 
 import net.minecraft.util.ResourceLocation; 
 
  
 
-public class GVCRenderPMCMG extends RenderBiped 
+public class GVCRenderPMCMG extends RenderInfantry
 { 
 	
 	private static final ResourceLocation skeletonTextures = new ResourceLocation("gvcmob:textures/mob/pmcmg.png"); 
@@ -18,7 +15,7 @@ public class GVCRenderPMCMG extends RenderBiped
  	public GVCRenderPMCMG() 
 	{ 
  		
- 		super(new GVCModelGuerrilla(), 0.5F);
+        super();
 	} 
  
  

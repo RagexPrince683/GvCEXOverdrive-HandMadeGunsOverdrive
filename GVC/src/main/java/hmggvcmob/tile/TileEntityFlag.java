@@ -2,15 +2,12 @@ package hmggvcmob.tile;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import hmggvcmob.entity.IGVCmob;
-import hmggvcmob.entity.IflagBattler;
 import hmggvcmob.block.GVCBlockFlag;
 import hmggvcmob.camp.CampObj;
 import hmggvcmob.camp.CampObjAndPos;
-import hmggvcmob.entity.IHasVehicleGacha;
-import handmadevehicle.VehicleSpawnGachaOBJ;
-import hmggvcmob.network.GVCMPacketHandler;
-import hmggvcmob.network.GVCMPacketSyncFlagdata;
+import hmggvcmob.entity.IGVCmob;
+import hmggvcmob.entity.IflagBattler;
+import hmggvcmob.entity.guerrilla.EntityGBases;
 import hmggvcmob.world.WorldSavedData_Flag;
 import littleMaidMobX.LMM_LittleMaidMobX;
 import net.minecraft.entity.Entity;
@@ -18,6 +15,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
@@ -29,381 +27,345 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
 import javax.vecmath.Vector3d;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.function.Predicate;
 
 import static handmadeguns.HandmadeGunsCore.islmmloaded;
-import static hmggvcmob.GVCMobPlus.*;
+import static hmggvcmob.GVCMobPlus.campsHash;
+import static hmggvcmob.GVCMobPlus.forPlayer;
 
+public class TileEntityFlag extends TileEntity {
+    private static final int UPDATE_INTERVAL = 10;
+    private static final int REINFORCEMENT_LIMIT = 16;
+    private static final int RAID_LIMIT = 48;
+    private static final int RAID_ATTEMPTS = 50;
+    private static final int RAID_RADIUS = 160;
 
-public class TileEntityFlag extends TileEntity
-{
-	Random rnd = new Random();
-	public int flagHeight;
-	public int respawncycle;
-	public int nextSpawnGroupNum;
+    public int flagHeight;
+    public int respawncycle;
+    public boolean raidMode = true;
+    public boolean vehicleBaseType;
+    public CampObj campObj;
+    private CampObjAndPos territory;
+    private boolean wasCountingDown;
 
-	public boolean vehicleBaseType = false;
-	public CampObj campObj;
-	public CampObjAndPos campObjAndPos;
-	WorldSavedData_Flag worldSavedData_flag;
-	public void readFromNBT(NBTTagCompound p_145839_1_)
-	{
-		super.readFromNBT(p_145839_1_);
-		flagHeight = p_145839_1_.getInteger("flagHeight");
-		respawncycle = p_145839_1_.getInteger("respawncycle");
-		raidMode = p_145839_1_.getBoolean("raidMode");
-		vehicleBaseType = p_145839_1_.getBoolean("vehicleBaseType");
-		campObj = campsHash.get(p_145839_1_.getString("campObj"));
-		campObjAndPos = new CampObjAndPos(new int[]{xCoord,yCoord,zCoord},campObj);
-	}
-	public void writeToNBT(NBTTagCompound p_145841_1_)
-	{
-		super.writeToNBT(p_145841_1_);
-		p_145841_1_.setInteger("flagHeight",flagHeight);
-		p_145841_1_.setInteger("respawncycle",respawncycle);
-		p_145841_1_.setBoolean("vehicleBaseType",vehicleBaseType);
-		p_145841_1_.setString("campObj",campObj.campName);
-		p_145841_1_.setBoolean("raidMode",raidMode);
-	}
-	public TileEntityFlag(CampObj campObj){
-		super();
-		this.campObj = campObj;
-		this.campObjAndPos = new CampObjAndPos(new int[]{xCoord,yCoord,zCoord},campObj);
-		this.flagHeight = campObj.maxFlagHeight;
-		respawncycle = campObj.flagSpawnInterval;
-	}
-	public TileEntityFlag(){
-	}
+    public TileEntityFlag() {}
 
-	@Override
-	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
-		this.readFromNBT(pkt.func_148857_g());
-	}
-	public void updateEntity()
-	{
-		super.updateEntity();
-		if(!worldObj.isRemote) {
-			if(worldObj.difficultySetting == EnumDifficulty.PEACEFUL)return;
-			//todo https://twitter.com/frou_0/status/1196046528533561344
-			this.campObjAndPos.flagPos[0] = xCoord;
-			this.campObjAndPos.flagPos[1] = yCoord;
-			this.campObjAndPos.flagPos[2] = zCoord;
-			this.campObjAndPos.campObj = this.campObj;
-			if(worldSavedData_flag == null) worldSavedData_flag = WorldSavedData_Flag.get(worldObj);
-			Chunk flagChunk = worldObj.getChunkFromBlockCoords(xCoord,zCoord);
-			CampObjAndPos campObj_Camp;
-			boolean campChanged = false;
-			ChunkCoordIntPair flagChunkCoordIntPair = flagChunk.getChunkCoordIntPair();
-			if((campObj_Camp = worldSavedData_flag.campObjHashMap.get(flagChunkCoordIntPair)) != null){
-				if(campObj_Camp.campObj != this.campObj) {
-					worldObj.setBlockToAir(xCoord, yCoord, zCoord);
-					this.invalidate();
-					removeFlagData();
-					return;
-				}
-			} else {
-				if(worldSavedData_flag.isDirty()){
-					setFlagData();
-				}
-			}
-			{
+    public TileEntityFlag(CampObj camp) {
+        campObj = camp;
+        flagHeight = camp.maxFlagHeight;
+        respawncycle = camp.flagSpawnInterval;
+    }
 
-				List nearEntitys = getNearbyEntities(flagChunk);
-				int friendEntityNum = 0;
-				int enemyEntityNum = 0;
-				CampObj nextCamp = this.campObj;
-				campObjAndPos.attacked = false;
-				for (Object te : nearEntitys) {
-					if(te instanceof IflagBattler){
-						if(((IflagBattler) te).isThisFriendCamp(this.campObj)){
-							friendEntityNum++;
-							flagHeight++;
-						}
-						if(((IflagBattler) te).isThisAttackAbleCamp(this.campObj)){
-							enemyEntityNum++;
-							nextCamp = ((IflagBattler) te).getCampObj();
-							flagHeight--;
-							campObjAndPos.attacked = true;
-						}
-					}else if((te instanceof EntityPlayer || (islmmloaded && te instanceof LMM_LittleMaidMobX))){
-						if(campObj.playerIsFriend) {
-							friendEntityNum += 10;
-							flagHeight += 10;
-						}else {
-							enemyEntityNum++;
-							if(nextCamp == this.campObj)nextCamp = forPlayer;
-							campObjAndPos.attacked = true;
-							flagHeight-=10;
-						}
-					}
-				}
-				if(flagHeight<0){
-					if(this.campObj.isOneTime){
-						worldSavedData_flag.campObjHashMap.remove(flagChunkCoordIntPair);
-						worldObj.setBlockToAir(xCoord,yCoord,zCoord);
-						this.invalidate();
-						return;
-					}else {
-						flagHeight = 0;
-						removeFlagData();
-						campChanged = true;
-						this.campObj = nextCamp;
-						this.campObjAndPos.campObj = this.campObj;
-						replaceFlagData();
-						this.invalidate();
-						worldObj.setBlock(xCoord,yCoord,zCoord,this.campObj.campsBlock);
-						worldSavedData_flag.setDirty(true);
-					}
-				}else if(flagHeight > this.campObj.maxFlagHeight){
-					flagHeight = this.campObj.maxFlagHeight;
-				}
-				if(campObj.teamEntityClasses != null && friendEntityNum >= enemyEntityNum && (friendEntityNum + enemyEntityNum < 16 || (campObj.isRaidType && this.raidMode))){
-					if(respawncycle<0){
-						SpawnNewEntities();
-						respawncycle = campObj.flagSpawnInterval;
-					}
-//                    System.out.println("" + respawncycle);
-					respawncycle--;
-				}
-			}
+    @Override
+    public void readFromNBT(NBTTagCompound tag) {
+        super.readFromNBT(tag);
+        flagHeight = tag.getInteger("flagHeight");
+        respawncycle = tag.getInteger("respawncycle");
+        raidMode = !tag.hasKey("raidMode") || tag.getBoolean("raidMode");
+        vehicleBaseType = tag.getBoolean("vehicleBaseType");
+        campObj = campsHash.get(tag.getString("campObj"));
+    }
 
-			GVCMPacketSyncFlagdata packet = new GVCMPacketSyncFlagdata();
-			packet.x = xCoord;
-			packet.y = yCoord;
-			packet.z = zCoord;
-			packet.height = flagHeight;
-			packet.respawncycle = respawncycle;
-			packet.campChanged = campChanged;
-			packet.campName = this.campObj.campName;
-			GVCMPacketHandler.INSTANCE.sendToAll(packet);
-		}
-	}
-	public List getNearbyEntities(Chunk flagChunk){
-		int k = MathHelper.floor_double(yCoord / 16.0D);
+    @Override
+    public void writeToNBT(NBTTagCompound tag) {
+        super.writeToNBT(tag);
+        tag.setInteger("flagHeight", flagHeight);
+        tag.setInteger("respawncycle", respawncycle);
+        tag.setBoolean("raidMode", raidMode);
+        tag.setBoolean("vehicleBaseType", vehicleBaseType);
+        if (campObj != null) tag.setString("campObj", campObj.campName);
+    }
 
-		if (k < 0)
-		{
-			k = 0;
-		}
+    @Override
+    public Packet getDescriptionPacket() {
+        NBTTagCompound tag = new NBTTagCompound();
+        writeToNBT(tag);
+        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 0, tag);
+    }
 
-		if (k >= flagChunk.entityLists.length)
-		{
-			k = flagChunk.entityLists.length - 1;
-		}
-		ArrayList nearEntitys = getSameALTEntities(flagChunk , null , k);
-		getSameALTEntities(flagChunk , nearEntitys , k-1);
-		getSameALTEntities(flagChunk , nearEntitys , k+1);
-		return nearEntitys;
-	}
-	public ArrayList getSameALTEntities(Chunk flagChunk,ArrayList nearEntitys,int k){
-		if(nearEntitys == null)nearEntitys = new ArrayList();
-		try {
-			addAllListToArray(nearEntitys, flagChunk.entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos - 1,
-					flagChunk.getChunkCoordIntPair().chunkZPos + 1).entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos,
-					flagChunk.getChunkCoordIntPair().chunkZPos + 1).entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos + 1,
-					flagChunk.getChunkCoordIntPair().chunkZPos + 1).entityLists[k]);
+    @Override
+    public void onDataPacket(NetworkManager network, S35PacketUpdateTileEntity packet) {
+        readFromNBT(packet.func_148857_g());
+    }
 
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos - 1,
-					flagChunk.getChunkCoordIntPair().chunkZPos).entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos,
-					flagChunk.getChunkCoordIntPair().chunkZPos).entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos + 1,
-					flagChunk.getChunkCoordIntPair().chunkZPos).entityLists[k]);
+    @Override
+    public void onChunkUnload() {
+        clearAttacked();
+    }
 
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos - 1,
-					flagChunk.getChunkCoordIntPair().chunkZPos - 1).entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos,
-					flagChunk.getChunkCoordIntPair().chunkZPos - 1).entityLists[k]);
-			addAllListToArray(nearEntitys, worldObj.getChunkFromChunkCoords(flagChunk.getChunkCoordIntPair().chunkXPos + 1,
-					flagChunk.getChunkCoordIntPair().chunkZPos - 1).entityLists[k]);
-		}catch (Exception e){
-			e.printStackTrace();
-		}
-		return nearEntitys;
-	}
+    @Override
+    public void invalidate() {
+        clearAttacked();
+        super.invalidate();
+    }
 
-	public void addAllListToArray(ArrayList to , List from){
-		for(Object a_from : from){
-			if(a_from != null)to.add(a_from);
-		}
-	}
+    private void clearAttacked() {
+        if (territory != null) territory.attacked = false;
+        territory = null;
+    }
 
-	public void setFlagData(){
-		Chunk flagChunk = worldObj.getChunkFromBlockCoords(xCoord,zCoord);
-		ChunkCoordIntPair flagChunkCoordIntPair = flagChunk.getChunkCoordIntPair();
-		if(worldSavedData_flag == null) worldSavedData_flag = WorldSavedData_Flag.get(worldObj);
-		for(int x = -campObj.flagWidth;x <= campObj.flagWidth;x++) for(int z = -campObj.flagWidth;z <= campObj.flagWidth;z++) {
-			ChunkCoordIntPair current = new ChunkCoordIntPair(flagChunkCoordIntPair.chunkXPos + x,flagChunkCoordIntPair.chunkZPos + z);
-			if(!worldSavedData_flag.campObjHashMap.containsKey(current))
-				worldSavedData_flag.campObjHashMap.put(
-						current,
-						campObjAndPos);
-		}
-	}
-	public void replaceFlagData(){
-		worldSavedData_flag.setDirty(true);
-		Chunk flagChunk = worldObj.getChunkFromBlockCoords(xCoord,zCoord);
-		ChunkCoordIntPair flagChunkCoordIntPair = flagChunk.getChunkCoordIntPair();
-		if(worldSavedData_flag == null) worldSavedData_flag = WorldSavedData_Flag.get(worldObj);
-		for(int x = -campObj.flagWidth;x <= campObj.flagWidth;x++) for(int z = -campObj.flagWidth;z <= campObj.flagWidth;z++) {
-			worldSavedData_flag.campObjHashMap.put(
-					new ChunkCoordIntPair(flagChunkCoordIntPair.chunkXPos + x,flagChunkCoordIntPair.chunkZPos + z),
-					campObjAndPos);
-		}
-	}
+    @Override
+    public void updateEntity() {
+        if (worldObj.isRemote || isInvalid()) return;
+        if (campObj == null && getBlockType() instanceof GVCBlockFlag) {
+            campObj = ((GVCBlockFlag) getBlockType()).campObj;
+        }
+        if (campObj == null) return;
+        if (territory == null) setFlagData();
+        if (worldObj.difficultySetting == EnumDifficulty.PEACEFUL) {
+            territory.attacked = false;
+            return;
+        }
+        long staggeredTick = worldObj.getTotalWorldTime() + xCoord + zCoord;
+        if (Math.floorMod(staggeredTick, UPDATE_INTERVAL) != 0) return;
 
-	public void removeFlagData(){
-		if(worldSavedData_flag == null) worldSavedData_flag = WorldSavedData_Flag.get(worldObj);
-		if(worldSavedData_flag == null)return;
-		worldSavedData_flag.setDirty(true);
-		Chunk flagChunk = worldObj.getChunkFromBlockCoords(xCoord,zCoord);
-		ChunkCoordIntPair flagChunkCoordIntPair = flagChunk.getChunkCoordIntPair();
-		if(worldSavedData_flag == null) worldSavedData_flag = WorldSavedData_Flag.get(worldObj);
-		worldSavedData_flag.setDirty(true);
-		for(int x = -campObj.flagWidth;x <= campObj.flagWidth;x++) for(int z = -campObj.flagWidth;z <= campObj.flagWidth;z++) {
-			ChunkCoordIntPair current = new ChunkCoordIntPair(flagChunkCoordIntPair.chunkXPos + x,flagChunkCoordIntPair.chunkZPos + z);
-			CampObjAndPos campObjAndPos = worldSavedData_flag.campObjHashMap.get(current);
-			if(campObjAndPos == null ||
-					!(worldObj.getBlock(campObjAndPos.flagPos[0],campObjAndPos.flagPos[1],campObjAndPos.flagPos[2]) instanceof GVCBlockFlag))
-				worldSavedData_flag.campObjHashMap.remove(
-						current);
-		}
-	}
-	public boolean raidMode = true;
-	public void SpawnNewEntities(){
-		if(campObj.isRaidType && raidMode){
-			for(int gnum = 0 ; gnum < campObj.raiderGroupNum;gnum++) {
-				raidMode = false;
-				nextSpawnGroupNum = campObj.spawnRaiderEntitiesAve - 4 + rnd.nextInt(8);
-				Vector3d spawningLocation = findRaiderSpawnPoint();
-				if(spawningLocation != null) {
-					for (Object obj : worldObj.playerEntities) {
-						if (obj instanceof EntityPlayer) {
-							EntityPlayer player = (EntityPlayer) obj;
-							player.addChatComponentMessage(new ChatComponentTranslation("Raiders spawned. x:" + (int) spawningLocation.x + " z:" + (int) spawningLocation.z));
-						}
-					}
-					int hegiht = worldObj.getHeightValue(MathHelper.floor_double(spawningLocation.x),
-							MathHelper.floor_double(spawningLocation.z));
-					for (int cnt = 0; cnt < nextSpawnGroupNum; cnt++) {
-						int entityType = rnd.nextInt(campObj.teamEntityClasses.length);
-						Entity newEntity;
-						try {
-							newEntity = campObj.raiderEntityClasses[entityType].getConstructor(World.class).newInstance(worldObj);
-//                            System.out.println("hegiht" + hegiht);
-							newEntity.setLocationAndAngles(spawningLocation.x + getRandomPos(), hegiht + 3, spawningLocation.z + getRandomPos()
-									, rnd.nextFloat() * 360, 0);
-							if (newEntity instanceof EntityLiving) {
-								((EntityLiving) newEntity).onSpawnWithEgg(null);
-							}
-							if (newEntity instanceof IHasVehicleGacha) {
-								Random rand = new Random();
-								if (((IHasVehicleGacha) newEntity).getVehicleGacha_rate_sum() > 0) {
-									int currentRate = rand.nextInt(((IHasVehicleGacha) newEntity).getVehicleGacha_rate_sum());
-									for (VehicleSpawnGachaOBJ gachaOBJ : ((IHasVehicleGacha) newEntity).getVehicleGacha()) {
-										System.out.println(currentRate);
-										if (currentRate < gachaOBJ.rate) {
-											if (gachaOBJ.vehicleName != null)
-												((IHasVehicleGacha) newEntity).setVehicleName(gachaOBJ.vehicleName);
-											break;
-										}
-										currentRate -= gachaOBJ.rate;
-									}
-								}
-							}else if(vehicleBaseType){
-								newEntity.setDead();
-								cnt--;
-								continue;
-							}
-							if (!newEntity.isEntityInsideOpaqueBlock()){
-								worldObj.spawnEntityInWorld(newEntity);
-								if(newEntity instanceof IGVCmob){
-									((IGVCmob) newEntity).setCanDespawn(false);
-								}
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
-		} else {
-			if(campObj.isRaidType)raidMode = true;
-			nextSpawnGroupNum = campObj.spawnEntitiesAve - 4 + rnd.nextInt(8);
-			for (int cnt = 0; cnt < nextSpawnGroupNum; cnt++) {
-				int entityType = rnd.nextInt(campObj.teamEntityClasses.length);
-				Entity newEntity;
-				try {
-					newEntity = campObj.teamEntityClasses[entityType].getConstructor(World.class).newInstance(worldObj);
-					newEntity.setLocationAndAngles(this.xCoord + getRandomPos(), this.yCoord + 1, this.zCoord + getRandomPos()
-							, rnd.nextFloat() * 360, 0);
-					if (newEntity instanceof EntityLiving) {
-						((EntityLiving) newEntity).onSpawnWithEgg(null);
-					}
-					if (!newEntity.isEntityInsideOpaqueBlock()) {
-						if(newEntity instanceof IHasVehicleGacha){//�ԗ��K�`���̂�����
-							Random rand = new Random();
-							if(((IHasVehicleGacha) newEntity).getVehicleGacha_rate_sum() >0) {
-								int currentRate = rand.nextInt(((IHasVehicleGacha) newEntity).getVehicleGacha_rate_sum());
-								for (VehicleSpawnGachaOBJ gachaOBJ : ((IHasVehicleGacha) newEntity).getVehicleGacha()) {
-//                                    System.out.println(currentRate);
-									if (currentRate < gachaOBJ.rate) {
-										if(gachaOBJ.vehicleName != null)((IHasVehicleGacha) newEntity).setVehicleName(gachaOBJ.vehicleName);
-										break;
-									}
-									currentRate -= gachaOBJ.rate;
-								}
-							}
-						}
-						worldObj.spawnEntityInWorld(newEntity);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+        int chunkX = xCoord >> 4;
+        int chunkZ = zCoord >> 4;
+        int minY = Math.max(0, ((yCoord >> 4) - 1) * 16);
+        int maxY = Math.min(256, ((yCoord >> 4) + 2) * 16);
+        AxisAlignedBB area = AxisAlignedBB.getBoundingBox((chunkX - 1) * 16, minY, (chunkZ - 1) * 16,
+                (chunkX + 2) * 16, maxY, (chunkZ + 2) * 16);
+        int allies = 0;
+        int enemies = 0;
+        int captureRate = 0;
+        int supplyBoxes = worldObj.getEntitiesWithinAABB(hmggvcmob.entity.EntitySupplyBox.class, area).size();
+        CampObj nextCamp = campObj;
+        for (Object candidate : worldObj.getEntitiesWithinAABB(EntityLiving.class, area)) {
+            if (!(candidate instanceof IflagBattler) || !((EntityLiving) candidate).isEntityAlive()) continue;
+            IflagBattler battler = (IflagBattler) candidate;
+            if (battler.isThisFriendCamp(campObj)) {
+                allies++;
+                captureRate++;
+            } else if (battler.isThisAttackAbleCamp(campObj)) {
+                enemies++;
+                captureRate--;
+                nextCamp = battler.getCampObj();
+            }
+        }
+        for (Object nearby : worldObj.getEntitiesWithinAABB(EntityPlayer.class, area)) {
+            if (!((EntityPlayer) nearby).isEntityAlive()) continue;
+            if (campObj.playerIsFriend) {
+                allies += 10;
+                captureRate += 10;
+            } else {
+                enemies++;
+                captureRate -= 10;
+                if (nextCamp == campObj) nextCamp = forPlayer;
+            }
+        }
+        if (islmmloaded) {
+            for (Object nearby : worldObj.getEntitiesWithinAABB(LMM_LittleMaidMobX.class, area)) {
+                if (!((EntityLiving) nearby).isEntityAlive()) continue;
+                if (campObj.playerIsFriend) {
+                    allies += 10;
+                    captureRate += 10;
+                } else {
+                    enemies++;
+                    captureRate -= 10;
+                    if (nextCamp == campObj) nextCamp = forPlayer;
+                }
+            }
+        }
+        territory.attacked = enemies > 0;
+        int previousHeight = flagHeight;
+        flagHeight = Math.min(campObj.maxFlagHeight, flagHeight + captureRate * UPDATE_INTERVAL);
+        if (flagHeight < 0) {
+            if (campObj.isOneTime) {
+                worldObj.setBlockToAir(xCoord, yCoord, zCoord);
+            } else if (nextCamp != campObj) {
+                worldObj.setBlock(xCoord, yCoord, zCoord, nextCamp.campsBlock);
+                TileEntity tile = worldObj.getTileEntity(xCoord, yCoord, zCoord);
+                if (tile instanceof TileEntityFlag) {
+                    TileEntityFlag replacement = (TileEntityFlag) tile;
+                    replacement.flagHeight = 0;
+                    replacement.setFlagData();
+                    replacement.markDirty();
+                    worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+                }
+            }
+            return;
+        }
 
-	public Vector3d findRaiderSpawnPoint(){
-		boolean flag = true;
-		Vector3d spawningLocation = null;
-		int cnt = 4 ;
-		while (flag || cnt>50) {
-			cnt++;
-			flag = false;
-			spawningLocation = new Vector3d(getRandomPos(), 0, getRandomPos());
-			spawningLocation.normalize();
-			spawningLocation.scale(16 * ((cnt/5f) * 2 + rnd.nextInt(2)));
-			spawningLocation.x += this.xCoord;
-			spawningLocation.z += this.zCoord;
-			Chunk spawningChunk = worldObj.getChunkFromBlockCoords(
-					MathHelper.floor_double(spawningLocation.x),
-					MathHelper.floor_double(spawningLocation.z));
-			CampObjAndPos campObjAndPos = worldSavedData_flag.campObjHashMap.get(spawningChunk.getChunkCoordIntPair());
-			if(campObjAndPos != null) {
-				for (CampObj campObj : this.campObj.raiderIgnoreList) {
-					if (campObjAndPos.campObj == campObj) {
-						flag = true;
-						break;
-					}
-				}
-			}
-		}
-		return spawningLocation;
-	}
-	public float getRandomPos(){
-		return (rnd.nextFloat()-0.5f)*4;
-	}
+        boolean spawnable = !vehicleBaseType && campObj.teamEntityClasses != null && allies >= enemies;
+        int room = REINFORCEMENT_LIMIT - allies - enemies - supplyBoxes;
+        boolean launchingRaid = campObj.isRaidType && raidMode;
+        boolean spawned = false;
+        boolean countingDown = spawnable && (launchingRaid || room > 0);
+        if (countingDown) {
+            respawncycle -= UPDATE_INTERVAL;
+            if (respawncycle <= 0) {
+                if (launchingRaid) {
+                    spawnRaid();
+                    raidMode = false;
+                } else {
+                    int count = Math.min(room, groupSize(campObj.spawnEntitiesAve));
+                    for (int attempt = 0; attempt < count; attempt++) {
+                        spawn(campObj.teamEntityClasses, xCoord + 0.5, yCoord + 1, zCoord + 0.5, false);
+                    }
+                    if (campObj.isRaidType) raidMode = true;
+                }
+                respawncycle = Math.max(UPDATE_INTERVAL, campObj.flagSpawnInterval);
+                spawned = true;
+            }
+            markDirty();
+        }
+        if (previousHeight != flagHeight || spawned || wasCountingDown != countingDown
+                || (countingDown && Math.floorMod(staggeredTick, 20) == 0)) {
+            markDirty();
+            worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+        }
+        wasCountingDown = countingDown;
+    }
 
-	@SideOnly(Side.CLIENT)
-	public AxisAlignedBB getRenderBoundingBox()
-	{
-		return INFINITE_EXTENT_AABB;
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public AxisAlignedBB getRenderBoundingBox() {
+        return AxisAlignedBB.getBoundingBox(xCoord - 2, yCoord, zCoord - 2, xCoord + 3, yCoord + 6, zCoord + 3);
+    }
 
+    public void setFlagData() {
+        if (worldObj == null || worldObj.isRemote || campObj == null) return;
+        territory = new CampObjAndPos(new int[]{xCoord, yCoord, zCoord}, campObj);
+        WorldSavedData_Flag data = WorldSavedData_Flag.get(worldObj);
+        int chunkX = xCoord >> 4;
+        int chunkZ = zCoord >> 4;
+        for (int dx = -campObj.flagWidth; dx <= campObj.flagWidth; dx++) {
+            for (int dz = -campObj.flagWidth; dz <= campObj.flagWidth; dz++) {
+                ChunkCoordIntPair key = new ChunkCoordIntPair(chunkX + dx, chunkZ + dz);
+                CampObjAndPos previous = data.campObjHashMap.get(key);
+                if (previous == null || owns(previous)) {
+                    data.campObjHashMap.put(key, territory);
+                    if (previous == null || previous.campObj != campObj) data.markDirty();
+                }
+            }
+        }
+    }
+
+    public void removeFlagData() {
+        if (worldObj == null || worldObj.isRemote || campObj == null) return;
+        WorldSavedData_Flag data = WorldSavedData_Flag.get(worldObj);
+        for (int dx = -campObj.flagWidth; dx <= campObj.flagWidth; dx++) {
+            for (int dz = -campObj.flagWidth; dz <= campObj.flagWidth; dz++) {
+                ChunkCoordIntPair key = new ChunkCoordIntPair((xCoord >> 4) + dx, (zCoord >> 4) + dz);
+                CampObjAndPos previous = data.campObjHashMap.get(key);
+                if (previous != null && owns(previous)) {
+                    data.campObjHashMap.remove(key);
+                    data.markDirty();
+                }
+            }
+        }
+    }
+
+    private boolean owns(CampObjAndPos camp) {
+        return camp.flagPos[0] == xCoord && camp.flagPos[1] == yCoord && camp.flagPos[2] == zCoord;
+    }
+
+    private int groupSize(int average) {
+        return Math.max(0, Math.min(RAID_LIMIT, average) - 4 + worldObj.rand.nextInt(8));
+    }
+
+    private void spawnRaid() {
+        if (campObj.raiderEntityClasses == null || campObj.raiderEntityClasses.length == 0) return;
+        AxisAlignedBB area = AxisAlignedBB.getBoundingBox(xCoord - RAID_RADIUS, 0, zCoord - RAID_RADIUS,
+                xCoord + RAID_RADIUS + 1, 256, zCoord + RAID_RADIUS + 1);
+        int remaining = RAID_LIMIT - worldObj.getEntitiesWithinAABB(EntityGBases.class, area).size();
+        int groups = Math.min(campObj.raiderGroupNum, 8);
+        for (int group = 0; group < groups && remaining > 0; group++) {
+            Vector3d location = findRaiderSpawnPoint();
+            if (location == null) break;
+            int count = Math.min(groupSize(campObj.spawnRaiderEntitiesAve), remaining);
+            int spawned = 0;
+            for (int attempt = 0; attempt < count; attempt++) {
+                if (spawn(campObj.raiderEntityClasses, location.x, location.y, location.z, true)) spawned++;
+            }
+            if (spawned == 0) continue;
+            remaining -= spawned;
+            for (Object candidate : worldObj.playerEntities) {
+                EntityPlayer player = (EntityPlayer) candidate;
+                if (player.getDistanceSq(xCoord, yCoord, zCoord) < RAID_RADIUS * RAID_RADIUS) {
+                    player.addChatComponentMessage(new ChatComponentTranslation("gvc.raid.spawned",
+                            MathHelper.floor_double(location.x), MathHelper.floor_double(location.z)));
+                }
+            }
+        }
+    }
+
+    private boolean spawn(Class<? extends Entity>[] types, double x, double y, double z, boolean raider) {
+        if (types.length == 0) return false;
+        x += worldObj.rand.nextDouble() * 4 - 2;
+        z += worldObj.rand.nextDouble() * 4 - 2;
+        int bx = MathHelper.floor_double(x);
+        int bz = MathHelper.floor_double(z);
+        if (!worldObj.getChunkProvider().chunkExists(bx >> 4, bz >> 4)) return false;
+        if (raider) y = worldObj.getTopSolidOrLiquidBlock(bx, bz);
+        if (y < 1 || y >= 255) return false;
+        try {
+            Entity entity = types[worldObj.rand.nextInt(types.length)].getConstructor(World.class).newInstance(worldObj);
+            entity.setLocationAndAngles(x, y, z, worldObj.rand.nextFloat() * 360, 0);
+            if (entity.isEntityInsideOpaqueBlock() || !worldObj.checkNoEntityCollision(entity.boundingBox)
+                    || worldObj.isAnyLiquid(entity.boundingBox)) return false;
+            if (entity instanceof EntityLiving) ((EntityLiving) entity).onSpawnWithEgg(null);
+            if (raider && entity instanceof IGVCmob) ((IGVCmob) entity).setCanDespawn(false);
+            return worldObj.spawnEntityInWorld(entity);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException("Invalid registered camp spawn type", failure);
+        }
+    }
+
+    public Vector3d findRaiderSpawnPoint() {
+        WorldSavedData_Flag data = WorldSavedData_Flag.get(worldObj);
+        for (int attempt = 0; attempt < RAID_ATTEMPTS; attempt++) {
+            double angle = worldObj.rand.nextDouble() * Math.PI * 2;
+            double radius = 32 + (RAID_RADIUS - 34) * (attempt + 1) / (double) RAID_ATTEMPTS;
+            int x = MathHelper.floor_double(xCoord + Math.cos(angle) * radius);
+            int z = MathHelper.floor_double(zCoord + Math.sin(angle) * radius);
+            if (!worldObj.getChunkProvider().chunkExists(x >> 4, z >> 4)) continue;
+            CampObjAndPos claimed = data.campObjHashMap.get(new ChunkCoordIntPair(x >> 4, z >> 4));
+            if (claimed != null && campObj.raiderIgnoreList != null) {
+                boolean ignored = false;
+                for (CampObj ignoredCamp : campObj.raiderIgnoreList) ignored |= claimed.campObj == ignoredCamp;
+                if (ignored) continue;
+            }
+            int y = worldObj.getTopSolidOrLiquidBlock(x, z);
+            if (y > 0 && y < 255 && !worldObj.getBlock(x, y - 1, z).getMaterial().isLiquid()) {
+                return new Vector3d(x + 0.5, y, z + 0.5);
+            }
+        }
+        return null;
+    }
+
+    public static TileEntityFlag findNearest(World world, double x, double y, double z, int range,
+                                              boolean horizontal, Predicate<TileEntityFlag> filter) {
+        TileEntityFlag closest = null;
+        double best = range * range;
+        int minX = MathHelper.floor_double(x - range) >> 4;
+        int minZ = MathHelper.floor_double(z - range) >> 4;
+        int maxX = MathHelper.floor_double(x + range) >> 4;
+        int maxZ = MathHelper.floor_double(z + range) >> 4;
+        for (int cx = minX; cx <= maxX; cx++) {
+            for (int cz = minZ; cz <= maxZ; cz++) {
+                if (!world.getChunkProvider().chunkExists(cx, cz)) continue;
+                Chunk chunk = world.getChunkFromChunkCoords(cx, cz);
+                for (Object candidate : chunk.chunkTileEntityMap.values()) {
+                    if (!(candidate instanceof TileEntityFlag)) continue;
+                    TileEntityFlag flag = (TileEntityFlag) candidate;
+                    if (flag.isInvalid() || flag.campObj == null) continue;
+                    double distance = flag.getDistanceFrom(x, horizontal ? flag.yCoord + 0.5 : y, z);
+                    if (distance < best && filter.test(flag)) {
+                        best = distance;
+                        closest = flag;
+                    }
+                }
+            }
+        }
+        return closest;
+    }
+
+    public boolean isAttacked() {
+        return territory != null && territory.attacked;
+    }
+
+    public boolean isActiveBeacon() {
+        return campObj != null && flagHeight >= campObj.maxFlagHeight / 2;
+    }
 }

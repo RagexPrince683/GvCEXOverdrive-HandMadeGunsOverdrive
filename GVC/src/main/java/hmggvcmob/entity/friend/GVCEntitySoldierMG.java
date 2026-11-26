@@ -29,7 +29,7 @@ public class GVCEntitySoldierMG extends EntitySoBase
     public void addRandomArmor()
     {
         super.addRandomArmor();
-        this.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_m240b));
+        this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_m240b, hmggvcmob.GVCMobPlus.Guns_LMG, worldObj.rand));
     }
 
 //    public void onUpdate()

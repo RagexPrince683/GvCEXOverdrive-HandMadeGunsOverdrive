@@ -1,11 +1,10 @@
 
 package hmggvcmob.render;
 
- 
 import hmggvcmob.GVCMobPlus;
-import hmggvcmob.render.model.GVCModelGuerrilla;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.RenderBiped; 
+
 import net.minecraft.entity.EntityLiving; 
 import net.minecraft.util.ResourceLocation; 
 import net.minecraft.world.World;
@@ -13,7 +12,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 
  
 
-public class GVCRenderGuerrilla extends RenderBiped 
+public class GVCRenderGuerrilla extends RenderInfantry
 { 
 	
 	private String Texturename = new String("gvcmob:textures/mob/guerrilla");
@@ -27,11 +26,11 @@ public class GVCRenderGuerrilla extends RenderBiped
  
  	public GVCRenderGuerrilla() 
 	{
- 		super(new GVCModelGuerrilla(), 0.5F);
+        super();
 	}
  	public GVCRenderGuerrilla(String texturename)
 	{
- 		super(new GVCModelGuerrilla(), 0.5F);
+        super();
  		Texturename = "gvcmob:textures/mob/" + texturename;
 		guerrillaTex =  new ResourceLocation(Texturename + ".png");
 		gurrillaTex2 =  new ResourceLocation(Texturename + "_d.png");

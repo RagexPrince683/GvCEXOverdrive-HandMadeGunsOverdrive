@@ -1,14 +1,3 @@
-buildscript {
-	repositories {
-		maven { url = "https://plugins.gradle.org/m2/" }
-	}
-	dependencies {
-		classpath "com.github.jengelman.gradle.plugins:shadow:2.0.4"
-	}
-}
-
-apply plugin: "com.github.johnrengelman.shadow"
-
 // ===========================
 // VERSION HANDLING
 // ===========================
@@ -77,31 +66,21 @@ ext.writeBuildNumberPreservingFormatting = { File propsFile, int buildNumber ->
 	propsFile.write(replaceOrAppendProperty(text, 'build_number', buildNumber), 'UTF-8')
 }
 
-if (!versionFile.exists()) {
-	writeInitialVersionFile(versionFile, [modVersion: defaultModVersion, buildNumber: defaultBuildNumber])
-}
-
 def loadedVersionValues = readVersionProperties(versionFile)
 validateVersionProperties(loadedVersionValues)
 
-ext.isProductionVersionTask = { String requestedTask ->
-	def taskName = requestedTask.tokenize(':').last()
-	def normalized = taskName.toLowerCase(Locale.ROOT)
-	def developmentTasks = [
-		'runclient', 'runserver', 'test', 'setupdecompworkspace', 'setupdevworkspace',
-		'setupciworkspace', 'eclipse', 'idea', 'genintellijruns', 'genEclipseRuns'.toLowerCase(Locale.ROOT)
-	]
-	if (developmentTasks.contains(normalized) || normalized.startsWith('run')) {
+def productionVersionBuild = !project.hasProperty('hmgKeepBuildNumber') &&
+		gradle.startParameter.taskNames.any { requested ->
+	def path = requested.tokenize(':')
+	if (path.size() > 1 && path[-2] != project.name) {
 		return false
 	}
-	return normalized in ['build', 'jar', 'assemble', 'uploadarchives'] ||
-		normalized == 'reobf' ||
-		normalized == 'reobfjar' ||
-		normalized.startsWith('reobf') ||
-		normalized.endsWith('jar')
+	if (path.size() == 1 && (requested.startsWith(':') ||
+			!(gradle.startParameter.currentDir in [rootProject.projectDir, project.projectDir]))) {
+		return false
+	}
+	return path[-1] in ['build', 'jar', 'assemble', 'uploadArchives', 'reobf', 'shadowJar']
 }
-
-def productionVersionBuild = gradle.startParameter.taskNames.any { isProductionVersionTask(it) }
 def originalBuildNumber = loadedVersionValues.buildNumber
 def effectiveBuildNumber = productionVersionBuild ? originalBuildNumber + 1 : originalBuildNumber
 
@@ -113,17 +92,14 @@ ext.fullVersion = computedVersion
 
 version = fullVersion
 
-gradle.taskGraph.whenReady { graph ->
-	if (productionVersionBuild) {
-		writeBuildNumberPreservingFormatting(versionFile, effectiveBuildNumber)
-		println "HMG production build version: ${fullVersion}"
-	}
-}
-
 gradle.buildFinished { result ->
-	if (productionVersionBuild && result.failure != null) {
-		writeBuildNumberPreservingFormatting(versionFile, originalBuildNumber)
-		println "HMG production build failed; restored build_number to ${originalBuildNumber}"
+	if (productionVersionBuild && result.failure == null && gradle.taskGraph.hasTask(jar)) {
+		if (versionFile.exists()) {
+			writeBuildNumberPreservingFormatting(versionFile, effectiveBuildNumber)
+		} else {
+			writeInitialVersionFile(versionFile, [modVersion: modVersion, buildNumber: effectiveBuildNumber])
+		}
+		println "HMG production build version: ${fullVersion}"
 	}
 }
 
@@ -171,114 +147,18 @@ dependencies {
 	embedded "javax.vecmath:vecmath:1.5.2"
 }
 
-task stageEmbeddedVecmath {
-	inputs.files configurations.embedded
-	outputs.file file("${buildDir}/generated/embedded-libraries/vecmath-1.5.2.jar.bin")
-	doLast {
-		File target = outputs.files.singleFile
-		target.parentFile.mkdirs()
-		java.nio.file.Files.copy(
-			configurations.embedded.singleFile.toPath(),
-			target.toPath(),
-			java.nio.file.StandardCopyOption.REPLACE_EXISTING
-		)
-	}
-}
-
-// ===========================
-// RESOURCE PROCESSING
-// ===========================
-
-processResources {
-
-	inputs.property "version", project.version
-
-	from(sourceSets.main.resources.srcDirs) {
-		include "mcmod.info"
-
-		expand([
-				version: project.version
-		])
-	}
-
-	from(sourceSets.main.resources.srcDirs) {
-		exclude "mcmod.info"
-	}
-}
-
-// ===========================
-// JAR CONFIG
-// ===========================
-
 jar {
-
 	baseName = "HandmadeGunsOverdrive"
-	version = project.version
 	manifest.attributes 'FMLCorePlugin': 'handmadeguns.loading.HMGJumpCorePlugin',
 			'FMLCorePluginContainsFMLMod': 'true'
-}
-
-shadowJar {
-	baseName = "HandmadeGunsOverdrive"
-	version = project.version
-	classifier = null
-	configurations = []
-	dependsOn stageEmbeddedVecmath
-	doLast {
-		File archive = archivePath
-		File rewritten = new File(archive.parentFile, archive.name + ".tmp")
-		java.util.zip.ZipFile source = new java.util.zip.ZipFile(archive)
-		java.util.zip.ZipOutputStream target = new java.util.zip.ZipOutputStream(
-				new java.io.BufferedOutputStream(new java.io.FileOutputStream(rewritten)))
-		try {
-			source.entries().each { entry ->
-				java.util.zip.ZipEntry copy = new java.util.zip.ZipEntry(entry.name)
-				copy.time = entry.time
-				target.putNextEntry(copy)
-				if (!entry.directory) {
-					source.getInputStream(entry).withStream { input ->
-						byte[] buffer = new byte[8192]
-						int read
-						while ((read = input.read(buffer)) != -1) {
-							target.write(buffer, 0, read)
-						}
-					}
-				}
-				target.closeEntry()
-			}
-			java.util.zip.ZipEntry library = new java.util.zip.ZipEntry("META-INF/libraries/vecmath-1.5.2.jar")
-			target.putNextEntry(library)
-			project.configurations.embedded.singleFile.withInputStream { input ->
-				byte[] buffer = new byte[8192]
-				int read
-				while ((read = input.read(buffer)) != -1) {
-					target.write(buffer, 0, read)
-				}
-			}
-			target.closeEntry()
-		} finally {
-			target.close()
-			source.close()
-		}
-		java.nio.file.Files.move(
-			rewritten.toPath(),
-			archive.toPath(),
-			java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-	}
-	manifest.attributes 'FMLCorePlugin': 'handmadeguns.loading.HMGJumpCorePlugin',
-			'FMLCorePluginContainsFMLMod': 'true'
-}
-
-jar.enabled = false
-
-afterEvaluate {
-	shadowJar.configurations = []
-	// ForgeGradle registers the normal jar for reobfuscation before this project block runs.
-	reobf.obfOutput.removeAll { it.toObf == jar.archivePath }
-	reobf.reobf(shadowJar) {
-		it.classpath = sourceSets.main.compileClasspath
+	from(configurations.embedded) {
+		into 'META-INF/libraries'
 	}
 }
+
+// Keep existing release scripts working with the standard ForgeGradle archive.
+task shadowJar(dependsOn: jar)
+reobf.mustRunAfter shadowJar
 
 // ===========================
 // ENCODING FIX

@@ -23,7 +23,7 @@ public class GVCCreativeTab extends CreativeTabs
 	@SideOnly(Side.CLIENT)
 	public String getTranslatedTabLabel()
 	{
-		return "GVCUtil";
+		return super.getTranslatedTabLabel();
 	}
  
 }

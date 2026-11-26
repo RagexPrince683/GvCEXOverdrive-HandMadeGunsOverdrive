@@ -404,3 +404,17 @@ Developer/backend
   input lists for late registrations, and exclude HMG's own ores from external-provider
   detection. Add standalone and cross-provider material regression checks and update
   the material compatibility and pack-authoring documentation.
+
+2026-11-25 15:21 — Restore GVC infantry builds and gameplay
+
+- Build and reobfuscate HMG, GVC and the optional Dungeon Generator Base separately on Java 8. Package HMG's vecmath fallback with Gradle's native JAR task and scope build numbering to HMG releases.
+- Preserve the GVC mod IDs, equipment and infantry registries. Restore HMG loadout fallbacks and soldier targeting, and bound camp reinforcements, raid searches and infantry path retries.
+- Scope flag updates to chunk watchers and apply retained client packets on the client thread. Persist camp, platoon and spawner state. Remove the permanent beacon worker and defer vehicle actions and the incomplete factory and trench generators.
+
+2026-11-25 20:20 — Improve GVC infantry, squads and firearm presentation
+
+- Route infantry combat, squad movement and wandering through bounded, staggered navigation. Keep usable paths, use the native walking helper for doors and terrain, and recover from blocked routes without loading terrain for an AI search.
+- Give platoons persistent membership, leadership, formation positions, and move, follow, patrol, defend and attack orders. Preserve destinations from older saves and regroup when targets or leaders are lost.
+- Use server-owned target acquisition, reaction and aim variation, firing-lane checks, role-specific engagement, and HMG's weapon states. Attach legacy and imported firearms to the posed infantry hand.
+- Hide 25 registered firearm placeholders and provide conversions to their bundled HMG equivalents. Use HMG guns for loadouts and loot. Add English names and localize squad orders, faction labels, beacon and raid messages.
+- Organize the repository guides around HMG, GVC and optional Dungeon Generator Base. Document supported build targets, dependencies, packs, legacy firearm IDs and deferred vehicle and structure work.

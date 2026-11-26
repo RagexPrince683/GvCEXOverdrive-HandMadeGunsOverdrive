@@ -24,8 +24,8 @@ public class WWorld extends WorldGenDungeons implements IWorldGenerator {
 	{
 		switch(world.provider.dimensionId)
 		{
-			case -1: generateNether(world, random, chunkX * 16, chunkZ * 16);
-			case 0: generateSurface(world, random, chunkX * 16, chunkZ * 16);
+			case -1: generateNether(world, random, chunkX * 16, chunkZ * 16); break;
+			case 0: generateSurface(world, random, chunkX * 16, chunkZ * 16); break;
 			case 1: generateEnd(world, random, chunkX * 16, chunkZ * 16);
 		}
 //		if (worldchunkmanager != null)
@@ -147,7 +147,7 @@ public class WWorld extends WorldGenDungeons implements IWorldGenerator {
 		//for (int i2 = 0; i2 < 32; ++i2){
 
 		if(!(par1World.getBlock(par1, par2, par3) == Blocks.wool)){
-			if(random.nextInt(cfg_creatCamp) == 0) {
+			if(cfg_creatCamp > 0 && random.nextInt(cfg_creatCamp) == 0) {
 				if (par1World.getBlock(par1, par2 - 1, par3) == Blocks.grass
 						|| par1World.getBlock(par1, par2 - 1, par3) == Blocks.sand) {
 					int rnd = random.nextInt(3);

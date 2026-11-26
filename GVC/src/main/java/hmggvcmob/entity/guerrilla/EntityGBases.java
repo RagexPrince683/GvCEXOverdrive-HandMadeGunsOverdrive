@@ -1,13 +1,14 @@
 package hmggvcmob.entity.guerrilla;
 
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import hmggvcmob.ai.AIPlatoonMovement;
+import hmggvcmob.ai.AIInfantryTarget;
+import hmggvcmob.ai.AIInfantryWander;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.registry.GameRegistry;
 import handmadeguns.Util.GunsUtils;
 import handmadeguns.entity.IFF;
 import handmadeguns.entity.PlacedGunEntity;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
-import handmadevehicle.SlowPathFinder.WorldForPathfind;
 import handmadevehicle.VehicleSpawnGachaOBJ;
 import handmadevehicle.entity.EntityDummy_rider;
 import handmadevehicle.entity.EntityVehicle;
@@ -20,14 +21,11 @@ import handmadevehicle.entity.prefab.Prefab_Seat;
 import hmggvcmob.GVCMobPlus;
 import hmggvcmob.ai.newai.AIAttackManager;
 import hmggvcmob.entity.*;
-import handmadevehicle.SlowPathFinder.ModifiedPathNavigater;
 import hmggvcmob.ai.*;
 import hmggvcmob.camp.CampObj;
 import hmggvcmob.entity.friend.EntitySoBases;
 import hmggvcmob.entity.friend.GVCEntityFlag;
 import hmggvcmob.entity.util.*;
-import hmggvcmob.network.GVCMPacketHandler;
-import hmggvcmob.network.GVCPacket_PlatoonInfoSync;
 import hmggvcmob.tile.TileEntityFlag;
 import net.minecraft.block.Block;
 import net.minecraft.entity.*;
@@ -40,7 +38,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.util.*;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
@@ -80,62 +77,34 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 
 	public int rideCool = 0;
 
-	private ModifiedPathNavigater modifiedPathNavigater;
-	WorldForPathfind worldForPathfind;
+
 
 	EntityAISwimming aiSwimming;
-	AIattackOnCollide AIAttackOnCollideToPlayer;
-	AIattackOnCollide AIAttackOnCollideToVillager;
-	AIattackOnCollide AIAttackOnCollideToSoldier;
-	EntityAIRestrictOpenDoor AIRestrictOpenDoor;
 	net.minecraft.entity.ai.EntityAIOpenDoor EntityAIOpenDoor;
-	EntityAIMoveTowardsRestriction AIMoveTowardsRestriction;
-	hmggvcmob.ai.AIMoveThroughVillage AIMoveThroughVillage;
 
 	public EntityGBases(World par1World) {
 		super(par1World);
 		canRideVehicle = true;
 		this.bodyHelper = new EntityBodyHelper_modified(this);
-		this.moveHelper = new EntityMoveHelperModified(this);
 		renderDistanceWeight = Double.MAX_VALUE;
-		this.worldForPathfind = new WorldForPathfind(worldObj);
-		this.moveToPositionMng = new MoveToPositionMng(this,worldForPathfind);
-		this.modifiedPathNavigater = new ModifiedPathNavigater(this, worldObj,worldForPathfind);
 
-
-
-		ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, this, moveHelper, "moveHelper", "field_70765_h");
-		ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, this, modifiedPathNavigater, "navigator", "field_70699_by");
+		this.moveToPositionMng = new MoveToPositionMng(this);
 
 		aiSwimming =new EntityAISwimming(this);
-		AIAttackOnCollideToPlayer =new AIattackOnCollide(this, EntityPlayer.class, 1.0D, true);
-		AIAttackOnCollideToVillager = new AIattackOnCollide(this, EntityVillager.class, 1.0D, true);
-		AIAttackOnCollideToSoldier =new AIattackOnCollide(this, EntitySoBases.class, 1.0D, true);
-		AIRestrictOpenDoor         =new EntityAIRestrictOpenDoor(this);
 		EntityAIOpenDoor           =new EntityAIOpenDoor(this, true);
-		AIMoveTowardsRestriction   =new EntityAIMoveTowardsRestriction(this, 1.0D);
-		AIMoveThroughVillage       =new AIMoveThroughVillage(this, 1.0D, false);
 		this.getNavigator().setBreakDoors(true);
+		this.getNavigator().setAvoidsWater(true);
 		this.tasks.addTask(0, aiSwimming);
-		this.tasks.addTask(0, new AIAttackManager(this));
-		this.tasks.addTask(3, AIAttackOnCollideToPlayer);
-		this.tasks.addTask(3, AIAttackOnCollideToVillager);
-		this.tasks.addTask(3, AIAttackOnCollideToSoldier);
+		this.tasks.addTask(2, new AIAttackManager(this));
+		if (!(this instanceof hmggvcmob.entity.IIRVING)) this.tasks.addTask(3, new AIattackOnCollide(this));
+		this.tasks.addTask(4, new AIPlatoonMovement(this));
+		this.targetTasks.addTask(1, new AIInfantryTarget(this));
 //		this.tasks.addTask(3, new AIDriveTank(this, null, worldForPathfind));
-		this.tasks.addTask(4, AIRestrictOpenDoor);
 		this.tasks.addTask(5, EntityAIOpenDoor);
-		this.tasks.addTask(6, AIMoveTowardsRestriction);
-		this.tasks.addTask(7, AIMoveThroughVillage);
 		//こっから先は待機時（？）
-		this.tasks.addTask(8, new EntityAIWander(this, 0.3));
+		this.tasks.addTask(8, new AIInfantryWander(this, 0.3));
 		this.tasks.addTask(8, new EntityAILookIdle(this));
 		//ターゲティング
-		this.targetTasks.addTask(1, new AIHurtByTarget(this, true));
-		this.targetTasks.addTask(2, new AINearestAttackableTarget(this, EntityPlayer.class, 0, true));
-		this.targetTasks.addTask(2, new AINearestAttackableTarget(this, EntitySoBases.class, 0, true));
-		this.targetTasks.addTask(2, new AINearestAttackableTarget(this, EntityVillager.class, 0, true));
-		this.targetTasks.addTask(2, new AINearestAttackableTarget(this, EntityGolem.class, 0, true));
-		this.targetTasks.addTask(2, new AINearestAttackableTarget(this, GVCEntityFlag.class, 0, false));
 		this.targetTasks.addTask(4, new AITargetFlag(this,this,this));
 		this.setCanPickUpLoot(true);
 	}
@@ -190,11 +159,6 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 		return 90;
 	}
 
-	public PathNavigate getNavigator()
-	{
-		return this.modifiedPathNavigater;
-	}
-	private EntityMoveHelperModified moveHelper;
 	protected void updateAITasks()
 	{
 		super.updateAITasks();
@@ -249,10 +213,6 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 			this.motionZ += (double)( p_70060_2_ * f5 + p_70060_1_ * f4);
 		}
 	}
-	public EntityMoveHelper getMoveHelper()
-	{
-		return this.moveHelper;
-	}
 	/**
 	 * (abstract) Protected helper method to read subclass entity data from NBT.
 	 */
@@ -261,7 +221,8 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 		super.readEntityFromNBT(p_70037_1_);
 		this.moveToPositionMng.getMoveToPos().set(this.posX,this.posY
 				,this.posZ);
-		canDespawn = p_70037_1_.getBoolean("canDespawn");
+		if (p_70037_1_.hasKey("canDespawn")) canDespawn = p_70037_1_.getBoolean("canDespawn");
+		PlatoonOBJ.read(this, p_70037_1_);
 	}
 	/**
 	 * (abstract) Protected helper method to write subclass entity data to NBT.
@@ -270,7 +231,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 	{
 		super.writeEntityToNBT(p_70014_1_);
 		p_70014_1_.setBoolean("canDespawn",canDespawn);
-		if(platoonOBJ != null)p_70014_1_.setIntArray("platoonTargetPos",new int[]{(int) platoonOBJ.PlatoonTargetPos.x,(int) platoonOBJ.PlatoonTargetPos.y,(int) platoonOBJ.PlatoonTargetPos.z});
+		PlatoonOBJ.save(this, p_70014_1_);
 	}
 	protected void entityInit() {
 		super.entityInit();
@@ -282,16 +243,12 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 	public boolean CanAttack(Entity entity){
 		return true;
 	}
-	boolean platoon_check;
 	private int reArmCnt;
 
 	public int chunkCheckCNT = 20;
 
 	public void onUpdate()
 	{
-		if(worldObj.isRemote && HMG_proxy.getEntityPlayerInstance() != null && HMG_proxy.getEntityPlayerInstance().isDead){
-			this.setDead();
-		}
 		if(currentMainWeapon != null && currentMainWeapon.linkedBaseLogic.mc_Entity != null){
 			if(getAttackTarget() == null){
 				aimPos = null;
@@ -319,31 +276,13 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 			//	reArmCnt = 20;
 			//}
 		}
-		if(getPlatoon() == null && !platoon_check){
-			platoon_check = true;
-			if(getEntityData().hasKey("platoonTargetPos")){
-				makePlatoon_OnLoading();
-				platoonOBJ.setPlatoonTargetPos(getEntityData().getIntArray("platoonTargetPos"));
-			}
-		}
-		if(!worldObj.isRemote && getPlatoon() != null){
-
-
-			if(platoonOBJ.checkLeaderAlive()) {
-				platoonOBJ.update();
-			}
-			if(isPlatoonLeader())platoonOBJ.update();
-		}
-//        if(!worldObj.isRemote && getPlatoon()!=null){
-		if(false){
-			platoonInfoData.isLeader = isPlatoonLeader();
-			platoonInfoData.isOnPlatoon = true;
-			platoonInfoData.target = new double[]{myPos.getPos().x,myPos.getPos().y,myPos.getPos().z};
-			platoonInfoData.mode = getPlatoon().platoonMode;
-			GVCMPacketHandler.INSTANCE.sendToAll(new GVCPacket_PlatoonInfoSync(platoonInfoData,this));
+		if (!worldObj.isRemote) {
+			PlatoonOBJ.restore(this);
+			hmggvcutil.GVCUtils.migrateNpcGun(this);
+			if (platoonOBJ != null) platoonOBJ.update(this);
 		}
 		super.onUpdate();
-		if(summoningVehicle != null) {
+		if(VEHICLES_ENABLED && !worldObj.isRemote && summoningVehicle != null) {
 
 			int var12 = MathHelper.floor_double((rotationYaw - 22.5)*8 / 360.0F)*45 + 45;
 //            System.out.println(summoningVehicle);
@@ -407,10 +346,10 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 				worldObj.spawnEntityInWorld(bespawningEntity);
 			}
 			summoningVehicle = null;
-		}else if(!worldObj.isRemote && ticksExisted > 10 && cfg_noGuerrillaSpawnAsInfantry && !(ridingEntity instanceof EntityDummy_rider)){
+		}else if(VEHICLES_ENABLED && !worldObj.isRemote && ticksExisted > 10 && cfg_noGuerrillaSpawnAsInfantry && !(ridingEntity instanceof EntityDummy_rider)){
 			this.setDead();
 		}
-		if(this.getAttackTarget() != null && this.getAttackTarget().isDead)this.setAttackTarget(null);
+		if(!worldObj.isRemote && this.getAttackTarget() != null && (this.getAttackTarget().isDead || is_this_entity_friend(this.getAttackTarget())))this.setAttackTarget(null);
 
 		if (!this.worldObj.isRemote && (this.worldObj.difficultySetting == EnumDifficulty.PEACEFUL && this.canDespawn)) {
 			this.setDead();
@@ -420,24 +359,14 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 		this.getEntityAttribute(SharedMonsterAttributes.movementSpeed).setBaseValue(movespeed);
 
 
-		{
-			List PlaceGunDetector = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(2, 3.0D, 2));
-
-			if (PlaceGunDetector != null && !PlaceGunDetector.isEmpty()) {
-				for (int i = 0; i < PlaceGunDetector.size(); ++i) {
-					if(cfg_guerrillacanusePlacedGun && canuseAlreadyPlacedGun && !worldObj.isRemote && ridingEntity == null && this.getAttackTarget() != null) {
-						Entity colliedentity = (Entity) PlaceGunDetector.get(i);
-						if (colliedentity.riddenByEntity == null && colliedentity instanceof PlacedGunEntity) {
-							placing++;
-							if (placing > 60) {
-								placing = 0;
-								this.mountEntity((PlacedGunEntity) colliedentity);
-							}
-							this.setCurrentItemOrArmor(0, null);
-							break;
-						}
-					}
-				}
+		if (!worldObj.isRemote && cfg_guerrillacanusePlacedGun && canuseAlreadyPlacedGun
+				&& ridingEntity == null && getAttackTarget() != null && (ticksExisted + getEntityId()) % 12 == 0) {
+			for (Object nearby : worldObj.getEntitiesWithinAABB(PlacedGunEntity.class, boundingBox.expand(2, 3, 2))) {
+				PlacedGunEntity emplacement = (PlacedGunEntity)nearby;
+				if (emplacement.riddenByEntity != null || emplacement.isDead || emplacement.gunStack == null) continue;
+				mountEntity(emplacement);
+				if (ridingEntity == emplacement) setCurrentItemOrArmor(0, null);
+				break;
 			}
 		}
 		if(this.getHeldItem() != null){
@@ -538,7 +467,6 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 		if(ridingEntity == null){
 			rideCool --;
 		}
-		if(modifiedPathNavigater.getSpeed() < 0 && rand.nextInt(10)==0 && this.getAttackTarget() == null)modifiedPathNavigater.setSpeed(1);
 		this.getEntityData().setBoolean("HMGisUsingItem",false);
 
 		moveToPositionMng.update();
@@ -606,7 +534,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 	public boolean canEntityBeSeen(Entity p_70685_1_)
 	{
 
-		if(ridingEntity instanceof EntityDummy_rider){
+		if(VEHICLES_ENABLED && ridingEntity instanceof EntityDummy_rider){
 			BaseLogic connected = ((EntityDummy_rider) ridingEntity).linkedBaseLogic;
 			if(connected.seatObjects[((EntityDummy_rider) ridingEntity).linkedSeatID].prefab_seat.isBlindedSeat)return false;
 		}
@@ -662,7 +590,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 
 	@Override
 	public boolean canSeeTarget(Entity target) {
-		if(this.ridingEntity instanceof EntityDummy_rider){
+		if(VEHICLES_ENABLED && this.ridingEntity instanceof EntityDummy_rider){
 			//if(!((EntityDummy_rider) this.ridingEntity).linkedBaseLogic.prefab_vehicle.T_Land_F_Plane)return true;
 		}
 		boolean flag;
@@ -681,7 +609,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 	public boolean canhearsound(Entity target) {
 		boolean flag;
 		double dist = getDistanceToEntity(target);
-		flag = dist < target.getEntityData().getFloat("GunshotLevel") * 10;
+		flag = dist < hmggvcmob.util.GVCUtil.audibleGunshotLevel(target) * 10;
 		return flag;
 	}
 
@@ -717,6 +645,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 	}
 
 	public void setDead(){
+		if (!worldObj.isRemote && platoonOBJ != null) setPlatoon(null);
 		super.setDead();
 	}
 
@@ -742,26 +671,9 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 				return false;//視線が通る範囲にプレイヤーが居るならキャンセルする。視界内にスポーンするのがクソゲだったので
 			}
 		}
-		{
-			double dist = 9216;
-			TileEntityFlag closestFlag = null;
-			for (Object obj : this.worldObj.loadedTileEntityList) {
-				if (obj instanceof TileEntityFlag) {
-					TileEntityFlag tileEntity = (TileEntityFlag) obj;
-					if (tileEntity.flagHeight >= tileEntity.campObj.maxFlagHeight / 2 && tileEntity.campObj == forPlayer) {
-						double tempDist = tileEntity.getDistanceFrom(this.posX, tileEntity.yCoord, this.posZ);
-						if (tempDist < dist || dist == -1) {
-							dist = tempDist;
-							closestFlag = tileEntity;
-						}
-					}
-				}
-			}
-			if (closestFlag != null) {
-				return false;
-			}
-		}
-		return super.getCanSpawnHere();
+		if (TileEntityFlag.findNearest(worldObj, posX, posY, posZ, 96, true,
+                flag -> flag.isActiveBeacon() && flag.campObj == forPlayer) != null) return false;
+        return super.getCanSpawnHere();
 	}
 	@Override
 	public float getBlockPathWeight(int p_70783_1_, int p_70783_2_, int p_70783_3_)
@@ -830,25 +742,12 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 						this.collideWithEntity(entity);
 					}
 					if (canuseVehicle && this.ridingEntity == null && !entity.isDead) {
-						if (entity instanceof EntityVehicle && ((EntityVehicle) entity).canUseByMob) {
+						if (VEHICLES_ENABLED && entity instanceof EntityVehicle && ((EntityVehicle) entity).canUseByMob) {
 							Entity pilot = ((EntityVehicle) entity).getBaseLogic().getRiddenEntityList()[((EntityVehicle) entity).getpilotseatid()];
 							if ((pilot == null || is_this_entity_friend(pilot)) && !((EntityVehicle) entity).getBaseLogic().isRidingEntity(this)) {
 //                            System.out.println("" + );
 								((EntityVehicle) entity).pickupEntity(this, seatID);
 								rideCool = 400;
-							}
-						}else {
-							if(cfg_guerrillacanusePlacedGun && canuseAlreadyPlacedGun && !worldObj.isRemote && this.getAttackTarget() != null) {
-								if (entity.riddenByEntity == null && entity instanceof PlacedGunEntity) {
-									placing++;
-									if (placing > 60) {
-										placing = 0;
-										rideCool = 400;
-										this.mountEntity((PlacedGunEntity) entity);
-									}
-									this.setCurrentItemOrArmor(0, null);
-									break;
-								}
 							}
 						}
 					}
@@ -918,7 +817,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 			}
 			else
 			{
-				if(this.ridingEntity instanceof EntityDummy_rider){
+				if(VEHICLES_ENABLED && this.ridingEntity instanceof EntityDummy_rider){
 					((EntityDummy_rider) this.ridingEntity).linkedBaseLogic.mc_Entity.setDead();
 				}
 				this.setDead();
@@ -937,7 +836,7 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 
 				if (this.canDespawn() && d3 > 16384.0D)
 				{
-					if(this.ridingEntity instanceof EntityDummy_rider){
+					if(VEHICLES_ENABLED && this.ridingEntity instanceof EntityDummy_rider){
 						((EntityDummy_rider) this.ridingEntity).linkedBaseLogic.mc_Entity.setDead();
 					}
 					this.setDead();
@@ -982,13 +881,12 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 	EntityAndPos myPos;
 
 	@Override
-	public void setPlatoon(PlatoonOBJ entities) {
-		if(!this.isDead) {
-			if(platoonOBJ != entities) {
-				this.platoonOBJ = entities;
-				if(this.platoonOBJ != null)this.platoonOBJ.addMember(this);
-			}
-		}
+	public void setPlatoon(PlatoonOBJ platoon) {
+		if (worldObj.isRemote || (isDead && platoon != null) || platoonOBJ == platoon) return;
+		if (platoonOBJ != null) platoonOBJ.removeMember(this, true);
+		platoonOBJ = platoon;
+		myPos = null;
+		if (platoonOBJ != null) platoonOBJ.addMember(this);
 	}
 
 	@Override
@@ -1009,48 +907,31 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 
 	@Override
 	public Vector3d getMoveToPos() {
-		return myPos.getPos();
+		return myPos == null ? null : myPos.getPos();
 	}
 
 
 	@Override
 	public void makePlatoon() {
-		this.setPlatoon(new PlatoonOBJ());
-
-		this.enlistPlatoon(false);
+		if (worldObj.isRemote || getPlatoon() != null) return;
+		setPlatoon(PlatoonOBJ.create(this));
+		enlistPlatoon(false);
 	}
+
 	@Override
 	public void makePlatoon_OnLoading() {
-		this.setPlatoon(new PlatoonOBJ());
-
-		this.enlistPlatoon(true);
+		if (!worldObj.isRemote) PlatoonOBJ.restore(this);
 	}
 
 	@Override
 	public void enlistPlatoon(boolean force) {
-
-		ArrayList<EntityGBases> newComer = new ArrayList<>();
-		List nearEntities = worldObj.getEntitiesWithinAABBExcludingEntity(this,boundingBox.expand(32,32,32));
-
-		for(Object obj:nearEntities){
-			Entity entity = (Entity)obj;
-			if(entity instanceof EntityGBases && canMoveEntity(entity)){
-				newComer.add((EntityGBases) entity);
-			}
-		}
-		List onVehicleEntity = worldObj.getEntitiesWithinAABBExcludingEntity(this,boundingBox.expand(512,512,512));
-
-		for(Object obj:onVehicleEntity){
-			Entity entity = (Entity)obj;
-			if(entity instanceof EntityGBases && entity.ridingEntity instanceof EntityDummy_rider && canMoveEntity(entity)){
-				newComer.add((EntityGBases) entity);
-			}
-		}
-		for(EntityGBases entityGBases : newComer){
-			//対象の分隊が同名or分隊に未所属時に徴発
-			if(canMoveEntity(entityGBases) && (((EntityGBases) entityGBases).getPlatoon() == null || force)){
-				((EntityGBases) entityGBases).setPlatoon(this.platoonOBJ);
-			}
+		if (worldObj.isRemote || platoonOBJ == null || !platoonOBJ.hasRoom()) return;
+		for (Object nearby : worldObj.getEntitiesWithinAABB(EntityGBases.class, boundingBox.expand(18, 7, 18))) {
+			EntityGBases candidate = (EntityGBases)nearby;
+			if (!candidate.isEntityAlive() || !canMoveEntity(candidate) || candidate.getPlatoon() != null
+					|| PlatoonOBJ.pending(candidate)) continue;
+			candidate.setPlatoon(platoonOBJ);
+			if (!platoonOBJ.hasRoom()) break;
 		}
 	}
 

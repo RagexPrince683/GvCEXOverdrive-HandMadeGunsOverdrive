@@ -141,16 +141,12 @@ public class EntitySupplyBox extends GVCEntityBox{
             case 3:
             case 4:
             case 5:
-                itemStack = new ItemStack(Magazines.get(rand.nextInt(Magazines.size())),8);
+                if (!Magazines.isEmpty()) itemStack = new ItemStack(Magazines.get(rand.nextInt(Magazines.size())), 8);
                 break;
             case 6:
             case 7:
             case 8:
-                Item gun = (Item) HMGGunMaker.Guns.get(new Random().nextInt(HMGGunMaker.Guns.size()));
-                while ((gun instanceof HMGItem_Unified_Guns && !((HMGItem_Unified_Guns) gun).gunInfo.canInRoot) || (gun instanceof HMGXItemGun_Sword && !((HMGXItemGun_Sword) gun).isinRoot)){
-                    gun = (Item) HMGGunMaker.Guns.get(new Random().nextInt(HMGGunMaker.Guns.size()));
-                }
-                itemStack = new ItemStack(gun,1);
+                itemStack = chooseSupplyGun(HMGGunMaker.Guns);
                 break;
             case 9:
             case 10:
@@ -171,11 +167,7 @@ public class EntitySupplyBox extends GVCEntityBox{
                 itemStack = new ItemStack(Blocks.stone,64);
                 break;
             case 13:
-                gun = (Item) GVCMobPlus.Guns_RR.get(new Random().nextInt(GVCMobPlus.Guns_RR.size()));
-                while (!((HMGItem_Unified_Guns)gun).gunInfo.canInRoot){
-                    gun = (Item) GVCMobPlus.Guns_RR.get(new Random().nextInt(GVCMobPlus.Guns_RR.size()));
-                }
-                itemStack = new ItemStack(gun,1);
+                itemStack = chooseSupplyGun(GVCMobPlus.Guns_RR);
                 break;
             case 14:
             case 20:
@@ -198,6 +190,18 @@ public class EntitySupplyBox extends GVCEntityBox{
 
     }
 
+    private ItemStack chooseSupplyGun(java.util.List<?> guns) {
+        Item selected = null;
+        int eligible = 0;
+        for (Object gun : guns) {
+            if ((gun instanceof HMGItem_Unified_Guns && ((HMGItem_Unified_Guns) gun).gunInfo.canInRoot)
+                    || (gun instanceof HMGXItemGun_Sword && ((HMGXItemGun_Sword) gun).isinRoot)) {
+                if (rand.nextInt(++eligible) == 0) selected = (Item) gun;
+            }
+        }
+        return selected == null ? null : new ItemStack(selected);
+    }
+
     protected void dropRareDrop(int par1)
     {
 
@@ -208,6 +212,7 @@ public class EntitySupplyBox extends GVCEntityBox{
      */
     public void readEntityFromNBT(NBTTagCompound par1NBTTagCompound)
     {
+        super.readEntityFromNBT(par1NBTTagCompound);
         hasItems = par1NBTTagCompound.getBoolean("hasItems");
 
     }
@@ -217,6 +222,7 @@ public class EntitySupplyBox extends GVCEntityBox{
      */
     public void writeEntityToNBT(NBTTagCompound par1NBTTagCompound)
     {
+        super.writeEntityToNBT(par1NBTTagCompound);
         par1NBTTagCompound.setBoolean("hasItems",hasItems);
         //par1NBTTagCompound.setByte("SkeletonType", (byte)this.getSkeletonType());
     }

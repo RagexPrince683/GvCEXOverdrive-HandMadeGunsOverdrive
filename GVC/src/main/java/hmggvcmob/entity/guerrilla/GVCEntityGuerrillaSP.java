@@ -36,7 +36,7 @@ public class GVCEntityGuerrillaSP extends EntityGBase
     public void addRandomArmor()
     {
         super.addRandomArmor();
-        this.setCurrentItemOrArmor(0,new ItemStack((Item)Guns_SR.get(rnd.nextInt(Guns_SR.size()))));
+        this.setCurrentItemOrArmor(0,hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_SR, rnd));
     }
     protected Item func_146068_u()
     {

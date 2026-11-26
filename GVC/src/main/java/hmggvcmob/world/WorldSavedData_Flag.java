@@ -33,8 +33,10 @@ public class WorldSavedData_Flag extends WorldSavedData {
 	@Override
 	public void readFromNBT(NBTTagCompound tag) {
 		int num,cnt=0;
+		campObjHashMap.clear();
 		num = tag.getInteger("CampObjNum");
 		for(;cnt < num;cnt++) {
+			if (!campsHash.containsKey(tag.getString("CampObj" + cnt))) continue;
 			campObjHashMap.put(new ChunkCoordIntPair(tag.getInteger("CampObjX"+cnt),tag.getInteger("CampObjZ"+cnt))
 					, new CampObjAndPos(new int[]{tag.getInteger("CampObjBlockX"+cnt),tag.getInteger("CampObjBlockY"+cnt),tag.getInteger("CampObjBlockZ"+cnt)},
 							campsHash.get(tag.getString("CampObj" + cnt))));
@@ -43,7 +45,6 @@ public class WorldSavedData_Flag extends WorldSavedData {
 
 	@Override
 	public void writeToNBT(NBTTagCompound tag) {
-		System.out.println("debug");
 		int num,cnt=0;
 		tag.setInteger("CampObjNum",campObjHashMap.size());
 		for(Map.Entry<ChunkCoordIntPair, CampObjAndPos> entry : campObjHashMap.entrySet()){
@@ -61,10 +62,6 @@ public class WorldSavedData_Flag extends WorldSavedData {
 		if(instance instanceof WorldSavedData_Flag){
 			return (WorldSavedData_Flag) instance;
 		}else {
-			if(!world.isRemote) {
-				System.out.println("first");
-				System.out.println("debug " + instance);
-			}
 			instance = new WorldSavedData_Flag();
 			world.perWorldStorage.setData(DATA_NAME,instance);
 			return (WorldSavedData_Flag) world.perWorldStorage.loadData(WorldSavedData_Flag.class,DATA_NAME);

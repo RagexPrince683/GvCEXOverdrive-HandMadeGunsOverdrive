@@ -10,6 +10,8 @@ import net.minecraft.world.World;
 
 import static hmggvcmob.GVCMobPlus.tabgvcm;
 
+import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
+
 public class GVCItemGuerrillaSoldierEgg extends Item
 {
     public int mob ;
@@ -19,11 +21,12 @@ public class GVCItemGuerrillaSoldierEgg extends Item
         super();
         this.mob = i;
         this.maxStackSize = 64;
-        this.setCreativeTab(tabgvcm);
+        if (VEHICLES_ENABLED || !(mob >= 4)) this.setCreativeTab(tabgvcm);
     }
 
     public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, int par4, int par5, int par6, int par7, float par8, float par9, float par10)
     {
+        if (!(VEHICLES_ENABLED || !(mob >= 4)) || par7 != 1 || !par2EntityPlayer.canPlayerEdit(par4, par5 + 1, par6, par7, par1ItemStack)) return false;
         if (par3World.isRemote)
         {
             return true;
@@ -40,9 +43,7 @@ public class GVCItemGuerrillaSoldierEgg extends Item
                 GVCEntitySoldier entityskeleton = new GVCEntitySoldier(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
                 entityskeleton.addRandomArmor();
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 1){
                 ++par5;
@@ -50,9 +51,7 @@ public class GVCItemGuerrillaSoldierEgg extends Item
                 GVCEntitySoldierSP entityskeleton = new GVCEntitySoldierSP(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
                 entityskeleton.addRandomArmor();
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 2){
                 ++par5;
@@ -60,9 +59,7 @@ public class GVCItemGuerrillaSoldierEgg extends Item
                 GVCEntitySoldierMG entityskeleton = new GVCEntitySoldierMG(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
                 entityskeleton.addRandomArmor();
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 3){
                 ++par5;
@@ -70,13 +67,11 @@ public class GVCItemGuerrillaSoldierEgg extends Item
                 GVCEntitySoldierRPG entityskeleton = new GVCEntitySoldierRPG(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
                 entityskeleton.addRandomArmor();
-                --par1ItemStack.stackSize;
-                if(par1ItemStack.hasDisplayName()){
+                if(VEHICLES_ENABLED && par1ItemStack.hasDisplayName()){
                     entityskeleton.summoningVehicle = par1ItemStack.getDisplayName();
                 }
                 entityskeleton.onSpawnWithEgg(null);
-                par3World.spawnEntityInWorld(entityskeleton);
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else{
                 return false;
             }

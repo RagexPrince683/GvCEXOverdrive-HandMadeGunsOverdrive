@@ -1,346 +1,275 @@
 package hmggvcmob.ai.newai;
 
+import handmadeguns.entity.IFF;
 import handmadeguns.entity.PlacedGunEntity;
+import handmadeguns.items.WeaponClass;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
-import handmadevehicle.SlowPathFinder.WorldForPathfind;
-import handmadevehicle.entity.EntityDummy_rider;
 import hmggvcmob.entity.IGVCmob;
-import net.minecraft.entity.Entity;
+import hmggvcmob.entity.guerrilla.GVCEntityGuerrillaMG;
+import hmggvcmob.entity.guerrilla.GVCEntityGuerrillaSG;
+import hmggvcmob.entity.guerrilla.GVCEntityGuerrillaSP;
+import hmggvcmob.entity.friend.GVCEntityPMCMG;
+import hmggvcmob.entity.friend.GVCEntityPMCSP;
+import hmggvcmob.entity.friend.GVCEntitySoldierMG;
+import hmggvcmob.entity.friend.GVCEntitySoldierSP;
+import hmggvcmob.entity.util.MoveToPositionMng;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.Vec3;
 
 import javax.vecmath.Vector3d;
-import java.util.List;
-import java.util.Random;
 
-import static hmggvcmob.util.GVCUtil.getRidingEntity;
-import static hmggvcmob.util.GVCUtil.isOnGround;
-import static java.lang.Math.abs;
+import static hmggvcmob.GVCMobPlus.cfg_infantryAimError;
+import static hmggvcmob.GVCMobPlus.cfg_infantryReactionTicks;
 
 public class AIAttackEntityByGun extends AIAttackToEntity {
-	public float maxshootrange;//射程
-	public float minshootrange;//射程
-	public int bursttime;//一連射の時間
-	public int burstingtime;//撃ってる時間
-	public int burstcool = 20;//連射の間隔
-	public int burstcoolcnt;
-	private final int Warningblank = 50;
-	private int Warningcoolcnt;
-	public int retriggerCool;
-	private boolean isSelectorChecked = false;
-	private int aiming = 0;//狙ってる時間
+    private enum Role {
+        RIFLE(8, 34, 12, 15, 1.0),
+        SUPPORT(11, 42, 26, 24, 1.2),
+        MARKSMAN(13, 58, 1, 28, 0.6),
+        CLOSE(3, 17, 9, 12, 1.4);
 
-	private int dir_modeChangeCool = 600;
-	private boolean roundDir;
-	private boolean moveRound = false;
+        final int minimum, maximum, burst, pause;
+        final double error;
 
-	private int standingTime;
+        Role(int minimum, int maximum, int burst, int pause, double error) {
+            this.minimum = minimum;
+            this.maximum = maximum;
+            this.burst = burst;
+            this.pause = pause;
+            this.error = error;
+        }
+    }
 
-	public AIAttackEntityByGun(EntityLiving guerrilla,AIAttackManager aiAttackManager){
-		super(guerrilla,aiAttackManager);
-		maxshootrange = 200;
-		minshootrange = 4;
-		bursttime = 40;
-	}
-	public boolean forceStop = false;
-	@Override
-	public boolean shouldExecute() {
-		if(forceStop){
-			forceStop = false;
-			return false;
-		}
-		return super.shouldExecute();
-	}
+    private final MoveToPositionMng movement;
+    private ItemStack weapon;
+    private Role role;
+    private boolean visible;
+    private int nextMovement;
+    private int reaction;
+    private int nextAimSample;
+    private int shotPause;
+    private int burstRemaining;
+    private int blockedTicks;
+    private double aimOffsetX, aimOffsetY, aimOffsetZ;
+    private final Vector3d lastSeenFeet = new Vector3d();
+    private boolean hasLastSeen;
+    private boolean firingLaneBlocked;
 
-	@Override
-	public void movePosition() {
-		Vector3d aimingPoint = getSeeingPosition();
-		if(!target.onGround && (getRidingEntity(target) == null || !getRidingEntity(target).onGround))return;//飛行してる目標相手に移動しない
-		boolean see = shooter.canEntityBeSeen(target);
-		boolean canSee = !shooter.isPotionActive(Potion.blindness);
-		canSee &= see;
-		canSeeState = canSee;
-		if((shooter.getHeldItem() == null || shooter.getHeldItem().getItem() instanceof HMGItem_Unified_Guns) && aimingPoint != null){
-			double maxrange = maxshootrange * maxshootrange;
-			double minrange = minshootrange * minshootrange;
-			if (shooter.ridingEntity == null && (shooter.getHeldItem() == null || !(shooter.getHeldItem().getItem() instanceof HMGItem_Unified_Guns))) {
-				maxrange = 0;
-				minrange = 0;
-				moveRound = false;
-			}
-			double tocurrentAttackToPosition = shooter.getDistanceSq(aimingPoint.x, aimingPoint.y, aimingPoint.z);
-			Vector3d reCurToTargetPosition = new Vector3d(aimingPoint);
-			Vector3d moveToVec = new Vector3d(shooter.posX, shooter.posY, shooter.posZ);
-			Vector3d reCurToTargetPosition_copy = new Vector3d(reCurToTargetPosition);
-			reCurToTargetPosition.sub(moveToVec);
-			byte state = -1;//stop
+    public AIAttackEntityByGun(EntityLiving shooter, AIAttackManager manager) {
+        super(shooter, manager);
+        movement = ((IGVCmob)shooter).getMoveToPositionMng();
+        rnd = shooter.getRNG();
+    }
 
-			{
-				if (!canSee || maxrange < tocurrentAttackToPosition)
-					state = 1;//go
-				else if (minrange > tocurrentAttackToPosition)
-					state = 3;//back
-				else if (moveRound)
-					state = 2;//slow
-			}
+    private ItemStack getWeapon() {
+        return shooter.ridingEntity instanceof PlacedGunEntity
+                ? ((PlacedGunEntity)shooter.ridingEntity).gunStack : shooter.getHeldItem();
+    }
 
-			double speed = 0;
-			if (state == 1) {
-				speed = 1;
-			} else if (state == 2) {
-				speed = 0.6;
-			}else
-			if (state == 3) {
-				speed = -1;
-			}
-			if(moveRound) {
-				reCurToTargetPosition.x = reCurToTargetPosition_copy.z * -1;
-				reCurToTargetPosition.z = reCurToTargetPosition_copy.x;
-				if (roundDir){
-					reCurToTargetPosition.x *= -1;
-					reCurToTargetPosition.z *= -1;
-				}
-				reCurToTargetPosition_copy.scale(speed);
-				reCurToTargetPosition.add(reCurToTargetPosition_copy);
-				speed = 0.6;
-			}else {
-				reCurToTargetPosition.scale(speed != 0?1:0);
-			}
-			moveToVec.add(reCurToTargetPosition);
+    @Override
+    public boolean shouldExecute() {
+        ItemStack held = getWeapon();
+        return held != null && held.getItem() instanceof HMGItem_Unified_Guns && super.shouldExecute();
+    }
 
-//				shooter.getNavigator().setPath(worldForPathfind.getEntityPathToXYZ(shooter,
-//						MathHelper.floor_double(moveToVec.x),
-//						MathHelper.floor_double(moveToVec.y),
-//						MathHelper.floor_double(moveToVec.z),
-//						80, true, false, fagetMoveToPositionMnglse, false), speed);
-			if(isOnGround(target))((IGVCmob)shooter).getMoveToPositionMng().getMoveToPos().set(
-					moveToVec.x,
-					moveToVec.y,
-					moveToVec.z);
-			((IGVCmob)shooter).getMoveToPositionMng().setMovingSpeed(speed);
-		}
-		dir_modeChangeCool--;
-		if(shooter.getNavigator().getPath() == null)standingTime++;
-		else standingTime--;
-		if(dir_modeChangeCool < 0 || standingTime>100){
-			dir_modeChangeCool = 20 + rnd.nextInt(60);
-			roundDir = rnd.nextBoolean();
-			moveRound = rnd.nextBoolean();
-		}
-	}
+    @Override
+    public boolean continueExecuting() {
+        return target == shooter.getAttackTarget() && target != null && target.isEntityAlive()
+                && weapon == getWeapon() && !((IFF)shooter).is_this_entity_friend(target);
+    }
 
-	@Override
-	public void aimTarget() {
-		Vector3d aimingPoint = getSeeingPosition();
-//        System.out.println("" + aimingPoint);
-		if(aimingPoint != null)shooter.getLookHelper().setLookPosition(aimingPoint.x, aimingPoint.y, aimingPoint.z, 1000000, 1000000);
-	}
+    @Override
+    public void startExecuting() {
+        weapon = getWeapon();
+        HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)weapon.getItem();
+        role = roleFor(gun);
+        movement.stop();
+        shooter.getNavigator().clearPathEntity();
+        reaction = cfg_infantryReactionTicks + rnd.nextInt(8);
+        nextAimSample = 0;
+        nextMovement = shooter.ticksExisted;
+        shotPause = 0;
+        blockedTicks = 0;
+        hasLastSeen = false;
+        firingLaneBlocked = false;
+        gun.checkTags(weapon);
+        NBTTagCompound tag = weapon.getTagCompound();
+        int mode = tag.getInteger("HMGMode");
+        int selected = -1;
+        int preferred = role == Role.MARKSMAN ? Integer.MAX_VALUE : 0;
+        for (int i = 0; i < gun.gunInfo.burstcount.size(); i++) {
+            int count = gun.getburstCount(i);
+            if (count == -1 && role != Role.MARKSMAN) {
+                selected = i;
+                break;
+            }
+            if (count > 0 && (role == Role.MARKSMAN ? count < preferred : count > preferred)) {
+                selected = i;
+                preferred = count;
+            }
+        }
+        if (selected >= 0 && selected != mode) tag.setInteger("HMGMode", selected);
+    }
 
-	@Override
-	public void fireWeapon() {
-		Vector3d aimingPoint = getSeeingPosition();
-		if(aimingPoint == null)return;//目標位置不明では撃てない
-		double maxrange = maxshootrange * maxshootrange;
-		boolean canSeeTargetPos = ((IGVCmob)shooter).canSeePos(aimingPoint);
-		double tocurrentAttackToPosition = shooter.getDistanceSq(aimingPoint.x, aimingPoint.y, aimingPoint.z);
+    private Role roleFor(HMGItem_Unified_Guns gun) {
+        WeaponClass type = gun.gunInfo.weaponClass;
+        if (type == WeaponClass.SHOTGUN || type == WeaponClass.SUBMACHINE_GUN || type == WeaponClass.HANDGUN
+                || shooter instanceof GVCEntityGuerrillaSG) return Role.CLOSE;
+        if (type == WeaponClass.MACHINE_GUN || shooter instanceof GVCEntityGuerrillaMG
+                || shooter instanceof GVCEntityPMCMG || shooter instanceof GVCEntitySoldierMG) return Role.SUPPORT;
+        if (type == WeaponClass.SNIPER_RIFLE || type == WeaponClass.BOLT_ACTION_RIFLE || type == WeaponClass.LAUNCHER
+                || shooter instanceof GVCEntityGuerrillaSP || shooter instanceof GVCEntityPMCSP
+                || shooter instanceof GVCEntitySoldierSP) return Role.MARKSMAN;
+        return Role.RIFLE;
+    }
 
-		if (!canSeeTargetPos) {
-			aiming = 0;
-			shooter.setSneaking(false);
-		} else {
-			aiming++;
-			shooter.setSneaking(true);
-		}
+    @Override
+    public void updateTask() {
+        if (target != shooter.getAttackTarget() || target == null || !target.isEntityAlive() || weapon != getWeapon()) {
+            resetTask();
+            return;
+        }
+        visible = !shooter.isPotionActive(Potion.blindness) && shooter.getEntitySenses().canSee(target);
+        if (visible) {
+            lastSeenFeet.set(target.posX, target.boundingBox.minY, target.posZ);
+            hasLastSeen = true;
+        } else {
+            reaction = Math.max(reaction, 6);
+        }
+        aimTarget();
+        fireWeapon();
+        movePosition();
+        if (movement.isBlocked() || (!visible && hasLastSeen && movement.getMovingSpeed() == 0)) blockedTicks++;
+        else blockedTicks = 0;
+        if (blockedTicks > 75 && (!visible || firingLaneBlocked || shooter.getDistanceSqToEntity(target) > role.maximum * role.maximum)) {
+            movement.disengage((EntityLivingBase)target);
+            shooter.setAttackTarget(null);
+            resetTask();
+        }
+    }
 
-//        System.out.println("\r" + "canSeeState " + canSeeState + "aiming" + aiming + "burstingtime" + burstingtime);
+    @Override
+    public void aimTarget() {
+        IGVCmob infantry = (IGVCmob)shooter;
+        if (!visible) {
+            infantry.setAimPos(null);
+            shooter.setSneaking(false);
+            return;
+        }
+        NBTTagCompound tag = weapon.getTagCompound();
+        shooter.setSneaking(!tag.getBoolean("IsReloading") && shooter.getDistanceSqToEntity(target) <= role.maximum * role.maximum);
+        if (--nextAimSample <= 0) {
+            nextAimSample = 7 + rnd.nextInt(5);
+            double error = Math.min(0.8, Math.sqrt(shooter.getDistanceSqToEntity(target)) * 0.013)
+                    * cfg_infantryAimError * role.error;
+            aimOffsetX = (rnd.nextDouble() - 0.5) * error;
+            aimOffsetY = (rnd.nextDouble() - 0.5) * error;
+            aimOffsetZ = (rnd.nextDouble() - 0.5) * error;
+        }
+        Vector3d aim = aiAttackManager.createAimingPoint();
+        aim.set(target.posX + aimOffsetX, target.boundingBox.minY + target.height * 0.72 + aimOffsetY, target.posZ + aimOffsetZ);
+        infantry.setAimPos(aim);
+        shooter.getLookHelper().setLookPosition(aim.x, aim.y, aim.z, 12F, 10F);
+    }
 
-		if (maxrange > tocurrentAttackToPosition && !shooter.isPotionActive(Potion.blindness) &&
-				((canSeeState && aiming > 40) || (!canSeeState && Warningcoolcnt < 0 && tocurrentAttackToPosition > 16))
-				&& burstingtime > 0 && retriggerCool <= 0 && canSeeTargetPos) {
-			ItemStack gunStack = null;
-			if (shooter.ridingEntity instanceof PlacedGunEntity) {
-				gunStack = ((PlacedGunEntity) shooter.ridingEntity).gunStack;
-			}else
-			if (shooter.getHeldItem() != null) {
-				gunStack = shooter.getHeldItem();
-			}
+    @Override
+    public void movePosition() {
+        if (shooter.ridingEntity != null || !hasLastSeen || shooter.ticksExisted < nextMovement) return;
+        nextMovement = shooter.ticksExisted + 10 + rnd.nextInt(7);
+        double dx = lastSeenFeet.x - shooter.posX;
+        double dz = lastSeenFeet.z - shooter.posZ;
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        if (!visible) {
+            if (distance < 1.8) movement.stop();
+            else movement.moveTo(lastSeenFeet.x, lastSeenFeet.y, lastSeenFeet.z, 0.92);
+            return;
+        }
+        if (distance > role.maximum) {
+            movement.moveTo(lastSeenFeet.x, lastSeenFeet.y, lastSeenFeet.z, 1);
+        } else if ((distance < role.minimum || firingLaneBlocked) && distance > 0.1) {
+            double side = (shooter.getEntityId() & 1) == 0 ? 2.5 : -2.5;
+            double retreat = distance < role.minimum ? 3 : 0;
+            movement.moveTo(shooter.posX - (dx * retreat + dz * side) / distance, shooter.boundingBox.minY,
+                    shooter.posZ + (dx * side - dz * retreat) / distance, 0.85);
+        } else {
+            movement.stop();
+        }
+    }
 
-			if (gunStack != null && gunStack.getItem() instanceof HMGItem_Unified_Guns) {
-				((HMGItem_Unified_Guns) gunStack.getItem()).checkTags(gunStack);
-				gunStack.getTagCompound().setBoolean("IsTriggered", true);
-				shooter.getEntityData().setBoolean("HMGisUsingItem", true);
-				checkSelector(gunStack);
-				if (((HMGItem_Unified_Guns) gunStack.getItem()).getburstCount(gunStack.getTagCompound().getInteger("HMGMode")) != -1) {
-					retriggerCool = rnd.nextInt((int) (abs(((HMGItem_Unified_Guns) gunStack.getItem()).gunInfo.recoil) + 1) * 3);
-				}
-			}
-			forget = 0;
-		}
-		burstingtime--;
-		if (!canSeeState) {
-			forget++;
-		}
-		if (burstingtime < 0) {
-			if (burstcoolcnt < 0) {
-				burstingtime = rnd.nextInt(bursttime);
-				burstcoolcnt = burstcool;
-			} else {
-				burstcoolcnt--;
-			}
-		}
-		if (!canSeeState && Warningcoolcnt < -20) {
-			Warningcoolcnt = rnd.nextInt(Warningblank) + 80;
-		}
-		Warningcoolcnt--;
-		retriggerCool--;
-	}
+    @Override
+    public void fireWeapon() {
+        firingLaneBlocked = false;
+        HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)weapon.getItem();
+        NBTTagCompound tag = weapon.getTagCompound();
+        if (shotPause > 0) shotPause--;
+        Vector3d aim = aiAttackManager.getAimingPoint();
+        if (!visible || aim == null || shooter.getDistanceSqToEntity(target) > role.maximum * role.maximum
+                || tag.getBoolean("IsReloading") || gun.remain_Bullet(weapon) <= 0 || --reaction > 0) {
+            cancelTrigger(tag);
+            return;
+        }
+        Vec3 origin = Vec3.createVectorHelper(shooter.posX, shooter.posY + shooter.getEyeHeight(), shooter.posZ);
+        Vec3 toAim = Vec3.createVectorHelper(aim.x - origin.xCoord, aim.y - origin.yCoord, aim.z - origin.zCoord);
+        Vec3 direction = shooter.getLook(1);
+        if (!(shooter.ridingEntity instanceof PlacedGunEntity) && direction.dotProduct(toAim.normalize()) < 0.997) {
+            cancelTrigger(tag);
+            return;
+        }
+        // Check the firing ray as well as the visual target, which can be seen through glass.
+        if (shooter.ridingEntity instanceof PlacedGunEntity) direction = toAim.normalize();
+        Vec3 end = origin.addVector(direction.xCoord * toAim.lengthVector(),
+                direction.yCoord * toAim.lengthVector(), direction.zCoord * toAim.lengthVector());
+        if (shooter.worldObj.rayTraceBlocks(origin, end) != null || friendlyInLane(origin, end)) {
+            firingLaneBlocked = true;
+            cancelTrigger(tag);
+            return;
+        }
+        if (shotPause > 0) return;
+        boolean automatic = gun.getburstCount(tag.getInteger("HMGMode")) == -1;
+        if (!automatic && tag.getBoolean("Bursting")) return;
+        if (burstRemaining == 0) burstRemaining = role.burst + (role.burst > 1 ? rnd.nextInt(6) : 0);
+        tag.setBoolean("IsTriggered", true);
+        shooter.getEntityData().setBoolean("HMGisUsingItem", true);
+        if (!automatic || --burstRemaining <= 0) {
+            burstRemaining = 0;
+            shotPause = role.pause + rnd.nextInt(7);
+        }
+    }
 
-//    public boolean setUp(){
-//        EntityLivingBase entityliving = shooter.getAttackTarget();
-//        if(shooter instanceof EntityGBases && entityliving instanceof EntityGBases){
-//            entityliving = null;
-//        }
-//        if(shooter instanceof EntitySoBases && entityliving instanceof EntitySoBases){
-//            entityliving = null;
-//        }
-//        if (entityliving == null || entityliving.isDead || forget > 500000) {
-//            aiming = 0;
-//            shooter.setAttackTarget(null);
-//            shooter.setSneaking(false);
-//            forget = 0;
-//            lastSeenPosition = null;
-//            return false;
-//        } else {
-//            target = entityliving;
-//            return true;
-//        }
-//    }
+    private boolean friendlyInLane(Vec3 start, Vec3 end) {
+        AxisAlignedBB search = AxisAlignedBB.getBoundingBox(Math.min(start.xCoord, end.xCoord),
+                Math.min(start.yCoord, end.yCoord), Math.min(start.zCoord, end.zCoord),
+                Math.max(start.xCoord, end.xCoord), Math.max(start.yCoord, end.yCoord),
+                Math.max(start.zCoord, end.zCoord)).expand(0.9, 0.9, 0.9);
+        for (Object entry : shooter.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, search)) {
+            EntityLivingBase entity = (EntityLivingBase)entry;
+            if (entity == shooter || entity == target || !entity.isEntityAlive()
+                    || (!((IFF)shooter).is_this_entity_friend(entity) && !shooter.isOnSameTeam(entity))) continue;
+            AxisAlignedBB hitBox = entity.boundingBox.expand(0.30, 0.24, 0.30);
+            if (hitBox.isVecInside(start) || hitBox.calculateIntercept(start, end) != null) return true;
+        }
+        return false;
+    }
 
-	@Override
-	public void resetTask() {
-		((IGVCmob)shooter).getMoveToPositionMng().stop();
-		if(shooter instanceof IGVCmob){
-			((IGVCmob) shooter).setAimPos(null);
-		}
-		burstingtime = 0;
-	}
-	//    @Override
-//    public void updateTask() {
-//        try {
-//            if (target != null) {
-////                System.out.println("debug");
-//                double maxrange = maxshootrange * maxshootrange;
-//                double minrange = minshootrange * minshootrange;
-//                if (shooter.ridingEntity == null && !(shooter.getHeldItem() != null && shooter.getHeldItem().getItem() instanceof HMGItem_Unified_Guns)) {
-//                    maxrange = 0;
-//                    minrange = 0;
-//                }
-//                Vector3d currentAttackToPosition = getSeeingPosition();
-//                if (currentAttackToPosition != null) {
-//                    if(shooter instanceof IGVCmob){
-//                        ((IGVCmob) shooter).setAimPos(currentAttackToPosition);
-//                    }
-//                    double tocurrentAttackToPosition = shooter.getDistanceSq(currentAttackToPosition.x, currentAttackToPosition.y, currentAttackToPosition.z);
-//                    boolean see = shooter.canEntityBeSeen(target);
-//                    boolean isnotblinded;
-//                    boolean canSee = isnotblinded = !shooter.isPotionActive(Potion.blindness);
-//                    canSee &= see;
-//                    if (canSee) {
-//                        shooter.getLookHelper().setLookPosition(currentAttackToPosition.x, currentAttackToPosition.y, currentAttackToPosition.z, 1000000, 1000000);
-//                    }else {
-//                        lookAround();
-//                    }
-//                    if(refindpath < 0|| shooter.getNavigator().noPath() || (shooter.getHeldItem() == null || !(shooter.getHeldItem().getItem() instanceof HMGItem_Unified_Guns))){
-//                        setPath(currentAttackToPosition,tocurrentAttackToPosition,canSee);
-//                        refindpath = 10;
-//                    }
-//                    refindpath -= 1;
-//                    boolean canSeeTargetPos = ((IGVCmob)shooter).canSeePos(currentAttackToPosition);
-////                System.out.println("debug PR" + shooter.rotationPitch);
-////                shooter.getLookHelper().onUpdateLook();
-////                System.out.println("debug AF" + shooter.rotationPitch);
-//                    if (!canSee) {
-//                        aiming = 0;
-//                        shooter.setSneaking(false);
-//                    } else {
-//                        aiming++;
-//                        shooter.setSneaking(true);
-//                    }
-//                    if (maxrange > tocurrentAttackToPosition && isnotblinded &&
-//                            ((canSee && aiming > 40) || (!canSee && Warningcoolcnt < 0 && tocurrentAttackToPosition > 16))
-//                            && burstingtime > 0 && retriggerCool <= 0 && canSeeTargetPos) {
-//                        ItemStack gunStack = null;
-//                        if (shooter.ridingEntity instanceof PlacedGunEntity) {
-//                            gunStack = ((PlacedGunEntity) shooter.ridingEntity).gunStack;
-//                        }else
-//                        if (shooter.getHeldItem() != null) {
-//                            gunStack = shooter.getHeldItem();
-//                        }
-//
-//                        if (gunStack != null && gunStack.getItem() instanceof HMGItem_Unified_Guns) {
-//                            gunStack.getTagCompound().setBoolean("IsTriggered", true);
-//                            shooter.getEntityData().setBoolean("HMGisUsingItem", true);
-//                            checkSelector(gunStack);
-//                            if (((HMGItem_Unified_Guns) gunStack.getItem()).getburstCount(gunStack.getTagCompound().getInteger("HMGMode")) != -1) {
-//                                retriggerCool = rnd.nextInt((int) (abs(((HMGItem_Unified_Guns) gunStack.getItem()).gunInfo.recoil) + 1) * 3);
-//                            }
-//                        }
-//                        forget = 0;
-//                    }
-//                    burstingtime--;
-//                    if (!canSee) {
-//                        forget++;
-//                    }
-//                    if (burstingtime < 0) {
-//                        if (burstcoolcnt < 0) {
-//                            burstingtime = rnd.nextInt(bursttime);
-//                            burstcoolcnt = burstcool;
-//                        } else {
-//                            burstcoolcnt--;
-//                        }
-//                    }
-//                    if (!canSee && Warningcoolcnt < -20) {
-//                        Warningcoolcnt = rnd.nextInt(Warningblank) + 80;
-//                    }
-//                    Warningcoolcnt--;
-//                    retriggerCool--;
-//                }
-//            }
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }
-//    }
-//    private void lookAround(){
-//
-//    }
-//    private void setPath(Vector3d currentAttackToPosition,double tocurrentAttackToPosition,boolean canSee){
-//
-//    }
-	private void checkSelector(ItemStack gunStack){
+    private void cancelTrigger(NBTTagCompound tag) {
+        tag.setBoolean("IsTriggered", false);
+        tag.setBoolean("TriggerBacked", false);
+        tag.setBoolean("Bursting", false);
+        burstRemaining = 0;
+    }
 
-		if (!isSelectorChecked) {
-			List<Integer> burst = ((HMGItem_Unified_Guns) gunStack.getItem()).gunInfo.burstcount;
-			int temp = 0;
-			int mode = 0;
-			for (int i = 0; i < burst.size(); i++) {
-				if (burst.get(i) == -1) {
-					mode = i;
-					break;
-				}
-				if (burst.get(i) != 0 && temp < burst.get(i)) {
-					temp = burst.get(i);
-					mode = i;
-				}
-			}
-			if (burst.size() > mode)
-				gunStack.getTagCompound().setInteger("HMGMode", mode);
-			isSelectorChecked = true;
-		}
-	}
-	//    private boolean canNavigate()
-//    {
-//        return this.shooter.onGround || shooter.isInWater() || this.shooter.isRiding() && this.shooter.ridingEntity instanceof EntityChicken;
-//    }
+    @Override
+    public void resetTask() {
+        if (weapon != null && weapon.hasTagCompound()) cancelTrigger(weapon.getTagCompound());
+        shooter.getEntityData().setBoolean("HMGisUsingItem", false);
+        shooter.setSneaking(false);
+        ((IGVCmob)shooter).setAimPos(null);
+        movement.stop();
+        weapon = null;
+    }
 }

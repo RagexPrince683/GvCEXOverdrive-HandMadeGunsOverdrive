@@ -1,138 +1,46 @@
-# Handmade Guns Overdrive
+# GvCEX Overdrive
 
-Handmade Guns Overdrive (HMG-Overdrive) is a maintained Minecraft Forge 1.7.10 firearms framework. It combines the established HMG/GvCEX gun-pack ecosystem with modernized loading, rendering, animation, multiplayer, and server-management behavior.
+GvCEX Overdrive maintains three companion mods for Minecraft 1.7.10. Handmade Guns Overdrive provides the firearm framework and content packs. GVC Overdrive uses those systems for infantry and faction gameplay, and GVC Dungeon Generator Base adds optional structure-pack support.
 
-The mod is data-driven: guns, magazines, ammunition, attachments, models, sounds, recipes, and presentation behavior can be supplied by content packs without adding new Java code.
+| Project | Production JAR | Role and dependencies |
+| --- | --- | --- |
+| [Handmade Guns Overdrive](docs/hmg.md) | `HandmadeGunsOverdrive-*.jar` | Primary firearm mod. Runs independently on Forge. |
+| [GVC Overdrive](docs/gvc/README.md) | `GVC-HD*.jar` | Infantry, factions, camps, raids, and squad orders. Requires HMG and provides both `GVCMob` and `GVCGuns`. |
+| [GVC Dungeon Generator Base](docs/gvc/dungeon-generator.md) | `GVCDangeonsBase-*.jar` | Optional generator for compatible structure packs. Requires HMG and GVC. |
 
-> **This project is part of [DEADHOUR](https://www.curseforge.com/minecraft/modpacks/deadhour).**
+## Install
 
-## Highlights
+1. Set up **Minecraft 1.7.10**, **Forge 10.13.4.1614**, and **Java 8**.
+2. Put the HMG JAR in the instance's `mods/` directory. Add the GVC JAR for faction gameplay. Add Dungeon Generator Base only if you use a compatible structure pack.
+3. Use matching mod builds and gameplay packs on the client and dedicated server. Put HMG packs under `handmadeguns_Packs/` and dungeon packs under `GVCDungeons_Packs/` in the relevant instance.
+4. Launch once to generate configuration. HMG's maintained source builds include the official firearm packs and a vecmath fallback. Follow any additional asset instructions attached to the particular release you downloaded.
 
-- **Ready-to-play official content.** The maintained HMG packs are bundled in the mod JAR. A separate asset download is not required.
-- **External content packs.** Packs in `handmadeguns_Packs/` load after the bundled baseline and can add content or override compatible bundled definitions and resources.
-- **Native Blockbench support.** Unified guns can load `.bbmodel` projects directly, including cubes, bones, pivots, hierarchy, embedded textures, and embedded animations. OBJ or MQO export is not required.
-- **Modern animation runtime.** Named clips support layered BASE/ACTION/ADDITIVE playback, transitions, interruption, per-weapon ownership, and presentation events. Existing OBJ/MQO guns and legacy HMG motion remain supported.
-- **TaCZ-style presentation.** Imported projects can use familiar action names, first-person and ADS view nodes, third-person hand placement, and authored hand locators.
-- **Configurable firearm systems.** HMG provides pack-defined weapons, magazines, ammunition, attachments, projectiles, gun skins, placed guns, gun racks, crafting components, and the Gun Smithing Table.
-- **Multiplayer and administration.** Server-owned reload and ammunition policy, synchronized weapon mobility, manual dropped-gun pickup, reload tools, global infinite ammo, and server-side balance controls support shared servers.
-- **Legacy-mod compatibility.** Maintained integrations cover Combatives, Angelica/Celeritas, BackTools, Flan's armor presentation, Guide-API, and other common 1.7.10 rendering environments.
+Download HMG from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/hand-made-guns-overdrive/files/all) or [Modrinth](https://modrinth.com/mod/handmade-guns-overdrive/versions). Check [GitHub Releases](https://github.com/RagexPrince683/GvCEXOverdrive-HandMadeGunsOverdrive/releases) for published companion JARs. If a matching GVC or Dungeon Generator Base build is unavailable there, build it from the same checkout as HMG.
 
-## Requirements
+## What the mods add
 
-| Component | Requirement |
+**Handmade Guns Overdrive** adds pack-defined firearms, ammunition, magazines, attachments, placed guns, and crafting. It supports legacy OBJ/MQO models, native Blockbench projects, and supported TaCZ-derived Bedrock assets and animations. The [HMG guide](docs/hmg.md) links to configuration, server administration, rendering, and pack-authoring references.
+
+**GVC Overdrive** adds ALLIES Radical Party guerrillas, UNION soldiers, and friendly PMC infantry. Camps, beacons, raids, and reinforcements bring those factions into the world. PMC groups accept move, follow, patrol, defend, and attack orders. See the [GVC guide](docs/gvc/README.md) for controls, spawning, and existing-world details.
+
+**GVC Dungeon Generator Base** reads compatible `GVCDungeons_Packs` at startup. GVC's own camp generator runs independently of the optional module. See the [structure pack guide](docs/gvc/dungeon-generator.md) for supported layouts and markers.
+
+## Build from source
+
+Run the native Gradle wrapper with a Java 8 JDK. Use `gradlew.bat` on Windows or `./gradlew` on macOS and Linux. The [build guide](docs/building.md) covers dependency setup, offline builds, reobfuscation, and release numbering.
+
+| Build task | Production output |
 | --- | --- |
-| Minecraft | 1.7.10 |
-| Forge | 10.13.4.1614 |
-| Java | Java 8 recommended |
-| Installation side | Client and server |
-| Mod ID | `HandmadeGuns` |
-| External content packs | Optional; required only for additional or server-specific content |
+| `:HMG:build` | `HMG/build/libs/HandmadeGunsOverdrive-*.jar` |
+| `:GVC:build` | `GVC/build/libs/GVC-HD*.jar` |
+| `:GVCDangeonsBase:build` | `GVCDangeonsBase/build/libs/GVCDangeonsBase-*.jar` |
 
-### Client and Server Requirements
+## Development status
 
-- Install Handmade Guns Overdrive on **both the client and server**. The mod registers gameplay items, blocks, entities, GUIs, sounds, networking, and content-pack resources.
-- Release jars carry HMG's vecmath runtime fallback and attach it directly to HMG's existing Forge `LaunchClassLoader` during coremod initialization when `javax.vecmath` is absent. The availability check uses a class resource lookup to avoid LaunchWrapper's failed-class cache; client and dedicated-server startup do not depend on the thread context or system classloader. A separate vecmath jar is not required.
-- Clients and servers should use matching HMG config and content packs. Mismatched gun, magazine, bullet, or attachment definitions can cause missing items, unusable weapons, or disconnects.
-- Client-only render options still belong in the generated config, but gameplay-affecting options should be treated as server policy.
+The supported build targets are `HMG`, `GVC`, and `GVCDangeonsBase`. `HMP`, `WW2`, `DCreator`, and `Linker` remain in the repository outside the supported release set. `Depend` provides build-time compatibility classes, and `Guide-API-1.7.10` and the reference trees are upstream sources. Factory and large-trench generation in `GVCDangeons` is incomplete and excluded from the supported build. Vehicle spawning, vehicle operation, and full MCHeli integration are deferred. MCHeli is optional for the current GVC release scope. See the [documentation index](docs/README.md), [compatibility notes](docs/compatibility.md), and [changelog](CHANGELOG.md).
 
-## Installation
+## Credits and contributing
 
-1. Install Minecraft Forge 1.7.10-10.13.4.1614.
-2. Place the HMG-Overdrive release JAR in the instance's `mods/` folder on both the client and server.
-3. Launch once to generate `config/HandmadeGuns.cfg`.
-4. Review the controls in the `HandmadeGuns` category; several legacy defaults overlap and the inspect key is unbound by default.
-5. If the server uses additional content packs, place them in the instance-root `handmadeguns_Packs/` directory on both sides.
+GvCEX and Handmade Guns originated with frou01 and SCOPE_MG36. RagexPrince683 and Zealot contribute to Overdrive. See the HMG [mod credits](HMG/src/main/resources/mcmod.info), the [TaCZ official pack notices](HMG/src/main/resources/hmg_packs/TaCZOfficial/CREDITS.txt), and the [published HMG license](https://www.curseforge.com/minecraft/mc-mods/hand-made-guns-overdrive/license). Bundled packs and third-party code carry their own credits and license notices. See also the [Forge license](MinecraftForge-License.txt) and [FML license](LICENSE-fml.txt).
 
-The JAR already contains the maintained official guns and assets. Do not install the private `handmadeguns_builtin/` cache as a pack or edit it; HMG regenerates that cache from the JAR for its legacy file-based loaders.
-
-For a fuller walkthrough, see [Getting started](docs/getting-started.md).
-
-## Content Packs
-
-The recommended external layout is:
-
-```text
-handmadeguns_Packs/
-  MyPack/
-    guns/
-    magazines/
-    bullets/
-    attachments/
-    models/
-    animations/
-    textures/
-      models/
-      items/
-      misc/
-    sounds/
-```
-
-Asset resolution is pack-scoped. HMG rejects absolute paths, `..` traversal, canonical or symbolic-link escapes, and cross-pack searches.
-
-A unified gun can use a normal OBJ/MQO model with optional named animation JSON:
-
-```text
-Model,my_rifle.obj
-ModelTexture,my_rifle.png
-IconTexture,my_rifle_icon.png
-Animations,my_rifle.json
-```
-
-Model-backed guns use one lazy canonical capture by default, persistently cached under
-`cache/hmg/icons` instead of redrawing the gun for every inventory, hotbar, creative-tab, GUI, or NEI
-pass. `IconTexture` (or the legacy `Texture` spelling) explicitly selects the authored sprite instead;
-`UseModelIcon,false` is the direct override for packs that do not want generated model art.
-
-Or it can load a native Blockbench project, including its embedded model and animations:
-
-```text
-BlockbenchModel,my_rifle.bbmodel
-```
-
-The Blockbench file is used directly; it does not need to be exported to another model format or modified for HMG. The gun still uses an ordinary HMG TXT definition for gameplay values.
-
-See [Content packs](docs/content-packs.md) and [Animation and Blockbench authoring](docs/animation-authoring.md) for supported layouts, directives, animation names, positioning nodes, and current importer limits.
-
-## Documentation
-
-Start with the [documentation index](docs/README.md), or open a guide directly:
-
-| Guide | Purpose |
-| --- | --- |
-| [Getting started](docs/getting-started.md) | Installation, controls, and first-use workflow |
-| [Content packs](docs/content-packs.md) | Pack roots, asset layout, definitions, recipes, skins, and overrides |
-| [Animation and Blockbench authoring](docs/animation-authoring.md) | Native `.bbmodel` importing and optional animation JSON |
-| [Configuration reference](docs/configuration-reference.md) | Generated config keys and advanced pack directives |
-| [Server administration](docs/server-administration.md) | Deployment, balancing, reloads, and operations |
-| [Command reference](docs/command-reference.md) | Player, development, and administrator commands |
-| [Compatibility notes](docs/compatibility.md) | Combatives, Angelica/Celeritas, BackTools, and Flan's interactions |
-| [Known limitations](docs/known-limitations.md) | Unsupported features, validation status, and remaining gaps |
-| [Changelog](CHANGELOG.md) | Chronological implementation history |
-
-## Compatibility Notes
-
-- Install matching HMG builds on the client and server.
-- Keep server-required external packs synchronized. Definition mismatches can produce missing or unusable content even when cosmetic model and animation parsing is client-only.
-- Guide-API is optional and only provides the HMG Field Manual integration.
-- Blockbench importing does not import TaCZ Lua state machines, gameplay code, ballistics, camera constraints, or complete attachment/ammunition logic.
-- Compatibility and animation systems with outstanding in-game checks are listed in [Known limitations](docs/known-limitations.md).
-
-## Building From Source
-
-This repository uses legacy ForgeGradle conventions and requires a Java 8 toolchain.
-
-```bash
-./gradlew setupDecompWorkspace
-./gradlew :HMG:build
-```
-
-The maintained module is `HMG/`. The repository also contains older companion and reference modules that are not covered by the main HMG documentation.
-
-HMG release versions are stored in `HMG/version.properties`. Production packaging manages the build number automatically; edit only `mod_version` when intentionally preparing a new release.
-
-## Links
-
-- [GitHub repository](https://github.com/RagexPrince683/GvCEXOverdrive-HandMadeGunsOverdrive)
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/hand-made-guns-overdrive)
-- [Modrinth](https://modrinth.com/mod/handmade-guns-overdrive)
-- [DEADHOUR modpack](https://www.curseforge.com/minecraft/modpacks/deadhour)
+Report bugs or propose changes in [GitHub Issues](https://github.com/RagexPrince683/GvCEXOverdrive-HandMadeGunsOverdrive/issues). Include the mod JARs, Forge and Java versions, relevant logs, and steps to reproduce the issue. The project is part of the [DEADHOUR modpack](https://www.curseforge.com/minecraft/modpacks/deadhour).

@@ -1,50 +1,57 @@
 package hmggvcmob.render.model;
 
-import net.minecraft.client.model.ModelBiped;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.MathHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import handmadeguns.items.guns.HMGItem_Unified_Guns;
+import net.minecraft.client.model.ModelBiped;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
 
 @SideOnly(Side.CLIENT)
-public class GVCModelGuerrilla extends ModelBiped
-{
-    public GVCModelGuerrilla()
-    {
+public class GVCModelGuerrilla extends ModelBiped {
+    public GVCModelGuerrilla() {
         this(0.0F, false);
     }
 
-    protected GVCModelGuerrilla(float par1, float par2, int par3, int par4)
-    {
-        super(par1, par2, par3, par4);
+    protected GVCModelGuerrilla(float size, float y, int textureWidth, int textureHeight) {
+        super(size, y, textureWidth, textureHeight);
     }
 
-    public GVCModelGuerrilla(float par1, boolean par2)
-    {
-        super(par1, 0.0F, 64, par2 ? 32 : 64);
+    public GVCModelGuerrilla(float size, boolean compactTexture) {
+        super(size, 0.0F, 64, compactTexture ? 32 : 64);
     }
 
-    /**
-     * Sets the model's various rotation angles. For bipeds, par1 and par2 are used for animating the movement of arms
-     * and legs, where par1 represents the time(so that arms and legs swing back and forth) and par2 represents how
-     * "far" arms and legs can swing at most.
-     */
-    public void setRotationAngles(float par1, float par2, float par3, float par4, float par5, float par6, Entity par7Entity)
-    {
-        super.setRotationAngles(par1, par2, par3, par4, par5, par6, par7Entity);
-        float var8 = MathHelper.sin(this.onGround * (float)Math.PI);
-        float var9 = MathHelper.sin((1.0F - (1.0F - this.onGround) * (1.0F - this.onGround)) * (float)Math.PI);
-        this.bipedRightArm.rotateAngleZ = 0.0F;
-        this.bipedLeftArm.rotateAngleZ = 0.0F;
-        this.bipedRightArm.rotateAngleY = -(0.1F - var8 * 0.6F) + this.bipedHead.rotateAngleY;
-        this.bipedLeftArm.rotateAngleY = 0.1F - var8 * 0.6F + this.bipedHead.rotateAngleY + 0.4F;
-        this.bipedRightArm.rotateAngleX = -((float)Math.PI / 2F) + this.bipedHead.rotateAngleX;
-        this.bipedLeftArm.rotateAngleX = -((float)Math.PI / 2F) + this.bipedHead.rotateAngleX;
-        this.bipedRightArm.rotateAngleX -= var8 * 1.2F - var9 * 0.4F;
-        this.bipedLeftArm.rotateAngleX -= var8 * 1.2F - var9 * 0.4F;
-        this.bipedRightArm.rotateAngleZ += MathHelper.cos(par3 * 0.09F) * 0.05F + 0.05F;
-        this.bipedLeftArm.rotateAngleZ -= MathHelper.cos(par3 * 0.09F) * 0.05F + 0.05F;
-        this.bipedRightArm.rotateAngleX += MathHelper.sin(par3 * 0.067F) * 0.05F;
-        this.bipedLeftArm.rotateAngleX -= MathHelper.sin(par3 * 0.067F) * 0.05F;
+    @Override
+    public void setLivingAnimations(EntityLivingBase entity, float limbSwing, float limbAmount, float partialTick) {
+        isSneak = entity.isSneaking();
+        super.setLivingAnimations(entity, limbSwing, limbAmount, partialTick);
+    }
+
+    @Override
+    public void setRotationAngles(float limbSwing, float limbAmount, float age, float headYaw,
+                                  float headPitch, float scale, Entity entity) {
+        super.setRotationAngles(limbSwing, limbAmount, age, headYaw, headPitch, scale, entity);
+        ItemStack held = ((EntityLivingBase)entity).getHeldItem();
+        if (held == null || !(held.getItem() instanceof HMGItem_Unified_Guns)) return;
+
+        boolean dead = !((EntityLivingBase)entity).isEntityAlive();
+        boolean reload = !dead && held.hasTagCompound() && held.getTagCompound().getBoolean("IsReloading");
+        boolean aim = !dead && !reload && entity.isSneaking() && !entity.isSprinting();
+        float pitch = -1.57F;
+        if (dead) pitch += 1.02F;
+        else if (reload) pitch += 0.37F;
+        else if (entity.isSprinting()) pitch += 0.75F;
+        else if (!aim) pitch += 0.51F;
+        float yaw = aim ? bipedHead.rotateAngleY : bipedHead.rotateAngleY * 0.25F;
+        float sway = aim ? 0 : MathHelper.sin(limbSwing * 0.67F) * limbAmount * 0.08F;
+
+        bipedRightArm.rotateAngleX = pitch + (aim ? bipedHead.rotateAngleX : sway);
+        bipedRightArm.rotateAngleY = yaw;
+        bipedRightArm.rotateAngleZ = 0;
+        bipedLeftArm.rotateAngleX = bipedRightArm.rotateAngleX - (reload ? 0.35F : 0.13F);
+        bipedLeftArm.rotateAngleY = yaw + (reload ? 0.52F : 0.56F);
+        bipedLeftArm.rotateAngleZ = reload ? -0.12F : 0;
     }
 }

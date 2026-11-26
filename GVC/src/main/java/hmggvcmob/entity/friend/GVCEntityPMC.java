@@ -22,7 +22,7 @@ public class GVCEntityPMC extends EntityPMCBase
     public void addRandomArmor()
     {
         super.addRandomArmor();
-        this.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_g36));
+        this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_g36, hmggvcmob.GVCMobPlus.Guns_AR, worldObj.rand));
     }
     protected void applyEntityAttributes()
     {

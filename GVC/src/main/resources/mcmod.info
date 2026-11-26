@@ -1,16 +1,31 @@
 [
-{
-  "modid": "${modid}",
-  "name": "Guerrilla vs Command mod : High Difficulity version",
-  "description": "Guerrilla warfare mod",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "https://forum.civa.jp/viewtopic.php?p=2010&sid=a1c278931a77c747dce60926f516c0a8#p2010",
-  "updateUrl": "https://www.curseforge.com/minecraft/mc-mods/guerrilla-vs-command-mod-high-difficulty-addition",
-  "authors": ["frou01"],
-  "credits": "original:SCOPE_MG36",
-  "logoFile": "logo.png",
-  "screenshots": [],
-  "dependencies": [HMG]
-}
+  {
+    "modid": "GVCGuns",
+    "name": "GVCGuns",
+    "description": "Guerrilla vs Command equipment and utility blocks.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "authorList": [
+      "frou01",
+      "SCOPE_MG36"
+    ],
+    "dependencies": [
+      "HandmadeGuns"
+    ]
+  },
+  {
+    "modid": "GVCMob",
+    "name": "GVCMob",
+    "description": "Guerrilla vs Command infantry, camps and raids.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "authorList": [
+      "frou01",
+      "SCOPE_MG36"
+    ],
+    "dependencies": [
+      "GVCGuns",
+      "HandmadeGuns"
+    ]
+  }
 ]

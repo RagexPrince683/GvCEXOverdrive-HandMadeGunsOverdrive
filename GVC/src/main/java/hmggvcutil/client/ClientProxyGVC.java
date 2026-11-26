@@ -29,10 +29,6 @@ public class ClientProxyGVC extends CommonSideProxyGVC {
 		//ClientRegistry.registerKeyBinding(Speedreload);
 	}
 
-	@Override
-	public Minecraft getCilentMinecraft(){
-		return FMLClientHandler.instance().getClient();
-	}
 
 	@Override
 	public void reisterRenderers(){

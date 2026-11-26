@@ -1,6 +1,5 @@
 package hmggvcmob.camp;
 
-import handmadeguns.client.render.ModelSetAndData;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.Team;
@@ -10,9 +9,13 @@ import static hmggvcmob.GVCMobPlus.cfg_beaconSpawnLevel;
 
 public class CampObj extends Team {
 	public String campName;
+	public String translationKey;
+
+	public String getTranslationKey() {
+		return translationKey == null ? campName : translationKey;
+	}
 	public boolean isOneTime = false;
 	public boolean isRaidType = false;
-	public ModelSetAndData modelSetAndData;
 	public String campBlockObjModel = "gvcmob:textures/model/flagmodel.mqo";
 	public String campBlockTextureModel = "gvcmob:textures/model/flagtexture.png";
 	public String campBlockTextureItem;

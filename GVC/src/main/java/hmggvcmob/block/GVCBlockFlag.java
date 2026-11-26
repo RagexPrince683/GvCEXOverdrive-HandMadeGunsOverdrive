@@ -6,10 +6,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -71,17 +69,16 @@ public class GVCBlockFlag extends BlockContainer {
 
     public void breakBlock(World p_149749_1_, int x, int y, int z, Block p_149749_5_, int p_149749_6_)
     {
-        TileEntityFlag tileEntityFlag = (TileEntityFlag)p_149749_1_.getTileEntity(x, y, z);
-
-        tileEntityFlag.removeFlagData();
-
-        p_149749_1_.spawnEntityInWorld(new EntityItem(p_149749_1_,x,y,z,
-                new ItemStack(Item.getItemFromBlock(tileEntityFlag.campObj.campsBlock))));
+        TileEntity tile = p_149749_1_.getTileEntity(x, y, z);
+        if (!p_149749_1_.isRemote && tile instanceof TileEntityFlag) {
+            ((TileEntityFlag) tile).removeFlagData();
+        }
+        super.breakBlock(p_149749_1_, x, y, z, p_149749_5_, p_149749_6_);
     }
 
 
     public Item getItemDropped(int p_149650_1_, Random p_149650_2_, int p_149650_3_)
     {
-        return null;
+        return Item.getItemFromBlock(this);
     }
 }

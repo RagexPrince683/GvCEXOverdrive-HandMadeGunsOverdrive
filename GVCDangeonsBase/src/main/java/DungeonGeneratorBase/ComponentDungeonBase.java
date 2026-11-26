@@ -432,7 +432,7 @@ public class ComponentDungeonBase extends StructureComponent {
                                             }
                                         }
                                         AddVehicleHelper vehicleHelper = dungeonData.vehiclePos.get(pos);
-                                        if (vehicleHelper != null) {
+                                        if (GVCMobPlus.VEHICLES_ENABLED && vehicleHelper != null) {
                                             vehicleHelper.setVehicle(world, finalI + 0.5, Ystart2 + pos.y, finalJ + 0.5);
                                         }
                                         Class<? extends Entity> entityClass = dungeonData.entitys.get(pos);

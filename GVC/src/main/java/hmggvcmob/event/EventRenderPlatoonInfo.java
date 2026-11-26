@@ -28,7 +28,7 @@ public class EventRenderPlatoonInfo {
 		EntityLivingBase entity = (EntityLivingBase) event.entity;
 		Minecraft minecraft = FMLClientHandler.instance().getClient();
 		EntityPlayer entityplayer = minecraft.thePlayer;
-		if (entity instanceof IPlatoonable && ((IPlatoonable) entity).getPlatoonMemberInfo() != null && ((IPlatoonable) entity).getPlatoonMemberInfo().isOnPlatoon) {
+		if (entityplayer != null && entity instanceof IPlatoonable && ((IPlatoonable) entity).getPlatoonMemberInfo() != null && ((IPlatoonable) entity).getPlatoonMemberInfo().isOnPlatoon) {
 			PlatoonInfoData platoonInfoData = ((IPlatoonable) entity).getPlatoonMemberInfo();
 			GL11.glTranslatef((float)-entityplayer.posX * (HandmadeGunsCore.smooth),(float)-entityplayer.posY * (HandmadeGunsCore.smooth),(float)-entityplayer.posZ * (HandmadeGunsCore.smooth));
 			GL11.glTranslatef((float)-entityplayer.prevPosX * (1 - HandmadeGunsCore.smooth),(float)-entityplayer.prevPosY * (1 - HandmadeGunsCore.smooth),(float)-entityplayer.prevPosZ * (1 - HandmadeGunsCore.smooth));
@@ -39,15 +39,18 @@ public class EventRenderPlatoonInfo {
 			float lastBrightnessY = OpenGlHelper.lastBrightnessY;
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 			GL11.glTranslatef(0, 2.5f, 0);
-			renderString(platoonInfoData.platoonName);
+			if (platoonInfoData.platoonName != null) renderString(platoonInfoData.platoonName);
 			GL11.glTranslatef(0,0.2f,0);
-			if(platoonInfoData.target[0] != 0 && platoonInfoData.target[1] != 0 && platoonInfoData.target[2] != 0) {
-				renderString(platoonInfoData.target[0] + " , " + platoonInfoData.target[1] + " , " + platoonInfoData.target[2]);
+			if (platoonInfoData.target != null && platoonInfoData.mode != null) {
+				renderString(net.minecraft.util.StatCollector.translateToLocalFormatted("gvc.order.position",
+                        net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[0]),
+                        net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[1]),
+                        net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[2])));
 				GL11.glTranslatef(0, 0.2f, 0);
-				renderString("" + platoonInfoData.mode);
+				renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.mode." + platoonInfoData.mode.name()));
 				if (platoonInfoData.isLeader) {
 					GL11.glTranslatef(0, 0.2f, 0);
-					renderString("leader");
+					renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.leader"));
 				}
 				GL11.glRotatef(-180 + entityplayer.rotationYawHead, 0, 1, 0);
 				GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -63,8 +66,8 @@ public class EventRenderPlatoonInfo {
 				GL11.glTranslatef((float) platoonInfoData.target[0], (float) platoonInfoData.target[1] + 2, (float) platoonInfoData.target[2]);
 				GL11.glRotatef(180 - entityplayer.rotationYawHead, 0, 1, 0);
 				renderString("v");
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) lastBrightnessX, (float) lastBrightnessY);
 			}
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
 		}
 		GL11.glPopMatrix();
 	}

@@ -53,7 +53,7 @@ public class GVCEntityGuerrillaBM extends EntityGBase
         super.addRandomArmor();
         Random rnd = new Random();
 
-        this.setCurrentItemOrArmor(0, new ItemStack((Item)Guns_GR.get(rnd.nextInt(Guns_GR.size()))));
+        this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_GR, rnd));
     }
 
     protected void dropFewItems(boolean par1, int par2)

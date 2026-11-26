@@ -265,12 +265,12 @@ public class GVCEntityAA extends EntityMob implements IRangedAttackMob
         {
             GVCEntityGuerrillaP entityskeleton = new GVCEntityGuerrillaP(this.worldObj);
             entityskeleton.setLocationAndAngles(this.posX+2, this.posY+3, this.posZ, this.rotationYaw, 0.0F);
-            entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_aks74u));
+            entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_aks74u, hmggvcmob.GVCMobPlus.Guns_AR, worldObj.rand));
             this.worldObj.spawnEntityInWorld(entityskeleton);
 
             GVCEntityGuerrillaP entityskeleton2 = new GVCEntityGuerrillaP(this.worldObj);
             entityskeleton2.setLocationAndAngles(this.posX-2, this.posY+3, this.posZ, this.rotationYaw, 0.0F);
-            entityskeleton2.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_aks74u));
+            entityskeleton2.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_aks74u, hmggvcmob.GVCMobPlus.Guns_AR, worldObj.rand));
             this.worldObj.spawnEntityInWorld(entityskeleton2);
         }
     }

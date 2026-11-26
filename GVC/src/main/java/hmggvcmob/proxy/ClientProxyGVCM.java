@@ -1,6 +1,14 @@
 package hmggvcmob.proxy;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.FMLCommonHandler;
+import hmggvcmob.event.EventRenderPlatoonInfo;
+import hmggvcmob.event.GVCMRenderSomeEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraftforge.common.MinecraftForge;
+
+import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
 import hmggvcmob.entity.*;
 import hmggvcmob.entity.friend.*;
 import hmggvcmob.entity.guerrilla.*;
@@ -25,6 +33,25 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 		}
 	
 	
+	@Override
+	public void registerClientEvents() {
+		GVCMRenderSomeEvent overlay = new GVCMRenderSomeEvent();
+		MinecraftForge.EVENT_BUS.register(overlay);
+		FMLCommonHandler.instance().bus().register(overlay);
+		MinecraftForge.EVENT_BUS.register(new EventRenderPlatoonInfo());
+	}
+
+	@Override
+	public void scheduleClientPacket(java.util.function.Consumer<World> action) {
+		Minecraft client = Minecraft.getMinecraft();
+		WorldClient world = client.theWorld;
+		if (world != null) {
+			client.func_152344_a(() -> {
+				if (client.theWorld == world) action.accept(world);
+			});
+		}
+	}
+
 	public void initSome(){
 		super.initSome();
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityGuerrilla.class, new GVCRenderGuerrilla());
@@ -59,7 +86,7 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 //		RenderingRegistry.registerEntityRenderingHandler(GVCEntityAPC.class, new GVCRenderAPC());
 //		RenderingRegistry.registerEntityRenderingHandler(GVCEntityHeli.class, new GVCRenderHeliobj());
 //		RenderingRegistry.registerEntityRenderingHandler(GVCEntityWZ10AttackHeli.class, new GVCRenderWZ10AttackHeli());
-		RenderingRegistry.registerEntityRenderingHandler(GVCEntityDrawn.class, new GVCRenderDrawn());
+		if (VEHICLES_ENABLED) RenderingRegistry.registerEntityRenderingHandler(GVCEntityDrawn.class, new GVCRenderDrawn());
 
 		
 		
@@ -100,7 +127,7 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 //		RenderingRegistry.registerEntityRenderingHandler(GVCEntitySoldierTank.class, new GVCRenderSoldierTankobj());
 //		RenderingRegistry.registerEntityRenderingHandler(GVCEntitySoldierHeli.class, new GVCRenderSoldierHeliobj());
 
-		RenderingRegistry.registerEntityRenderingHandler(EntityMGAX55.class, new GVCRenderMGM());
+		if (VEHICLES_ENABLED) RenderingRegistry.registerEntityRenderingHandler(EntityMGAX55.class, new GVCRenderMGM());
 	}
 	
 	

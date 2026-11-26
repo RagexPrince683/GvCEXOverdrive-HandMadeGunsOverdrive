@@ -29,16 +29,14 @@ public class EntitySoBase extends EntitySoBases implements IflagBattler {
 	
 	public boolean getCanSpawnHere()
 	{
-		return super.getCanSpawnHere() && this.worldObj.difficultySetting != EnumDifficulty.PEACEFUL && spawnedcount<40 && this.isValidLightLevel();
+		return super.getCanSpawnHere() && this.worldObj.difficultySetting != EnumDifficulty.PEACEFUL
+				&& worldObj.getEntitiesWithinAABB(EntitySoBase.class, boundingBox.expand(128, 128, 128)).size() < 40
+				&& this.isValidLightLevel();
 	}
-    protected boolean isValidLightLevel()
-    {
-    	for(int i = 0;i<worldObj.loadedTileEntityList.size();i++) {
-			TileEntity tileentity;
-			Object aLoadedTileEntityList = worldObj.loadedTileEntityList.get(i);
-			tileentity = (TileEntity) aLoadedTileEntityList;
-			if (tileentity.getBlockType() == GVCMobPlus.fn_PlayerFlag)return false;
-		}
+
+	protected boolean isValidLightLevel() {
+		if (hmggvcmob.tile.TileEntityFlag.findNearest(worldObj, posX, posY, posZ, 96, true,
+				flag -> flag.campObj == forPlayer) != null) return false;
 		int i = MathHelper.floor_double(this.posX);
 		int j = MathHelper.floor_double(this.boundingBox.minY);
 		int k = MathHelper.floor_double(this.posZ);
@@ -102,41 +100,25 @@ public class EntitySoBase extends EntitySoBases implements IflagBattler {
 
 	@Override
 	public void makePlatoon() {
-		this.setPlatoon(new PlatoonOBJ());
-
-		this.enlistPlatoon(false);
+		if (worldObj.isRemote || getPlatoon() != null) return;
+		setPlatoon(PlatoonOBJ.create(this));
+		enlistPlatoon(false);
 	}
+
 	@Override
 	public void makePlatoon_OnLoading() {
-		this.setPlatoon(new PlatoonOBJ());
-
-		this.enlistPlatoon(true);
+		if (!worldObj.isRemote) PlatoonOBJ.restore(this);
 	}
 
 	@Override
 	public void enlistPlatoon(boolean force) {
-		ArrayList<EntitySoBase> newComer = new ArrayList<>();
-		List nearEntities = worldObj.getEntitiesWithinAABBExcludingEntity(this,boundingBox.expand(32,32,32));
-
-		for(Object obj:nearEntities){
-			Entity entity = (Entity)obj;
-			if(entity instanceof EntitySoBase && canMoveEntity(entity)){
-				newComer.add((EntitySoBase) entity);
-			}
-		}
-		List onVehicleEntity = worldObj.getEntitiesWithinAABBExcludingEntity(this,boundingBox.expand(512,512,512));
-
-		for(Object obj:onVehicleEntity){
-			Entity entity = (Entity)obj;
-			if(entity instanceof EntitySoBase && entity.ridingEntity instanceof EntityDummy_rider && canMoveEntity(entity)){
-				newComer.add((EntitySoBase) entity);
-			}
-		}
-		for(EntitySoBase entitySoBase : newComer){
-			//対象の分隊が同名or分隊に未所属時に徴発
-			if(canMoveEntity(entitySoBase) && (((EntitySoBase) entitySoBase).getPlatoon() == null || force)){
-				((EntitySoBase) entitySoBase).setPlatoon(this.platoonOBJ);
-			}
+		if (worldObj.isRemote || platoonOBJ == null || !platoonOBJ.hasRoom()) return;
+		for (Object nearby : worldObj.getEntitiesWithinAABB(EntitySoBase.class, boundingBox.expand(18, 7, 18))) {
+			EntitySoBase candidate = (EntitySoBase)nearby;
+			if (!candidate.isEntityAlive() || !canMoveEntity(candidate) || candidate.getPlatoon() != null
+					|| PlatoonOBJ.pending(candidate)) continue;
+			candidate.setPlatoon(platoonOBJ);
+			if (!platoonOBJ.hasRoom()) break;
 		}
 	}
 

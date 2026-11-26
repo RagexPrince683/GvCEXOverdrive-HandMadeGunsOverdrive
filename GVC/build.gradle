@@ -1,6 +1,15 @@
+version = 'HD14.3'
 
+repositories {
+    mavenCentral()
+}
 
-version = "HD14.3"
-tasks.withType(Jar) {compileJava.options.encoding = 'UTF-8'}
-tasks.withType(Jar) {compileApiJava.options.encoding = 'UTF-8'}
-dependencies { compile project(':HMG')}
+dependencies {
+    compile files(project(':HMG').sourceSets.main.output)
+    compile files(project(':depend').sourceSets.main.output)
+    compile 'javax.vecmath:vecmath:1.5.2'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

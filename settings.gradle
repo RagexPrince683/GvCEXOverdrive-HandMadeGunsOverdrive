@@ -1,1 +1,3 @@
-include 'depend','HMG','HMP',"GVC","GVCDangeonsBase","GVCDangeons","DCreator","Linker","WW2"
+include 'depend', 'HMG', 'HMP', 'GVC', 'GVCDangeonsBase', 'DCreator', 'Linker', 'WW2'
+project(':depend').projectDir = file('Depend')
+// GVCDangeons contains unfinished factory and trench generators. Keep them out of release builds.

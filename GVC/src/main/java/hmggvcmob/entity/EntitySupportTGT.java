@@ -1,5 +1,7 @@
 package hmggvcmob.entity;
 
+import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import handmadeguns.entity.bullets.HMGEntityBulletExprode;
@@ -204,6 +206,10 @@ public class EntitySupportTGT extends Entity {
     public void onUpdate()
     {
         super.onUpdate();
+        if (!VEHICLES_ENABLED && type != 0) {
+            setDead();
+            return;
+        }
         if(!this.worldObj.isRemote && this.shootingEntity == null){
             setDead();
         }
@@ -313,7 +319,7 @@ public class EntitySupportTGT extends Entity {
                         case 0: {
                             if (!this.worldObj.isRemote) {
                                 if(shootingEntity instanceof EntityPlayerMP) ((EntityPlayerMP) shootingEntity).addChatComponentMessage(new ChatComponentTranslation(
-                                        "roger that! We will support artillery toward X = "+field_145791_d+", Z = "+field_145789_f+"!"));
+                                        "gvc.support.artillery", field_145791_d, field_145789_f));
                                 for(int l= 0;l<4;l++) {
                                     HMGEntityBulletExprode var3 = new HMGEntityBulletExprode(this.worldObj, shootingEntity, 100, 0, 0);
                                     var3.canbounce = false;
@@ -334,7 +340,7 @@ public class EntitySupportTGT extends Entity {
                             if (!this.worldObj.isRemote) {
                                 if (shootingEntity instanceof EntityPlayerMP)
                                     ((EntityPlayerMP) shootingEntity).addChatComponentMessage(new ChatComponentTranslation(
-                                            "roger that! we send a gun ship to X= " + field_145791_d + ", Z = " + field_145789_f + "!"));
+                                            "gvc.support.gunship", field_145791_d, field_145789_f));
                                 GVCEntitySoldierRPG entityskeleton = new GVCEntitySoldierRPG(worldObj);
                                 Vec3 playersdir = Vec3.createVectorHelper(shootingEntity.posX - field_145791_d,shootingEntity.posY - field_145792_e,shootingEntity.posZ - field_145789_f);
                                 playersdir = playersdir.normalize();
@@ -350,7 +356,7 @@ public class EntitySupportTGT extends Entity {
                             if (!this.worldObj.isRemote) {
                                 if (shootingEntity instanceof EntityPlayerMP)
                                     ((EntityPlayerMP) shootingEntity).addChatComponentMessage(new ChatComponentTranslation(
-                                            "roger that! we send a fighter to X= " + field_145791_d + ", Z = " + field_145789_f + "!"));
+                                            "gvc.support.fighter", field_145791_d, field_145789_f));
                                 GVCEntitySoldierRPG entityskeleton = new GVCEntitySoldierRPG(worldObj);
                                 Vec3 playersdir = Vec3.createVectorHelper(shootingEntity.posX - field_145791_d,shootingEntity.posY - field_145792_e,shootingEntity.posZ - field_145789_f);
                                 playersdir = playersdir.normalize();
@@ -366,7 +372,7 @@ public class EntitySupportTGT extends Entity {
                             if (!this.worldObj.isRemote) {
                                 if (shootingEntity instanceof EntityPlayerMP)
                                     ((EntityPlayerMP) shootingEntity).addChatComponentMessage(new ChatComponentTranslation(
-                                            "roger that! we send a Attacker to X= " + field_145791_d + ", Z = " + field_145789_f + "!"));
+                                            "gvc.support.attacker", field_145791_d, field_145789_f));
                                 GVCEntitySoldierRPG entityskeleton = new GVCEntitySoldierRPG(worldObj);
                                 Vec3 playersdir = Vec3.createVectorHelper(shootingEntity.posX - field_145791_d,shootingEntity.posY - field_145792_e,shootingEntity.posZ - field_145789_f);
                                 playersdir = playersdir.normalize();
@@ -435,6 +441,7 @@ public class EntitySupportTGT extends Entity {
         p_70014_1_.setByte("inGround", (byte)(this.inGround ? 1 : 0));
         p_70014_1_.setByte("pickup", (byte)this.canBePickedUp);
         p_70014_1_.setDouble("damage", this.damage);
+        p_70014_1_.setInteger("GvcSupportType", type);
     }
 
     /**
@@ -442,6 +449,7 @@ public class EntitySupportTGT extends Entity {
      */
     public void readEntityFromNBT(NBTTagCompound p_70037_1_)
     {
+        type = p_70037_1_.getInteger("GvcSupportType");
         this.field_145791_d = p_70037_1_.getShort("xTile");
         this.field_145792_e = p_70037_1_.getShort("yTile");
         this.field_145789_f = p_70037_1_.getShort("zTile");

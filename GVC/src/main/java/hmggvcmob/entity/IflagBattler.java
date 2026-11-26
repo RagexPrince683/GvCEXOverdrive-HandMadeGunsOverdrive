@@ -10,25 +10,25 @@ import static handmadevehicle.entity.parts.Modes.Wait;
 public interface IflagBattler extends IPlatoonable {
     CampObj getCampObj();
     default int[] getTargetCampPosition(){
-        if(getPlatoon() != null)return new int[]{
+        if (getPlatoon() != null && (getPlatoon().platoonMode == Modes.Attack || getPlatoon().platoonMode == Modes.Defend)) return new int[]{
                 (int) getPlatoon().PlatoonTargetPos.x,
                 (int) getPlatoon().PlatoonTargetPos.y,
                 (int) getPlatoon().PlatoonTargetPos.z};
         else return null;
     }
     default void setTargetCampPosition(int[] ints){
-        if(getPlatoon()!= null)getPlatoon().setPlatoonTargetPos(ints);
+        if (getPlatoon() != null) getPlatoon().order(Modes.Attack, ints[0] + 0.5, ints[1] + 1, ints[2] + 0.5);
     }
 
     @Override
     default Modes getMobMode() {
-        if(getTargetCampPosition() != null)return Go;
-        else return Wait;
+        return getPlatoon() == null ? Wait : getPlatoon().platoonMode;
     }
 
     @Override
     default double[] getTargetpos() {
-        return new double[]{getTargetCampPosition()[0],getTargetCampPosition()[1],getTargetCampPosition()[2]};
+        int[] position = getTargetCampPosition();
+        return position == null ? null : new double[]{position[0], position[1], position[2]};
     }
 
     boolean isThisAttackAbleCamp(CampObj campObj);

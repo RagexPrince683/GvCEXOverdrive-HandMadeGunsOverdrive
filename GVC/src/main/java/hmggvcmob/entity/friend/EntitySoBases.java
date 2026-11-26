@@ -1,6 +1,8 @@
 package hmggvcmob.entity.friend;
 
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import hmggvcmob.ai.AIPlatoonMovement;
+import hmggvcmob.ai.AIInfantryTarget;
+import hmggvcmob.ai.AIInfantryWander;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
@@ -9,7 +11,6 @@ import handmadeguns.Util.GunsUtils;
 import handmadeguns.entity.IFF;
 import handmadeguns.entity.PlacedGunEntity;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
-import handmadevehicle.SlowPathFinder.WorldForPathfind;
 import handmadevehicle.entity.EntityDummy_rider;
 import handmadevehicle.entity.EntityVehicle;
 //import handmadevehicle.entity.parts.IDriver;
@@ -24,7 +25,6 @@ import hmggvcmob.ai.newai.AIAttackEntityByGun;
 import hmggvcmob.ai.newai.AIAttackEntityByTank;
 import hmggvcmob.ai.newai.AIAttackManager;
 import hmggvcmob.entity.*;
-import handmadevehicle.SlowPathFinder.ModifiedPathNavigater;
 import hmggvcmob.ai.*;
 import hmggvcmob.entity.guerrilla.EntityGBase;
 import hmggvcmob.entity.guerrilla.EntityGBases;
@@ -41,7 +41,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -63,8 +62,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 
 	public MoveToPositionMng moveToPositionMng;
 
-	private ModifiedPathNavigater modifiedPathNavigater;
-	WorldForPathfind worldForPathfind;
+
 	
 	public float viewWide = 1.04f;
 	public double movespeed = 0.3d;
@@ -73,37 +71,28 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 	public AIAttackEntityByGun aiAttackGun;
 	public AITargetFlag aiTargetFlag;
 	public boolean canDespawn = true;
-	public static int spawnedcount;
 
 	public int rideCool = 0;
 
 	public EntitySoBases(World par1World) {
 		super(par1World);
-		this.moveHelper = new EntityMoveHelperModified(this);
 		this.bodyHelper = new EntityBodyHelper_modified(this);
 		renderDistanceWeight = Double.MAX_VALUE;
-		this.worldForPathfind = new WorldForPathfind(worldObj);
-		this.moveToPositionMng = new MoveToPositionMng(this,worldForPathfind);
-		this.modifiedPathNavigater = new ModifiedPathNavigater(this, worldObj,worldForPathfind);
 
-		ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, this, moveHelper, "moveHelper", "field_70765_h");
-		ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, this, modifiedPathNavigater, "navigator", "field_70699_by");
+		this.moveToPositionMng = new MoveToPositionMng(this);
 
 		this.getNavigator().setBreakDoors(true);
+		this.getNavigator().setAvoidsWater(true);
 		this.tasks.addTask(0, aiSwimming = new EntityAISwimming(this));
-		this.tasks.addTask(3, new AIattackOnCollide(this, EntityLiving.class, 1.0D, true));
-		this.tasks.addTask(3, new AIattackOnCollide(this, EntityGBases.class, 1.0D, true));
-		this.tasks.addTask(1, new AIAttackManager(this));
+		this.tasks.addTask(2, new AIAttackManager(this));
+		if (!(this instanceof hmggvcmob.entity.IIRVING)) this.tasks.addTask(3, new AIattackOnCollide(this));
+		this.tasks.addTask(4, new AIPlatoonMovement(this));
+		this.targetTasks.addTask(1, new AIInfantryTarget(this));
 //		this.tasks.addTask(3, new AIDriveTank(this, null, worldForPathfind));
-		this.tasks.addTask(5, new EntityAIRestrictOpenDoor(this));
 		this.tasks.addTask(6, new EntityAIOpenDoor(this, true));
-		this.tasks.addTask(7, new EntityAIMoveTowardsRestriction(this, 1.0D));
-		this.tasks.addTask(8, new EntityAIWander(this, 1.0D));
+		this.tasks.addTask(8, new AIInfantryWander(this, 1.0D));
 		this.tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
 		this.tasks.addTask(8, new EntityAILookIdle(this));
-		this.targetTasks.addTask(1, new AIHurtByTarget(this, true));
-		this.targetTasks.addTask(2, new AINearestAttackableTarget(this, EntityGBase.class, 0, true));
-		this.targetTasks.addTask(3, new AINearestAttackableTarget(this, EntityLiving.class, 0, true, false, IMob.mobSelector));
 		
 	}
 
@@ -130,15 +119,15 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 	    this.moveToPositionMng.getMoveToPos().set(this.posX,this.posY
 			    ,this.posZ);
 		seatID = p_70037_1_.getInteger("seatID");
-	    canDespawn = p_70037_1_.getBoolean("canDespawn");
-		if(p_70037_1_.hasKey("platoonTargetPos"))getEntityData().setIntArray("platoonTargetPos",p_70037_1_.getIntArray("platoonTargetPos"));
+	    if (p_70037_1_.hasKey("canDespawn")) canDespawn = p_70037_1_.getBoolean("canDespawn");
+		PlatoonOBJ.read(this, p_70037_1_);
     }
     public void writeEntityToNBT(NBTTagCompound p_70014_1_)
     {
         super.writeEntityToNBT(p_70014_1_);
 	    p_70014_1_.setBoolean("canDespawn",canDespawn);
-        if(platoonOBJ != null)p_70014_1_.setIntArray("platoonTargetPos",new int[]{(int) platoonOBJ.PlatoonTargetPos.x,(int) platoonOBJ.PlatoonTargetPos.y,(int) platoonOBJ.PlatoonTargetPos.z});
-	    spawnedcount--;
+		p_70014_1_.setInteger("seatID", seatID);
+		PlatoonOBJ.save(this, p_70014_1_);
     }
 	
     public IEntityLivingData onSpawnWithEgg(IEntityLivingData par1EntityLivingData)
@@ -162,8 +151,8 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
     }
     
 	public void setDead(){
+		if (!worldObj.isRemote && platoonOBJ != null) setPlatoon(null);
 		super.setDead();
-		spawnedcount--;
 	}
     public boolean canAttackClass(Class par1Class)
     {
@@ -240,19 +229,12 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 			return Vec3.createVectorHelper((double)(f4 * f5), (double)f6, (double)(f3 * f5));
 		}
 	}
-	boolean platoon_check = false;
 	private int reArmCnt;
 	public void onUpdate() {
-		if(worldObj.isRemote && HMG_proxy.getEntityPlayerInstance() != null && HMG_proxy.getEntityPlayerInstance().isDead){
-			this.setDead();
-		}
-		if(getPlatoon() == null && !platoon_check){
-			platoon_check = true;
-			if(getEntityData().hasKey("platoonTargetPos")){
-//				System.out.println("debug");
-				makePlatoon_OnLoading();
-				platoonOBJ.setPlatoonTargetPos(getEntityData().getIntArray("platoonTargetPos"));
-			}
+		if (!worldObj.isRemote) {
+			PlatoonOBJ.restore(this);
+			hmggvcutil.GVCUtils.migrateNpcGun(this);
+			if (platoonOBJ != null) platoonOBJ.update(this);
 		}
 
 		if(currentMainWeapon != null && currentMainWeapon.linkedBaseLogic.mc_Entity != null){
@@ -284,29 +266,8 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 			}
 		}
 
-		if(aimPos != null){
-			getLookHelper().setLookPosition(aimPos.x,aimPos.y,aimPos.z,90,90);
-		}
-
-		if(!worldObj.isRemote && getPlatoon() != null){
-
-			if(platoonOBJ.checkLeaderAlive()) {
-				platoonOBJ.update();
-			}
-
-			if(isPlatoonLeader()){
-				if(platoonOBJ.platoonMode == Modes.Follow){
-					if(platoonOBJ.platoonTargetEntity == null){
-						platoonOBJ.platoonMode = Modes.Wait;
-					}else {
-						platoonOBJ.setPlatoonTargetPos(platoonOBJ.platoonTargetEntity);
-					}
-				}
-				platoonOBJ.update();
-			}
-		}
 		super.onUpdate();
-		if(summoningVehicle != null) {
+		if(VEHICLES_ENABLED && !worldObj.isRemote && summoningVehicle != null) {
 
 			int var12 = MathHelper.floor_double((rotationYaw - 22.5)*8 / 360.0F)*45 + 45;
 //			System.out.println(summoningVehicle);
@@ -362,18 +323,12 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 			}
 			summoningVehicle = null;
 		}
-		if(this.getAttackTarget() != null && this.getAttackTarget().isDead)this.setAttackTarget(null);
+		if(!worldObj.isRemote && this.getAttackTarget() != null && (this.getAttackTarget().isDead || is_this_entity_friend(this.getAttackTarget())))this.setAttackTarget(null);
 		if(this.getAttackTarget() != null && (this.getAttackTarget() instanceof EntitySoBases || this.getAttackTarget() instanceof EntityPlayer || (islmmloaded && this.getAttackTarget() instanceof LMM_EntityLittleMaid)))this.setAttackTarget(null);
 		if(this.getHeldItem() != null) {
 			if(this.getHeldItem().hasTagCompound()){
 				if(this.getHeldItem().getItem() instanceof HMGItem_Unified_Guns)((HMGItem_Unified_Guns)this.getHeldItem().getItem()).checkTags(this.getHeldItem());
 			}
-			if(!worldObj.isRemote)
-				if (this.getEntityData().getBoolean("HMGisUsingItem")) {
-					this.setSneaking(true);
-				} else {
-					this.setSneaking(false);
-				}
 			float backRP = rotationPitch;
 			float backRY = rotationYaw;
 			this.getHeldItem().getItem().onUpdate(this.getHeldItem(), worldObj, this, 0, true);
@@ -396,7 +351,6 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 			rideCool --;
 		}
 		this.getEntityData().setBoolean("HMGisUsingItem",false);
-		if(modifiedPathNavigater.getSpeed() < 0 && rand.nextInt(10)==0 && this.getAttackTarget() == null)modifiedPathNavigater.setSpeed(1);
 
 		moveToPositionMng.update();
 
@@ -416,18 +370,9 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 		super.onLivingUpdate();
 	}
 	
-	public PathNavigate getNavigator()
-	{
-		return this.modifiedPathNavigater;
-	}
-	private EntityMoveHelperModified moveHelper;
 	protected void updateAITasks()
 	{
 		super.updateAITasks();
-	}
-	public EntityMoveHelper getMoveHelper()
-	{
-		return this.moveHelper;
 	}
 	public float moveToDir = 0;
 	public void setAIMoveSpeed(float p_70659_1_)
@@ -508,7 +453,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 
 	@Override
 	public boolean canSeeTarget(Entity target) {
-		if(this.ridingEntity instanceof EntityDummy_rider){
+		if(VEHICLES_ENABLED && this.ridingEntity instanceof EntityDummy_rider){
 			//if(!((EntityDummy_rider) this.ridingEntity).linkedBaseLogic.prefab_vehicle.T_Land_F_Plane)return true;
 		}
 		boolean flag;
@@ -527,7 +472,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 	public boolean canEntityBeSeen(Entity p_70685_1_)
 	{
 
-		if(ridingEntity instanceof EntityDummy_rider){
+		if(VEHICLES_ENABLED && ridingEntity instanceof EntityDummy_rider){
 			BaseLogic connected = ((EntityDummy_rider) ridingEntity).linkedBaseLogic;
 			if(connected.seatObjects[((EntityDummy_rider) ridingEntity).linkedSeatID].prefab_seat.isBlindedSeat)return false;
 		}
@@ -542,7 +487,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 	public boolean canhearsound(Entity target) {
 		boolean flag;
 		double dist = getDistanceToEntity(target);
-		flag = dist < target.getEntityData().getFloat("GunshotLevel") * 14;
+		flag = dist < hmggvcmob.util.GVCUtil.audibleGunshotLevel(target) * 14;
 		return flag;
 	}
 
@@ -567,7 +512,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 					}
 
 					if (this.ridingEntity == null && rideCool < 0 && !entity.isDead) {
-						if (entity instanceof EntityVehicle && ((EntityVehicle) entity).canUseByMob) {
+						if (VEHICLES_ENABLED && entity instanceof EntityVehicle && ((EntityVehicle) entity).canUseByMob) {
 							Entity pilot = ((EntityVehicle) entity).getBaseLogic().getRiddenEntityList()[((EntityVehicle) entity).getpilotseatid()];
 							if ((pilot == null || is_this_entity_friend(pilot)) && !((EntityVehicle) entity).getBaseLogic().isRidingEntity(this)) {
 //                            System.out.println("" + );
@@ -583,9 +528,8 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 										placing = 0;
 										rideCool = 200;
 										this.mountEntity((PlacedGunEntity) entity);
+										if (ridingEntity == entity) setCurrentItemOrArmor(0, null);
 									}
-									this.setCurrentItemOrArmor(0, null);
-									break;
 								}
 							}
 						}
@@ -657,7 +601,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 
 				if (this.canDespawn() && d3 > 16384.0D)
 				{
-					if(this.ridingEntity instanceof EntityDummy_rider){
+					if(VEHICLES_ENABLED && this.ridingEntity instanceof EntityDummy_rider){
 						((EntityDummy_rider) this.ridingEntity).linkedBaseLogic.mc_Entity.despawnEntity();
 					}
 					this.setDead();
@@ -672,13 +616,12 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
     EntityAndPos myPos;
 
 	@Override
-	public void setPlatoon(PlatoonOBJ entities) {
-		if(!this.isDead) {
-			if(platoonOBJ != entities) {
-				this.platoonOBJ = entities;
-				if(this.platoonOBJ != null)this.platoonOBJ.addMember(this);
-			}
-		}
+	public void setPlatoon(PlatoonOBJ platoon) {
+		if (worldObj.isRemote || (isDead && platoon != null) || platoonOBJ == platoon) return;
+		if (platoonOBJ != null) platoonOBJ.removeMember(this, true);
+		platoonOBJ = platoon;
+		myPos = null;
+		if (platoonOBJ != null) platoonOBJ.addMember(this);
 	}
 
 	@Override
@@ -698,7 +641,7 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 
 	@Override
 	public Vector3d getMoveToPos() {
-		return myPos.getPos();
+		return myPos == null ? null : myPos.getPos();
 	}
 	Vector3d aimPos;
 	public void setAimPos(Vector3d aimPos){

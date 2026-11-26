@@ -14,8 +14,11 @@ public interface IPlatoonable extends Hasmode {
 
 	PlatoonOBJ getPlatoon();//分隊オブジェクトを返す
 	default IPlatoonable getPlatoonLeader(){//分隊長を返す
-		return (IPlatoonable)getPlatoon().leader.entity;
+		PlatoonOBJ platoon = getPlatoon();
+		return platoon == null || platoon.leader == null ? null : (IPlatoonable)platoon.leader.entity;
 	}
+
+	javax.vecmath.Vector3d getMoveToPos();
 
 	void setPosObj(EntityAndPos entityAndPos);
 
@@ -29,7 +32,7 @@ public interface IPlatoonable extends Hasmode {
 
 
 	default void changePlatoonOrder(Modes order){//分隊命令の変更
-		getPlatoon().platoonMode = order;
+		if (getPlatoon() != null) getPlatoon().setMode(order);
 	}
 
 

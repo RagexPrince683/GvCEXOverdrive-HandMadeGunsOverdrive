@@ -133,7 +133,7 @@ public class GVCEntityBoxSpawner extends EntityMob
             GVCEntityGuerrilla entityskeleton = new GVCEntityGuerrilla(worldObj);
             entityskeleton.setLocationAndAngles(this.posX, this.posY, this.posZ, var12, 0.0F);
             Random rnd = new Random();
-            entityskeleton.setCurrentItemOrArmor(0, new ItemStack((Item) Guns_AR.get(rnd.nextInt(Guns_AR.size()))));
+            entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(Guns_AR, rnd));
             worldObj.spawnEntityInWorld(entityskeleton);
         } else for(;infLoopDetector < 100;infLoopDetector++) {
             this.dropItem(GVCUtils.fn_box, 1);

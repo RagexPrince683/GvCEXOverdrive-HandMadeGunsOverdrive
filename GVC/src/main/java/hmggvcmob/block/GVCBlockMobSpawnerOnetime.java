@@ -2,7 +2,6 @@ package hmggvcmob.block;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import handmadevehicle.Items.ItemVehicle;
 import hmggvcmob.tile.TileEntityMobSpawner_OneTime;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -41,7 +40,7 @@ public class GVCBlockMobSpawnerOnetime extends BlockContainer
     {
         TileEntityMobSpawner_OneTime tileEntityMobSpawner_oneTime = new TileEntityMobSpawner_OneTime();
         tileEntityMobSpawner_oneTime.mobName = "GVCMob.Guerrillarpg";
-        tileEntityMobSpawner_oneTime.vehicleName = "F-14D";
+        tileEntityMobSpawner_oneTime.offset.y = 1;
         return tileEntityMobSpawner_oneTime;
     }
 
@@ -94,23 +93,23 @@ public class GVCBlockMobSpawnerOnetime extends BlockContainer
 
     public boolean onBlockActivated(World world, int posX, int posY, int posZ, EntityPlayer player, int p_149727_6_, float p_149727_7_, float p_149727_8_, float p_149727_9_)
     {
-        try {
-            TileEntityMobSpawner_OneTime myTile = (TileEntityMobSpawner_OneTime) world.getTileEntity(posX, posY, posZ);
-            ItemStack currentItemStack = player.getCurrentEquippedItem();
-            if(currentItemStack != null) {
-                if (currentItemStack.getItem() instanceof ItemVehicle) {
-                    myTile.vehicleName = ((ItemVehicle) currentItemStack.getItem()).dataName;
-                }
-                if (currentItemStack.getItem() instanceof ItemNameTag){
-                    myTile.mobName = currentItemStack.getDisplayName();
-                }
-            }else {
-                player.addChatComponentMessage(new ChatComponentTranslation(
-                        "" + myTile.mobName + " , " + myTile.vehicleName));
-            }
+        if (world.isRemote) return true;
+        TileEntity tile = world.getTileEntity(posX, posY, posZ);
+        if (!(tile instanceof TileEntityMobSpawner_OneTime)) return false;
+        TileEntityMobSpawner_OneTime spawner = (TileEntityMobSpawner_OneTime) tile;
+        ItemStack held = player.getCurrentEquippedItem();
+        if (held == null) {
+            player.addChatComponentMessage(new ChatComponentTranslation("gvc.spawner.configured",
+                    new ChatComponentTranslation("entity." + spawner.mobName + ".name")));
             return true;
-        }catch (Exception e){
-            e.printStackTrace();
+        }
+        if (held.getItem() instanceof ItemNameTag && held.hasDisplayName()
+                && held.getDisplayName().startsWith("GVCMob.")
+                && player.canPlayerEdit(posX, posY, posZ, p_149727_6_, held)) {
+            spawner.mobName = held.getDisplayName();
+            spawner.vehicleName = "";
+            spawner.markDirty();
+            return true;
         }
         return false;
     }

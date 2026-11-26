@@ -398,7 +398,7 @@ public class GVCBlockGuerrillaCamp extends Block
 			Chest = (TileEntityChest) par1World.getTileEntity(par1+13, par2+1, par3+2);
 			for (int i = 0; i < 5; ++i){
 				int suro = par1World.rand.nextInt(27);
-				Chest.setInventorySlotContents(suro, new ItemStack(GVCUtils.fn_ak74));
+				if (GVCUtils.fn_ak74 != null) Chest.setInventorySlotContents(suro, new ItemStack(GVCUtils.fn_ak74));
 			}
 
 			TileEntityChest Chest2;
@@ -407,7 +407,7 @@ public class GVCBlockGuerrillaCamp extends Block
 			Chest2 = (TileEntityChest) par1World.getTileEntity(par1+13, par2+1, par3+5);
 			for (int i = 0; i < 20; ++i){
 				int suro2 = par1World.rand.nextInt(27);
-				Chest2.setInventorySlotContents(suro2, new ItemStack(GVCUtils.fn_magazine_545,2,0));
+				if (GVCUtils.fn_magazine_545 != null) Chest2.setInventorySlotContents(suro2, new ItemStack(GVCUtils.fn_magazine_545, 2));
 			}
 
 			par1World.setBlock(par1+13, par2+1, par3+9, Blocks.chest);

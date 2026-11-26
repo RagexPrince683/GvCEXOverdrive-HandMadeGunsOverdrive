@@ -8,9 +8,11 @@ import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonInfoData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.world.World;
+import net.minecraft.entity.EntityLiving;
 
-import static handmadeguns.HandmadeGunsCore.HMG_proxy;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
+import static hmggvcmob.GVCMobPlus.proxy;
 
 public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVCPacket_PlatoonInfoSync, IMessage> {
 	boolean isLeader;
@@ -36,7 +38,9 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		isLeader = buf.readBoolean();
 		isOnPlatoon = buf.readBoolean();
 		target = new double[]{buf.readDouble(),buf.readDouble(),buf.readDouble()};
-		mode = Modes.values()[buf.readInt()];
+		int ordinal = buf.readInt();
+		Modes[] modes = Modes.values();
+		mode = ordinal >= 0 && ordinal < modes.length ? modes[ordinal] : null;
 		targetEntity = buf.readInt();
 	}
 
@@ -52,22 +56,31 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 
 	}
 
+	public static void send(PlatoonInfoData data, Entity entity) {
+		GVCMPacketHandler.INSTANCE.sendToAllAround(new GVCPacket_PlatoonInfoSync(data, entity),
+				new TargetPoint(entity.dimension, entity.posX, entity.posY, entity.posZ, 128));
+	}
+
 	@Override
 	public IMessage onMessage(GVCPacket_PlatoonInfoSync message, MessageContext ctx) {
-		World world;
-		if(ctx.side.isServer()) {
-			world = ctx.getServerHandler().playerEntity.worldObj;
-		}else{
-			world = HMG_proxy.getCilentWorld();
+		if (ctx.side == Side.CLIENT && message.mode != null) {
+			proxy.scheduleClientPacket(world -> {
+				Entity entity = world.getEntityByID(message.targetEntity);
+				if (entity instanceof IPlatoonable) {
+					PlatoonInfoData info = ((IPlatoonable) entity).getPlatoonMemberInfo();
+					if (info == null) return;
+					if (entity instanceof EntityLiving && ((EntityLiving)entity).hasCustomNameTag()) {
+						info.platoonName = ((EntityLiving)entity).getCustomNameTag();
+					} else {
+						info.platoonName = null;
+					}
+					info.isLeader = message.isLeader;
+					info.isOnPlatoon = message.isOnPlatoon;
+					info.target = message.target;
+					info.mode = message.mode;
+				}
+			});
 		}
-		Entity targetEntity = world.getEntityByID(message.targetEntity);
-		if(targetEntity != null) {
-			((IPlatoonable) targetEntity).getPlatoonMemberInfo().isLeader = message.isLeader;
-			((IPlatoonable) targetEntity).getPlatoonMemberInfo().isOnPlatoon = message.isOnPlatoon;
-			((IPlatoonable) targetEntity).getPlatoonMemberInfo().target = message.target;
-			((IPlatoonable) targetEntity).getPlatoonMemberInfo().mode = message.mode;
-		}
-
 		return null;
 	}
 }

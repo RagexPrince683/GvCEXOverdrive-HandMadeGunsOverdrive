@@ -46,7 +46,7 @@ public class GVCXEntitySoldierSpawn extends Entity
 
                 GVCEntitySoldier entityskeleton = new GVCEntitySoldier(worldObj);
                 entityskeleton.setLocationAndAngles(this.posX + 0.5, this.posY, this.posZ + 0.5, yaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_m16a4));
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_m16a4, hmggvcmob.GVCMobPlus.Guns_AR, worldObj.rand));
                 worldObj.spawnEntityInWorld(entityskeleton);
 
             } else if (mob == 1) {
@@ -54,7 +54,7 @@ public class GVCXEntitySoldierSpawn extends Entity
 
                 GVCEntitySoldierSP entityskeleton = new GVCEntitySoldierSP(worldObj);
                 entityskeleton.setLocationAndAngles(this.posX + 0.5, this.posY, this.posZ + 0.5, yaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_m110));
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_m110, hmggvcmob.GVCMobPlus.Guns_SR, worldObj.rand));
                 worldObj.spawnEntityInWorld(entityskeleton);
 
             } else if (mob == 2) {
@@ -62,7 +62,7 @@ public class GVCXEntitySoldierSpawn extends Entity
 
                 GVCEntitySoldierMG entityskeleton = new GVCEntitySoldierMG(worldObj);
                 entityskeleton.setLocationAndAngles(this.posX + 0.5, this.posY, this.posZ + 0.5, yaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_m240b));
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_m240b, hmggvcmob.GVCMobPlus.Guns_LMG, worldObj.rand));
                 worldObj.spawnEntityInWorld(entityskeleton);
 
             } else if (mob == 3) {
@@ -70,7 +70,7 @@ public class GVCXEntitySoldierSpawn extends Entity
 
                 GVCEntitySoldierRPG entityskeleton = new GVCEntitySoldierRPG(worldObj);
                 entityskeleton.setLocationAndAngles(this.posX + 0.5, this.posY, this.posZ + 0.5, yaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_smaw));
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_smaw, hmggvcmob.GVCMobPlus.Guns_RR, worldObj.rand));
                 worldObj.spawnEntityInWorld(entityskeleton);
 
             }

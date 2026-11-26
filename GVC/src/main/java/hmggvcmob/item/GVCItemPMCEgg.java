@@ -12,6 +12,8 @@ import net.minecraft.world.World;
 import static hmggvcmob.GVCMobPlus.power_of_number;
 import static hmggvcmob.GVCMobPlus.tabgvcm;
 
+import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
+
 public class GVCItemPMCEgg extends Item
 {
     public int mob ;
@@ -21,11 +23,12 @@ public class GVCItemPMCEgg extends Item
         super();
         this.mob = i;
         this.maxStackSize = 64;
-        this.setCreativeTab(tabgvcm);
+        if (VEHICLES_ENABLED || !(mob == 4 || mob == 5 || mob == 7 || mob == 8 || mob == 10)) this.setCreativeTab(tabgvcm);
     }
 
     public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, int par4, int par5, int par6, int par7, float par8, float par9, float par10)
     {
+        if (!(VEHICLES_ENABLED || !(mob == 4 || mob == 5 || mob == 7 || mob == 8 || mob == 10)) || par7 != 1 || !par2EntityPlayer.canPlayerEdit(par4, par5 + 1, par6, par7, par1ItemStack)) return false;
         if (par3World.isRemote)
         {
             return true;
@@ -42,30 +45,24 @@ public class GVCItemPMCEgg extends Item
                 int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
                 GVCEntityPMC entityskeleton = new GVCEntityPMC(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_g36));
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_g36, hmggvcmob.GVCMobPlus.Guns_AR, par3World.rand));
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 1){
                 ++par5;
                 int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
                 GVCEntityPMCSP entityskeleton = new GVCEntityPMCSP(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_m82a3));
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_m82a3, hmggvcmob.GVCMobPlus.Guns_SR, par3World.rand));
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 2){
                 ++par5;
                 int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
                 GVCEntityPMCMG entityskeleton = new GVCEntityPMCMG(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
-                entityskeleton.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_mg36));
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                entityskeleton.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_mg36, hmggvcmob.GVCMobPlus.Guns_LMG, par3World.rand));
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 3){
                 ++par5;
@@ -73,10 +70,8 @@ public class GVCItemPMCEgg extends Item
                 GVCEntityPMCRPG entityskeleton = new GVCEntityPMCRPG(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
                 entityskeleton.addRandomArmor();
-                --par1ItemStack.stackSize;
                 entityskeleton.onSpawnWithEgg(null);
-                par3World.spawnEntityInWorld(entityskeleton);
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else
             if(this.mob == 4){
                 ++par5;
@@ -105,9 +100,7 @@ public class GVCItemPMCEgg extends Item
                 int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
                 GVCEntityFriendGK entityskeleton = new GVCEntityFriendGK(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else if(this.mob == 7){
                 ++par5;
                 int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
@@ -123,9 +116,7 @@ public class GVCItemPMCEgg extends Item
                 EntityMGAX55 entityskeleton = new EntityMGAX55(par3World);
                 entityskeleton.setLocationAndAngles(par4+0.5, par5, par6+0.5, par2EntityPlayer.rotationYaw, 0.0F);
                 entityskeleton.bodyrotationYaw = par2EntityPlayer.rotationYaw;
-                par3World.spawnEntityInWorld(entityskeleton);
-                --par1ItemStack.stackSize;
-                return true;
+                return hmggvcmob.util.GVCUtil.spawnFromItem(par3World, entityskeleton, par2EntityPlayer, par1ItemStack);
             }else if(this.mob == 10) {
                 ++par5;
                 int var12 = MathHelper.floor_double((double)(par2EntityPlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;

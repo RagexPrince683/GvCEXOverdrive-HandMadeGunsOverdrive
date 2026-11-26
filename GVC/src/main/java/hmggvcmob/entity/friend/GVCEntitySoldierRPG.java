@@ -23,7 +23,7 @@ public class GVCEntitySoldierRPG extends EntitySoBase implements IHasVehicleGach
     {
         super(par1World);
         this.setSize(0.6F, 1.8F);
-        if(cfg_blockdestory)this.tasks.addTask(1,new AIBuilder(this,worldForPathfind));
+        if(cfg_blockdestory)this.tasks.addTask(1,new AIBuilder(this));
     }
     protected void applyEntityAttributes()
     {
@@ -46,7 +46,7 @@ public class GVCEntitySoldierRPG extends EntitySoBase implements IHasVehicleGach
     public void addRandomArmor()
     {
         super.addRandomArmor();
-        this.setCurrentItemOrArmor(0, new ItemStack(GVCUtils.fn_smaw));
+        this.setCurrentItemOrArmor(0, hmggvcmob.GVCMobPlus.chooseNpcGun(GVCUtils.fn_smaw, hmggvcmob.GVCMobPlus.Guns_RR, worldObj.rand));
     }
 
 	public boolean isConverting() {
