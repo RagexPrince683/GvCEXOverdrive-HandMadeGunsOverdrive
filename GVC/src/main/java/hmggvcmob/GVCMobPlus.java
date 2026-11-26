@@ -46,7 +46,7 @@ import net.minecraftforge.common.config.Configuration;
 
 import static hmggvcmob.GVCMobPlus.modid;
 
-@Mod(modid=modid, name=modid, version="HD11", useMetadata=true, dependencies="required-after:GVCGuns;required-after:HandmadeGuns")
+@Mod(modid=modid, name="GVCOverdrive", useMetadata=true, dependencies="required-after:GVCGuns;required-after:HandmadeGuns")
 public class GVCMobPlus
 {
     public static final String modid = "GVCMob";

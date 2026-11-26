@@ -40,8 +40,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 @Mod(
 		modid	= "GVCGuns",
-		name	= "GVCGuns",
-		version	= "1.7.x-srg-1",
+		name	= "GVCOverdrive Equipment",
 		useMetadata = true,
 		dependencies="required-after:HandmadeGuns"
 )

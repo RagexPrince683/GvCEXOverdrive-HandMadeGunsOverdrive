@@ -1,4 +1,19 @@
-version = 'HD14.3'
+archivesBaseName = 'GVCOverdrive'
+ext.overdriveVersioning = [
+    defaultModVersion: '1.0.0',
+    keepBuildNumberProperty: 'gvcKeepBuildNumber',
+    displayName: 'GVCOverdrive',
+    logName: 'GVCOverdrive'
+]
+apply from: rootProject.file('gradle/overdrive-version.gradle')
+
+processResources {
+    def releaseVersion = project.version.toString()
+    inputs.property 'gvcReleaseVersion', releaseVersion
+    filesMatching('version.properties') {
+        expand version: releaseVersion
+    }
+}
 
 repositories {
     mavenCentral()

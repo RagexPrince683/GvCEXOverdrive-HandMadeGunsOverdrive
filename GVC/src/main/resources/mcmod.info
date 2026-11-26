@@ -1,7 +1,7 @@
 [
   {
     "modid": "GVCGuns",
-    "name": "GVCGuns",
+    "name": "GVCOverdrive Equipment",
     "description": "Guerrilla vs Command equipment and utility blocks.",
     "version": "${version}",
     "mcversion": "${mcversion}",
@@ -15,7 +15,7 @@
   },
   {
     "modid": "GVCMob",
-    "name": "GVCMob",
+    "name": "GVCOverdrive",
     "description": "Guerrilla vs Command infantry, camps and raids.",
     "version": "${version}",
     "mcversion": "${mcversion}",

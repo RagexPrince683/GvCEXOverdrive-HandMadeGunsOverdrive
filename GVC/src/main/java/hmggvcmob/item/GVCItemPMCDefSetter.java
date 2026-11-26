@@ -1,8 +1,8 @@
 package hmggvcmob.item;
 
-import handmadevehicle.entity.parts.Modes;
 import hmggvcmob.entity.friend.EntityPMCBase;
 import hmggvcmob.entity.util.PlatoonOBJ;
+import hmggvcmob.entity.util.PlatoonOrder;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -17,7 +17,7 @@ import static hmggvcutil.GVCUtils.platoonMatched;
 
 public class GVCItemPMCDefSetter extends Item {
     private static final String ORDER_MODE = "GVCOrderMode";
-    private static final Modes[] ORDERS = {Modes.Go, Modes.Follow, Modes.Patrol, Modes.Defend, Modes.Attack};
+    private static final PlatoonOrder[] ORDERS = {PlatoonOrder.Go, PlatoonOrder.Follow, PlatoonOrder.Patrol, PlatoonOrder.Defend, PlatoonOrder.Attack};
 
     public GVCItemPMCDefSetter() {
         setCreativeTab(tabgvcm);
@@ -50,9 +50,9 @@ public class GVCItemPMCDefSetter extends Item {
             player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.no_squad"));
             return stack;
         }
-        Modes order = ORDERS[index];
+        PlatoonOrder order = ORDERS[index];
         MovingObjectPosition point = null;
-        if (order != Modes.Follow) {
+        if (order != PlatoonOrder.Follow) {
             Vec3 look = player.getLook(1);
             Vec3 start = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
             point = world.rayTraceBlocks(start, start.addVector(look.xCoord * 80, look.yCoord * 80, look.zCoord * 80));
@@ -67,7 +67,7 @@ public class GVCItemPMCDefSetter extends Item {
         if (unit.getPlatoon() == null) unit.makePlatoon();
         else unit.enlistPlatoon(false);
         PlatoonOBJ platoon = unit.getPlatoon();
-        if (order == Modes.Follow) {
+        if (order == PlatoonOrder.Follow) {
             platoon.follow(player);
             player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.follow"));
         } else {
@@ -80,7 +80,7 @@ public class GVCItemPMCDefSetter extends Item {
         return stack;
     }
 
-    private static ChatComponentTranslation title(Modes order) {
+    private static ChatComponentTranslation title(PlatoonOrder order) {
         return new ChatComponentTranslation("gvc.order.mode." + order.name());
     }
 

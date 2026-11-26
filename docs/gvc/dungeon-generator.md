@@ -1,6 +1,6 @@
 # GVC Dungeon Generator Base
 
-GVC Dungeon Generator Base adds optional structure packs to GVC Overdrive. It requires HMG and GVC and targets Minecraft 1.7.10, Forge 10.13.4.1614, and Java 8. Install `GVCDangeonsBase-*.jar` as the third JAR on the client and server. GVC's native camps are available without this module.
+GVC Dungeon Generator Base adds optional structure packs to GVCOverdrive. It requires HMG and GVC and targets Minecraft 1.7.10, Forge 10.13.4.1614, and Java 8. Install `GVCDangeonsBase-*.jar` as the third JAR on the client and server. GVC's native camps are available without this module.
 
 ## Install compatible packs
 

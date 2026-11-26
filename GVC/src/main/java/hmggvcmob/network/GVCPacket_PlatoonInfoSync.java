@@ -3,9 +3,9 @@ package hmggvcmob.network;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import handmadevehicle.entity.parts.Modes;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonInfoData;
+import hmggvcmob.entity.util.PlatoonOrder;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -19,8 +19,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 	boolean isOnPlatoon;
 	double[] target;
 	int targetEntity;
-	Modes mode;
-	String platoonName;
+	PlatoonOrder order;
 	public GVCPacket_PlatoonInfoSync(){
 
 	}
@@ -28,8 +27,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		isLeader = platoonInfoData.isLeader;
 		isOnPlatoon = platoonInfoData.isOnPlatoon;
 		target = platoonInfoData.target;
-		mode = platoonInfoData.mode;
-		platoonName = platoonInfoData.platoonName;
+		order = platoonInfoData.order == null ? PlatoonOrder.fromLegacy(platoonInfoData.mode) : platoonInfoData.order;
 		this.targetEntity = targetEntity.getEntityId();
 	}
 
@@ -38,9 +36,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		isLeader = buf.readBoolean();
 		isOnPlatoon = buf.readBoolean();
 		target = new double[]{buf.readDouble(),buf.readDouble(),buf.readDouble()};
-		int ordinal = buf.readInt();
-		Modes[] modes = Modes.values();
-		mode = ordinal >= 0 && ordinal < modes.length ? modes[ordinal] : null;
+		order = PlatoonOrder.fromId(buf.readInt());
 		targetEntity = buf.readInt();
 	}
 
@@ -51,7 +47,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		buf.writeDouble(target[0]);
 		buf.writeDouble(target[1]);
 		buf.writeDouble(target[2]);
-		buf.writeInt(mode.ordinal());
+		buf.writeInt(order.id);
 		buf.writeInt(targetEntity);
 
 	}
@@ -63,7 +59,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 
 	@Override
 	public IMessage onMessage(GVCPacket_PlatoonInfoSync message, MessageContext ctx) {
-		if (ctx.side == Side.CLIENT && message.mode != null) {
+		if (ctx.side == Side.CLIENT && message.order != null) {
 			proxy.scheduleClientPacket(world -> {
 				Entity entity = world.getEntityByID(message.targetEntity);
 				if (entity instanceof IPlatoonable) {
@@ -77,7 +73,8 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 					info.isLeader = message.isLeader;
 					info.isOnPlatoon = message.isOnPlatoon;
 					info.target = message.target;
-					info.mode = message.mode;
+					info.order = message.order;
+					info.mode = message.order.legacyMode;
 				}
 			});
 		}

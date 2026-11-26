@@ -5,6 +5,7 @@ import handmadeguns.entity.PlacedGunEntity;
 import handmadevehicle.entity.EntityDummy_rider;
 import handmadevehicle.entity.parts.Modes;
 import hmggvcmob.entity.util.PlatoonOBJ;
+import hmggvcmob.entity.util.PlatoonOrder;
 import hmggvcmob.camp.CampObj;
 import hmggvcmob.entity.IGVCmob;
 import hmggvcmob.entity.IflagBattler;
@@ -80,7 +81,8 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 			platoonInfoData.isLeader = isPlatoonLeader();
 			platoonInfoData.isOnPlatoon = platoonOBJ != null;
 			platoonInfoData.target = myPos == null ? new double[]{posX, posY, posZ} : myPos.getArrayPos();
-			platoonInfoData.mode = getMobMode();
+			platoonInfoData.order = platoonOBJ == null ? PlatoonOrder.Wait : platoonOBJ.getOrder();
+			platoonInfoData.mode = platoonInfoData.order.legacyMode;
 			GVCPacket_PlatoonInfoSync.send(platoonInfoData, this);
 		}
 
@@ -151,7 +153,7 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	@Override
 	public Modes getMobMode() {
-		if(platoonOBJ != null)return platoonOBJ.platoonMode;
+		if(platoonOBJ != null)return platoonOBJ.getOrder().legacyMode;
 		return Wait;
 	}
 

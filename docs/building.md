@@ -20,12 +20,12 @@ The first setup needs network access to download the wrapper, Forge and Minecraf
 | Requested task | Reobfuscated JAR |
 | --- | --- |
 | `:HMG:build` | `HMG/build/libs/HandmadeGunsOverdrive-*.jar` |
-| `:GVC:build` | `GVC/build/libs/GVC-HD*.jar` |
+| `:GVC:build` | `GVC/build/libs/GVCOverdrive-*.jar` |
 | `:GVCDangeonsBase:build` | `GVCDangeonsBase/build/libs/GVCDangeonsBase-*.jar` |
 
 Use the output of `build` for an ordinary Minecraft instance. The task includes ForgeGradle's `reobf` step. HMG packages its bundled packs and vecmath fallback in that output. Each companion remains a separate JAR.
 
-HMG's release version is stored in `HMG/version.properties`. A successful HMG production build normally advances its build number. Pass `-PhmgKeepBuildNumber` to make an HMG verification JAR without changing version state. The module-qualified `:GVC:build` and `:GVCDangeonsBase:build` tasks leave HMG's build number untouched. Use those qualified tasks when working on a companion.
+HMG and GVCOverdrive each keep release state in their module's `version.properties`. The `mod_version` is the release version and `build_number` is the final number in the JAR version. A successful production build advances the requested module's build number. Pass `-PhmgKeepBuildNumber` for an HMG verification build or `-PgvcKeepBuildNumber` for a GVCOverdrive verification build. The module-qualified tasks keep the counters independent. Dungeon Generator Base uses its own fixed release version.
 
 ## Offline builds
 
@@ -33,7 +33,7 @@ After workspace setup and one successful build of the relevant module, add `--of
 
 ```sh
 ./gradlew --offline -PhmgKeepBuildNumber :HMG:build
-./gradlew --offline :GVC:build
+./gradlew --offline -PgvcKeepBuildNumber :GVC:build
 ./gradlew --offline :GVCDangeonsBase:build
 ```
 

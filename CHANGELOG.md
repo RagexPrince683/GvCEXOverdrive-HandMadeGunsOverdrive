@@ -418,3 +418,9 @@ Developer/backend
 - Use server-owned target acquisition, reaction and aim variation, firing-lane checks, role-specific engagement, and HMG's weapon states. Attach legacy and imported firearms to the posed infantry hand.
 - Hide 25 registered firearm placeholders and provide conversions to their bundled HMG equivalents. Use HMG guns for loadouts and loot. Add English names and localize squad orders, faction labels, beacon and raid messages.
 - Organize the repository guides around HMG, GVC and optional Dungeon Generator Base. Document supported build targets, dependencies, packs, legacy firearm IDs and deferred vehicle and structure work.
+
+2026-11-25 20:57 — Release GVCOverdrive with independent build numbering
+
+- Keep Patrol and Defend in GVCOverdrive so the command device loads with earlier HMG releases. Preserve squad save and packet IDs and expose the legacy HMG movement modes through compatibility adapters.
+- Use the shared NPC hand attachment when HMG provides it and the installed HMG equipment renderer otherwise.
+- Rename the display and archive to GVCOverdrive. Give it its own `version.properties`, publish that version to both FML entries, and keep `GVCMob` and `GVCGuns` registry IDs. Document the new artifact name and module-specific version commands.

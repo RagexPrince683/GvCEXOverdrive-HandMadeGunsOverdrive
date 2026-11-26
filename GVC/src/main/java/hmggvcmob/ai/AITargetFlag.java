@@ -1,7 +1,7 @@
 package hmggvcmob.ai;
 
 import handmadeguns.entity.IFF;
-import handmadevehicle.entity.parts.Modes;
+import hmggvcmob.entity.util.PlatoonOrder;
 import hmggvcmob.entity.IflagBattler;
 import hmggvcmob.tile.TileEntityFlag;
 import net.minecraft.entity.EntityLiving;
@@ -41,13 +41,13 @@ public class AITargetFlag extends EntityAIBase {
                 }
             }
             if (battler.getPlatoon() != null && battler.getPlatoon().hasCurrentCamp()) {
-                battler.getPlatoon().setMode(Modes.Wait);
+                battler.getPlatoon().setOrder(PlatoonOrder.Wait);
                 battler.getPlatoon().setCurrentCamp(false);
             }
             return false;
         }
         if (battler.isFree()) battler.makePlatoon();
-        Modes order = battler.isThisAttackAbleCamp(flag.campObj) ? Modes.Attack : Modes.Defend;
+        PlatoonOrder order = battler.isThisAttackAbleCamp(flag.campObj) ? PlatoonOrder.Attack : PlatoonOrder.Defend;
         battler.getPlatoon().order(order, flag.xCoord + 0.5, flag.yCoord + 1, flag.zCoord + 0.5);
         if (!battler.getPlatoon().hasCurrentCamp()) battler.getPlatoon().setCurrentCamp(true);
         return true;

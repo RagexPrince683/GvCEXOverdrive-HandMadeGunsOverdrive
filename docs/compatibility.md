@@ -244,7 +244,7 @@ Use Minecraft 1.7.10, Forge 10.13.4.1614, and Java 8 with matching HMG and GVC J
 GVC camp reinforcements use nearby loaded entities. Raids choose positions in
 already loaded chunks, attempt at most 50 positions per group and cap each
 area at 48 raiders. Protected territory, flag progress and raid timing are
-saved with the world. Flag state is sent to chunk watchers. Squad membership and orders are stored per dimension, with each infantry entity carrying its squad ID. Existing position-only records are readable. See the [GVC squad guide](gvc/README.md#squads-and-orders) and the [firearm registry report](gvc/legacy-firearms.md).
+saved with the world. Flag state is sent to chunk watchers. Squad membership and orders are stored per dimension, with each infantry entity carrying its squad ID. Existing position-only records are readable. The Patrol and Defend save and packet IDs remain 5 and 6. Earlier HMG versions use their existing NPC equipment renderer. An HMG build containing the biped hand bridge enables corrected NPC weapon placement. See the [GVC squad guide](gvc/README.md#squads-and-orders) and the [firearm registry report](gvc/legacy-firearms.md).
 
 ### Future vehicle adapter
 
@@ -258,7 +258,7 @@ encounters, the one-time spawner, outgoing support requests and dungeon pack
 markers. The legacy integration points are `EntityGBases`, `EntitySoBases`,
 `AIAttackManager`, `EntitySupportTGT`, `TileEntityMobSpawner_OneTime` and
 `ComponentDungeonBase`. Keep faction selection, raid spawning, platoon orders
-and infantry navigation in GVC. Infantry uses Minecraft's walking navigator and retains the platoon order enum from HMG's bundled `handmadevehicle` package. Use the legacy
+and infantry navigation in GVC. Infantry uses Minecraft's walking navigator. GVCOverdrive owns the orders and exposes the original HMG movement modes for legacy callers. Use the legacy
 seat code as a reference for the adapter's server-owned pilot and gunner
 state. The MGAX55 packet IDs are reserved. A replacement control handler must
 validate the sender's active seat and execute on the server thread.

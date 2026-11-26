@@ -1,11 +1,11 @@
 # GvCEX Overdrive
 
-GvCEX Overdrive maintains three companion mods for Minecraft 1.7.10. Handmade Guns Overdrive provides the firearm framework and content packs. GVC Overdrive uses those systems for infantry and faction gameplay, and GVC Dungeon Generator Base adds optional structure-pack support.
+GvCEX Overdrive maintains three companion mods for Minecraft 1.7.10. Handmade Guns Overdrive provides the firearm framework and content packs. GVCOverdrive uses those systems for infantry and faction gameplay, and GVC Dungeon Generator Base adds optional structure-pack support.
 
 | Project | Production JAR | Role and dependencies |
 | --- | --- | --- |
 | [Handmade Guns Overdrive](docs/hmg.md) | `HandmadeGunsOverdrive-*.jar` | Primary firearm mod. Runs independently on Forge. |
-| [GVC Overdrive](docs/gvc/README.md) | `GVC-HD*.jar` | Infantry, factions, camps, raids, and squad orders. Requires HMG and provides both `GVCMob` and `GVCGuns`. |
+| [GVCOverdrive](docs/gvc/README.md) | `GVCOverdrive-*.jar` | Infantry, factions, camps, raids, and squad orders. Requires HMG and provides both `GVCMob` and `GVCGuns`. |
 | [GVC Dungeon Generator Base](docs/gvc/dungeon-generator.md) | `GVCDangeonsBase-*.jar` | Optional generator for compatible structure packs. Requires HMG and GVC. |
 
 ## Install
@@ -15,13 +15,15 @@ GvCEX Overdrive maintains three companion mods for Minecraft 1.7.10. Handmade Gu
 3. Use matching mod builds and gameplay packs on the client and dedicated server. Put HMG packs under `handmadeguns_Packs/` and dungeon packs under `GVCDungeons_Packs/` in the relevant instance.
 4. Launch once to generate configuration. HMG's maintained source builds include the official firearm packs and a vecmath fallback. Follow any additional asset instructions attached to the particular release you downloaded.
 
+Older GVC releases used `GVC-HD*.jar` or `GVC-Overdrive-*.jar`. Replace the older GVC JAR when upgrading to `GVCOverdrive-*.jar`.
+
 Download HMG from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/hand-made-guns-overdrive/files/all) or [Modrinth](https://modrinth.com/mod/handmade-guns-overdrive/versions). Check [GitHub Releases](https://github.com/RagexPrince683/GvCEXOverdrive-HandMadeGunsOverdrive/releases) for published companion JARs. If a matching GVC or Dungeon Generator Base build is unavailable there, build it from the same checkout as HMG.
 
 ## What the mods add
 
 **Handmade Guns Overdrive** adds pack-defined firearms, ammunition, magazines, attachments, placed guns, and crafting. It supports legacy OBJ/MQO models, native Blockbench projects, and supported TaCZ-derived Bedrock assets and animations. The [HMG guide](docs/hmg.md) links to configuration, server administration, rendering, and pack-authoring references.
 
-**GVC Overdrive** adds ALLIES Radical Party guerrillas, UNION soldiers, and friendly PMC infantry. Camps, beacons, raids, and reinforcements bring those factions into the world. PMC groups accept move, follow, patrol, defend, and attack orders. See the [GVC guide](docs/gvc/README.md) for controls, spawning, and existing-world details.
+**GVCOverdrive** adds ALLIES Radical Party guerrillas, UNION soldiers, and friendly PMC infantry. Camps, beacons, raids, and reinforcements bring those factions into the world. PMC groups accept move, follow, patrol, defend, and attack orders. See the [GVC guide](docs/gvc/README.md) for controls, spawning, and existing-world details.
 
 **GVC Dungeon Generator Base** reads compatible `GVCDungeons_Packs` at startup. GVC's own camp generator runs independently of the optional module. See the [structure pack guide](docs/gvc/dungeon-generator.md) for supported layouts and markers.
 
@@ -32,7 +34,7 @@ Run the native Gradle wrapper with a Java 8 JDK. Use `gradlew.bat` on Windows or
 | Build task | Production output |
 | --- | --- |
 | `:HMG:build` | `HMG/build/libs/HandmadeGunsOverdrive-*.jar` |
-| `:GVC:build` | `GVC/build/libs/GVC-HD*.jar` |
+| `:GVC:build` | `GVC/build/libs/GVCOverdrive-*.jar` |
 | `:GVCDangeonsBase:build` | `GVCDangeonsBase/build/libs/GVCDangeonsBase-*.jar` |
 
 ## Development status

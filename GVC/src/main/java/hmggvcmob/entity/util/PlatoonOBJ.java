@@ -46,7 +46,8 @@ public class PlatoonOBJ {
     private final Vector3d heading = new Vector3d();
     private boolean hasHeading;
 
-    public Modes platoonMode = Modes.Wait;
+    @Deprecated public Modes platoonMode = Modes.Wait;
+    private PlatoonOrder currentOrder = PlatoonOrder.Wait;
     public final Vector3d PlatoonTargetPos = new Vector3d();
 
     private PlatoonOBJ(Data data, UUID id) {
@@ -99,12 +100,12 @@ public class PlatoonOBJ {
             // merging neighboring squads just because they were moving toward the same flag.
             platoon = create(member);
             unit.setPlatoon(platoon);
-            platoon.order(Modes.Go, oldPosition[0] + 0.5, oldPosition[1], oldPosition[2] + 0.5);
+            platoon.order(PlatoonOrder.Go, oldPosition[0] + 0.5, oldPosition[1], oldPosition[2] + 0.5);
             if (member instanceof EntityPMCBase) {
                 String name = ((EntityPMCBase)member).leaderEntity_name;
                 if (name != null && !name.isEmpty()) {
                     platoon.legacyPlayerName = name;
-                    platoon.setMode(Modes.Follow);
+                    platoon.setOrder(PlatoonOrder.Follow);
                 }
             }
         }
@@ -153,24 +154,42 @@ public class PlatoonOBJ {
         }
     }
 
+    public PlatoonOrder getOrder() {
+        // Preserve writes by callers of the old GVC field and Hasmode interface.
+        if (platoonMode != currentOrder.legacyMode) {
+            setOrder(PlatoonOrder.fromLegacy(platoonMode));
+            platoonMode = currentOrder.legacyMode;
+        }
+        return currentOrder;
+    }
+
     public void setMode(Modes mode) {
-        if (platoonMode == mode) return;
-        platoonMode = mode;
+        setOrder(PlatoonOrder.fromLegacy(mode));
+    }
+
+    public void setOrder(PlatoonOrder order) {
+        platoonMode = order.legacyMode;
+        if (currentOrder == order) return;
+        currentOrder = order;
         scheduled = false;
         data.markDirty();
     }
 
     public void order(Modes mode, double x, double y, double z) {
-        if (platoonMode == mode && PlatoonTargetPos.x == x && PlatoonTargetPos.y == y
+        order(PlatoonOrder.fromLegacy(mode), x, y, z);
+    }
+
+    public void order(PlatoonOrder mode, double x, double y, double z) {
+        if (getOrder() == mode && PlatoonTargetPos.x == x && PlatoonTargetPos.y == y
                 && PlatoonTargetPos.z == z) return;
-        if (mode == Modes.Patrol && leader != null) {
+        if (mode == PlatoonOrder.Patrol && leader != null) {
             patrolOrigin.set(leader.entity.posX, leader.entity.boundingBox.minY, leader.entity.posZ);
             patrolOutbound = true;
         }
         playerId = null;
         legacyPlayerName = null;
         PlatoonTargetPos.set(x, y, z);
-        setMode(mode);
+        setOrder(mode);
         scheduled = false;
         data.markDirty();
     }
@@ -178,7 +197,7 @@ public class PlatoonOBJ {
     public void follow(EntityPlayer player) {
         playerId = player.getUniqueID();
         legacyPlayerName = null;
-        setMode(Modes.Follow);
+        setOrder(PlatoonOrder.Follow);
         scheduled = false;
         data.markDirty();
     }
@@ -193,13 +212,14 @@ public class PlatoonOBJ {
     }
 
     public boolean allowsEngagement(EntityLivingBase target) {
-        if (platoonMode == Modes.Defend) {
+        if (getOrder() == PlatoonOrder.Defend) {
             return target.getDistanceSq(PlatoonTargetPos.x, PlatoonTargetPos.y, PlatoonTargetPos.z) <= 24 * 24;
         }
         return leader == null || leader.entity.getDistanceSqToEntity(target) <= 48 * 48;
     }
 
     public void update(EntityLiving caller) {
+        PlatoonOrder order = getOrder();
         long tick = caller.worldObj.getTotalWorldTime();
         if (scheduled && tick < nextUpdate) return;
         nextUpdate = tick + 10 + (id.hashCode() & 7);
@@ -211,14 +231,14 @@ public class PlatoonOBJ {
         if (leader == null) return;
 
         EntityLiving captain = leader.entity;
-        boolean hold = platoonMode == Modes.Wait || platoonMode == Modes.Land;
-        Vector3d anchor = platoonMode == Modes.Patrol && !patrolOutbound ? patrolOrigin : PlatoonTargetPos;
-        if (platoonMode == Modes.Patrol && horizontalDistance(captain, anchor) < 9) {
+        boolean hold = order == PlatoonOrder.Wait || order == PlatoonOrder.Land;
+        Vector3d anchor = order == PlatoonOrder.Patrol && !patrolOutbound ? patrolOrigin : PlatoonTargetPos;
+        if (order == PlatoonOrder.Patrol && horizontalDistance(captain, anchor) < 9) {
             patrolOutbound = !patrolOutbound;
             anchor = patrolOutbound ? PlatoonTargetPos : patrolOrigin;
             data.markDirty();
         }
-        if (platoonMode == Modes.Follow) {
+        if (order == PlatoonOrder.Follow) {
             EntityPlayer player = playerId == null ? null : caller.worldObj.func_152378_a(playerId);
             if (player == null && legacyPlayerName != null) {
                 player = caller.worldObj.getPlayerEntityByName(legacyPlayerName);
@@ -244,7 +264,7 @@ public class PlatoonOBJ {
         }
         double forwardX = heading.x;
         double forwardZ = heading.z;
-        double stopRange = platoonMode == Modes.Attack ? 4 : platoonMode == Modes.Follow ? 5 : 2;
+        double stopRange = order == PlatoonOrder.Attack ? 4 : order == PlatoonOrder.Follow ? 5 : 2;
         if (hold || (length < stopRange && Math.abs(anchor.y - captain.boundingBox.minY) < 1.1)) {
             leader.set(captain.posX, captain.boundingBox.minY, captain.posZ);
         } else {
@@ -333,8 +353,11 @@ public class PlatoonOBJ {
                 squad.leaderId = parseId(entry.getString("Leader"));
                 squad.playerId = parseId(entry.getString("Player"));
                 squad.legacyPlayerName = entry.hasKey("PlayerName") ? entry.getString("PlayerName") : null;
-                int mode = entry.getInteger("Mode");
-                if (mode >= 0 && mode < Modes.values().length) squad.platoonMode = Modes.values()[mode];
+                PlatoonOrder order = PlatoonOrder.fromId(entry.getInteger("Mode"));
+                if (order != null) {
+                    squad.currentOrder = order;
+                    squad.platoonMode = order.legacyMode;
+                }
                 squad.PlatoonTargetPos.set(entry.getDouble("X"), entry.getDouble("Y"), entry.getDouble("Z"));
                 squad.patrolOrigin.set(entry.getDouble("PatrolX"), entry.getDouble("PatrolY"), entry.getDouble("PatrolZ"));
                 squad.patrolOutbound = entry.getBoolean("Outbound");
@@ -357,7 +380,7 @@ public class PlatoonOBJ {
                 if (squad.leaderId != null) entry.setString("Leader", squad.leaderId.toString());
                 if (squad.playerId != null) entry.setString("Player", squad.playerId.toString());
                 if (squad.legacyPlayerName != null) entry.setString("PlayerName", squad.legacyPlayerName);
-                entry.setInteger("Mode", squad.platoonMode.ordinal());
+                entry.setInteger("Mode", squad.getOrder().id);
                 entry.setDouble("X", squad.PlatoonTargetPos.x);
                 entry.setDouble("Y", squad.PlatoonTargetPos.y);
                 entry.setDouble("Z", squad.PlatoonTargetPos.z);

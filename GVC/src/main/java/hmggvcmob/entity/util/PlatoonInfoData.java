@@ -9,5 +9,6 @@ public class PlatoonInfoData {
 	public boolean isOnPlatoon = false;
 	public double[] target = new double[3];
 	public Modes mode = Wait;
+	public PlatoonOrder order;
 	public String platoonName = null;
 }

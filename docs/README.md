@@ -1,7 +1,7 @@
 # GvCEX Overdrive documentation
 
 - [Handmade Guns Overdrive](hmg.md) covers the firearm framework, bundled content, and external packs.
-- [GVC Overdrive](gvc/README.md) covers infantry, faction gameplay, squad orders, configuration, and world generation.
+- [GVCOverdrive](gvc/README.md) covers infantry, faction gameplay, squad orders, configuration, and world generation.
 - [GVC Dungeon Generator Base](gvc/dungeon-generator.md) covers compatible structure packs and placement.
 - [Building from source](building.md) covers all three production modules.
 

@@ -7,6 +7,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import handmadeguns.HandmadeGunsCore;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonInfoData;
+import hmggvcmob.entity.util.PlatoonOrder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -47,7 +48,7 @@ public class EventRenderPlatoonInfo {
                         net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[1]),
                         net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[2])));
 				GL11.glTranslatef(0, 0.2f, 0);
-				renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.mode." + platoonInfoData.mode.name()));
+				renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.mode." + (platoonInfoData.order == null ? PlatoonOrder.fromLegacy(platoonInfoData.mode) : platoonInfoData.order).name()));
 				if (platoonInfoData.isLeader) {
 					GL11.glTranslatef(0, 0.2f, 0);
 					renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.leader"));

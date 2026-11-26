@@ -1,10 +1,10 @@
-# GVC Overdrive
+# GVCOverdrive
 
-GVC Overdrive adds infantry, rival factions, camps, supply and raid beacons, and player-commanded PMC squads. Handmade Guns Overdrive supplies the weapons, magazines, and projectile mechanics. GVC's equipment, infantry, and camp systems are packaged together.
+GVCOverdrive adds infantry, rival factions, camps, supply and raid beacons, and player-commanded PMC squads. Handmade Guns Overdrive supplies the weapons, magazines, and projectile mechanics. GVC's equipment, infantry, and camp systems are packaged together.
 
 ## Getting started
 
-Use Minecraft **1.7.10**, Forge **10.13.4.1614**, and **Java 8**. Install matching `HandmadeGunsOverdrive-*.jar` and `GVC-HD*.jar` files in `mods/` on both the client and server. GVC provides the `GVCGuns` and `GVCMob` mod IDs. A normal installation needs those two JARs. Install the third JAR, `GVCDangeonsBase-*.jar`, if you use compatible dungeon packs. See the [project installation page](../../README.md#install) and [build instructions](../building.md).
+Use Minecraft **1.7.10**, Forge **10.13.4.1614**, and **Java 8**. Install matching `HandmadeGunsOverdrive-*.jar` and `GVCOverdrive-*.jar` files in `mods/` on both the client and server. GVC provides the `GVCGuns` and `GVCMob` mod IDs. A normal installation needs those two JARs. Install the third JAR, `GVCDangeonsBase-*.jar`, if you use compatible dungeon packs. See the [project installation page](../../README.md#install) and [build instructions](../building.md).
 
 On first launch, look for `config/GVCMob.cfg`, `config/GVCGuns.cfg`, and `config/HandmadeGuns.cfg`. The GVC Infantry and GVC Equipment creative tabs expose the relevant eggs, tools, and equipment. HMG owns the normal firearm tabs.
 
@@ -38,7 +38,7 @@ New saves store squad membership, leadership, and orders per dimension. Older sa
 
 Infantry use HMG unified firearms and the weapon's selector, bolt, magazine, reload sequence, and projectile model. GVC chooses the engagement distance and firing cadence for general infantry, machine gunners, marksmen, and short-range units. Clear sight and a clear firing lane are required before triggering a shot. A remembered position can guide a short search after sight is lost. HMG's own spread and projectile behavior still apply.
 
-Pack authors can provide NPC-capable weapons through the HMG registration categories and NPC eligibility in the gun definition. Loadouts prefer the requested gun or role pool, with a usable HMG fallback if available. HMG supplies NPC reload ammunition according to its entity ammunition rules. Supported NPC third-person renderers include legacy HMG OBJ/MQO and imported Blockbench/TaCZ models. Imported models can specify `thirdperson_hand`. Player presentation uses HMG's existing player render paths.
+Pack authors can provide NPC-capable weapons through the HMG registration categories and NPC eligibility in the gun definition. Loadouts prefer the requested gun or role pool, with a usable HMG fallback if available. HMG supplies NPC reload ammunition according to its entity ammunition rules. Supported NPC third-person renderers include legacy HMG OBJ/MQO and imported Blockbench/TaCZ models. Imported models can specify `thirdperson_hand`. Use an HMG build containing the biped hand bridge for the corrected NPC weapon attachment. Earlier HMG builds use their existing equipment renderer. Player presentation uses HMG's existing player render paths.
 
 See [HMG content packs](../content-packs.md), [animation and model authoring](../animation-authoring.md), and the [legacy firearm registry report](legacy-firearms.md).
 
