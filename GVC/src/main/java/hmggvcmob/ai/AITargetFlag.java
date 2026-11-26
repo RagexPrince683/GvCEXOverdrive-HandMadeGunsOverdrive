@@ -1,8 +1,9 @@
 package hmggvcmob.ai;
 
 import handmadeguns.entity.IFF;
-import hmggvcmob.entity.util.PlatoonOrder;
 import hmggvcmob.entity.IflagBattler;
+import hmggvcmob.entity.util.PlatoonOBJ;
+import hmggvcmob.entity.util.PlatoonOrder;
 import hmggvcmob.tile.TileEntityFlag;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAIBase;
@@ -21,6 +22,7 @@ public class AITargetFlag extends EntityAIBase {
 
     @Override
     public boolean shouldExecute() {
+        if (entity.worldObj.isRemote || !entity.isEntityAlive()) return false;
         if (--cooldown > 0 || !(battler.isPlatoonLeader() || battler.isFree())) return false;
         cooldown = 30 + entity.getRNG().nextInt(30);
         TileEntityFlag flag = TileEntityFlag.findNearest(entity.worldObj, entity.posX, entity.posY,
@@ -40,16 +42,19 @@ public class AITargetFlag extends EntityAIBase {
                     }
                 }
             }
-            if (battler.getPlatoon() != null && battler.getPlatoon().hasCurrentCamp()) {
-                battler.getPlatoon().setOrder(PlatoonOrder.Wait);
-                battler.getPlatoon().setCurrentCamp(false);
+            PlatoonOBJ platoon = battler.getPlatoon();
+            if (platoon != null && platoon.hasCurrentCamp()) {
+                platoon.setOrder(PlatoonOrder.Wait);
+                platoon.setCurrentCamp(false);
             }
             return false;
         }
         if (battler.isFree()) battler.makePlatoon();
+        PlatoonOBJ platoon = battler.getPlatoon();
+        if (platoon == null) return false;
         PlatoonOrder order = battler.isThisAttackAbleCamp(flag.campObj) ? PlatoonOrder.Attack : PlatoonOrder.Defend;
-        battler.getPlatoon().order(order, flag.xCoord + 0.5, flag.yCoord + 1, flag.zCoord + 0.5);
-        if (!battler.getPlatoon().hasCurrentCamp()) battler.getPlatoon().setCurrentCamp(true);
+        platoon.order(order, flag.xCoord + 0.5, flag.yCoord + 1, flag.zCoord + 0.5);
+        if (!platoon.hasCurrentCamp()) platoon.setCurrentCamp(true);
         return true;
     }
 }

@@ -435,3 +435,7 @@ Developer/backend
 - Limit vertical aim changes from the infantry's current pitch. This lets infantry sight targets up and down steep ground even though Minecraft resets the look helper's pitch each tick.
 - Start combat pauses from confirmed shots on handheld and placed guns. Preserve weapon cycling, firing lane checks, and HMG fire modes. Add optional server diagnostics for combat and weapon state.
 - Run NPC shotgun reloads through HMG’s staged reload and shell insertion. Inventory-less NPCs draw from their implicit reserve. Player and inventory-backed reloads continue to use their configured reserves. Drive imported NPC reload animations and the infantry reload pose from synchronized weapon state.
+
+2026-11-25 22:55 — Fix an infantry crash when targeting a flag
+
+- Run flag targeting for living infantry on the server and issue camp orders only after a platoon has been assigned.
