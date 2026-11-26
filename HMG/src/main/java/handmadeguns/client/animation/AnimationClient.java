@@ -10,6 +10,7 @@ import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,6 +27,7 @@ public final class AnimationClient {
     public static final KeyBinding INSPECT = new KeyBinding("Inspect HMG animation", Keyboard.KEY_NONE, "HandmadeGuns");
     private static final Map<ItemStack, List<Entry>> INSTANCES = new WeakHashMap<ItemStack, List<Entry>>();
     private static final Map<ItemStack, Integer> LEGACY_RELOAD_EVENTS = new WeakHashMap<ItemStack, Integer>();
+    private static final Map<EntityLiving, Entry> NPC_INSTANCES = new WeakHashMap<EntityLiving, Entry>();
     private static final ThreadLocal<Scope> ACTIVE = new ThreadLocal<Scope>();
     private static Object world;
     private static ItemStack held;
@@ -34,7 +36,7 @@ public final class AnimationClient {
     private static long ticks;
     private static double seconds;
 
-    public static void clearPlayback() { INSTANCES.clear(); LEGACY_RELOAD_EVENTS.clear(); }
+    public static void clearPlayback() { INSTANCES.clear(); LEGACY_RELOAD_EVENTS.clear(); NPC_INSTANCES.clear(); }
 
     /** Receives one server-authorized reload presentation event on the client thread. */
     public static boolean reloadStarted(int eventId, int slot, int itemId, boolean empty,
@@ -159,7 +161,21 @@ public final class AnimationClient {
             // state must come from the live slot while retaining the stable render identity.
             if (live != null && stack != null && live.getItem() == stack.getItem()) stateStack = live;
         }
-        Entry entry = renderer.animationDefinition == null ? null : entry(identity, owner, type, flags, renderer.animationDefinition);
+        Entry entry = null;
+        if (renderer.animationDefinition != null) {
+            if (flags == 0 && isNpcEquipment(owner, type)) {
+                EntityLiving npc = (EntityLiving)owner;
+                entry = NPC_INSTANCES.get(npc);
+                if (entry == null || entry.definition != renderer.animationDefinition || entry.npcGun != stack.getItem()) {
+                    entry = new Entry(npc, type, flags, renderer.animationDefinition);
+                    entry.npcGun = stack.getItem();
+                    NPC_INSTANCES.put(npc, entry);
+                }
+                entry.lastSeen = seconds;
+            } else {
+                entry = entry(identity, owner, type, flags, renderer.animationDefinition);
+            }
+        }
         Scope scope = new Scope(parent, renderer, identity, stack, stateStack, owner, type, entry);
         ACTIVE.set(scope);
         return scope;
@@ -271,6 +287,7 @@ public final class AnimationClient {
         if (scope.stateStack != scope.stack && scope.stateStack.getItem() instanceof HMGItem_Unified_Guns)
             ammunition = ((HMGItem_Unified_Guns)scope.stateStack.getItem()).remain_Bullet(scope.stateStack);
         entry.settleReloadCompletion();
+        if (entry.npcGun != null && tag != null) observeNpcReload(scope, entry, tag, ammunition);
         boolean reload = entry.reloadBridge.presentationReload(authoritativeReload(scope, false));
         int cock = tag == null ? 0 : tag.getInteger("CockingTime");
         int bolt = tag == null ? 0 : tag.getByte("Bolt");
@@ -433,8 +450,34 @@ public final class AnimationClient {
 
     private static boolean authoritativeReload(Scope scope, boolean fallback) {
         if (scope == null || scope.stateStack == null) return fallback;
+        if (scope.entry != null && scope.entry.npcGun instanceof HMGItem_Unified_Guns)
+            return ((HMGItem_Unified_Guns)scope.entry.npcGun).isReloadInProgress(scope.stateStack);
         NBTTagCompound tag = scope.stateStack.getTagCompound();
         return tag == null ? fallback : tag.getBoolean("IsReloading");
+    }
+
+    public static boolean isNpcEquipment(Object owner, IItemRenderer.ItemRenderType context) {
+        return owner instanceof EntityLiving && context == IItemRenderer.ItemRenderType.EQUIPPED;
+    }
+
+    private static void observeNpcReload(Scope scope, Entry entry, NBTTagCompound tag, int ammunition) {
+        HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)entry.npcGun;
+        ItemStack stack = scope.stateStack;
+        boolean reloading = gun.isReloadInProgress(stack);
+        boolean activeInsertion = tag.getBoolean("IsReloading");
+        ReloadAnimationBridge.Stage stage = reloading ? gun.reloadPresentationStage(stack) : ReloadAnimationBridge.Stage.END;
+        boolean changed = reloading != entry.npcReloading || reloading && activeInsertion
+                && (stage != entry.npcReloadStage || stage == ReloadAnimationBridge.Stage.INSERT
+                && (!entry.npcActiveInsertion || ammunition > entry.ammunition));
+        entry.npcReloading = reloading;
+        entry.npcActiveInsertion = activeInsertion;
+        if (!changed) return;
+        entry.npcReloadStage = stage;
+        int itemId = Item.getIdFromItem(entry.npcGun);
+        boolean empty = stage == ReloadAnimationBridge.Stage.INTRO ? gun.reloadPresentationStartedEmpty(stack) : ammunition == 0;
+        ReloadAnimationBridge.StartEvent event = new ReloadAnimationBridge.StartEvent(++entry.npcReloadEvent, 0, itemId, empty, stage);
+        entry.reloadRequest = entry.reloadBridge.accept(event, 0, itemId, entry.definition.clips.keySet());
+        entry.reloadPlaybackEndedAt = Double.NaN;
     }
 
     private static void validateReloadIdentity(Scope scope) {
@@ -505,6 +548,10 @@ public final class AnimationClient {
         final LocomotionAnimationBridge.State locomotion = new LocomotionAnimationBridge.State();
         boolean initialized, recoil, requestRestart;
         int cock, bolt, ammunition;
+        Item npcGun;
+        boolean npcReloading, npcActiveInsertion;
+        int npcReloadEvent;
+        ReloadAnimationBridge.Stage npcReloadStage;
         ReloadAnimationBridge.Request reloadRequest;
         String request;
         AnimationController.Layer requestLayer;

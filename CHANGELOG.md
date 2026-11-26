@@ -424,3 +424,14 @@ Developer/backend
 - Keep Patrol and Defend in GVCOverdrive so the command device loads with earlier HMG releases. Preserve squad save and packet IDs and expose the legacy HMG movement modes through compatibility adapters.
 - Use the shared NPC hand attachment when HMG provides it and the installed HMG equipment renderer otherwise.
 - Rename the display and archive to GVCOverdrive. Give it its own `version.properties`, publish that version to both FML entries, and keep `GVCMob` and `GVCGuns` registry IDs. Document the new artifact name and module-specific version commands.
+
+2026-11-25 21:22 — Use explicit release versions for HMG and GVCOverdrive
+
+- Use each module’s mod_version as the complete version in its production JAR and metadata. Remove automatic build counters and the flags that suspended them.
+
+2026-11-25 21:40 — Recover stalled infantry engagements and restore shotgun reloads
+
+- Check acquired targets for line of sight independently of the initial detection cone. Give infantry time to complete a flank and make stalled engagements fall back to reacquisition or squad orders. Retain the stationary defend perimeter.
+- Limit vertical aim changes from the infantry's current pitch. This lets infantry sight targets up and down steep ground even though Minecraft resets the look helper's pitch each tick.
+- Start combat pauses from confirmed shots on handheld and placed guns. Preserve weapon cycling, firing lane checks, and HMG fire modes. Add optional server diagnostics for combat and weapon state.
+- Run NPC shotgun reloads through HMG’s staged reload and shell insertion. Inventory-less NPCs draw from their implicit reserve. Player and inventory-backed reloads continue to use their configured reserves. Drive imported NPC reload animations and the infantry reload pose from synchronized weapon state.

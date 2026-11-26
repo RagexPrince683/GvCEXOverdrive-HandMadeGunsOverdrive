@@ -122,11 +122,13 @@ gvc.order.mode.Defend=Defend
 gvc.order.mode.Attack=Attack
 gvc.order.mode.Land=Land
 gvc.config.infantry.reaction=Infantry Reaction Time
-gvc.config.infantry.reaction.tooltip=Minimum visible ticks before infantry start firing.
+gvc.config.infantry.reaction.tooltip=Base delay in ticks between acquiring a target and firing.
 gvc.config.infantry.accuracy=Infantry Aim Error
 gvc.config.infantry.accuracy.tooltip=Scales infantry aim error. Weapon spread still applies.
 gvc.config.infantry.aggression=Infantry Detection Range
 gvc.config.infantry.aggression.tooltip=Scales the distance at which infantry search for new targets.
+gvc.config.infantry.diagnostics=Infantry Combat Diagnostics
+gvc.config.infantry.diagnostics.tooltip=Logs infantry combat transitions, stalled actions and ammunition gains on the server.
 
 achievement.No_place_to_HIDE=No Place to Hide
 achievement.No_place_to_HIDE.desc=Draw the attention of a guerrilla.

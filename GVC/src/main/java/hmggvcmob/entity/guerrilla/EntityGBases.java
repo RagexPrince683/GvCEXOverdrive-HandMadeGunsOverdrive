@@ -542,7 +542,8 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 		Vec3 vec31 = Vec3.createVectorHelper(p_70685_1_.posX, p_70685_1_.posY + p_70685_1_.getEyeHeight(), p_70685_1_.posZ);
 
 		//衝突するブロックを調べる
-		return GunsUtils.getMovingObjectPosition_forBlock_CheckEmpty(worldObj,vec3, vec31,3,new Block[] {Blocks.glass,Blocks.glass_pane,Blocks.stained_glass,Blocks.stained_glass_pane}) && canSeeTarget(p_70685_1_);
+		return GunsUtils.getMovingObjectPosition_forBlock_CheckEmpty(worldObj,vec3, vec31,3,new Block[] {Blocks.glass,Blocks.glass_pane,Blocks.stained_glass,Blocks.stained_glass_pane})
+				&& (p_70685_1_ == getAttackTarget() || getDistanceSqToEntity(p_70685_1_) <= 16 || canSeeTarget(p_70685_1_));
 	}
 
 	/**
@@ -967,8 +968,8 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 		if(ridingEntity instanceof PlacedGunEntity && getAimPos() != null){
 			double[] yp = ((PlacedGunEntity) ridingEntity).getAngleToTarget(getAimPos());
 			this.rotationPitch = (float) yp[1];
-			this.rotationYaw = (float) yp[1];
-			this.rotationYawHead = (float) yp[1];
+			this.rotationYaw = (float) yp[0];
+			this.rotationYawHead = (float) yp[0];
 		}
 	}
 

@@ -480,7 +480,8 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 		Vec3 vec3 = Vec3.createVectorHelper(this.posX, this.posY + this.getEyeHeight(), this.posZ);
 		Vec3 vec31 = Vec3.createVectorHelper(p_70685_1_.posX, p_70685_1_.posY + p_70685_1_.getEyeHeight(), p_70685_1_.posZ);
 
-		return GunsUtils.getMovingObjectPosition_forBlock_CheckEmpty(worldObj,vec3, vec31,10,new Block[] {Blocks.glass,Blocks.glass_pane,Blocks.stained_glass,Blocks.stained_glass_pane}) && canSeeTarget(p_70685_1_);
+		return GunsUtils.getMovingObjectPosition_forBlock_CheckEmpty(worldObj,vec3, vec31,10,new Block[] {Blocks.glass,Blocks.glass_pane,Blocks.stained_glass,Blocks.stained_glass_pane})
+				&& (p_70685_1_ == getAttackTarget() || getDistanceSqToEntity(p_70685_1_) <= 16 || canSeeTarget(p_70685_1_));
 	}
 
 	@Override

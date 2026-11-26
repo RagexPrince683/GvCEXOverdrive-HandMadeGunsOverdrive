@@ -215,7 +215,7 @@ public class PlatoonOBJ {
         if (getOrder() == PlatoonOrder.Defend) {
             return target.getDistanceSq(PlatoonTargetPos.x, PlatoonTargetPos.y, PlatoonTargetPos.z) <= 24 * 24;
         }
-        return leader == null || leader.entity.getDistanceSqToEntity(target) <= 48 * 48;
+        return true;
     }
 
     public void update(EntityLiving caller) {

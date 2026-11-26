@@ -7,6 +7,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MathHelper;
 
 @SideOnly(Side.CLIENT)
@@ -37,7 +38,9 @@ public class GVCModelGuerrilla extends ModelBiped {
         if (held == null || !(held.getItem() instanceof HMGItem_Unified_Guns)) return;
 
         boolean dead = !((EntityLivingBase)entity).isEntityAlive();
-        boolean reload = !dead && held.hasTagCompound() && held.getTagCompound().getBoolean("IsReloading");
+        NBTTagCompound weaponState = held.getTagCompound();
+        boolean reload = !dead && weaponState != null
+                && (weaponState.getBoolean("IsReloading") || weaponState.getInteger("PerShellInterruptTime") > 0);
         boolean aim = !dead && !reload && entity.isSneaking() && !entity.isSprinting();
         float pitch = -1.57F;
         if (dead) pitch += 1.02F;

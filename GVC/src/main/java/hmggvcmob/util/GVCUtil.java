@@ -14,10 +14,11 @@ import static hmggvcmob.GVCMobPlus.VEHICLES_ENABLED;
 
 public class GVCUtil {
 	public static double audibleGunshotLevel(Entity entity) {
-		if (!entity.getEntityData().hasKey("HMGGunshotTick")) return 0;
-		long age = entity.worldObj.getTotalWorldTime() - entity.getEntityData().getLong("HMGGunshotTick");
+		Entity gunUser = entity.ridingEntity instanceof PlacedGunEntity ? entity.ridingEntity : entity;
+		if (!gunUser.getEntityData().hasKey("HMGGunshotTick")) return 0;
+		long age = entity.worldObj.getTotalWorldTime() - gunUser.getEntityData().getLong("HMGGunshotTick");
 		if (age < 0 || age > 200) return 0;
-		return entity.getEntityData().getFloat("GunshotLevel") * Math.pow(0.95, age);
+		return gunUser.getEntityData().getFloat("GunshotLevel") * Math.pow(0.95, age);
 	}
 
 	public static boolean spawnFromItem(World world, Entity entity, EntityPlayer player, ItemStack stack) {

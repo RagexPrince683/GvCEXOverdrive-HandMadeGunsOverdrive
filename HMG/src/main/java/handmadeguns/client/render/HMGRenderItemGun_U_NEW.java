@@ -463,8 +463,10 @@ public class HMGRenderItemGun_U_NEW implements IItemRenderer {
 		NBTTagCompound reloadTag = handmadeguns.animation.ReloadAnimationBridge.legacyTag(nbt,
 				live == null ? null : live.getTagCompound(), localFirstPerson,
 				live != null && live.getItem() == gunstack.getItem());
+		boolean npcEquipped = !isUnder && !isPlacedGun && data != null && data.length > 1
+				&& handmadeguns.client.animation.AnimationClient.isNpcEquipment(data[1], type);
 		boolean currentReloadState = handmadeguns.client.animation.AnimationClient.reloadState(
-				partsRender_gun, reloadTag.getBoolean("IsReloading"));
+				partsRender_gun, npcEquipped ? gunitem.isReloadInProgress(gunstack) : reloadTag.getBoolean("IsReloading"));
 		partsRender_gun.gunSkinTexture = HMGGunSkinTextures.available(HMGGunSkinRegistry.appliedTexture(gunstack));
 		partsRender_gun.renderGunSkinOverlay = false;
 		items[0] = null;

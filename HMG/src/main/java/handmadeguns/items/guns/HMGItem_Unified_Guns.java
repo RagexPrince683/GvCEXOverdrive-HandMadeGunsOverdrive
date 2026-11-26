@@ -742,8 +742,11 @@ public class HMGItem_Unified_Guns extends Item {
 				}
 				boolean perShellInterruptWindow = isPerShellReload(itemstack) && nbt.getInteger(PER_SHELL_INTERRUPT_TIME_TAG) > 0;
 				boolean reloadRequested = nbt.getBoolean("IsReloading");
-				boolean canAutoReload = !requiresManualReload(entity);
-				if (reloadRequested || perShellInterruptWindow || (canAutoReload && remain_Bullet(itemstack) <= 0)) {
+				if (!reloadRequested && !perShellInterruptWindow && !world.isRemote
+						&& !requiresManualReload(entity) && remain_Bullet(itemstack) <= 0) {
+					reloadRequested = beginReload(itemstack, world, entity, nbt);
+				}
+				if (reloadRequested || perShellInterruptWindow) {
 					nbt.setInteger("CockingTime", 0);
 					nbt.setBoolean("Cocking", true);
 					if (!perShellInterruptWindow) {
@@ -755,7 +758,6 @@ public class HMGItem_Unified_Guns extends Item {
 						} catch (NoSuchMethodException e) {
 							e.printStackTrace();
 						}
-						if (!nbt.getBoolean("IsReloading")) nbt.setBoolean("IsReloading", true);
 						if (!isPerShellReload(itemstack) && !nbt.getBoolean("detached")) returnInternalMagazines(itemstack, entity);
 					}
 					proceedreload(itemstack, world, entity, nbt, i);
@@ -1750,17 +1752,12 @@ public class HMGItem_Unified_Guns extends Item {
 					}
 				}
 
-				// Reset cocking state after reload
-				if (gunInfo.needFirstCock) {
-					nbt.setBoolean("cocking", false);
-				} else {
-					nbt.setBoolean("cocking", true);
-				}
+				nbt.setBoolean("Cocking", !gunInfo.needFirstCock || hasNextPerShellReload);
 
 				nbt.setBoolean("IsReloading", false);
 				nbt.setBoolean("WaitReloading", false);
 				nbt.setInteger("RloadTime", 0);
-				nbt.setInteger(PER_SHELL_INTERRUPT_TIME_TAG, hasNextPerShellReload ? getPerShellInterruptTicks(nbt) : 0);
+				nbt.setInteger(PER_SHELL_INTERRUPT_TIME_TAG, hasNextPerShellReload ? Math.max(1, getPerShellInterruptTicks(nbt)) : 0);
 				nbt.setBoolean("Bursting", false);
 				nbt.setInteger("RemainBurstround", getburstCount(nbt.getInteger("HMGMode")));
 			} else if (nbt.getBoolean("IsReloading")) {
@@ -1784,8 +1781,13 @@ public class HMGItem_Unified_Guns extends Item {
 			nbt.setBoolean("IsReloading", false);
 			nbt.setBoolean("WaitReloading", false);
 			nbt.setInteger("RloadTime", 0);
+			nbt.setInteger(PER_SHELL_PHASE_TAG, PER_SHELL_PHASE_NONE);
 			return true;
 		}
+		return beginReload(itemstack, world, entity, nbt);
+	}
+
+	private boolean beginReload(ItemStack itemstack, World world, Entity entity, NBTTagCompound nbt) {
 		if (nbt.getBoolean("IsReloading") || remain_Bullet(itemstack) >= max_Bullet(itemstack) || !canreloadBullets(itemstack, world, entity)) {
 			return false;
 		}
@@ -1815,6 +1817,16 @@ public class HMGItem_Unified_Guns extends Item {
 			return ReloadAnimationBridge.Stage.STANDARD;
 		return itemstack.getTagCompound().getInteger(PER_SHELL_PHASE_TAG) == PER_SHELL_PHASE_INTRO
 				? ReloadAnimationBridge.Stage.INTRO : ReloadAnimationBridge.Stage.INSERT;
+	}
+
+	public boolean isReloadInProgress(ItemStack itemstack) {
+		NBTTagCompound nbt = itemstack.getTagCompound();
+		return nbt != null && (nbt.getBoolean("IsReloading") || nbt.getInteger(PER_SHELL_INTERRUPT_TIME_TAG) > 0);
+	}
+
+	public boolean reloadPresentationStartedEmpty(ItemStack itemstack) {
+		NBTTagCompound nbt = itemstack.getTagCompound();
+		return nbt != null && nbt.getBoolean(PER_SHELL_STARTED_EMPTY_TAG);
 	}
 
 	private boolean requiresManualReload(Entity entity) {
@@ -1917,13 +1929,21 @@ public class HMGItem_Unified_Guns extends Item {
 			return commitOnePerShellReload(itemstack, world, null, currentLoadedAmmo);
 		}
 
-		IInventory inventory = getInventory_VehicleCheck(entity);
-		if (inventory != null && commitOnePerShellReload(itemstack, world, inventory, currentLoadedAmmo)) {
+		IInventory vehicleInventory = getInventory_VehicleCheck(entity);
+		if (vehicleInventory != null && commitOnePerShellReload(itemstack, world, vehicleInventory, currentLoadedAmmo)) {
 			return true;
 		}
 
-		inventory = getInventory_fromEntity(entity);
-		return inventory != null && commitOnePerShellReload(itemstack, world, inventory, currentLoadedAmmo);
+		IInventory inventory = getInventory_fromEntity(entity);
+		if (inventory != null) return commitOnePerShellReload(itemstack, world, inventory, currentLoadedAmmo);
+		// Infantry without inventories use the same implicit reserve as their magazine-fed guns.
+		return vehicleInventory == null && hasInventorylessNpcReserve(entity)
+				&& commitOnePerShellReload(itemstack, world, null, currentLoadedAmmo);
+	}
+
+	private boolean hasInventorylessNpcReserve(Entity entity) {
+		return !requiresManualReload(entity) && (entity instanceof EntityLiving
+				|| entity instanceof PlacedGunEntity && entity.riddenByEntity instanceof EntityLiving);
 	}
 
 	private boolean commitOnePerShellReload(ItemStack itemstack, World world, IInventory inventory, int currentLoadedAmmo) {
@@ -2151,30 +2171,12 @@ public class HMGItem_Unified_Guns extends Item {
 	}
 	public void reloadBullets(ItemStack itemstack, World world, Entity entity){
 		itemstack.getTagCompound().setBoolean("detached",false);
-		if (handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity) && get_selectingMagazine(itemstack) != null) {
-			if (isPerShellReload(itemstack)) commitOnePerShellReload(itemstack, world, entity);
-			else consumeAndSetMagazine(itemstack, world, null, true);
+		if (isPerShellReload(itemstack)) {
+			commitOnePerShellReload(itemstack, world, entity);
 			return;
 		}
-
-		if(isPerShellReload(itemstack)){
-			boolean loadedShell = false;
-			IInventory inventory = getInventory_VehicleCheck(entity);
-			if(inventory != null){
-				loadedShell = consumeAndSetMagazine(itemstack,world,inventory);
-			}
-			if(!loadedShell){
-				inventory = getInventory_fromEntity(entity);
-				if(inventory != null){
-					loadedShell = consumeAndSetMagazine(itemstack,world,inventory);
-				}
-			}
-			if(!loadedShell){
-				NBTTagCompound nbt = itemstack.getTagCompound();
-				nbt.setBoolean("IsReloading", false);
-				nbt.setBoolean("WaitReloading", false);
-				nbt.setInteger("RloadTime", 0);
-			}
+		if (handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity) && get_selectingMagazine(itemstack) != null) {
+			consumeAndSetMagazine(itemstack, world, null, true);
 			return;
 		}
 
@@ -2204,12 +2206,13 @@ public class HMGItem_Unified_Guns extends Item {
 		}
 		if(get_selectingMagazine(itemstack) == null)return true;
 		if(handmadeguns.Util.HMGAmmoPolicy.hasInfiniteAmmo(entity))return true;
-		IInventory inventory = getInventory_VehicleCheck(entity);
-		if(inventory != null && searchMagazines(itemstack,world,inventory)!= null){
+		IInventory vehicleInventory = getInventory_VehicleCheck(entity);
+		if(vehicleInventory != null && searchMagazines(itemstack,world,vehicleInventory)!= null){
 			return true;
 		}
-		inventory = getInventory_fromEntity(entity);
+		IInventory inventory = getInventory_fromEntity(entity);
 		if(inventory != null)return searchMagazines(itemstack,world,inventory) != null;
+		if (isPerShellReload(itemstack)) return vehicleInventory == null && hasInventorylessNpcReserve(entity);
 		else return !(entity instanceof PlacedGunEntity) || !(entity.riddenByEntity == null || entity.riddenByEntity instanceof EntityPlayer);
 	}
 	public IInventory getInventory_VehicleCheck(Entity entity){

@@ -68,6 +68,7 @@ public class GVCMobPlus
     public static int cfg_infantryReactionTicks;
     public static double cfg_infantryAimError;
     public static double cfg_infantryAggression;
+    public static boolean cfg_infantryCombatDiagnostics;
     public static int cfg_guerrillaspawnnomal;
     public static int cfg_guerrillaspawntank;
     public static boolean cfg_guerrillaspawndrawn;
@@ -224,11 +225,14 @@ public class GVCMobPlus
         cfg_noVanillaMob = lconf.get("world", "cfg_noVanillaMob", false).getBoolean(false);
         cfg_modeGorC = lconf.get("render", "cfg_ModeGorC", true).getBoolean(true);
         cfg_infantryReactionTicks = lconf.getInt("reactionTicks", "Infantry AI", 14, 4, 60,
-                "Minimum visible ticks before infantry start firing.", "gvc.config.infantry.reaction");
+                "Base delay in ticks between acquiring a target and firing.", "gvc.config.infantry.reaction");
         cfg_infantryAimError = lconf.getFloat("aimErrorMultiplier", "Infantry AI", 1F, 0F, 3F,
                 "Scales infantry aim error. Weapon spread still applies.", "gvc.config.infantry.accuracy");
         cfg_infantryAggression = lconf.getFloat("acquisitionRangeMultiplier", "Infantry AI", 0.75F, 0.1F, 1F,
                 "Scales the distance at which infantry search for new targets.", "gvc.config.infantry.aggression");
+        cfg_infantryCombatDiagnostics = lconf.getBoolean("combatDiagnostics", "Infantry AI", false,
+                "Logs infantry combat transitions, stalled actions and ammunition gains on the server.",
+                "gvc.config.infantry.diagnostics");
         cfg_guerrillasrach = lconf.get("Guerrilla", "cfg_GuerrillaMobSrach", 60).getDouble(60.0D);
         cfg_guerrillaspawnnomal = Math.max(0, Math.min(1000, lconf.get("Guerrilla", "cfg_GuerrillaSpawnNomal", 5).getInt(5)));
         cfg_guerrillaspawndrawn = lconf.get("Guerrilla", "cfg_CanSpawndrawn", true).getBoolean(true);

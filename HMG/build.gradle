@@ -1,9 +1,4 @@
-ext.overdriveVersioning = [
-	defaultModVersion: '2.7.0',
-	keepBuildNumberProperty: 'hmgKeepBuildNumber',
-	displayName: 'Handmade Guns Overdrive',
-	logName: 'HMG'
-]
+ext.defaultModVersion = '2.7.0'
 apply from: rootProject.file('gradle/overdrive-version.gradle')
 
 // ===========================

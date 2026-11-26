@@ -75,6 +75,23 @@ public class MoveToPositionMng {
         return searches;
     }
 
+    public boolean hasArrived() {
+        double dx = destination.x - entity.posX;
+        double dz = destination.z - entity.posZ;
+        return dx * dx + dz * dz < 0.81 && Math.abs(destination.y - entity.boundingBox.minY) < 1.1;
+    }
+
+    public int getFailures() {
+        return failures;
+    }
+
+    public String getPathStatus() {
+        if (speed == 0) return "idle";
+        if (hasArrived()) return "arrived";
+        if (ownedPath != null && entity.getNavigator().getPath() == ownedPath && !entity.getNavigator().noPath()) return "following";
+        return failures > 0 ? "retry" : "pending";
+    }
+
     private void clearOwnedPath() {
         if (ownedPath != null && entity.getNavigator().getPath() == ownedPath) {
             entity.getNavigator().clearPathEntity();
@@ -89,7 +106,7 @@ public class MoveToPositionMng {
         double dx = destination.x - entity.posX;
         double dy = destination.y - entity.boundingBox.minY;
         double dz = destination.z - entity.posZ;
-        if (dx * dx + dz * dz < 0.81 && Math.abs(dy) < 1.1) {
+        if (hasArrived()) {
             clearOwnedPath();
             failures = 0;
             return;

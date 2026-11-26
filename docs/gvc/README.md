@@ -38,6 +38,8 @@ New saves store squad membership, leadership, and orders per dimension. Older sa
 
 Infantry use HMG unified firearms and the weapon's selector, bolt, magazine, reload sequence, and projectile model. GVC chooses the engagement distance and firing cadence for general infantry, machine gunners, marksmen, and short-range units. Clear sight and a clear firing lane are required before triggering a shot. A remembered position can guide a short search after sight is lost. HMG's own spread and projectile behavior still apply.
 
+Infantry can hold a clear firing position, move around an obstruction, or break off a stalled engagement. A sustained break in sight can prompt a reload before the weapon is empty. Use the matching HMG build for shell-by-shell NPC reloads and synchronized TaCZ reload animation.
+
 Pack authors can provide NPC-capable weapons through the HMG registration categories and NPC eligibility in the gun definition. Loadouts prefer the requested gun or role pool, with a usable HMG fallback if available. HMG supplies NPC reload ammunition according to its entity ammunition rules. Supported NPC third-person renderers include legacy HMG OBJ/MQO and imported Blockbench/TaCZ models. Imported models can specify `thirdperson_hand`. Use an HMG build containing the biped hand bridge for the corrected NPC weapon attachment. Earlier HMG builds use their existing equipment renderer. Player presentation uses HMG's existing player render paths.
 
 See [HMG content packs](../content-packs.md), [animation and model authoring](../animation-authoring.md), and the [legacy firearm registry report](legacy-firearms.md).
@@ -60,9 +62,10 @@ The keys below use the names generated in `GVCMob.cfg`. On a dedicated server, e
 | `Guerrilla` | `cfg_Flagspawninterval` | `2000` | Sets the default beacon reinforcement interval in ticks. |
 | `Soldier` | `cfg_SoldierSpawnNormal` | `2.0` | Base weight for natural UNION spawns. |
 | `Soldier` | `ignoreSoldierTargetEntityClass` | empty | Comma-separated entity registry names omitted by friendly infantry target selection. |
-| `Infantry AI` | `reactionTicks` | `14` | Minimum visible reaction time before infantry fire, with a small random delay. |
+| `Infantry AI` | `reactionTicks` | `14` | Base delay after acquiring a target, with a small random variation. |
 | `Infantry AI` | `aimErrorMultiplier` | `1.0` | Scales NPC aim variation independently of weapon spread. |
 | `Infantry AI` | `acquisitionRangeMultiplier` | `0.75` | Scales the range for new infantry target searches. |
+| `Infantry AI` | `combatDiagnostics` | `false` | Logs firing and movement decisions, stalled actions, path retries and ammunition gains on the server. |
 
 Spawn weights, beacon reinforcement strength, and encounter frequency control how much infantry activity a server carries. Route searches and target acquisition are staggered. Infantry navigation keeps usable paths and waits for the necessary chunks to be loaded before computing a new route.
 
