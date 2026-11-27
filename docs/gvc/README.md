@@ -1,6 +1,6 @@
 # GVCOverdrive
 
-GVCOverdrive adds infantry, rival factions, camps, supply and raid beacons, and player-commanded PMC squads. Handmade Guns Overdrive supplies the weapons, magazines, and projectile mechanics. GVC's equipment, infantry, and camp systems are packaged together.
+GVCOverdrive adds recruitable infantry, persistent faction occupation, patrols, camps, and village outposts. Handmade Guns Overdrive supplies the weapons, magazines, and projectile mechanics. The [military management guide](military.md) covers recruiting, currency, food, presets, and server configuration.
 
 ## Getting started
 
@@ -13,7 +13,7 @@ On first launch, look for `config/GVCMob.cfg`, `config/GVCGuns.cfg`, and `config
 - **ALLIES Radical Party** guerrillas fight players and allied troops. Units include riflemen, marksmen, machine gunners, grenadiers, shotgun infantry, and specialized variants.
 - **UNION** soldiers are friendly to players and fight guerrillas. The UNION flag can draw reinforcement and defense activity.
 - **PMC** infantry are friendly to players and can be issued squad orders using the Squad Command Device.
-- Player respawn beacons can rescue a player from a lethal hit within range. A raid supply beacon periodically attempts reinforcement waves around its area. Which beacons are friendly is shown in the HUD.
+- Military beacons reinforce their garrisons and patrols. A raid supply beacon still supports raid and resupply encounters. Beacon player respawns are optional, and normal vanilla respawn is the default.
 - Camp loot, gun boxes, and infantry loadouts use HMG items. GVC also supplies health packs, portable equipment, practice targets, and stationary sentries.
 
 Natural spawns depend on difficulty, biome, and GVC configuration. Use a difficulty above Peaceful for regular hostile encounters. Spawners, raids, and natural spawning have different entry points.
@@ -30,7 +30,7 @@ Hold the **Squad Command Device**. Sneak and right-click to cycle orders. Right-
 | Defend | Hold around the marked area and engage nearby threats. |
 | Attack | Advance toward the marked area and engage targets the infantry can detect. |
 
-A platoon has up to eight members. Its leader sets the route and other members follow with spacing. Infantry can engage independently and return to formation after losing a target. A surviving member takes leadership when the leader dies. Camp-oriented factions can acquire attack or defense orders from nearby flags.
+A legacy platoon has up to eight members. Recruited leaders take command based on rank and have preset-defined capacities. The leader sets the route and other members follow with spacing. Infantry can engage independently and return to formation after losing a target. A surviving member takes leadership when the leader dies. Camp-oriented factions can acquire attack or defense orders from nearby flags.
 
 New saves store squad membership, leadership, and orders per dimension. Older saves that only stored an order position retain that destination. Those records lack group IDs, so reconstructed units can start in separate platoons.
 
@@ -40,7 +40,7 @@ Infantry use HMG unified firearms and the weapon's selector, bolt, magazine, rel
 
 Infantry can hold a clear firing position, move around an obstruction, or break off a stalled engagement. A sustained break in sight can prompt a reload before the weapon is empty. Use the matching HMG build for shell-by-shell NPC reloads and synchronized TaCZ reload animation.
 
-Pack authors can provide NPC-capable weapons through the HMG registration categories and NPC eligibility in the gun definition. Loadouts prefer the requested gun or role pool, with a usable HMG fallback if available. HMG supplies NPC reload ammunition according to its entity ammunition rules. Supported NPC third-person renderers include legacy HMG OBJ/MQO and imported Blockbench/TaCZ models. Imported models can specify `thirdperson_hand`. Use an HMG build containing the biped hand bridge for the corrected NPC weapon attachment. Earlier HMG builds use their existing equipment renderer. Player presentation uses HMG's existing player render paths.
+GVCO discovers registered HMG firearms and publishes the NPC compatibility report at startup. Preset loadouts prefer the requested gun and then a compatible pool. HMG supports unlimited reserve ammunition for GVCO infantry, including shell-by-shell reloads. Supported NPC third-person renderers include legacy HMG OBJ/MQO and imported Blockbench/TaCZ models. Imported models can specify `thirdperson_hand` for weapon placement.
 
 See [HMG content packs](../content-packs.md), [animation and model authoring](../animation-authoring.md), and the [legacy firearm registry report](legacy-firearms.md).
 

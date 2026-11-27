@@ -8,6 +8,9 @@ import hmggvcmob.camp.CampObjAndPos;
 import hmggvcmob.entity.IGVCmob;
 import hmggvcmob.entity.IflagBattler;
 import hmggvcmob.entity.guerrilla.EntityGBases;
+import hmggvcmob.military.MilitaryConfig;
+import hmggvcmob.military.MilitaryOccupation;
+import hmggvcmob.military.Occupation;
 import hmggvcmob.world.WorldSavedData_Flag;
 import littleMaidMobX.LMM_LittleMaidMobX;
 import net.minecraft.entity.Entity;
@@ -21,7 +24,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -45,7 +47,8 @@ public class TileEntityFlag extends TileEntity {
     public boolean raidMode = true;
     public boolean vehicleBaseType;
     public CampObj campObj;
-    private CampObjAndPos territory;
+    private Occupation territory;
+    private String militaryType = "";
     private boolean wasCountingDown;
 
     public TileEntityFlag() {}
@@ -64,6 +67,7 @@ public class TileEntityFlag extends TileEntity {
         raidMode = !tag.hasKey("raidMode") || tag.getBoolean("raidMode");
         vehicleBaseType = tag.getBoolean("vehicleBaseType");
         campObj = campsHash.get(tag.getString("campObj"));
+        militaryType = tag.getString("MilitaryType");
     }
 
     @Override
@@ -74,6 +78,7 @@ public class TileEntityFlag extends TileEntity {
         tag.setBoolean("raidMode", raidMode);
         tag.setBoolean("vehicleBaseType", vehicleBaseType);
         if (campObj != null) tag.setString("campObj", campObj.campName);
+        if (!militaryType.isEmpty()) tag.setString("MilitaryType", militaryType);
     }
 
     @Override
@@ -100,8 +105,17 @@ public class TileEntityFlag extends TileEntity {
     }
 
     private void clearAttacked() {
-        if (territory != null) territory.attacked = false;
         territory = null;
+    }
+
+    public void designate(String type) {
+        militaryType = type;
+        markDirty();
+    }
+
+    public Occupation occupation() {
+        if (territory == null) setFlagData();
+        return territory;
     }
 
     @Override
@@ -112,6 +126,11 @@ public class TileEntityFlag extends TileEntity {
         }
         if (campObj == null) return;
         if (territory == null) setFlagData();
+        if (!vehicleBaseType && !campObj.isOneTime && !campObj.isRaidType
+                && (MilitaryConfig.occupation || MilitaryConfig.recruitment)) {
+            MilitaryOccupation.update(this, territory, worldObj);
+            if (MilitaryConfig.occupation) return;
+        }
         if (worldObj.difficultySetting == EnumDifficulty.PEACEFUL) {
             territory.attacked = false;
             return;
@@ -225,39 +244,22 @@ public class TileEntityFlag extends TileEntity {
 
     public void setFlagData() {
         if (worldObj == null || worldObj.isRemote || campObj == null) return;
-        territory = new CampObjAndPos(new int[]{xCoord, yCoord, zCoord}, campObj);
         WorldSavedData_Flag data = WorldSavedData_Flag.get(worldObj);
-        int chunkX = xCoord >> 4;
-        int chunkZ = zCoord >> 4;
-        for (int dx = -campObj.flagWidth; dx <= campObj.flagWidth; dx++) {
-            for (int dz = -campObj.flagWidth; dz <= campObj.flagWidth; dz++) {
-                ChunkCoordIntPair key = new ChunkCoordIntPair(chunkX + dx, chunkZ + dz);
-                CampObjAndPos previous = data.campObjHashMap.get(key);
-                if (previous == null || owns(previous)) {
-                    data.campObjHashMap.put(key, territory);
-                    if (previous == null || previous.campObj != campObj) data.markDirty();
-                }
-            }
+        String type = militaryType.isEmpty() ? campObj.isRaidType ? "raid" : "base" : militaryType;
+        territory = data.getOrCreate(xCoord, yCoord, zCoord, campObj, type);
+        if (!territory.established) {
+            territory.established = true;
+            territory.control = MathHelper.clamp_int(flagHeight * MilitaryConfig.captureStrength
+                    / Math.max(1, campObj.maxFlagHeight), 0, MilitaryConfig.captureStrength);
+            territory.nextReinforcement = worldObj.getTotalWorldTime() + MilitaryConfig.reinforcementInterval;
+            data.markDirty();
         }
+        campObj = territory.campObj;
     }
 
     public void removeFlagData() {
         if (worldObj == null || worldObj.isRemote || campObj == null) return;
-        WorldSavedData_Flag data = WorldSavedData_Flag.get(worldObj);
-        for (int dx = -campObj.flagWidth; dx <= campObj.flagWidth; dx++) {
-            for (int dz = -campObj.flagWidth; dz <= campObj.flagWidth; dz++) {
-                ChunkCoordIntPair key = new ChunkCoordIntPair((xCoord >> 4) + dx, (zCoord >> 4) + dz);
-                CampObjAndPos previous = data.campObjHashMap.get(key);
-                if (previous != null && owns(previous)) {
-                    data.campObjHashMap.remove(key);
-                    data.markDirty();
-                }
-            }
-        }
-    }
-
-    private boolean owns(CampObjAndPos camp) {
-        return camp.flagPos[0] == xCoord && camp.flagPos[1] == yCoord && camp.flagPos[2] == zCoord;
+        WorldSavedData_Flag.get(worldObj).remove(xCoord, yCoord, zCoord);
     }
 
     private int groupSize(int average) {
@@ -320,7 +322,7 @@ public class TileEntityFlag extends TileEntity {
             int x = MathHelper.floor_double(xCoord + Math.cos(angle) * radius);
             int z = MathHelper.floor_double(zCoord + Math.sin(angle) * radius);
             if (!worldObj.getChunkProvider().chunkExists(x >> 4, z >> 4)) continue;
-            CampObjAndPos claimed = data.campObjHashMap.get(new ChunkCoordIntPair(x >> 4, z >> 4));
+            CampObjAndPos claimed = data.atTerritory(x + .5, z + .5, false);
             if (claimed != null && campObj.raiderIgnoreList != null) {
                 boolean ignored = false;
                 for (CampObj ignoredCamp : campObj.raiderIgnoreList) ignored |= claimed.campObj == ignoredCamp;

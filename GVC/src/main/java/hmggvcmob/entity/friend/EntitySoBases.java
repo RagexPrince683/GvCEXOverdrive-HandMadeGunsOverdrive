@@ -324,7 +324,6 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 			summoningVehicle = null;
 		}
 		if(!worldObj.isRemote && this.getAttackTarget() != null && (this.getAttackTarget().isDead || is_this_entity_friend(this.getAttackTarget())))this.setAttackTarget(null);
-		if(this.getAttackTarget() != null && (this.getAttackTarget() instanceof EntitySoBases || this.getAttackTarget() instanceof EntityPlayer || (islmmloaded && this.getAttackTarget() instanceof LMM_EntityLittleMaid)))this.setAttackTarget(null);
 		if(this.getHeldItem() != null) {
 			if(this.getHeldItem().hasTagCompound()){
 				if(this.getHeldItem().getItem() instanceof HMGItem_Unified_Guns)((HMGItem_Unified_Guns)this.getHeldItem().getItem()).checkTags(this.getHeldItem());
@@ -436,6 +435,10 @@ public abstract class EntitySoBases extends EntityCreature implements INpc ,  IF
 
     @Override
 	public boolean is_this_entity_friend(Entity entity) {
+		if (this instanceof IflagBattler && (entity instanceof EntityPlayer
+				|| hmggvcmob.military.MilitaryRelations.faction(entity) != null)) {
+			return !hmggvcmob.military.MilitaryRelations.hostile(this, entity);
+		}
 		if(entity instanceof EntityPlayer){
 			return true;
 		}else if(entity instanceof EntitySoBases) {

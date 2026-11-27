@@ -622,6 +622,9 @@ public class EntityGBases extends EntityMob implements IGVCmob, IFF ,IflagBattle
 
 	@Override
 	public boolean is_this_entity_friend(Entity entity) {
+		if (entity instanceof EntityPlayer || hmggvcmob.military.MilitaryRelations.faction(entity) != null) {
+			return !hmggvcmob.military.MilitaryRelations.hostile(this, entity);
+		}
 		return entity instanceof EntityGBases;
 	}
 

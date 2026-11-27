@@ -92,7 +92,8 @@ public class GVCItemPMCDefSetter extends Item {
         for (Object nearby : world.getEntitiesWithinAABB(EntityPMCBase.class, player.boundingBox.expand(80, 16, 80))) {
             EntityPMCBase unit = (EntityPMCBase)nearby;
             double distance = player.getDistanceSqToEntity(unit);
-            if (unit.isEntityAlive() && unit.ridingEntity == null && distance < best && platoonMatched(name, unit)) {
+            if (unit.canBeCommandedBy(player) && unit.isEntityAlive() && unit.ridingEntity == null
+                    && distance < best && platoonMatched(name, unit)) {
                 best = distance;
                 nearest = unit;
             }

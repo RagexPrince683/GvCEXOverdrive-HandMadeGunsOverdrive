@@ -180,7 +180,8 @@ public class EntitySupplyBox extends GVCEntityBox{
             case 16:
             case 17:
             case 18:
-                itemStack = new ItemStack(fn_pmcegg,16);
+                itemStack = hmggvcmob.military.MilitaryConfig.legacyHiring ? new ItemStack(fn_pmcegg, 16)
+                        : new ItemStack(hmggvcmob.military.MilitarySupplies.coinItem(1), 4);
                 break;
         }
         if(itemStack != null) {

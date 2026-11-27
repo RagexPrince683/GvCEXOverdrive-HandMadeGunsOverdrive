@@ -8,6 +8,8 @@ import hmggvcmob.entity.friend.GVCEntityFlag;
 import hmggvcmob.entity.guerrilla.EntityGBases;
 import hmggvcmob.entity.util.MoveToPositionMng;
 import hmggvcmob.entity.util.PlatoonOBJ;
+import hmggvcmob.military.EntityMilitaryUnit;
+import hmggvcmob.military.MilitaryRelations;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -93,17 +95,22 @@ public class AIInfantryTarget extends EntityAIBase {
                 || ((IGVCmob)soldier).getMoveToPositionMng().isDisengagedFrom(target)
                 || soldier.getDistanceSqToEntity(target) > range * range) return false;
         if (target instanceof EntityPlayer && ((EntityPlayer)target).capabilities.disableDamage) return false;
+        if (soldier instanceof EntityMilitaryUnit && !((EntityMilitaryUnit)soldier).mayEngage(target)) return false;
         if (soldier instanceof EntitySoBases && ignoreSoTargetEntity.containsKey(EntityList.getEntityString(target))) return false;
         PlatoonOBJ platoon = ((IPlatoonable)soldier).getPlatoon();
         return platoon == null || platoon.allowsEngagement(target);
     }
 
     private static boolean isOrdinaryTarget(EntityLiving soldier, EntityLivingBase target) {
-        if (soldier instanceof EntityGBases) {
-            return target instanceof EntityPlayer || target instanceof EntitySoBases
-                    || target instanceof EntityVillager || target instanceof EntityGolem
-                    || target instanceof GVCEntityFlag;
+        if (target instanceof EntityPlayer || MilitaryRelations.faction(target) != null) {
+            return MilitaryRelations.hostile(soldier, target);
         }
-        return target instanceof EntityGBases || target instanceof IMob;
+        if (soldier instanceof EntityMilitaryUnit && "allies".equals(((EntityMilitaryUnit)soldier).faction())) {
+            return target instanceof EntityVillager || target instanceof EntityGolem || target instanceof GVCEntityFlag;
+        }
+        if (soldier instanceof EntityGBases) {
+            return target instanceof EntityVillager || target instanceof EntityGolem || target instanceof GVCEntityFlag;
+        }
+        return target instanceof IMob;
     }
 }

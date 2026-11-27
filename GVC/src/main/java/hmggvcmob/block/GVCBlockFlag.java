@@ -2,12 +2,15 @@ package hmggvcmob.block;
 
 import hmggvcmob.camp.CampObj;
 import hmggvcmob.tile.TileEntityFlag;
+import hmggvcmob.military.MilitaryRespawn;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -62,6 +65,28 @@ public class GVCBlockFlag extends BlockContainer {
             }
         }
         return new TileEntityFlag(campObj);
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player,
+                                    int side, float hitX, float hitY, float hitZ) {
+        if (!player.isSneaking()) return false;
+        TileEntity tile = world.getTileEntity(x, y, z);
+        return tile instanceof TileEntityFlag && MilitaryRespawn.bind(player, (TileEntityFlag) tile);
+    }
+
+    @Override
+    public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase placer, ItemStack stack) {
+        if (!world.isRemote && this == fn_PlayerFlag && placer instanceof EntityPlayer) {
+            TileEntity tile = world.getTileEntity(x, y, z);
+            if (tile instanceof TileEntityFlag) {
+                hmggvcmob.military.Occupation post = ((TileEntityFlag) tile).occupation();
+                if (post != null) {
+                    post.owner = placer.getUniqueID();
+                    hmggvcmob.world.WorldSavedData_Flag.get(world).markDirty();
+                }
+            }
+        }
     }
 
 

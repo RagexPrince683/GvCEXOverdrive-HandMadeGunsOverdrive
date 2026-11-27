@@ -36,6 +36,7 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 	public String platoonName = null;
 
 	public boolean interact(EntityPlayer entityPlayer) {
+		if (!canBeCommandedBy(entityPlayer)) return false;
 		if(entityPlayer.getHeldItem() != null && entityPlayer.getHeldItem().getItem() instanceof GVCItemPMCDefSetter && entityPlayer.getHeldItem().hasDisplayName()){
 
 			HMG_proxy.setRightClickTimer();
@@ -101,9 +102,10 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	@Override
 	public boolean is_this_entity_friend(Entity entity) {
-		if(entity instanceof EntityPlayer){
-			return true;
-		}else if(entity instanceof EntitySoBases) {
+		if (entity instanceof EntityPlayer || hmggvcmob.military.MilitaryRelations.faction(entity) != null) {
+			return !hmggvcmob.military.MilitaryRelations.hostile(this, entity);
+		}
+		if(entity instanceof EntitySoBases) {
 			return true;
 		}else if(islmmloaded && entity instanceof LMM_EntityLittleMaid){
 			return true;
@@ -126,6 +128,11 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	public String leaderEntity_name;
 
+	public boolean canBeCommandedBy(EntityPlayer player) { return true; }
+	public boolean canAutoEnlist() { return true; }
+	public int commandRank() { return 0; }
+	public int commandSize() { return PlatoonOBJ.MAX_MEMBERS; }
+
 	@Override
 	public void makePlatoon() {
 		if (worldObj.isRemote || getPlatoon() != null) return;
@@ -140,10 +147,10 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	@Override
 	public void enlistPlatoon(boolean force) {
-		if (worldObj.isRemote || platoonOBJ == null || !platoonOBJ.hasRoom()) return;
+		if (worldObj.isRemote || !canAutoEnlist() || platoonOBJ == null || !platoonOBJ.hasRoom()) return;
 		for (Object nearby : worldObj.getEntitiesWithinAABB(EntityPMCBase.class, boundingBox.expand(18, 7, 18))) {
 			EntityPMCBase candidate = (EntityPMCBase)nearby;
-			if (!candidate.isEntityAlive() || !canMoveEntity(candidate) || candidate.getPlatoon() != null
+			if (!candidate.canAutoEnlist() || !candidate.isEntityAlive() || !canMoveEntity(candidate) || candidate.getPlatoon() != null
 					|| PlatoonOBJ.pending(candidate) || !platoonMatched(platoonName, candidate)) continue;
 			candidate.setPlatoon(platoonOBJ);
 			candidate.platoonName = platoonName;

@@ -6,7 +6,6 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import handmadeguns.HMGGunMaker;
 import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import hmggvcmob.block.*;
 import hmggvcmob.camp.CampObj;
@@ -18,6 +17,8 @@ import hmggvcmob.entity.guerrilla.*;
 import hmggvcmob.event.GVCMSpawnEvent;
 import hmggvcmob.event.GVCMXEntityEvent;
 import hmggvcmob.network.GVCMPacketHandler;
+import hmggvcmob.military.MilitaryConfig;
+import hmggvcmob.military.MilitarySystem;
 import hmggvcmob.proxy.CommonSideProxyGVCM;
 import hmggvcmob.tab.GVMTab;
 import java.io.File;
@@ -276,6 +277,8 @@ public class GVCMobPlus
 //        }
         cfg_beaconSpawnLevel = lconf.get("Guerrilla", "cfg_BeaconSpawnLevel", 16).getInt(16);
         cfg_beaconSpawnInterval = lconf.get("Guerrilla", "cfg_Flagspawninterval", 2000).getInt(2000);
+        MilitaryConfig.load(lconf, cfg_beaconSpawnInterval, cfg_beaconSpawnLevel);
+        MilitarySystem.registerItems(configFile);
         cfg_minimumGuerrillaSpawnDistance = lconf.get("Guerrilla", "cfg_minimumGuerrillaSpawnDistance", 64).getInt(64);
         cfg_minimumGuerrillaSpawnDistance *= cfg_minimumGuerrillaSpawnDistance;
         cfg_noGuerrillaSpawnInView = lconf.get("Guerrilla", "cfg_noGuerrillaSpawnInView", true).getBoolean(true);
@@ -568,6 +571,7 @@ public class GVCMobPlus
             }
         }
 
+        if (MilitaryConfig.legacyRecipes) {
         GameRegistry.addRecipe(new ItemStack(fn_pmcegg, 1),
                 "e",
                 "i",
@@ -621,6 +625,7 @@ public class GVCMobPlus
                 'd', Items.diamond,
                 'e', Items.egg
         );
+        }
         GameRegistry.addRecipe(new ItemStack(gvcmx_reqsupport_arty, 1),
                 "dad",
                 "aaa",
@@ -650,12 +655,12 @@ public class GVCMobPlus
                 'r', Items.redstone,
                 'd', Items.diamond
         );
-        GameRegistry.addRecipe(new ItemStack(defsetter, 1),
+        if (MilitaryConfig.legacyRecipes) GameRegistry.addRecipe(new ItemStack(defsetter, 1),
                 "I ",
                 "dd",
                 'd', Items.emerald,'I',Items.iron_ingot
         );
-        GameRegistry.addRecipe(new ItemStack(fn_SoldierFlag, 1),
+        if (MilitaryConfig.legacyRecipes) GameRegistry.addRecipe(new ItemStack(fn_SoldierFlag, 1),
                 " I ",
                 " I ",
                 "ddd",
@@ -679,7 +684,7 @@ public class GVCMobPlus
                 "III",
                 'd', Blocks.beacon,'I',Items.iron_ingot
         );
-        if (VEHICLES_ENABLED) GameRegistry.addRecipe(new ItemStack(fn_pmcBMPEgg, 1),
+        if (VEHICLES_ENABLED && MilitaryConfig.legacyRecipes) GameRegistry.addRecipe(new ItemStack(fn_pmcBMPEgg, 1),
                 "IrI",
                 "IdI",
                 "III",
@@ -687,6 +692,7 @@ public class GVCMobPlus
                 'r', Blocks.redstone_block
         );
 
+        MilitarySystem.register(this);
         proxy.initSome();
         if (cfg_setCamp == true) {
             GameRegistry.registerWorldGenerator(new WWorld(), 10);
@@ -697,48 +703,6 @@ public class GVCMobPlus
         MinecraftForge.EVENT_BUS.register(new GVCMXEntityEvent());
 
         proxy.registerTileEntity();
-
-        Object guns = new ArrayList();
-        ((List)guns).addAll(HMGGunMaker.Guns);
-        for (int i = 0; i < ((List)guns).size(); i++)
-        {
-            if ((((List)guns).get(i) instanceof HMGItem_Unified_Guns)) {
-                HMGItem_Unified_Guns unified_guns = (HMGItem_Unified_Guns)((List)guns).get(i);
-                if (unified_guns.gunInfo.guerrila_can_use && (!unified_guns.gunInfo.needfix)) {
-                    switch (unified_guns.gunInfo.canuseclass)
-                    {
-                        case 0:
-                            Guns_AR.add(unified_guns);
-                            break;
-                        case 1:
-                            Guns_SG.add(unified_guns);
-                            break;
-                        case 2:
-                            Guns_SR.add(unified_guns);
-                            break;
-                        case 3:
-                            Guns_LMG.add(unified_guns);
-                            break;
-                        case 4:
-                            Guns_RR.add(unified_guns);
-                            break;
-                        case 5:
-                            Guns_FL.add(unified_guns);
-                            break;
-                    }
-                    Guns_CanUse.add(unified_guns);
-                    if(unified_guns.gunInfo.guntype == 0 && unified_guns.gunInfo.needcock){
-                        Guns_BoltR.add(unified_guns);
-                    }
-                    if(unified_guns.gunInfo.needfix && unified_guns.gunInfo.canfix){
-                        Guns_HMG.add(unified_guns);
-                    }
-                    if(unified_guns.gunInfo.guntype==2)Guns_GR.add(unified_guns);
-                    Debug("Listing HMG guns." + unified_guns.getUnlocalizedName(), new Object[0]);
-                }
-            }
-        }
-
 
         No_place_to_HIDE = new Achievement(id_of_No_place_to_HIDE, "No_place_to_HIDE", 0, 0, new ItemStack(fn_guerrillaegg, 1, 15), null).initIndependentStat().registerStat();
 
@@ -769,6 +733,21 @@ public class GVCMobPlus
     }
 
 
+
+    @Mod.EventHandler
+    public void militaryDefinitions(FMLPostInitializationEvent event) {
+        MilitarySystem.loadDefinitions();
+    }
+
+    @Mod.EventHandler
+    public void militaryServer(FMLServerStartingEvent event) {
+        MilitarySystem.start(event);
+    }
+
+    @Mod.EventHandler
+    public void militaryStopped(FMLServerStoppedEvent event) {
+        MilitarySystem.stop();
+    }
 
     public void spawn(BiomeGenBase biome)
     {

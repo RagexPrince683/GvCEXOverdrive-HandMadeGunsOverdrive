@@ -13,6 +13,13 @@ import hmggvcmob.entity.*;
 import hmggvcmob.entity.friend.*;
 import hmggvcmob.entity.guerrilla.*;
 import hmggvcmob.render.*;
+import hmggvcmob.military.EntityMilitaryTrader;
+import hmggvcmob.military.EntityMilitaryUnit;
+import hmggvcmob.military.client.MilitaryClientEvents;
+import hmggvcmob.military.client.MilitaryScreen;
+import hmggvcmob.military.client.RenderMilitaryUnit;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import hmggvcmob.tile.TileEntityFlag;
 import hmggvcmob.tile.TileEntityMobSpawner_Extend;
 
@@ -39,7 +46,23 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 		MinecraftForge.EVENT_BUS.register(overlay);
 		FMLCommonHandler.instance().bus().register(overlay);
 		MinecraftForge.EVENT_BUS.register(new EventRenderPlatoonInfo());
+        MinecraftForge.EVENT_BUS.register(new MilitaryClientEvents());
 	}
+
+    @Override
+    public Object militaryGui(EntityPlayer player, int trader) {
+        return new MilitaryScreen(player, trader);
+    }
+
+    @Override
+    public void handleMilitarySnapshot(int window, NBTTagCompound snapshot) {
+        scheduleClientPacket(world -> {
+            Minecraft client = Minecraft.getMinecraft();
+            if (client.currentScreen instanceof MilitaryScreen) {
+                ((MilitaryScreen) client.currentScreen).applySnapshot(window, snapshot);
+            }
+        });
+    }
 
 	@Override
 	public void scheduleClientPacket(java.util.function.Consumer<World> action) {
@@ -104,6 +127,8 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 		
 		
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMC.class, new GVCRenderPMC());
+        RenderingRegistry.registerEntityRenderingHandler(EntityMilitaryUnit.class, new RenderMilitaryUnit());
+        RenderingRegistry.registerEntityRenderingHandler(EntityMilitaryTrader.class, new GVCRenderPMC());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMCSP.class, new GVCRenderPMCSP());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMCMG.class, new GVCRenderPMCMG());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMCRPG.class, new GVCRenderPMCRPG());

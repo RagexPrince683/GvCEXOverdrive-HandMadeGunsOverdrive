@@ -20,6 +20,7 @@ public class GVCItemGuerrillaFlagEgg extends Item
 
 	public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, int par4, int par5, int par6, int par7, float par8, float par9, float par10)
     {
+        if (!hmggvcmob.military.MilitaryConfig.legacyHiring && !par2EntityPlayer.capabilities.isCreativeMode) return false;
         if (par3World.isRemote)
         {
             return true;

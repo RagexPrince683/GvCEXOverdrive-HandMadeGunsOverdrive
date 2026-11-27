@@ -5,7 +5,6 @@ import handmadeguns.items.guns.HMGItem_Unified_Guns;
 import hmggvcmob.entity.EntityMGAX55;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonOBJ;
-import hmggvcmob.tile.TileEntityFlag;
 import hmggvcutil.GVCUtils;
 import hmggvcmob.entity.guerrilla.*;
 import net.minecraft.entity.Entity;
@@ -90,23 +89,6 @@ public class GVCMXEntityEvent {
 		}
 		if(picked.getEntityItem().getItem() instanceof HMGItem_Unified_Guns) {
 			if(picked.getEntityItem().getItem() == GVCUtils.type38) ((EntityPlayer) picking).addStat(Gun_of_the_Lost_Country,1);
-		}
-	}
-
-	@SubscribeEvent
-	public void entitydamaged(LivingDeathEvent event)
-	{
-		EntityLivingBase entity = event.entityLiving;
-
-		if(entity instanceof EntityPlayer && !entity.worldObj.isRemote) {
-			TileEntityFlag closestFlag = TileEntityFlag.findNearest(entity.worldObj, entity.posX,
-					entity.posY, entity.posZ, 128, false, flag -> flag.isActiveBeacon() && flag.campObj.playerIsFriend);
-			if(closestFlag != null){
-				entity.setHealth(20);
-				((EntityPlayer) entity).getFoodStats().addStats(20,20);
-				((EntityPlayer)entity).setPositionAndUpdate(closestFlag.xCoord + 0.5,closestFlag.yCoord+1,closestFlag.zCoord + 0.5);
-				event.setCanceled(true);
-			}
 		}
 	}
 

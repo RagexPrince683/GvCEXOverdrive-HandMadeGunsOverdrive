@@ -28,6 +28,7 @@ public class GVCItemPMCEgg extends Item
 
     public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, int par4, int par5, int par6, int par7, float par8, float par9, float par10)
     {
+        if (!hmggvcmob.military.MilitaryConfig.legacyHiring && !par2EntityPlayer.capabilities.isCreativeMode) return false;
         if (!(VEHICLES_ENABLED || !(mob == 4 || mob == 5 || mob == 7 || mob == 8 || mob == 10)) || par7 != 1 || !par2EntityPlayer.canPlayerEdit(par4, par5 + 1, par6, par7, par1ItemStack)) return false;
         if (par3World.isRemote)
         {

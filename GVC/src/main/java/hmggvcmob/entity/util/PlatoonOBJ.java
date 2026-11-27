@@ -36,6 +36,7 @@ public class PlatoonOBJ {
     private final Data data;
     public EntityAndPos leader;
     private UUID leaderId;
+    private int leaderRank, capacity = MAX_MEMBERS, patrolCapacity;
     private UUID playerId;
     private String legacyPlayerName;
     private long nextUpdate;
@@ -112,7 +113,28 @@ public class PlatoonOBJ {
     }
 
     public boolean hasRoom() {
-        return members.size() < MAX_MEMBERS;
+        return members.size() < (patrolCapacity > 0 ? patrolCapacity : capacity);
+    }
+
+    public void setPatrolCapacity(int limit) {
+        patrolCapacity = limit;
+        data.markDirty();
+    }
+
+    public int size() {
+        return members.size();
+    }
+
+    public UUID id() {
+        return id;
+    }
+
+    public UUID leaderId() {
+        return leaderId;
+    }
+
+    public static PlatoonOBJ find(World world, UUID id) {
+        return id == null ? null : Data.get(world).platoons.get(id);
     }
 
     public void addMember(EntityLiving entity) {
@@ -123,35 +145,55 @@ public class PlatoonOBJ {
         EntityAndPos member = new EntityAndPos(entity);
         loadedMembers.add(member);
         ((IPlatoonable)entity).setPosObj(member);
-        if (leader == null || entity.getUniqueID().equals(leaderId)) leader = member;
-        if (leaderId == null) {
-            leaderId = entity.getUniqueID();
-            data.markDirty();
-        }
+        int rank = entity instanceof EntityPMCBase ? ((EntityPMCBase)entity).commandRank() : 0;
+        if (entity.getUniqueID().equals(leaderId) || leaderId == null || rank > leaderRank) appoint(member);
+        else if (leader == null) electLeader();
         scheduled = false;
     }
 
     public void removeMember(EntityLiving entity, boolean permanent) {
         loadedMembers.removeIf(member -> member.entity == entity);
         if (permanent && members.remove(entity.getUniqueID())) {
-            if (entity.getUniqueID().equals(leaderId)) leaderId = null;
+            if (entity.getUniqueID().equals(leaderId)) {
+                leaderId = null;
+                leaderRank = 0;
+                capacity = MAX_MEMBERS;
+            }
             if (members.isEmpty()) data.platoons.remove(id);
             data.markDirty();
         }
         if (leader != null && leader.entity == entity) leader = null;
         if (leader == null && !loadedMembers.isEmpty()) electLeader();
+        else if (leader != null && leaderId == null) appoint(leader);
         scheduled = false;
     }
 
     private void electLeader() {
         for (EntityAndPos member : loadedMembers) {
             if (!member.entity.isEntityAlive()) continue;
-            if (leader == null || member.entity.getUniqueID().equals(leaderId)) leader = member;
+            if (member.entity.getUniqueID().equals(leaderId)) {
+                leader = member;
+                return;
+            }
+            if (leader == null || rank(member) > rank(leader)) leader = member;
         }
-        if (leaderId == null && leader != null) {
-            leaderId = leader.entity.getUniqueID();
-            data.markDirty();
-        }
+        if (leaderId == null && leader != null) appoint(leader);
+    }
+
+    private int rank(EntityAndPos member) {
+        return member.entity instanceof EntityPMCBase ? ((EntityPMCBase)member.entity).commandRank() : 0;
+    }
+
+    private void appoint(EntityAndPos member) {
+        leader = member;
+        UUID selected = member.entity.getUniqueID();
+        int rank = rank(member);
+        int limit = member.entity instanceof EntityPMCBase ? ((EntityPMCBase)member.entity).commandSize() : MAX_MEMBERS;
+        if (selected.equals(leaderId) && leaderRank == rank && capacity == limit) return;
+        leaderId = selected;
+        leaderRank = rank;
+        capacity = limit;
+        data.markDirty();
     }
 
     public PlatoonOrder getOrder() {
@@ -351,6 +393,9 @@ public class PlatoonOBJ {
                 if (id == null) continue;
                 PlatoonOBJ squad = new PlatoonOBJ(this, id);
                 squad.leaderId = parseId(entry.getString("Leader"));
+                squad.leaderRank = entry.getInteger("LeaderRank");
+                squad.patrolCapacity = entry.getInteger("PatrolCapacity");
+                squad.capacity = entry.hasKey("Capacity") ? Math.max(1, Math.min(33, entry.getInteger("Capacity"))) : MAX_MEMBERS;
                 squad.playerId = parseId(entry.getString("Player"));
                 squad.legacyPlayerName = entry.hasKey("PlayerName") ? entry.getString("PlayerName") : null;
                 PlatoonOrder order = PlatoonOrder.fromId(entry.getInteger("Mode"));
@@ -363,7 +408,7 @@ public class PlatoonOBJ {
                 squad.patrolOutbound = entry.getBoolean("Outbound");
                 squad.currentCamp = entry.getBoolean("Camp");
                 NBTTagList roster = entry.getTagList("Members", 8);
-                for (int j = 0; j < roster.tagCount() && squad.hasRoom(); j++) {
+                for (int j = 0; j < roster.tagCount() && j < 33; j++) {
                     UUID member = parseId(roster.getStringTagAt(j));
                     if (member != null) squad.members.add(member);
                 }
@@ -378,6 +423,9 @@ public class PlatoonOBJ {
                 NBTTagCompound entry = new NBTTagCompound();
                 entry.setString("Id", squad.id.toString());
                 if (squad.leaderId != null) entry.setString("Leader", squad.leaderId.toString());
+                entry.setInteger("LeaderRank", squad.leaderRank);
+                entry.setInteger("PatrolCapacity", squad.patrolCapacity);
+                entry.setInteger("Capacity", squad.capacity);
                 if (squad.playerId != null) entry.setString("Player", squad.playerId.toString());
                 if (squad.legacyPlayerName != null) entry.setString("PlayerName", squad.legacyPlayerName);
                 entry.setInteger("Mode", squad.getOrder().id);

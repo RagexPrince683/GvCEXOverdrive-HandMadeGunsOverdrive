@@ -53,7 +53,7 @@ public class MQO_MetasequoiaObject implements IModelCustom_HMG
 	public float	sizeY = 0;
 	public float	sizeZ = 0;
 
-	public boolean endLoad = false;
+	public volatile boolean endLoad = false;
 	private boolean cpuSourceDataReleased = false;
 	ExecutorService es;
 	public MQO_MetasequoiaObject(ResourceLocation resource) throws ModelFormatException

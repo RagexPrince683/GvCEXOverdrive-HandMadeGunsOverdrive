@@ -1147,6 +1147,9 @@ public class HMGItem_Unified_Guns extends Item {
 				// GunTemp records the normal ADS, diffusion and attachment factor. Apply
 				// it to this round's base directly, without dividing by the gun base.
 				firetemp.spread *= guntemp.spreadMultiplier;
+				if (entity instanceof handmadeguns.entity.NpcFirearmUser) {
+					firetemp.spread *= ((handmadeguns.entity.NpcFirearmUser) entity).dispersionMultiplier(itemstack);
+				}
 				if(HandmadeGunsCore.isDebugMessage) {
 					ItemStack loadedFront = ItemStack.loadItemStackFromNBT(itemstack.getTagCompound().getCompoundTag("LoadedMagazine0"));
 					Item selected = getcurrentMagazine(itemstack);
@@ -1730,7 +1733,7 @@ public class HMGItem_Unified_Guns extends Item {
 
 		// Perform reload logic when reload time reaches its limit
 		if (!world.isRemote) {
-			if (reloadti >= reloadTime(itemstack)) {
+			if (reloadti >= reloadTime(itemstack, entity)) {
 				boolean shellCommitted = false;
 				if (perShellReload) {
 					shellCommitted = commitOnePerShellReload(itemstack, world, entity);
@@ -2733,6 +2736,28 @@ public class HMGItem_Unified_Guns extends Item {
 			e.printStackTrace();
 		}
 		return 0;
+	}
+
+	public int reloadTime(ItemStack stack, Entity user) {
+		int ticks = reloadTime(stack);
+		if (!(user instanceof handmadeguns.entity.NpcFirearmUser)) return ticks;
+		return Math.max(1, Math.round(ticks * ((handmadeguns.entity.NpcFirearmUser) user).reloadTimeMultiplier(stack)));
+	}
+
+	/** Prepare a manufactured NPC weapon with a magazine it already accepts. */
+	public Item prepareNpcWeapon(ItemStack stack, World world, Item preferred) {
+		checkTags(stack);
+		if (preferred != null) {
+			for (int i = 0; i < gunInfo.magazine.length; i++) {
+				if (gunInfo.magazine[i] == preferred) {
+					stack.getTagCompound().setInteger("get_selectingMagazine", i);
+					break;
+				}
+			}
+		}
+		Item magazine = get_selectingMagazine(stack);
+		if (magazine != null) consumeAndSetMagazine(stack, world, null, true);
+		return magazine;
 	}
 	//    public boolean selectingMagazine_has_roundOption(ItemStack itemStack){
 //        Item selectingmagazine = get_selectingMagazine(itemStack);

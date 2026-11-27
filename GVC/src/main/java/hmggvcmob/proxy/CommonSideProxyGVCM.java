@@ -38,6 +38,10 @@ public class CommonSideProxyGVCM {
 
 	public void scheduleClientPacket(java.util.function.Consumer<World> action) {}
 
+	public Object militaryGui(EntityPlayer player, int trader) { return null; }
+
+	public void handleMilitarySnapshot(int window, net.minecraft.nbt.NBTTagCompound snapshot) {}
+
 	public void registerTileEntity() {
 //		GameRegistry.registerTileEntity(GVCTileEntityMobSpawner.class, "GVCTile_MobSpawner");
 		GameRegistry.registerTileEntity(TileEntityFlag.class, "FlagTile");

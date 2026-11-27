@@ -44,15 +44,10 @@ public class GVCMRenderSomeEvent {
 
     @SubscribeEvent
     public void render(RenderGameOverlayEvent.Post event) {
-        if (world == null || event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
-        String text = net.minecraft.util.StatCollector.translateToLocal("gvc.beacon.lost");
-        int color = 0x808080;
-        if (nearestCamp != null && !nearestCamp.isInvalid() && nearestCamp.isActiveBeacon()) {
-            boolean friendly = nearestCamp.campObj.playerIsFriend;
-            text = net.minecraft.util.StatCollector.translateToLocalFormatted(
-                    friendly ? "gvc.beacon.friendly" : "gvc.beacon.hostile", distance);
-            color = friendly ? 0x80FF80 : 0xFF8080;
-        }
-        Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, 5, 5, color);
+        if (world == null || event.type != RenderGameOverlayEvent.ElementType.TEXT
+                || nearestCamp == null || nearestCamp.isInvalid() || !nearestCamp.isActiveBeacon()) return;
+        String faction = net.minecraft.util.StatCollector.translateToLocal(nearestCamp.campObj.getTranslationKey());
+        String text = net.minecraft.util.StatCollector.translateToLocalFormatted("gvc.military.hud.beacon", faction, distance);
+        Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, 5, 5, 0xEEEBDD);
     }
 }

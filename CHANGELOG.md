@@ -439,3 +439,11 @@ Developer/backend
 2026-11-25 22:55 — Fix an infantry crash when targeting a flag
 
 - Run flag targeting for living infantry on the server and issue camp orders only after a platoon has been assigned.
+
+2026-11-26 22:26 — Add military recruitment, economy, and settlement occupation
+
+- Hire equipped infantry and officers from faction traders. Organize squads around ranked leaders and manage currency, rations, and personnel from the inventory.
+- Give military camps and fortified village outposts persistent owners, traders, garrisons, and patrols. Capture transfers control of the existing site. Hostile village occupation restricts local trade.
+- Keep vanilla player respawns by default and add optional Hybrid and Beacon Only modes. Legacy soldier crafting is available through configuration.
+- Discover HMG firearms for NPC loadouts and publish compatibility diagnostics. GVCO troops have unlimited reserve ammunition and retain normal HMG magazine and reload behavior.
+- Add separate Overview, Personnel, Treasury, and Supplies tabs. Military traders open a recruitment screen with 3D previews, eligibility, pricing, and recurring costs.

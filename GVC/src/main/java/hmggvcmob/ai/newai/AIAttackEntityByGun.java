@@ -16,6 +16,9 @@ import hmggvcmob.entity.friend.GVCEntitySoldierMG;
 import hmggvcmob.entity.friend.GVCEntitySoldierSP;
 import hmggvcmob.entity.util.MoveToPositionMng;
 import hmggvcmob.entity.util.PlatoonOBJ;
+import hmggvcmob.military.EntityMilitaryUnit;
+import hmggvcmob.military.UnitPresets;
+import hmggvcmob.military.WeaponCatalog;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.Entity;
@@ -90,11 +93,15 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
     private int stateSince;
     private int nextDiagnostic;
     private float targetPitch;
+    private final EntityMilitaryUnit military;
+    private int engagementRange;
+    private double recoilError;
 
     public AIAttackEntityByGun(EntityLiving shooter, AIAttackManager manager) {
         super(shooter, manager);
         movement = ((IGVCmob)shooter).getMoveToPositionMng();
         rnd = shooter.getRNG();
+        military = shooter instanceof EntityMilitaryUnit ? (EntityMilitaryUnit) shooter : null;
     }
 
     private ItemStack getWeapon() {
@@ -123,9 +130,14 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
         weapon = getWeapon();
         HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)weapon.getItem();
         role = roleFor(gun);
+        UnitPresets.Preset preset = military == null ? null : military.preset();
+        engagementRange = preset == null ? role.maximum : preset.range;
+        if (preset != null && role == Role.CLOSE) engagementRange = Math.min(engagementRange, 24);
         movement.stop();
         shooter.getNavigator().clearPathEntity();
-        reaction = cfg_infantryReactionTicks + rnd.nextInt(8);
+        reaction = (preset == null ? cfg_infantryReactionTicks : preset.reactionTicks) + rnd.nextInt(8);
+        if (military != null && military.hasSupplyPenalty()) reaction += 8;
+        recoilError = 0;
         nextAimSample = 0;
         nextMovement = shooter.ticksExisted;
         shotPause = 0;
@@ -165,12 +177,21 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
     }
 
     private Role roleFor(HMGItem_Unified_Guns gun) {
+        String classification = WeaponCatalog.classification(gun);
+        UnitPresets.Preset preset = military == null ? null : military.preset();
+        if (preset != null) {
+            if ("close".equals(preset.behavior)) return Role.CLOSE;
+            if ("support".equals(preset.behavior)) return Role.SUPPORT;
+            if ("marksman".equals(preset.behavior) || "LAUNCHER".equals(classification)) return Role.MARKSMAN;
+        }
         WeaponClass type = gun.gunInfo.weaponClass;
-        if (type == WeaponClass.SHOTGUN || type == WeaponClass.SUBMACHINE_GUN || type == WeaponClass.HANDGUN
+        if ("SHOTGUN".equals(classification) || "SUBMACHINE_GUN".equals(classification) || "HANDGUN".equals(classification)
+                || type == WeaponClass.SHOTGUN || type == WeaponClass.SUBMACHINE_GUN || type == WeaponClass.HANDGUN
                 || shooter instanceof GVCEntityGuerrillaSG) return Role.CLOSE;
-        if (type == WeaponClass.MACHINE_GUN || shooter instanceof GVCEntityGuerrillaMG
+        if ("MACHINE_GUN".equals(classification) || type == WeaponClass.MACHINE_GUN || shooter instanceof GVCEntityGuerrillaMG
                 || shooter instanceof GVCEntityPMCMG || shooter instanceof GVCEntitySoldierMG) return Role.SUPPORT;
-        if (type == WeaponClass.SNIPER_RIFLE || type == WeaponClass.BOLT_ACTION_RIFLE || type == WeaponClass.LAUNCHER
+        if ("SNIPER_RIFLE".equals(classification) || "BOLT_ACTION_RIFLE".equals(classification) || "LAUNCHER".equals(classification)
+                || type == WeaponClass.SNIPER_RIFLE || type == WeaponClass.BOLT_ACTION_RIFLE || type == WeaponClass.LAUNCHER
                 || shooter instanceof GVCEntityGuerrillaSP || shooter instanceof GVCEntityPMCSP
                 || shooter instanceof GVCEntitySoldierSP) return Role.MARKSMAN;
         return Role.RIFLE;
@@ -199,7 +220,7 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
         if (cfg_infantryCombatDiagnostics) logCombat(false);
         int tick = shooter.ticksExisted;
         HMGItem_Unified_Guns gun = (HMGItem_Unified_Guns)weapon.getItem();
-        int actionLimit = lastReloading ? Math.max(GIVE_UP_DELAY, gun.reloadTime(weapon) + 60) : GIVE_UP_DELAY;
+        int actionLimit = lastReloading ? Math.max(GIVE_UP_DELAY, gun.reloadTime(weapon, weaponUser) + 60) : GIVE_UP_DELAY;
         if (tick - lastAction >= actionLimit && (tick - lastMovement >= RECOVERY_DELAY
                 || movementState == MovementState.FLANK && flankAttempts >= 3)) {
             if (cfg_infantryCombatDiagnostics) logCombat(true);
@@ -232,12 +253,14 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
         Entity currentUser = getWeaponUser();
         long shot = currentUser.getEntityData().getLong("HMGGunshotTick");
         if (shotPause > 0) shotPause--;
+        recoilError *= .72;
         if (currentUser != weaponUser) {
             weaponUser = currentUser;
             lastShot = shot;
         } else if (shot != lastShot) {
             lastShot = shot;
             shots++;
+            if (military != null) recoilError = Math.min(.9, recoilError + .16 * military.recoilMultiplier(weapon));
             lastAction = tick;
             flankAttempts = 0;
             if (gun.getburstCount(weapon.getTagCompound().getInteger("HMGMode")) != -1) {
@@ -259,17 +282,19 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
         }
         NBTTagCompound tag = weapon.getTagCompound();
         shooter.setSneaking(!isReloading(tag) && movementState == MovementState.HOLD
-                && shooter.getDistanceSqToEntity(target) <= role.maximum * role.maximum);
+                && shooter.getDistanceSqToEntity(target) <= engagementRange * engagementRange);
         if (--nextAimSample <= 0) {
             nextAimSample = 7 + rnd.nextInt(5);
             double error = Math.min(0.8, Math.sqrt(shooter.getDistanceSqToEntity(target)) * 0.013)
                     * cfg_infantryAimError * role.error;
+            if (military != null && military.preset() != null) error *= military.preset().accuracy;
+            if (military != null && military.hasSupplyPenalty()) error *= 1.5;
             aimOffsetX = (rnd.nextDouble() - 0.5) * error;
             aimOffsetY = (rnd.nextDouble() - 0.5) * error;
             aimOffsetZ = (rnd.nextDouble() - 0.5) * error;
         }
         Vector3d aim = aiAttackManager.createAimingPoint();
-        aim.set(target.posX + aimOffsetX, target.boundingBox.minY + target.height * 0.72 + aimOffsetY, target.posZ + aimOffsetZ);
+        aim.set(target.posX + aimOffsetX, target.boundingBox.minY + target.height * 0.72 + aimOffsetY + recoilError, target.posZ + aimOffsetZ);
         infantry.setAimPos(aim);
         double eyeY = shooter.posY + shooter.getEyeHeight();
         double horizontal = Math.hypot(aim.x - shooter.posX, aim.z - shooter.posZ);
@@ -326,7 +351,7 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
             if (atLastSeen) movement.stop();
             else movement.moveTo(lastSeenFeet.x, lastSeenFeet.y, lastSeenFeet.z, 0.94);
         } else if (fireState == FireState.OUT_OF_RANGE
-                || shooter.getDistanceSqToEntity(target) > role.maximum * role.maximum) {
+                || shooter.getDistanceSqToEntity(target) > engagementRange * engagementRange) {
             movementState = MovementState.PURSUE;
             movement.moveTo(lastSeenFeet.x, lastSeenFeet.y, lastSeenFeet.z, 1);
         } else {
@@ -345,7 +370,7 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
         }
         Vector3d aim = aiAttackManager.getAimingPoint();
         if (!visible || aim == null) fireState = FireState.NO_SIGHT;
-        else if (shooter.getDistanceSqToEntity(target) > role.maximum * role.maximum) fireState = FireState.OUT_OF_RANGE;
+        else if (shooter.getDistanceSqToEntity(target) > engagementRange * engagementRange) fireState = FireState.OUT_OF_RANGE;
         else if (isReloading(tag)) fireState = FireState.RELOADING;
         else if (lastAmmo <= 0) fireState = FireState.EMPTY;
         else if (reaction > 0) fireState = FireState.REACTION;
@@ -370,7 +395,7 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
         Vec3 end = origin.addVector(direction.xCoord * toAim.lengthVector(),
                 direction.yCoord * toAim.lengthVector(), direction.zCoord * toAim.lengthVector());
         if (shooter.worldObj.rayTraceBlocks(origin, end) != null) fireState = FireState.BLOCK;
-        else if (friendlyInLane(origin, end)) fireState = FireState.FRIENDLY;
+        else if (friendlyInLane(origin, end) || unsafeExplosiveShot(gun)) fireState = FireState.FRIENDLY;
         if (fireState != FireState.AIMING) {
             cancelTrigger(tag);
             return;
@@ -394,6 +419,16 @@ public class AIAttackEntityByGun extends AIAttackToEntity {
 
     private boolean isReloading(NBTTagCompound tag) {
         return tag.getBoolean("IsReloading") || tag.getInteger("PerShellInterruptTime") > 0;
+    }
+
+    private boolean unsafeExplosiveShot(HMGItem_Unified_Guns gun) {
+        if (!"LAUNCHER".equals(WeaponCatalog.classification(gun)) && gun.gunInfo.weaponClass != WeaponClass.LAUNCHER) return false;
+        if (shooter.getDistanceSqToEntity(target) < 10 * 10) return true;
+        for (Object entry : shooter.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, target.boundingBox.expand(5, 4, 5))) {
+            EntityLivingBase nearby = (EntityLivingBase) entry;
+            if (nearby != target && nearby.isEntityAlive() && ((IFF)shooter).is_this_entity_friend(nearby)) return true;
+        }
+        return false;
     }
 
     private void logCombat(boolean givingUp) {

@@ -2,6 +2,7 @@ package hmggvcmob.render;
 
 import cpw.mods.fml.client.FMLClientHandler;
 import handmadeguns.client.render.ModelSetAndData;
+import handmadeguns.client.render.IModelCustom_HMG;
 import hmggvcmob.tile.TileEntityFlag;
 import hmggvcmob.camp.CampObj;
 
@@ -28,6 +29,7 @@ public class RenderTileFlag extends TileEntitySpecialRenderer {
         if (tileEntity.campObj != null) {
             ModelSetAndData flag = models.computeIfAbsent(tileEntity.campObj,
                     camp -> new ModelSetAndData(camp.campBlockObjModel, camp.campBlockTextureModel));
+            if (flag.model instanceof IModelCustom_HMG && !((IModelCustom_HMG)flag.model).isReady()) return;
             bindTexture(flag.texture);
             GL11.glDepthMask(true);
             GL11.glPushMatrix();

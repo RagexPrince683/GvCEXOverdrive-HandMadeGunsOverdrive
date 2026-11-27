@@ -23,7 +23,7 @@ Download HMG from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/hand
 
 **Handmade Guns Overdrive** adds pack-defined firearms, ammunition, magazines, attachments, placed guns, and crafting. It supports legacy OBJ/MQO models, native Blockbench projects, and supported TaCZ-derived Bedrock assets and animations. The [HMG guide](docs/hmg.md) links to configuration, server administration, rendering, and pack-authoring references.
 
-**GVCOverdrive** adds ALLIES Radical Party guerrillas, UNION soldiers, and friendly PMC infantry. Camps, beacons, raids, and reinforcements bring those factions into the world. PMC groups accept move, follow, patrol, defend, and attack orders. See the [GVC guide](docs/gvc/README.md) for controls, spawning, and existing-world details.
+**GVCOverdrive** adds UNION, ALLIES and PMC forces, recruitable infantry and leaders, persistent occupation, and fortified village outposts. Players can command squads and manage reserves through the military inventory. See the [GVC guide](docs/gvc/README.md) and [military management guide](docs/gvc/military.md).
 
 **GVC Dungeon Generator Base** reads compatible `GVCDungeons_Packs` at startup. GVC's own camp generator runs independently of the optional module. See the [structure pack guide](docs/gvc/dungeon-generator.md) for supported layouts and markers.
 
