@@ -5,7 +5,6 @@ import hmggvcmob.entity.IGVCmob;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.friend.EntitySoBases;
 import hmggvcmob.entity.friend.GVCEntityFlag;
-import hmggvcmob.entity.guerrilla.EntityGBases;
 import hmggvcmob.entity.util.MoveToPositionMng;
 import hmggvcmob.entity.util.PlatoonOBJ;
 import hmggvcmob.military.EntityMilitaryUnit;
@@ -105,10 +104,7 @@ public class AIInfantryTarget extends EntityAIBase {
         if (target instanceof EntityPlayer || MilitaryRelations.faction(target) != null) {
             return MilitaryRelations.hostile(soldier, target);
         }
-        if (soldier instanceof EntityMilitaryUnit && "allies".equals(((EntityMilitaryUnit)soldier).faction())) {
-            return target instanceof EntityVillager || target instanceof EntityGolem || target instanceof GVCEntityFlag;
-        }
-        if (soldier instanceof EntityGBases) {
+        if (MilitaryRelations.factionRelation(MilitaryRelations.faction(soldier), "union") < 0) {
             return target instanceof EntityVillager || target instanceof EntityGolem || target instanceof GVCEntityFlag;
         }
         return target instanceof IMob;

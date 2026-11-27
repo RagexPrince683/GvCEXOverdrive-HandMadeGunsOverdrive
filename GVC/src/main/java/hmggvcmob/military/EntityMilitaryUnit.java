@@ -88,6 +88,8 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
         return preset;
     }
 
+    boolean isReinforcement() { return post != null; }
+
     @Override
     public boolean canBeCommandedBy(EntityPlayer player) {
         return player.getUniqueID().equals(owner);
@@ -232,7 +234,7 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
         presetId = tag.getString("MilitaryPreset");
         preset = UnitPresets.get(presetId);
         String faction = tag.getString("MilitaryFaction");
-        if (MilitaryRelations.isFaction(faction)) dataWatcher.updateObject(FACTION, faction);
+        if (MilitaryRelations.validId(faction)) dataWatcher.updateObject(FACTION, faction);
         if (preset != null) movespeed = preset.speed;
         holdingSecondary = tag.getBoolean("SecondaryActive");
         if (tag.hasKey("StowedWeapon")) stowedWeapon = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("StowedWeapon"));

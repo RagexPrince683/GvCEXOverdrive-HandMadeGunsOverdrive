@@ -72,6 +72,8 @@ public final class MilitaryEconomy extends WorldSavedData {
         return accounts.computeIfAbsent(owner, Account::new);
     }
 
+    Account findAccount(UUID owner) { return accounts.get(owner); }
+
     void changed(Account account) {
         account.revision++;
         markDirty();
@@ -106,6 +108,7 @@ public final class MilitaryEconomy extends WorldSavedData {
             account.revision++;
         }
         unit.setSupplyPenalty(penalized(member), member.missedFood > MilitaryConfig.graceIntervals && MilitaryConfig.penalizeHungry);
+        MilitaryGroups.sync(unit, account, member);
         return true;
     }
 
@@ -199,6 +202,7 @@ public final class MilitaryEconomy extends WorldSavedData {
 
     private void retire(Account account, Personnel member, String state) {
         member.state = state;
+        MilitaryGroups.retired(account, member);
         int remaining = 0;
         for (Personnel entry : account.roster.values()) if (!entry.active()) remaining++;
         Iterator<Personnel> entries = account.roster.values().iterator();
@@ -224,11 +228,16 @@ public final class MilitaryEconomy extends WorldSavedData {
             Account account = account(owner);
             account.currency = bound(tag.getLong("Currency"));
             account.food = bound(tag.getLong("Food"));
-            for (String faction : MilitaryRelations.factions()) {
-                if (tag.getCompoundTag("Relations").hasKey(faction)) {
-                    account.relations.put(faction, MilitaryRelations.clamp(tag.getCompoundTag("Relations").getInteger(faction)));
-                }
+            NBTTagCompound relations = tag.getCompoundTag("Relations");
+            for (Object id : relations.func_150296_c()) {
+                String faction = (String) id;
+                if (MilitaryRelations.validId(faction)) account.relations.put(faction, MilitaryRelations.clamp(relations.getInteger(faction)));
             }
+            account.allegiance = tag.getString("Allegiance");
+            account.allegianceAfter = tag.getLong("AllegianceAfter");
+            account.reputationWindow = tag.getLong("ReputationWindow");
+            account.creditedKills = tag.getInteger("CreditedKills");
+            MilitaryGroups.Group.readAll(account, tag.getTagList("Groups", 10));
             NBTTagList roster = tag.getTagList("Roster", 10);
             for (int i = 0; i < roster.tagCount(); i++) {
                 Personnel member = Personnel.read(owner, roster.getCompoundTagAt(i));
@@ -252,6 +261,13 @@ public final class MilitaryEconomy extends WorldSavedData {
                 relations.setInteger(value.getKey(), value.getValue());
             }
             tag.setTag("Relations", relations);
+            tag.setString("Allegiance", account.allegiance);
+            tag.setLong("AllegianceAfter", account.allegianceAfter);
+            tag.setLong("ReputationWindow", account.reputationWindow);
+            tag.setInteger("CreditedKills", account.creditedKills);
+            NBTTagList groups = new NBTTagList();
+            for (MilitaryGroups.Group group : account.groups.values()) groups.appendTag(group.write());
+            tag.setTag("Groups", groups);
             NBTTagList roster = new NBTTagList();
             for (Personnel member : account.roster.values()) roster.appendTag(member.write());
             tag.setTag("Roster", roster);
@@ -275,8 +291,14 @@ public final class MilitaryEconomy extends WorldSavedData {
     static final class Account {
         final UUID owner;
         long currency, food, revision;
+        long allegianceAfter, reputationWindow, lastOrder = -1000, lastMenu = -1000;
+        int creditedKills;
+        String allegiance = "";
+        final Map<String, Integer> notices = new LinkedHashMap<>();
+        long nextNotice;
         final Map<UUID, Personnel> roster = new LinkedHashMap<>();
         final Map<String, Integer> relations = new HashMap<>();
+        final Map<UUID, MilitaryGroups.Group> groups = new LinkedHashMap<>();
 
         Account(UUID owner) {
             this.owner = owner;
@@ -292,7 +314,7 @@ public final class MilitaryEconomy extends WorldSavedData {
     static final class Personnel {
         final UUID id, owner;
         String preset, name, weapon = "", state = "active", assignment = "unassigned";
-        UUID squad, leader;
+        UUID squad, leader, group;
         long nextDue;
         int tier, rank, wage, ration, missedWage, missedFood, dimension;
 
@@ -323,6 +345,7 @@ public final class MilitaryEconomy extends WorldSavedData {
             tag.setString("Assignment", assignment);
             if (squad != null) tag.setString("Squad", squad.toString());
             if (leader != null) tag.setString("Leader", leader.toString());
+            if (group != null) tag.setString("Group", group.toString());
             tag.setLong("Due", nextDue);
             tag.setInteger("Tier", tier);
             tag.setInteger("Rank", rank);
@@ -345,6 +368,7 @@ public final class MilitaryEconomy extends WorldSavedData {
             member.assignment = tag.getString("Assignment");
             member.squad = parseUuid(tag.getString("Squad"));
             member.leader = parseUuid(tag.getString("Leader"));
+            member.group = parseUuid(tag.getString("Group"));
             member.nextDue = tag.getLong("Due");
             member.tier = tag.getInteger("Tier");
             member.rank = tag.getInteger("Rank");

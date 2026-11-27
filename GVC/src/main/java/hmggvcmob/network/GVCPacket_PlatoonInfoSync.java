@@ -3,12 +3,12 @@ package hmggvcmob.network;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonInfoData;
 import hmggvcmob.entity.util.PlatoonOrder;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
@@ -20,6 +20,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 	double[] target;
 	int targetEntity;
 	PlatoonOrder order;
+	String name;
 	public GVCPacket_PlatoonInfoSync(){
 
 	}
@@ -28,6 +29,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		isOnPlatoon = platoonInfoData.isOnPlatoon;
 		target = platoonInfoData.target;
 		order = platoonInfoData.order == null ? PlatoonOrder.fromLegacy(platoonInfoData.mode) : platoonInfoData.order;
+		name = platoonInfoData.platoonName == null ? "" : platoonInfoData.platoonName;
 		this.targetEntity = targetEntity.getEntityId();
 	}
 
@@ -38,6 +40,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		target = new double[]{buf.readDouble(),buf.readDouble(),buf.readDouble()};
 		order = PlatoonOrder.fromId(buf.readInt());
 		targetEntity = buf.readInt();
+		name = ByteBufUtils.readUTF8String(buf);
 	}
 
 	@Override
@@ -49,6 +52,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 		buf.writeDouble(target[2]);
 		buf.writeInt(order.id);
 		buf.writeInt(targetEntity);
+		ByteBufUtils.writeUTF8String(buf, name);
 
 	}
 
@@ -65,11 +69,7 @@ public class GVCPacket_PlatoonInfoSync implements IMessage , IMessageHandler<GVC
 				if (entity instanceof IPlatoonable) {
 					PlatoonInfoData info = ((IPlatoonable) entity).getPlatoonMemberInfo();
 					if (info == null) return;
-					if (entity instanceof EntityLiving && ((EntityLiving)entity).hasCustomNameTag()) {
-						info.platoonName = ((EntityLiving)entity).getCustomNameTag();
-					} else {
-						info.platoonName = null;
-					}
+					info.platoonName = message.name;
 					info.isLeader = message.isLeader;
 					info.isOnPlatoon = message.isOnPlatoon;
 					info.target = message.target;

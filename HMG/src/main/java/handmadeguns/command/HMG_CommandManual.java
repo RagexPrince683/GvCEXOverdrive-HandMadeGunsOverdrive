@@ -1,9 +1,11 @@
 package handmadeguns.command;
 
 import handmadeguns.HandmadeGunsCore;
-import handmadeguns.guide.HMGGuideIntegration;
+import handmadeguns.HMGPacketHandler;
+import handmadeguns.guide.PacketFieldManual;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentTranslation;
 
 public class HMG_CommandManual extends CommandBase {
@@ -18,6 +20,11 @@ public class HMG_CommandManual extends CommandBase {
     }
 
     @Override
+    public boolean canCommandSenderUseCommand(ICommandSender sender) {
+        return sender instanceof EntityPlayerMP || super.canCommandSenderUseCommand(sender);
+    }
+
+    @Override
     public String getCommandUsage(ICommandSender sender) {
         return "/hmgmanual";
     }
@@ -25,15 +32,11 @@ public class HMG_CommandManual extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (!HandmadeGunsCore.enableHMGGuideBook) {
-            sender.addChatMessage(new ChatComponentTranslation("hmg.guide.command.disabled"));
-        } else if (!HMGGuideIntegration.isGuideApiLoaded()) {
-            sender.addChatMessage(new ChatComponentTranslation("hmg.guide.command.missing"));
-        } else if (HMGGuideIntegration.isRegistered()) {
-            sender.addChatMessage(new ChatComponentTranslation("hmg.guide.command.registered"));
-        } else if (HMGGuideIntegration.isFailed()) {
-            sender.addChatMessage(new ChatComponentTranslation("hmg.guide.command.failed"));
+            sender.addChatMessage(new ChatComponentTranslation("hmg.manual.disabled"));
+        } else if (sender instanceof EntityPlayerMP) {
+            HMGPacketHandler.INSTANCE.sendTo(new PacketFieldManual(), (EntityPlayerMP) sender);
         } else {
-            sender.addChatMessage(new ChatComponentTranslation("hmg.guide.command.pending"));
+            sender.addChatMessage(new ChatComponentTranslation("hmg.manual.player_only"));
         }
     }
 }

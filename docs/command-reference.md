@@ -4,7 +4,7 @@ HMG registers server commands for players and administrators plus development re
 
 | Command | Availability | Permission | Purpose |
 | --- | --- | ---: | --- |
-| `/hmgmanual` | Server | 0 | Report optional Field Manual integration status |
+| `/hmgmanual` | Server | 0 | Open the built-in Field Manual |
 | `/hmg infiniteammo [true\|false]` | Server | 2 | Toggle or set the global infinite-ammunition policy |
 | `/reloadSettings` | Server and client | 0 | Reload external gun and attachment settings after invalidating reloadable model caches |
 | `/reloadsettingsnomodel` | Server and client | 0 | Reload external gun and attachment settings while retaining the current model caches |
@@ -12,13 +12,7 @@ HMG registers server commands for players and administrators plus development re
 
 ## `/hmgmanual`
 
-Reports one of the following optional Guide-API Field Manual states:
-
-- Disabled by `GuideBook.enableHMGGuideBook=false`.
-- Guide-API is missing.
-- The manual registered successfully.
-- Registration failed.
-- Registration is still pending.
+Opens the built-in HMG Field Manual for the player who runs it. The manual uses your current bindings. The server reports when it has disabled access with `GuideBook.enableHMGGuideBook=false`.
 
 ## `/hmg infiniteammo [true|false]`
 

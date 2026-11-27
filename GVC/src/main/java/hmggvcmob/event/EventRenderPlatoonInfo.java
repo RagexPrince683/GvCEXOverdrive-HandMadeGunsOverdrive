@@ -1,10 +1,6 @@
 package hmggvcmob.event;
 
-import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import handmadeguns.HandmadeGunsCore;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonInfoData;
 import hmggvcmob.entity.util.PlatoonOrder;
@@ -12,93 +8,63 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
-import static org.lwjgl.opengl.GL11.*;
+public final class EventRenderPlatoonInfo {
+    @SubscribeEvent
+    public void renderEntity(RenderLivingEvent.Post event) {
+        Minecraft client = Minecraft.getMinecraft();
+        if (client.thePlayer == null || client.gameSettings.hideGUI || event.entity.isInvisibleToPlayer(client.thePlayer)
+                || !(event.entity instanceof IPlatoonable) || event.entity.getDistanceSqToEntity(client.thePlayer) > 48 * 48) return;
+        PlatoonInfoData info = ((IPlatoonable) event.entity).getPlatoonMemberInfo();
+        if (info == null || !info.isOnPlatoon) return;
 
-public class EventRenderPlatoonInfo {
-	
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void renderEntity(RenderLivingEvent.Pre event) {
-		GL11.glPushMatrix();
-		EntityLivingBase entity = (EntityLivingBase) event.entity;
-		Minecraft minecraft = FMLClientHandler.instance().getClient();
-		EntityPlayer entityplayer = minecraft.thePlayer;
-		if (entityplayer != null && entity instanceof IPlatoonable && ((IPlatoonable) entity).getPlatoonMemberInfo() != null && ((IPlatoonable) entity).getPlatoonMemberInfo().isOnPlatoon) {
-			PlatoonInfoData platoonInfoData = ((IPlatoonable) entity).getPlatoonMemberInfo();
-			GL11.glTranslatef((float)-entityplayer.posX * (HandmadeGunsCore.smooth),(float)-entityplayer.posY * (HandmadeGunsCore.smooth),(float)-entityplayer.posZ * (HandmadeGunsCore.smooth));
-			GL11.glTranslatef((float)-entityplayer.prevPosX * (1 - HandmadeGunsCore.smooth),(float)-entityplayer.prevPosY * (1 - HandmadeGunsCore.smooth),(float)-entityplayer.prevPosZ * (1 - HandmadeGunsCore.smooth));
-			GL11.glTranslatef((float)entity.posX,(float)entity.posY,(float)entity.posZ);
-			GL11.glRotatef(180-entityplayer.rotationYawHead,0,1,0);
+        RenderManager view = RenderManager.instance;
+        FontRenderer font = client.fontRenderer;
+        PlatoonOrder order = info.order == null ? PlatoonOrder.fromLegacy(info.mode) : info.order;
+        String status = StatCollector.translateToLocal("gvc.order.mode." + order.name());
+        if (info.isLeader) status += "  ·  " + StatCollector.translateToLocal("gvc.order.leader");
 
-			float lastBrightnessX = OpenGlHelper.lastBrightnessX;
-			float lastBrightnessY = OpenGlHelper.lastBrightnessY;
-			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-			GL11.glTranslatef(0, 2.5f, 0);
-			if (platoonInfoData.platoonName != null) renderString(platoonInfoData.platoonName);
-			GL11.glTranslatef(0,0.2f,0);
-			if (platoonInfoData.target != null && platoonInfoData.mode != null) {
-				renderString(net.minecraft.util.StatCollector.translateToLocalFormatted("gvc.order.position",
-                        net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[0]),
-                        net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[1]),
-                        net.minecraft.util.MathHelper.floor_double(platoonInfoData.target[2])));
-				GL11.glTranslatef(0, 0.2f, 0);
-				renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.mode." + (platoonInfoData.order == null ? PlatoonOrder.fromLegacy(platoonInfoData.mode) : platoonInfoData.order).name()));
-				if (platoonInfoData.isLeader) {
-					GL11.glTranslatef(0, 0.2f, 0);
-					renderString(net.minecraft.util.StatCollector.translateToLocal("gvc.order.leader"));
-				}
-				GL11.glRotatef(-180 + entityplayer.rotationYawHead, 0, 1, 0);
-				GL11.glDisable(GL11.GL_TEXTURE_2D);
-				GL11.glDisable(GL11.GL_LIGHTING);
-				glLineWidth(0.1f);
-				glBegin(GL_LINE_LOOP);
-				glVertex3f(0, 0, 0);
-				glVertex3d(platoonInfoData.target[0] - entity.posX, platoonInfoData.target[1] - entity.posY, platoonInfoData.target[2] - entity.posZ);
-				glEnd();
-				GL11.glEnable(GL11.GL_TEXTURE_2D);
-				GL11.glEnable(GL11.GL_LIGHTING);
-				GL11.glTranslatef((float) -entity.posX, (float) -entity.posY, (float) -entity.posZ);
-				GL11.glTranslatef((float) platoonInfoData.target[0], (float) platoonInfoData.target[1] + 2, (float) platoonInfoData.target[2]);
-				GL11.glRotatef(180 - entityplayer.rotationYawHead, 0, 1, 0);
-				renderString("v");
-			}
-			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-		}
-		GL11.glPopMatrix();
-	}
+        float lightX = OpenGlHelper.lastBrightnessX;
+        float lightY = OpenGlHelper.lastBrightnessY;
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
+        GL11.glPushMatrix();
+        try {
+            // RenderLivingEvent positions already include entity and render-view interpolation.
+            GL11.glTranslated(event.x, event.y + event.entity.height + .68, event.z);
+            GL11.glRotatef(-view.playerViewY, 0, 1, 0);
+            float pitch = client.gameSettings.thirdPersonView == 2 ? -view.playerViewX : view.playerViewX;
+            GL11.glRotatef(pitch, 1, 0, 0);
+            GL11.glScalef(-.019F, -.019F, .019F);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glDepthMask(false);
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+            line(font, status, 0, 0xE7CE87);
+            if (info.platoonName != null && !info.platoonName.isEmpty()) line(font, info.platoonName, -10, 0xEEEBDD);
+        } finally {
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightX, lightY);
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
+        }
+    }
 
-	public void renderString(String renderObj){
-		GL11.glPushMatrix();
-		GL11.glDisable(GL_BLEND);
-		GL11.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glScalef(0.01f,-0.01f,0.01f);
-		Minecraft minecraft = FMLClientHandler.instance().getClient();
-		FontRenderer fontrenderer = minecraft.fontRenderer;
-		Tessellator tessellator = Tessellator.instance;
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_LIGHTING);
-		GL11.glDepthMask(false);
-		int width = fontrenderer.getStringWidth(renderObj) / 2;
-		GL11.glEnable(GL11.GL_BLEND);
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA_F(0.0F, 0.0F, 0.0F, 0.25F);
-		tessellator.addVertex((double)(-width - 1), -1.0D, 0.0D);
-		tessellator.addVertex((double)(-width - 1), 8.0D, 0.0D);
-		tessellator.addVertex((double)(width + 1), 8.0D, 0.0D);
-		tessellator.addVertex((double)(width + 1), -1.0D, 0.0D);
-		tessellator.draw();
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glDepthMask(true);
-		GL11.glDisable(GL11.GL_BLEND);
-		fontrenderer.drawString(renderObj,-width,0,0xFFFFFF);
-		GL11.glPopMatrix();
-	}
+    private static void line(FontRenderer font, String text, int y, int color) {
+        int width = font.getStringWidth(text) / 2;
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        Tessellator mesh = Tessellator.instance;
+        mesh.startDrawingQuads();
+        mesh.setColorRGBA_F(.09F, .12F, .09F, .72F);
+        mesh.addVertex(-width - 2, y + 9, 0);
+        mesh.addVertex(width + 2, y + 9, 0);
+        mesh.addVertex(width + 2, y - 1, 0);
+        mesh.addVertex(-width - 2, y - 1, 0);
+        mesh.draw();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        font.drawStringWithShadow(text, -width, y, color);
+    }
 }

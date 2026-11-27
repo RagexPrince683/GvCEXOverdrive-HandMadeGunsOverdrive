@@ -100,8 +100,10 @@ public final class UnitPresets {
         public int tier = 1, armor = 0, reactionTicks = 14, range = 34, rank = 0, capacity = 0;
         public int recruitmentCost = 20, currencyUpkeep = 1, foodConsumption = 3, requiredRelation = 0;
         public int reinforcementWeight = 0;
+        public Integer minimumReputation;
         public float health = 20, resistance = 0, speed = .31F, accuracy = 1, dispersion = 1, recoil = 1, reload = 1;
         public boolean recruitable = true;
+        public boolean allegianceRequired;
 
         boolean valid() {
             return id != null && id.matches("[a-z0-9_.-]{1,48}") && name != null && !name.isEmpty()
@@ -112,7 +114,8 @@ public final class UnitPresets {
                     && tier >= 1 && tier <= 10 && armor >= 0 && armor <= 20 && rank >= 0 && rank <= 10
                     && capacity >= 0 && capacity <= 32 && reactionTicks >= 1 && reactionTicks <= 120
                     && range >= 6 && range <= 128 && recruitmentCost >= 0 && currencyUpkeep >= 0
-                    && foodConsumption >= 0 && requiredRelation >= -100 && requiredRelation <= 100
+                    && foodConsumption >= 0 && requiredRelation == MilitaryRelations.clamp(requiredRelation)
+                    && (minimumReputation == null || minimumReputation == MilitaryRelations.clamp(minimumReputation))
                     && reinforcementWeight >= 0 && reinforcementWeight <= 1000
                     && health >= 1 && health <= 512 && resistance >= 0 && resistance <= .9F
                     && speed >= .05F && speed <= .6F && accuracy >= 0 && accuracy <= 5

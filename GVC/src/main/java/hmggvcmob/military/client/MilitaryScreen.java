@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public final class MilitaryScreen extends GuiContainer {
     private static final int WIDTH = 288, HEIGHT = 234;
@@ -38,10 +40,10 @@ public final class MilitaryScreen extends GuiContainer {
     private static final int LIST_X = 11, LIST_Y = 65, LIST_W = 125, ROW_H = 23, SCROLL_X = 138;
     private static final int RIGHT = 150;
     private static final ResourceLocation ICONS = new ResourceLocation("gvcmob:textures/gui/military_icons.png");
-    private static final int OVERVIEW = 0, PERSONNEL = 1, TREASURY = 2, SUPPLIES = 3;
-    private static final String[] TABS = {"overview", "personnel", "treasury", "supplies"};
-    private static final int[] TAB_LEFT = {9, 75, 147, 213};
-    private static final int[] TAB_WIDTH = {65, 71, 65, 65};
+    private static final int OVERVIEW = 0, PERSONNEL = 1, TREASURY = 2, SUPPLIES = 3, FACTIONS = 4;
+    private static final String[] TABS = {"overview", "personnel", "treasury", "supplies", "factions"};
+    private static final int[] TAB_LEFT = {9, 62, 119, 174, 226};
+    private static final int[] TAB_WIDTH = {52, 56, 54, 51, 53};
     private static final String[] FILTERS = {"everyone", "deployed", "away", "losses"};
     private static final int[] QUICK = {100, 500, 1000};
     private static int lastTab;
@@ -52,7 +54,7 @@ public final class MilitaryScreen extends GuiContainer {
     private NBTTagCompound selected;
     private String selectedId = "";
     private String feedback = "";
-    private GuiTextField amount;
+    private GuiTextField amount, groupName;
     private NumberFormat numbers;
     private int tab, filter, offset, ticks, transaction, pending, confirmAmount;
     private boolean grouping, dragging;
@@ -61,6 +63,10 @@ public final class MilitaryScreen extends GuiContainer {
     private String preview = "", portraitId = "";
     private EntityMilitaryUnit portrait;
     private List<String> hover = Collections.emptyList();
+    private final Set<String> selectedUnits = new LinkedHashSet<>();
+    private boolean organization, settlementView, allegianceView;
+    private int groupOffset, factionOffset, nameAction = -1, confirmation = -1;
+    private String selectedGroup = "-", selectedFaction = "";
 
     public MilitaryScreen(EntityPlayer player, int trader) {
         super(new MilitaryContainer(player, trader));
@@ -73,18 +79,25 @@ public final class MilitaryScreen extends GuiContainer {
 
     public void applySnapshot(int window, NBTTagCompound data) {
         if (inventorySlots.windowId != window || data == null) return;
+        boolean hadAllegiance = !snapshot.getString("Allegiance").isEmpty();
         snapshot = data;
         offset = data.getInteger("Offset");
+        if (hasList()) reconcileSelection();
         if (data.getInteger("Ack") >= pending && pending > 0) {
             feedback = data.getString("Result");
             pending = 0;
             refreshControls();
+        } else if (tab == FACTIONS && hadAllegiance != !snapshot.getString("Allegiance").isEmpty()) {
+            refreshControls();
         }
-        reconcileSelection();
+        if (group(selectedGroup) == null) selectedGroup = "-";
+        if (faction(selectedFaction) == null && factions().tagCount() > 0) selectedFaction = factions().getCompoundTagAt(0).getString("Id");
+        groupOffset = Math.min(groupOffset, Math.max(0, groups().tagCount() - 3));
     }
 
     @Override public void initGui() {
         String input = amount == null ? "" : amount.getText();
+        String groupInput = groupName == null ? "" : groupName.getText();
         super.initGui();
         Locale locale = Locale.forLanguageTag(mc.getLanguageManager().getCurrentLanguage().getLanguageCode().replace('_', '-'));
         numbers = NumberFormat.getNumberInstance(locale);
@@ -92,6 +105,9 @@ public final class MilitaryScreen extends GuiContainer {
         amount = new GuiTextField(fontRendererObj, guiLeft + 157, guiTop + 69, 113, 15);
         amount.setMaxStringLength(7);
         amount.setText(input);
+        groupName = new GuiTextField(fontRendererObj, guiLeft + 156, guiTop + 127, 115, 16);
+        groupName.setMaxStringLength(32);
+        groupName.setText(groupInput);
         container.positionInventory(tab);
         refreshControls();
     }
@@ -99,15 +115,19 @@ public final class MilitaryScreen extends GuiContainer {
     private void refreshControls() {
         buttonList.clear();
         if (recruiting) {
-            control(20, 157, 199, 113, 20, label("hire"));
+            control(60, 11, 47, 126, 15, label(allegianceView ? "back_to_offers" : "allegiance"));
+            if (allegianceView) control(61, 157, 199, 113, 20, label("pledge"));
+            else control(20, 157, 199, 113, 20, label("hire"));
             return;
         }
         for (int i = 0; i < TABS.length; i++) {
-            styled(i, TAB_LEFT[i], 28, TAB_WIDTH[i], 19, label(TABS[i]), i, tab == i);
+            styled(i, TAB_LEFT[i], 28, TAB_WIDTH[i], 19, label(TABS[i]), -1, tab == i);
         }
         if (tab == PERSONNEL) {
             control(10, 11, 50, 68, 13, label(FILTERS[filter]));
             control(11, 81, 50, 64, 13, label(grouping ? "grouped" : "individual"));
+            control(40, 151, 50, organization ? 67 : 127, 13, label(organization ? "unit_details" : "manage_groups"));
+            if (organization) groupControls();
         } else if (tab == TREASURY) {
             control(12, 42, 84, 91, 16, label("deposit_stack"));
             control(13, 17, 108, 116, 16, label("deposit_all_coins"));
@@ -116,7 +136,36 @@ public final class MilitaryScreen extends GuiContainer {
         } else if (tab == SUPPLIES) {
             control(15, 17, 108, 56, 16, label("deposit_one"));
             control(16, 77, 108, 56, 16, label("full_stack"));
+        } else if (tab == FACTIONS) {
+            control(63, 151, 50, 127, 13, label(settlementView ? "faction_details" : "nearby_settlement"));
+            if (settlementView) {
+                control(64, 155, 171, 117, 17, label("claim_faction"));
+                control(65, 155, 190, 117, 17, label("neutralize"));
+            } else if (!snapshot.getString("Allegiance").isEmpty()) {
+                control(62, 155, 205, 117, 17, label("renounce"));
+            }
         }
+        if (tab == OVERVIEW) control(66, 219, 7, 58, 15, label("field_manual"));
+    }
+
+    private void groupControls() {
+        control(41, 221, 50, 16, 13, "<");
+        control(42, 240, 50, 16, 13, ">");
+        control(43, 259, 50, 16, 13, "+");
+        if (nameAction >= 0) {
+            control(44, 155, 151, 56, 16, label("save"));
+            control(45, 215, 151, 57, 16, label("cancel"));
+            return;
+        }
+        control(46, 154, 167, 59, 13, label("view_group"));
+        control(47, 216, 167, 57, 13, label("assign_group"));
+        control(48, 154, 181, 59, 13, label("set_leader"));
+        control(49, 216, 181, 57, 13, label("quick_slot"));
+        control(50, 154, 195, 59, 13, label("rename"));
+        control(51, 216, 195, 57, 13, label("delete_group"));
+        control(52, 154, 209, 28, 13, "↑");
+        control(53, 185, 209, 28, 13, "↓");
+        control(54, 216, 209, 57, 13, label("clear_leader"));
     }
 
     private void control(int id, int x, int y, int width, int height, String title) {
@@ -132,6 +181,8 @@ public final class MilitaryScreen extends GuiContainer {
         tab = lastTab = selected;
         feedback = "";
         confirmAmount = 0;
+        confirmation = -1;
+        nameAction = -1;
         amount.setFocused(false);
         container.positionInventory(tab);
         request(MilitaryNetwork.TAB, tab);
@@ -149,6 +200,20 @@ public final class MilitaryScreen extends GuiContainer {
             grouping = !grouping;
             scrollTo(0);
             refreshControls();
+        } else if (id == 40) {
+            organization = !organization;
+            nameAction = -1;
+            if (organization && grouping) {
+                grouping = false;
+                scrollTo(0);
+            }
+            refreshControls();
+        } else if (id >= 41 && id <= 54) {
+            groupAction(id);
+        } else if (id >= 60 && id <= 65) {
+            factionAction(id);
+        } else if (id == 66) {
+            MilitaryFieldManual.open(mc);
         } else if (id == 12) {
             transact(MilitaryNetwork.DEPOSIT_COINS, -1, "");
         } else if (id == 13) {
@@ -163,6 +228,74 @@ public final class MilitaryScreen extends GuiContainer {
             amount.setText(Integer.toString(QUICK[id - 30]));
             confirmAmount = 0;
             feedback = "";
+        }
+    }
+
+    private void groupAction(int id) {
+        if (id == 41 || id == 42) {
+            groupOffset = Math.max(0, Math.min(Math.max(0, groups().tagCount() - 3), groupOffset + (id == 41 ? -3 : 3)));
+        } else if (id == 43 || id == 50) {
+            nameAction = id == 43 ? 0 : 1;
+            NBTTagCompound current = group(selectedGroup);
+            groupName.setText(id == 43 || current == null ? "" : current.getString("Name"));
+            groupName.setFocused(true);
+            refreshControls();
+        } else if (id == 44) {
+            saveGroupName();
+        } else if (id == 45) {
+            nameAction = -1;
+            refreshControls();
+        } else if (id == 46) {
+            String filter = snapshot.getString("GroupFilter");
+            MilitaryNetwork.request(inventorySlots.windowId, MilitaryNetwork.GROUP_FILTER, 0, 0,
+                    selectedGroup.equals(filter) ? "all" : selectedGroup);
+        } else if (id == 47 && !selectedUnits.isEmpty()) {
+            transact(MilitaryNetwork.GROUP_EDIT, 3, selectedGroup + "|" + String.join(",", selectedUnits));
+        } else if (id == 48 && selectedUnits.size() == 1) {
+            transact(MilitaryNetwork.GROUP_EDIT, 4, selectedGroup + "|" + selectedUnits.iterator().next());
+        } else if (id == 49) {
+            NBTTagCompound row = group(selectedGroup);
+            if (row != null) transact(MilitaryNetwork.GROUP_EDIT, 6, selectedGroup + "|" + (row.getInteger("Slot") + 1) % 9);
+        } else if (id == 51) {
+            if (confirmation == id) {
+                transact(MilitaryNetwork.GROUP_EDIT, 2, selectedGroup);
+                confirmation = -1;
+            } else {
+                confirmation = id;
+                feedback = "confirm_delete_group";
+            }
+        } else if (id == 52 || id == 53) {
+            transact(MilitaryNetwork.GROUP_EDIT, 5, selectedGroup + (id == 52 ? "|up" : "|down"));
+        } else if (id == 54) {
+            transact(MilitaryNetwork.GROUP_EDIT, 4, selectedGroup + "|");
+        }
+    }
+
+    private void saveGroupName() {
+        String name = groupName.getText().trim();
+        if (name.isEmpty() || pending != 0) return;
+        transact(MilitaryNetwork.GROUP_EDIT, nameAction, nameAction == 0 ? name : selectedGroup + "|" + name);
+        nameAction = -1;
+        refreshControls();
+    }
+
+    private void factionAction(int id) {
+        if (id == 60 || id == 63) {
+            if (id == 60) allegianceView = !allegianceView;
+            else settlementView = !settlementView;
+            confirmation = -1;
+            feedback = "";
+            refreshControls();
+        } else if (confirmation != id) {
+            confirmation = id;
+            feedback = "";
+        } else {
+            confirmation = -1;
+            if (id == 61 || id == 62) {
+                transact(MilitaryNetwork.PLEDGE, 0, id == 61 ? snapshot.getString("FactionId") : "");
+            } else {
+                transact(MilitaryNetwork.CAPTURE, id == 64 ? 1 : 0, snapshot.getCompoundTag("Settlement").getString("Id"));
+            }
         }
     }
 
@@ -204,6 +337,19 @@ public final class MilitaryScreen extends GuiContainer {
     private boolean hasList() { return recruiting || tab == PERSONNEL; }
 
     private NBTTagList rows() { return snapshot.getTagList("Rows", 10); }
+    private NBTTagList groups() { return snapshot.getTagList("Groups", 10); }
+    private NBTTagList factions() { return snapshot.getTagList("Factions", 10); }
+
+    private NBTTagCompound group(String id) { return findRow(groups(), id); }
+    private NBTTagCompound faction(String id) { return findRow(factions(), id); }
+
+    private static NBTTagCompound findRow(NBTTagList list, String id) {
+        for (int i = 0; i < list.tagCount(); i++) {
+            NBTTagCompound row = list.getCompoundTagAt(i);
+            if (id.equals(row.getString("Id"))) return row;
+        }
+        return null;
+    }
 
     private void reconcileSelection() {
         NBTTagList rows = rows();
@@ -230,6 +376,10 @@ public final class MilitaryScreen extends GuiContainer {
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0 && hasList() && x >= LIST_X && x < 146 && y >= LIST_Y && y < LIST_Y + ROW_H * MilitaryContainer.VISIBLE_ROWS) {
             scrollTo(offset + (wheel < 0 ? 1 : -1));
+        } else if (wheel != 0 && !recruiting && tab == PERSONNEL && organization && x >= 150 && y >= 64 && y < 106) {
+            groupOffset = Math.max(0, Math.min(Math.max(0, groups().tagCount() - 3), groupOffset + (wheel < 0 ? 1 : -1)));
+        } else if (wheel != 0 && !recruiting && tab == FACTIONS && x >= LIST_X && x < 146 && y >= LIST_Y) {
+            factionOffset = Math.max(0, Math.min(Math.max(0, factions().tagCount() - 6), factionOffset + (wheel < 0 ? 1 : -1)));
         }
     }
 
@@ -238,6 +388,11 @@ public final class MilitaryScreen extends GuiContainer {
         ticks++;
         if (!recruiting && pending == 0 && ticks % 8 == 1 && snapshot.getInteger("View") != tab) request(MilitaryNetwork.TAB, tab);
         amount.updateCursorCounter();
+        groupName.updateCursorCounter();
+        NBTTagCompound group = group(selectedGroup), pledge = faction(snapshot.getString("FactionId"));
+        NBTTagCompound settlement = snapshot.getCompoundTag("Settlement");
+        boolean custom = group != null && !"-".equals(selectedGroup);
+        boolean ready = pending == 0;
         for (Object entry : buttonList) {
             GuiButton button = (GuiButton)entry;
             if (!(button instanceof DeskButton)) continue;
@@ -254,6 +409,37 @@ public final class MilitaryScreen extends GuiContainer {
                     button.enabled = pending == 0 && selected != null && offerReason(selected).isEmpty();
                     button.displayString = selected == null ? label("hire") : label("hire_for", number(selected.getInteger("Price")));
                     break;
+                case 11: button.enabled = !organization; break;
+                case 41: button.enabled = groupOffset > 0; break;
+                case 42: button.enabled = groupOffset + 3 < groups().tagCount(); break;
+                case 43: button.enabled = ready && groups().tagCount() - 1 < snapshot.getInteger("GroupLimit"); break;
+                case 46:
+                    button.enabled = group != null;
+                    button.displayString = label(selectedGroup.equals(snapshot.getString("GroupFilter")) ? "view_all" : "view_group");
+                    break;
+                case 47: button.enabled = ready && group != null && !selectedUnits.isEmpty(); break;
+                case 48: button.enabled = ready && custom && selectedUnits.size() == 1; break;
+                case 49:
+                    button.enabled = ready && custom;
+                    button.displayString = label("slot_number", group == null || group.getInteger("Slot") == 0 ? "–" : group.getInteger("Slot"));
+                    break;
+                case 50: case 51: case 52: case 53: case 54:
+                    button.enabled = ready && custom;
+                    if (button.id == 51) button.displayString = label(confirmation == 51 ? "confirm_action" : "delete_group");
+                    break;
+                case 61:
+                    button.enabled = ready && pledge != null && pledge.getBoolean("CanPledge")
+                            && !snapshot.getString("Allegiance").equals(pledge.getString("Id")) && snapshot.getLong("AllegianceWait") == 0;
+                    button.displayString = label(confirmation == 61 ? "confirm_action" : snapshot.getString("Allegiance").isEmpty() ? "pledge" : "switch_allegiance");
+                    break;
+                case 62:
+                    button.enabled = ready && snapshot.getLong("AllegianceWait") == 0;
+                    button.displayString = label(confirmation == 62 ? "confirm_action" : "renounce");
+                    break;
+                case 64: case 65:
+                    button.enabled = ready && settlement.getBoolean(button.id == 64 ? "Claim" : "Neutralize");
+                    button.displayString = label(confirmation == button.id ? "confirm_action" : button.id == 64 ? "claim_faction" : "neutralize");
+                    break;
                 default: break;
             }
         }
@@ -261,7 +447,15 @@ public final class MilitaryScreen extends GuiContainer {
 
     @Override protected void keyTyped(char character, int key) {
         if (!recruiting && key == 15) {
-            switchTab((tab + (isShiftKeyDown() ? 3 : 1)) % TABS.length);
+            switchTab((tab + (isShiftKeyDown() ? TABS.length - 1 : 1)) % TABS.length);
+            return;
+        }
+        if (!recruiting && tab == PERSONNEL && organization && nameAction >= 0 && groupName.isFocused()) {
+            if (key == 28 || key == 156) saveGroupName();
+            else if (key == 1) {
+                nameAction = -1;
+                refreshControls();
+            } else groupName.textboxKeyTyped(character, key);
             return;
         }
         if (tab == TREASURY && !recruiting && amount.isFocused() && key != 1) {
@@ -280,6 +474,29 @@ public final class MilitaryScreen extends GuiContainer {
 
     @Override protected void mouseClicked(int x, int y, int button) {
         int relativeX = x - guiLeft, relativeY = y - guiTop;
+        if (!recruiting && tab == FACTIONS && button == 0 && inside(relativeX, relativeY, LIST_X, LIST_Y, LIST_W, ROW_H * 6)) {
+            int index = factionOffset + (relativeY - LIST_Y) / ROW_H;
+            if (index < factions().tagCount()) {
+                selectedFaction = factions().getCompoundTagAt(index).getString("Id");
+                confirmation = -1;
+                feedback = "";
+            }
+            return;
+        }
+        if (!recruiting && tab == PERSONNEL && organization && button == 0) {
+            if (nameAction >= 0) groupName.mouseClicked(x, y, button);
+            if (inside(relativeX, relativeY, 153, 65, 122, 39)) {
+                int index = groupOffset + (relativeY - 65) / 13;
+                if (index < groups().tagCount()) {
+                    selectedGroup = groups().getCompoundTagAt(index).getString("Id");
+                    nameAction = -1;
+                    confirmation = -1;
+                    feedback = "";
+                    refreshControls();
+                }
+                return;
+            }
+        }
         if (hasList() && button == 0 && relativeY >= LIST_Y && relativeY < LIST_Y + ROW_H * MilitaryContainer.VISIBLE_ROWS) {
             if (relativeX >= SCROLL_X && relativeX < 147 && maxScroll() > 0) {
                 dragging = true;
@@ -288,7 +505,14 @@ public final class MilitaryScreen extends GuiContainer {
             }
             if (relativeX >= LIST_X && relativeX < LIST_X + LIST_W) {
                 int index = (relativeY - LIST_Y) / ROW_H;
-                if (index < rows().tagCount()) select(rows().getCompoundTagAt(index));
+                if (index < rows().tagCount()) {
+                    NBTTagCompound row = rows().getCompoundTagAt(index);
+                    select(row);
+                    if (!recruiting && organization && !grouping && "active".equals(row.getString("State"))) {
+                        if (!isCtrlKeyDown()) selectedUnits.clear();
+                        if (!selectedUnits.add(selectedId)) selectedUnits.remove(selectedId);
+                    }
+                }
                 return;
             }
         }
@@ -326,7 +550,7 @@ public final class MilitaryScreen extends GuiContainer {
         background(1, 1, WIDTH - 1, HEIGHT - 1, FRAME);
         background(2, 2, WIDTH - 2, 3, LINE);
         background(3, 3, WIDTH - 3, 26, 0xFF30382F);
-        if (hasList()) background(149, LIST_Y, 278, 224, PANEL);
+        if (hasList() || tab == FACTIONS) background(149, LIST_Y, 278, 224, PANEL);
         if (!recruiting && (tab == TREASURY || tab == SUPPLIES)) {
             background(9, 51, 140, 131, PANEL);
             background(149, 51, 279, 131, PANEL);
@@ -354,7 +578,8 @@ public final class MilitaryScreen extends GuiContainer {
         else if (tab == OVERVIEW) overview(x, y);
         else if (tab == PERSONNEL) roster(x, y);
         else if (tab == TREASURY) treasury(x, y);
-        else supplies(x, y);
+        else if (tab == SUPPLIES) supplies(x, y);
+        else factionPanel(x, y);
         if (!recruiting && y >= 28 && y < 47) {
             for (int i = 0; i < TABS.length; i++) {
                 if (x >= TAB_LEFT[i] && x < TAB_LEFT[i] + TAB_WIDTH[i]) {
@@ -411,9 +636,15 @@ public final class MilitaryScreen extends GuiContainer {
     private void roster(int x, int y) {
         NBTTagList rows = rows();
         if (recruiting) {
-            title(I18n.format(snapshot.getString("FactionLabel")), 11, 34, 135, MUTED);
+            NBTTagCompound faction = faction(snapshot.getString("FactionId"));
+            String factionName = snapshot.getString("FactionLabel");
+            if (faction != null) FactionInsignia.of(faction.getString("Id")).draw(11, 31);
+            title(factionName, 25, 34, 121, MUTED);
             title(label("account_coins", number(snapshot.getLong("Currency"))), RIGHT, 34, 129, GOLD);
-            title(label("reputation", number(snapshot.getInteger("Reputation"))), RIGHT, 47, 125, MUTED);
+            if (faction != null) {
+                title(label("faction_score", faction.getString("Standing"), number(faction.getInteger("Score"))), RIGHT, 47, 125, MUTED);
+                if (faction.getInteger("Discount") > 0) title(label("recruit_discount", faction.getInteger("Discount")), 216, 11, 59, GOLD);
+            }
         }
         if (rows.tagCount() == 0) {
             drawRect(LIST_X, LIST_Y, LIST_X + LIST_W, LIST_Y + 49, INSET);
@@ -423,7 +654,7 @@ public final class MilitaryScreen extends GuiContainer {
             NBTTagCompound row = rows.getCompoundTagAt(i);
             int rowY = LIST_Y + i * ROW_H;
             String identifier = row.getString("Id");
-            boolean active = identifier.equals(selectedId);
+            boolean active = !recruiting && organization ? selectedUnits.contains(identifier) : identifier.equals(selectedId);
             boolean pointed = inside(x, y, LIST_X, rowY, LIST_W, ROW_H);
             drawRect(LIST_X, rowY, LIST_X + LIST_W, rowY + ROW_H - 1, active || pointed ? PICKED : INSET);
             if (active) drawRect(LIST_X, rowY, LIST_X + 2, rowY + ROW_H - 1, 0xFFE7CE87);
@@ -445,8 +676,164 @@ public final class MilitaryScreen extends GuiContainer {
         int thumb = Math.min(track, Math.max(15, track * MilitaryContainer.VISIBLE_ROWS / Math.max(1, total)));
         int top = LIST_Y + (maxScroll() == 0 ? 0 : offset * (track - thumb) / maxScroll());
         drawRect(SCROLL_X + 1, top, SCROLL_X + 5, top + thumb, LINE);
-        if (selected != null) details(selected, x, y);
+        if (recruiting && allegianceView) allegiancePanel();
+        else if (!recruiting && organization) organizationPanel(x, y);
+        else if (selected != null) details(selected, x, y);
         else wrapped(label(recruiting ? "pick_offer" : "pick_unit"), 157, LIST_Y + 9, 111, 3, MUTED);
+    }
+
+    private void organizationPanel(int x, int y) {
+        for (int index = 0; index < 3 && index + groupOffset < groups().tagCount(); index++) {
+            NBTTagCompound row = groups().getCompoundTagAt(index + groupOffset);
+            int top = 65 + index * 13;
+            boolean active = selectedGroup.equals(row.getString("Id"));
+            drawRect(153, top, 275, top + 12, active ? PICKED : INSET);
+            title(groupTitle(row), 157, top + 2, 95, active ? GOLD : INK);
+            title(number(row.getInteger("Count")), 252, top + 2, 21, MUTED);
+            if (inside(x, y, 153, top, 122, 12)) hint(groupTitle(row), label("unit_count", "", row.getInteger("Count")));
+        }
+        if (nameAction >= 0) {
+            title(label(nameAction == 0 ? "new_group" : "rename"), 156, 113, 117, GOLD);
+            GL11.glPushMatrix();
+            GL11.glTranslatef(-guiLeft, -guiTop, 0);
+            groupName.drawTextBox();
+            GL11.glPopMatrix();
+            return;
+        }
+        NBTTagCompound row = group(selectedGroup);
+        if (row != null) {
+            int count = row.getInteger("Count"), capacity = row.getInteger("Capacity");
+            boolean warning = capacity > 0 && count > capacity || !"-".equals(selectedGroup)
+                    && snapshot.getBoolean("RequireOfficer") && !row.getBoolean("OfficerDeployed");
+            title(label("group_deployed", row.getInteger("Deployed"), count), 157, 106, 114, INK);
+            String leader = row.getString("Leader");
+            title(leader.isEmpty() ? label("no_officer") : label("group_officer", leader, capacity), 157, 117, 114, warning ? RED : MUTED);
+            title(label("group_upkeep", number(daily(row.getLong("Wage"))), number(daily(row.getLong("Ration")))),
+                    157, 128, 114, MUTED);
+            String orders = row.getString("Orders");
+            List<String> translated = new ArrayList<>();
+            if (!orders.isEmpty()) for (String order : orders.split(",")) {
+                translated.add("unassigned".equals(order) ? label("unassigned") : I18n.format("gvc.order.mode." + order));
+            }
+            title(translated.isEmpty() ? label("no_orders") : String.join(", ", translated), 157, 139, 114, GOLD);
+            title(warning ? label("leadership_warning") : label("selected_units", selectedUnits.size()), 157, 151, 114, warning ? RED : INK);
+            if (inside(x, y, 151, 105, 126, 58)) {
+                ArrayList<String> lines = new ArrayList<>();
+                lines.add(groupTitle(row));
+                if (!translated.isEmpty()) lines.addAll(translated);
+                if (!leader.isEmpty()) lines.add(label("group_officer", leader, capacity));
+                NBTTagList roles = row.getTagList("Composition", 10);
+                for (int i = 0; i < roles.tagCount(); i++) {
+                    NBTTagCompound role = roles.getCompoundTagAt(i);
+                    lines.add(label("unit_count", classification(role), role.getInteger("Count")));
+                }
+                lines.add(label("multiselect_tip"));
+                hover = lines;
+            }
+        }
+        if (!feedback.isEmpty()) title(result(feedback), 11, 218, 134, feedbackColor());
+        else title(label("multiselect_short"), 11, 218, 134, MUTED);
+    }
+
+    private static String groupTitle(NBTTagCompound row) {
+        return "-".equals(row.getString("Id")) ? label("unassigned_pool") : row.getString("Name");
+    }
+
+    private void factionPanel(int x, int y) {
+        String allegiance = snapshot.getString("Allegiance");
+        NBTTagCompound pledged = faction(allegiance);
+        title(pledged == null ? label("unaligned") : label("pledged_to", pledged.getString("Name")), 11, 51, 135, GOLD);
+        for (int i = 0; i < 6 && i + factionOffset < factions().tagCount(); i++) {
+            NBTTagCompound faction = factions().getCompoundTagAt(factionOffset + i);
+            int top = LIST_Y + ROW_H * i;
+            boolean selected = selectedFaction.equals(faction.getString("Id"));
+            drawRect(LIST_X, top, LIST_X + LIST_W, top + ROW_H - 1, selected ? PICKED : INSET);
+            drawRect(LIST_X, top, LIST_X + 2, top + ROW_H - 1, 0xFF000000 | faction.getInteger("Color"));
+            FactionInsignia.of(faction.getString("Id")).draw(LIST_X + 6, top + 5);
+            title(faction.getString("Name"), LIST_X + 23, top + 3, 99, INK);
+            int tint = faction.getBoolean("Hostile") ? RED : GREEN;
+            String score = number(faction.getInteger("Score"));
+            int scoreWidth = fontRendererObj.getStringWidth(score);
+            title(faction.getString("Standing"), LIST_X + 23, top + 13, 95 - scoreWidth, tint);
+            title(score, LIST_X + LIST_W - scoreWidth - 3, top + 13, scoreWidth, tint);
+        }
+        if (factionOffset > 0) title("↑", SCROLL_X, LIST_Y + 2, 9, GOLD);
+        if (factionOffset + 6 < factions().tagCount()) title("↓", SCROLL_X, LIST_Y + ROW_H * 6 - 11, 9, GOLD);
+        if (settlementView) {
+            capturePanel();
+            return;
+        }
+        NBTTagCompound row = faction(selectedFaction);
+        if (row == null) return;
+        title(row.getString("Name"), 156, 71, 117, INK);
+        title(label("faction_score", row.getString("Standing"), number(row.getInteger("Score"))),
+                156, 83, 117, row.getBoolean("Hostile") ? RED : GOLD);
+        int score = row.getInteger("Score"), next = row.getInteger("Next"), previous = row.getInteger("Previous");
+        if (previous == -1000000 && next > score) previous = Math.min(score, next - 100);
+        double progress = next == score ? 1 : (score - previous) / (double) Math.max(1, next - previous);
+        drawRect(156, 96, 271, 101, INSET);
+        drawRect(156, 96, 156 + (int) (115 * progress), 101, 0xFF000000 | row.getInteger("Color"));
+        title(next == score ? label("top_standing") : label("next_standing", number(next - score)), 156, 105, 117, MUTED);
+        wrapped(row.getString("Description"), 156, 116, 115, 3, INK);
+        title(label("recruit_tier_discount", row.getInteger("Tier"), row.getInteger("Discount")), 156, 149, 117, MUTED);
+        title(label(row.getBoolean("Hostile") ? "faction_hostile" : row.getBoolean("Trade") ? "trade_open" : "trade_closed"),
+                156, 160, 117, row.getBoolean("Trade") ? GREEN : RED);
+        title(row.getBoolean("Pledging") ? label("pledge_required", number(row.getInteger("PledgeRequired"))) : label("pledge_disabled"),
+                156, 171, 117, MUTED);
+        String allies = row.getString("Allies"), enemies = row.getString("Enemies");
+        title(label("faction_allies", allies.isEmpty() ? "–" : allies), 156, 182, 117, GREEN);
+        title(label("faction_enemies", enemies.isEmpty() ? "–" : enemies), 156, 193, 117, RED);
+        if (inside(x, y, 149, 65, 129, 137)) {
+            ArrayList<String> lines = new ArrayList<>();
+            lines.add(row.getString("Name"));
+            lines.add(label("pledge_discount", row.getInteger("PledgeDiscount")));
+            lines.add(label(row.getBoolean("Capture") ? "privilege_capture" : "privilege_no_capture"));
+            lines.add(label(row.getBoolean("Infrastructure") ? "privilege_infrastructure" : "privilege_no_infrastructure"));
+            if (!allies.isEmpty()) lines.add(label("faction_allies", allies));
+            if (!enemies.isEmpty()) lines.add(label("faction_enemies", enemies));
+            hover = lines;
+        }
+        if (confirmation == 62) wrapped(label("leaving_warning", snapshot.getInteger("AllegiancePenalty")), 11, 204, 126, 3, RED);
+        else if (!feedback.isEmpty()) title(result(feedback), 11, 218, 134, feedbackColor());
+    }
+
+
+    private void capturePanel() {
+        NBTTagCompound post = snapshot.getCompoundTag("Settlement");
+        if (post.getString("Id").isEmpty()) {
+            wrapped(label("no_nearby_settlement"), 156, 74, 114, 4, MUTED);
+            return;
+        }
+        title(label("site." + post.getString("Type")), 156, 72, 118, INK);
+        title(post.getString("Faction"), 156, 84, 118, GOLD);
+        String state = post.getString("State");
+        title(label("beacon." + state), 156, 96, 118, state.equals("CONTESTED") ? RED : MUTED);
+        String detail = confirmation == 64 ? "claim_warning" : confirmation == 65 ? "neutralize_warning"
+                : post.getBoolean("Claim") ? "claim_available" : state.equals("NEUTRALIZED") ? "neutralized_site" : "capture_site_hint";
+        wrapped(label(detail), 156, 113, 115, 5, confirmation >= 0 ? GOLD : MUTED);
+        if (!feedback.isEmpty()) title(result(feedback), 156, 210, 115, feedbackColor());
+    }
+
+    private void allegiancePanel() {
+        NBTTagCompound row = faction(snapshot.getString("FactionId"));
+        if (row == null) return;
+        String allegiance = snapshot.getString("Allegiance");
+        NBTTagCompound previous = faction(allegiance);
+        title(row.getString("Name"), 156, 72, 117, GOLD);
+        wrapped(previous == null ? label("unaligned") : label("pledged_to", previous.getString("Name")), 156, 85, 115, 2, INK);
+        title(row.getBoolean("Pledging") ? label("pledge_required", number(row.getInteger("PledgeRequired"))) : label("pledge_disabled"),
+                156, 106, 116, MUTED);
+        title(label("pledge_discount", row.getInteger("PledgeDiscount")), 156, 118, 116, MUTED);
+        if (confirmation == 61) {
+            wrapped(allegiance.isEmpty() ? label("pledge_warning") : label("leaving_warning", snapshot.getInteger("AllegiancePenalty")),
+                    156, 135, 116, 5, GOLD);
+        } else {
+            String message = allegiance.equals(row.getString("Id")) ? label("already_pledged")
+                    : snapshot.getLong("AllegianceWait") > 0 ? label("pledge_wait")
+                    : row.getBoolean("CanPledge") ? label("pledge_ready") : label("pledge_unavailable");
+            wrapped(message, 156, 135, 116, 4, MUTED);
+        }
+        if (!feedback.isEmpty()) title(result(feedback), 156, 187, 116, feedbackColor());
     }
 
     private void details(NBTTagCompound row, int x, int y) {
@@ -562,8 +949,12 @@ public final class MilitaryScreen extends GuiContainer {
     }
 
     private int feedbackColor() {
-        return "deposited".equals(feedback) || "supplied".equals(feedback) || "withdrawn".equals(feedback) ? GREEN
-                : "confirm_withdraw".equals(feedback) ? YELLOW : RED;
+        switch (feedback) {
+            case "deposited": case "supplied": case "withdrawn": case "hired": case "group_saved":
+            case "pledged": case "renounced": case "occupied": case "neutralized": return GREEN;
+            case "confirm_withdraw": case "confirm_delete_group": return YELLOW;
+            default: return RED;
+        }
     }
 
     private int depositCount(int slot) {
@@ -600,7 +991,8 @@ public final class MilitaryScreen extends GuiContainer {
     }
 
     private String offerReason(NBTTagCompound row) {
-        if (snapshot.getInteger("Reputation") < row.getInteger("Required")) return "needs_reputation";
+        String lock = row.getString("Lock");
+        if (!lock.isEmpty()) return lock;
         if (snapshot.getInteger("Active") >= snapshot.getInteger("Limit")) return "limit";
         if (snapshot.getLong("Currency") < row.getInteger("Price")) return "funds";
         return "";
@@ -608,7 +1000,8 @@ public final class MilitaryScreen extends GuiContainer {
 
     private String offerHint(NBTTagCompound row) {
         String reason = offerReason(row);
-        if (reason.equals("needs_reputation")) return label("needs_reputation", number(row.getInteger("Required")));
+        if (reason.equals("reputation_locked")) return row.getInteger("Required") > 1000000 ? label("tier_disabled")
+                : label("needs_reputation", number(row.getInteger("Required")));
         return reason.isEmpty() ? label("available") : result(reason);
     }
 
@@ -681,7 +1074,7 @@ public final class MilitaryScreen extends GuiContainer {
         return client.fontRenderer.getStringWidth(text) <= width ? text : client.fontRenderer.trimStringToWidth(text, width - 6) + "…";
     }
 
-    private static void emblem(int icon, int x, int y) {
+    static void emblem(int icon, int x, int y) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(ICONS);
         GL11.glColor4f(1, 1, 1, 1);
         Gui.func_146110_a(x, y, icon * 16, 0, 16, 16, 128, 16);

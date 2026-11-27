@@ -49,6 +49,7 @@ public class TileEntityFlag extends TileEntity {
     public CampObj campObj;
     private Occupation territory;
     private String militaryType = "";
+    private String militaryFactionName = "";
     private boolean wasCountingDown;
 
     public TileEntityFlag() {}
@@ -85,13 +86,20 @@ public class TileEntityFlag extends TileEntity {
     public Packet getDescriptionPacket() {
         NBTTagCompound tag = new NBTTagCompound();
         writeToNBT(tag);
+        if (territory != null && !territory.campObj.isRaidType) {
+            tag.setString("MilitaryFactionName", hmggvcmob.military.MilitaryRelations.displayName(territory.faction()));
+        }
         return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 0, tag);
     }
 
     @Override
     public void onDataPacket(NetworkManager network, S35PacketUpdateTileEntity packet) {
-        readFromNBT(packet.func_148857_g());
+        NBTTagCompound tag = packet.func_148857_g();
+        readFromNBT(tag);
+        militaryFactionName = tag.getString("MilitaryFactionName");
     }
+
+    public String militaryFactionName() { return militaryFactionName; }
 
     @Override
     public void onChunkUnload() {
@@ -126,6 +134,7 @@ public class TileEntityFlag extends TileEntity {
         }
         if (campObj == null) return;
         if (territory == null) setFlagData();
+        if (!territory.occupied() && !MilitaryConfig.occupation) return;
         if (!vehicleBaseType && !campObj.isOneTime && !campObj.isRaidType
                 && (MilitaryConfig.occupation || MilitaryConfig.recruitment)) {
             MilitaryOccupation.update(this, territory, worldObj);

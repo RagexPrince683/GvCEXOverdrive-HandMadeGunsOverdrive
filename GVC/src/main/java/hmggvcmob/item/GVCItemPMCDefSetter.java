@@ -1,15 +1,14 @@
 package hmggvcmob.item;
 
 import hmggvcmob.entity.friend.EntityPMCBase;
-import hmggvcmob.entity.util.PlatoonOBJ;
 import hmggvcmob.entity.util.PlatoonOrder;
+import hmggvcmob.military.ArmyOrders;
+import hmggvcmob.military.MilitaryConfig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import static hmggvcmob.GVCMobPlus.tabgvcm;
@@ -18,15 +17,17 @@ import static hmggvcutil.GVCUtils.platoonMatched;
 public class GVCItemPMCDefSetter extends Item {
     private static final String ORDER_MODE = "GVCOrderMode";
     private static final PlatoonOrder[] ORDERS = {PlatoonOrder.Go, PlatoonOrder.Follow, PlatoonOrder.Patrol, PlatoonOrder.Defend, PlatoonOrder.Attack};
+    private static final ArmyOrders.Order[] COMMANDS = {ArmyOrders.Order.MOVE, ArmyOrders.Order.FOLLOW,
+            ArmyOrders.Order.PATROL, ArmyOrders.Order.DEFEND, ArmyOrders.Order.ATTACK};
 
     public GVCItemPMCDefSetter() {
-        setCreativeTab(tabgvcm);
+        if (MilitaryConfig.legacyDevice) setCreativeTab(tabgvcm);
         setMaxStackSize(64);
     }
 
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
-        if (world.isRemote) return stack;
+        if (world.isRemote || !MilitaryConfig.legacyDevice) return stack;
         NBTTagCompound tag = stack.getTagCompound();
         int index = tag == null ? 0 : tag.getInteger(ORDER_MODE);
         // The previous index 2 meant vehicle landing.
@@ -50,33 +51,8 @@ public class GVCItemPMCDefSetter extends Item {
             player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.no_squad"));
             return stack;
         }
-        PlatoonOrder order = ORDERS[index];
-        MovingObjectPosition point = null;
-        if (order != PlatoonOrder.Follow) {
-            Vec3 look = player.getLook(1);
-            Vec3 start = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
-            point = world.rayTraceBlocks(start, start.addVector(look.xCoord * 80, look.yCoord * 80, look.zCoord * 80));
-            if (point == null) {
-                player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.no_destination"));
-                return stack;
-            }
-        }
-
-        PlatoonOBJ.restore(unit);
         if (stack.hasDisplayName()) unit.platoonName = stack.getDisplayName();
-        if (unit.getPlatoon() == null) unit.makePlatoon();
-        else unit.enlistPlatoon(false);
-        PlatoonOBJ platoon = unit.getPlatoon();
-        if (order == PlatoonOrder.Follow) {
-            platoon.follow(player);
-            player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.follow"));
-        } else {
-            int x = point.blockX;
-            int y = point.blockY + 1;
-            int z = point.blockZ;
-            platoon.order(order, x + 0.5, y, z + 0.5);
-            player.addChatComponentMessage(new ChatComponentTranslation("gvc.order.destination", title(order), x, y, z));
-        }
+        ArmyOrders.legacy(player, unit, COMMANDS[index]);
         return stack;
     }
 

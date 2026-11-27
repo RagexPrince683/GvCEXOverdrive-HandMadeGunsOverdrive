@@ -37,7 +37,7 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 
 	public boolean interact(EntityPlayer entityPlayer) {
 		if (!canBeCommandedBy(entityPlayer)) return false;
-		if(entityPlayer.getHeldItem() != null && entityPlayer.getHeldItem().getItem() instanceof GVCItemPMCDefSetter && entityPlayer.getHeldItem().hasDisplayName()){
+		if(hmggvcmob.military.MilitaryConfig.legacyDevice && entityPlayer.getHeldItem() != null && entityPlayer.getHeldItem().getItem() instanceof GVCItemPMCDefSetter && entityPlayer.getHeldItem().hasDisplayName()){
 
 			HMG_proxy.setRightClickTimer();
 			platoonName = entityPlayer.getHeldItem().getDisplayName();
@@ -81,6 +81,7 @@ public class EntityPMCBase extends EntitySoBases implements IFF,IGVCmob, IflagBa
 				&& (platoonOBJ != null || platoonInfoData.isOnPlatoon)) {
 			platoonInfoData.isLeader = isPlatoonLeader();
 			platoonInfoData.isOnPlatoon = platoonOBJ != null;
+			platoonInfoData.platoonName = platoonName != null ? platoonName : hasCustomNameTag() ? getCustomNameTag() : null;
 			platoonInfoData.target = myPos == null ? new double[]{posX, posY, posZ} : myPos.getArrayPos();
 			platoonInfoData.order = platoonOBJ == null ? PlatoonOrder.Wait : platoonOBJ.getOrder();
 			platoonInfoData.mode = platoonInfoData.order.legacyMode;

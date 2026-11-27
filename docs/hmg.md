@@ -13,11 +13,11 @@ The mod is data-driven: guns, magazines, ammunition, attachments, models, sounds
 - **TaCZ-style presentation.** Imported projects can use familiar action names, first-person and ADS view nodes, third-person hand placement, and authored hand locators.
 - **Configurable firearm systems.** HMG provides pack-defined weapons, magazines, ammunition, attachments, projectiles, gun skins, placed guns, gun racks, crafting components, and the Gun Smithing Table.
 - **Multiplayer and administration.** Server-owned reload and ammunition policy, synchronized weapon mobility, manual dropped-gun pickup, reload tools, global infinite ammo, and server-side balance controls support shared servers.
-- **Legacy-mod compatibility.** Maintained integrations cover Combatives, Angelica/Celeritas, BackTools, Flan's armor presentation, Guide-API, and other common 1.7.10 rendering environments.
+- **Legacy-mod compatibility.** Maintained integrations cover Combatives, Angelica/Celeritas, BackTools, Flan's armor presentation, and other common 1.7.10 rendering environments.
 
 ## Installation
 
-HMG runs independently on Minecraft 1.7.10 with Forge 10.13.4.1614 and Java 8. Install the same build and gameplay content packs on the client and server. Source builds include the maintained HMG packs and a vecmath fallback. Guide-API is optional and enables the in-game Field Manual. See [Getting started](getting-started.md) and [Building from source](building.md).
+HMG runs independently on Minecraft 1.7.10 with Forge 10.13.4.1614 and Java 8. Install the same build and gameplay content packs on the client and server. Source builds include the maintained HMG packs, a vecmath fallback, and the built-in HMG Field Manual. See [Getting started](getting-started.md) and [Building from source](building.md).
 
 ## Documentation
 
@@ -39,7 +39,6 @@ Start with the [documentation index](README.md), or open a guide directly:
 
 - Install matching HMG builds on the client and server.
 - Keep server-required external packs synchronized. Definition mismatches can produce missing or unusable content even when cosmetic model and animation parsing is client-only.
-- Guide-API is optional and only provides the HMG Field Manual integration.
 - Blockbench importing does not import TaCZ Lua state machines, gameplay code, ballistics, camera constraints, or complete attachment/ammunition logic.
 - Compatibility and animation systems with outstanding in-game checks are listed in [Known limitations](known-limitations.md).
 

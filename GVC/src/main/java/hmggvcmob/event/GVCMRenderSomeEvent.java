@@ -46,7 +46,8 @@ public class GVCMRenderSomeEvent {
     public void render(RenderGameOverlayEvent.Post event) {
         if (world == null || event.type != RenderGameOverlayEvent.ElementType.TEXT
                 || nearestCamp == null || nearestCamp.isInvalid() || !nearestCamp.isActiveBeacon()) return;
-        String faction = net.minecraft.util.StatCollector.translateToLocal(nearestCamp.campObj.getTranslationKey());
+        String faction = nearestCamp.militaryFactionName();
+        if (faction.isEmpty()) faction = net.minecraft.util.StatCollector.translateToLocal(nearestCamp.campObj.getTranslationKey());
         String text = net.minecraft.util.StatCollector.translateToLocalFormatted("gvc.military.hud.beacon", faction, distance);
         Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, 5, 5, 0xEEEBDD);
     }

@@ -60,7 +60,7 @@ Gameplay definitions must match on both sides. Blockbench geometry, embedded tex
 - `/reloadSettings` invalidates reloadable model caches, reloads external gun and attachment settings, and rebuilds model setup on the side where it is run.
 - `/reloadsettingsnomodel` reloads external gun and attachment settings while retaining current model caches.
 - `/reloadsetonlyhelditem` is a client-only development command for the local player's held HMG model.
-- `/hmgmanual` reports Guide-API/HMG Field Manual status and also has permission level `0`.
+- `/hmgmanual` opens the invoking player's HMG Field Manual and has permission level `0`.
 - `/hmg infiniteammo [true|false]` is a permission-level-2 global administrator toggle that persists in the world gamerule `hmgInfiniteAmmo`.
 
 The level-0 reload commands should be restricted on public servers with external command or permissions tooling. See the [command reference](command-reference.md) for exact behavior and reload boundaries.

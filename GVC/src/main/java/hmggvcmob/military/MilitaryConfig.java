@@ -29,21 +29,75 @@ public final class MilitaryConfig {
     public static String[] factionRelations;
     public static Respawn respawn;
     public static int respawnDistance;
+    public static boolean legacyDevice, radialMenu, quickCommands, requireOfficer, enforceCapacity;
+    public static int groupLimit, groupSize, commandRange, targetingRange, markerTicks, commandTimeout, commandCooldown;
+    public static boolean neutralize, factionCapture, alignedNeutralize;
+    public static int occupationInterval, tradeInterval;
+    public static boolean attributePlayer, attributeHired, attributeSquad, attributeVehicle, attributeIndirect, shareReputation;
+    public static boolean rewardOwned, rewardReinforcements, rewardTraders, reputationNotices;
+    public static int reputationLoss, ownFactionPenalty, reputationWindow, reputationKillLimit, assistTicks, noticeTicks;
+    public static int allegianceCooldown, allegiancePenalty, retaliationTicks;
+    public static String[] militaryStandings, classificationValues;
 
     private MilitaryConfig() {}
 
     public static void load(Configuration config, int legacyInterval, int legacyStrength) {
         legacyRecipes = config.getBoolean("legacyRecipes", RECRUITMENT, false, "Restore recipes for legacy soldier eggs and deployment devices.");
         legacyHiring = config.getBoolean("legacyHiring", RECRUITMENT, legacyRecipes, "Restore survival use of old recruitment items. Creative use remains available.");
+        String command = "Military.Command";
+        legacyDevice = config.getBoolean("legacyDevice", command, false, "Enable squad control device use and crafting.");
+        radialMenu = config.getBoolean("radialMenu", command, true, "Enable the radial command screen on this client.");
+        quickCommands = config.getBoolean("quickCommands", command, true, "Enable the contextual keyboard command screen on this client.");
+        commandTimeout = config.getInt("quickTimeoutTicks", command, 160, 20, 1200, "Idle time before quick command mode closes.");
+        markerTicks = config.getInt("markerTicks", command, 100, 0, 600, "Lifetime of the most recent accepted order marker on this client.");
+        groupLimit = config.getInt("groupLimit", command, 24, 1, 48, "Maximum custom groups per player.");
+        groupSize = config.getInt("groupSize", command, 32, 1, 64, "Maximum personnel assigned to one group.");
+        requireOfficer = config.getBoolean("requireOfficerForGroupOrders", command, false, "Require a deployed ranked group leader to relay orders.");
+        enforceCapacity = config.getBoolean("enforceLeaderCapacity", command, false, "Reject group assignments and orders exceeding an assigned leader's capacity.");
+        commandRange = config.getInt("commandRange", command, 96, 16, 256, "Maximum command distance to personnel in blocks.");
+        targetingRange = config.getInt("targetRange", command, 80, 8, 128, "Maximum server crosshair targeting distance in blocks.");
+        commandCooldown = config.getInt("orderCooldownTicks", command, 4, 1, 40, "Minimum time between accepted battlefield order requests.");
         recruitment = config.getBoolean("enabled", RECRUITMENT, true, "Enable military traders and currency-based hiring.");
         invulnerableTraders = config.getBoolean("invulnerableTraders", RECRUITMENT, true, "Reject all incoming damage to military traders.");
         traderReplacement = config.getInt("traderReplacementTicks", RECRUITMENT, 12000, 0, 1200000, "Ticks after a trader dies before replacement. Zero disables replacement.");
         playerLimit = config.getInt("playerPersonnelLimit", RECRUITMENT, 64, 1, 512, "Maximum active hired personnel per player.");
         reputationPerKill = config.getInt("reputationPerHostileKill", RECRUITMENT, 1, 0, 20,
-                "Reputation gained with friendly factions that oppose hostile unowned infantry slain by the player.");
+                "Base reputation earned with factions that oppose the defeated unit's faction.");
+        String reputation = "Military.Reputation";
+        reputationLoss = config.getInt("lossPerKill", reputation, 4, 0, 100, "Base reputation lost with the victim's faction.");
+        ownFactionPenalty = config.getInt("allegianceFriendlyFirePenalty", reputation, 6, 0, 100, "Additional reputation lost for killing a member of your pledged faction.");
+        attributePlayer = config.getBoolean("attributePlayerKills", reputation, true, "Attribute direct player damage and projectiles.");
+        attributeHired = config.getBoolean("attributeHiredKills", reputation, true, "Attribute player-owned soldier kills.");
+        attributeSquad = config.getBoolean("attributeSubordinateKills", reputation, true, "Attribute kills by soldiers assigned to a custom group or subordinate squad.");
+        attributeVehicle = config.getBoolean("attributeVehicleKills", reputation, true, "Attribute vehicle and mounted gun damage to an available driver or gunner.");
+        attributeIndirect = config.getBoolean("attributeIndirectKills", reputation, false, "Attribute environmental deaths to the most recent recorded player damage.");
+        shareReputation = config.getBoolean("shareParticipation", reputation, false, "Share credit with players who damaged a victim within the attribution window.");
+        rewardOwned = config.getBoolean("rewardPlayerOwnedVictims", reputation, false, "Allow gains from killing hired units. Losses still apply.");
+        rewardReinforcements = config.getBoolean("rewardReinforcements", reputation, false, "Allow gains from repeated garrison and patrol replacements.");
+        rewardTraders = config.getBoolean("rewardTraderKills", reputation, false, "Allow gains from killing military traders.");
+        reputationWindow = config.getInt("rewardWindowTicks", reputation, 1200, 20, 72000, "Duration of the per-player gain budget.");
+        reputationKillLimit = config.getInt("rewardedKillsPerWindow", reputation, 16, 0, 1024, "Number of eligible deaths that can grant positive reputation per window. Zero removes the limit.");
+        assistTicks = config.getInt("attributionWindowTicks", reputation, 200, 20, 1200, "How far back to consider actual damage participation.");
+        retaliationTicks = config.getInt("retaliationTicks", reputation, 160, 0, 1200, "How long a directly attacked soldier remembers a local attacker.");
+        reputationNotices = config.getBoolean("notifications", reputation, true, "Show aggregated reputation and unlock notifications.");
+        noticeTicks = config.getInt("notificationInterval", reputation, 80, 20, 1200, "Ticks between reputation notice batches.");
+        allegianceCooldown = config.getInt("allegianceCooldownTicks", reputation, 1200, 0, 72000, "Cooldown on pledge, switch or renunciation.");
+        allegiancePenalty = config.getInt("allegianceLeavingPenalty", reputation, 25, 0, 10000, "Reputation lost with the departing faction when renouncing or switching.");
+        militaryStandings = config.getStringList("standings", reputation, new String[]{
+                "-1000000,Hostile,0,0", "-100,Unfriendly,0,0", "0,Friendly,1,0", "100,Trusted,2,5",
+                "300,Respected,3,10", "600,Honored,4,15", "1000,Distinguished,10,20"
+        }, "Each entry is minimum reputation, standing label, maximum recruitment tier, discount percent.");
+        classificationValues = config.getStringList("classificationModifiers", reputation, new String[]{
+                "heavy=1.25", "marksman=1.25", "anti_armor=1.5"
+        }, "Positive point multiplier per preset classification, in classification=multiplier form.");
 
         occupation = config.getBoolean("enabled", OCCUPATION, true, "Enable faction occupation and preset-based garrisons and patrols.");
         reinforceContested = config.getBoolean("reinforceWhileContested", OCCUPATION, false, "Allow an occupied post to receive reinforcements during an attack.");
+        neutralize = config.getBoolean("neutralizeOnDefeat", OCCUPATION, true, "Neutralize a defeated post before an explicit claim. Otherwise the defeated post becomes disabled and stops reinforcing.");
+        factionCapture = config.getBoolean("factionCapture", OCCUPATION, true, "Allow pledged players to claim defeated settlements for their faction.");
+        alignedNeutralize = config.getBoolean("allowAlignedNeutralization", OCCUPATION, true, "Allow pledged players to leave a defeated post neutralized.");
+        occupationInterval = config.getInt("updateInterval", OCCUPATION, 20, 5, 100, "Ticks between staggered occupation updates.");
+        tradeInterval = config.getInt("tradeCheckInterval", OCCUPATION, 20, 1, 100, "Ticks between checks of open civilian trade windows.");
         reinforcementInterval = config.getInt("reinforcementInterval", OCCUPATION, cap(legacyInterval, 20, 72000), 20, 72000, "Ticks between replacement waves for active settlements.");
         reinforcementDistance = config.getInt("reinforcementDistance", OCCUPATION, 96, 16, 256, "A player must be within this distance to activate reinforcements.");
         garrisonSize = config.getInt("garrisonSize", OCCUPATION, cap(legacyStrength / 2, 0, 16), 0, 16, "Maximum personnel in a base garrison.");

@@ -41,6 +41,7 @@ public class CommonSideProxyGVCM {
 	public Object militaryGui(EntityPlayer player, int trader) { return null; }
 
 	public void handleMilitarySnapshot(int window, net.minecraft.nbt.NBTTagCompound snapshot) {}
+	public void openFieldManual() {}
 
 	public void registerTileEntity() {
 //		GameRegistry.registerTileEntity(GVCTileEntityMobSpawner.class, "GVCTile_MobSpawner");

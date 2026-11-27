@@ -9,6 +9,8 @@ import net.minecraft.util.MathHelper;
 import java.util.UUID;
 
 public final class Occupation extends CampObjAndPos {
+    public enum State { ACTIVE, DISABLED, CONTESTED, NEUTRALIZED, FACTION_CONTROLLED }
+
     public final UUID id;
     public final String type;
     public final int radius, patrolRadius;
@@ -17,6 +19,9 @@ public final class Occupation extends CampObjAndPos {
     public long nextTrader, nextReinforcement;
     public int control, tenure;
     public boolean established;
+    private String factionId;
+    public State state = State.ACTIVE;
+    UUID defeatedBy;
 
     public Occupation(int x, int y, int z, CampObj camp, String type) {
         this(UUID.randomUUID(), x, y, z, camp, type,
@@ -30,11 +35,19 @@ public final class Occupation extends CampObjAndPos {
         this.type = type;
         this.radius = MathHelper.clamp_int(radius, 16, 128);
         this.patrolRadius = MathHelper.clamp_int(patrolRadius, 8, Math.min(64, this.radius));
+        factionId = MilitaryRelations.faction(camp);
     }
 
     public String faction() {
-        return MilitaryRelations.faction(campObj);
+        return factionId;
     }
+
+    void setFaction(String faction) {
+        factionId = faction;
+        campObj = MilitaryRelations.camp(faction);
+    }
+
+    public boolean occupied() { return state != State.NEUTRALIZED && state != State.DISABLED; }
 
     public boolean isVillage() {
         return "village".equals(type);
@@ -47,7 +60,14 @@ public final class Occupation extends CampObjAndPos {
     }
 
     public boolean permits(net.minecraft.entity.player.EntityPlayer player) {
-        return (owner == null || owner.equals(player.getUniqueID())) && MilitaryRelations.playerRelation(player, faction()) >= 0;
+        String allegiance = player.worldObj.isRemote ? "" : MilitaryRelations.allegiance(player.getUniqueID());
+        MilitaryRelations.Faction definition = MilitaryRelations.definition(faction());
+        return permitsTrade(player) && (MilitaryRelations.playerRelation(player, faction()) >= 0
+                || faction().equals(allegiance) && definition != null && definition.memberInfrastructure);
+    }
+
+    boolean permitsTrade(net.minecraft.entity.player.EntityPlayer player) {
+        return occupied() && (owner == null || owner.equals(player.getUniqueID())) && MilitaryRelations.permitsTrade(player, faction());
     }
 
     public NBTTagCompound write() {
@@ -55,6 +75,9 @@ public final class Occupation extends CampObjAndPos {
         tag.setString("Id", id.toString());
         tag.setIntArray("Position", flagPos);
         tag.setString("Camp", campObj.campName);
+        tag.setString("Faction", factionId);
+        tag.setString("BeaconState", state.name());
+        if (defeatedBy != null) tag.setString("DefeatedBy", defeatedBy.toString());
         tag.setString("Type", type);
         tag.setInteger("Radius", radius);
         tag.setInteger("PatrolRadius", patrolRadius);
@@ -82,6 +105,14 @@ public final class Occupation extends CampObjAndPos {
         result.control = tag.getInteger("Control");
         result.tenure = tag.getInteger("Tenure");
         result.attacked = tag.getBoolean("Contested");
+        String faction = tag.getString("Faction");
+        if (MilitaryRelations.validId(faction)) result.factionId = faction;
+        result.state = result.attacked ? State.CONTESTED : State.ACTIVE;
+        if (tag.hasKey("BeaconState")) {
+            try { result.state = State.valueOf(tag.getString("BeaconState")); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        result.defeatedBy = MilitaryEconomy.parseUuid(tag.getString("DefeatedBy"));
         result.established = tag.getBoolean("Established");
         result.owner = MilitaryEconomy.parseUuid(tag.getString("Owner"));
         result.trader = MilitaryEconomy.parseUuid(tag.getString("Trader"));

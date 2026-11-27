@@ -314,7 +314,7 @@ The active config file is generated from the `HandmadeGuns` mod id, usually as `
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
-| `enableHMGGuideBook` | boolean | `true` | Enables optional Guide-API HMG Field Manual registration. HMG still loads without Guide-API. |
+| `enableHMGGuideBook` | boolean | `true` | Enables the built-in HMG Field Manual, its crafting recipe, creative listing, and command access. |
 
 ### `Compatibility`
 

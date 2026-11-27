@@ -16,6 +16,9 @@ import hmggvcmob.render.*;
 import hmggvcmob.military.EntityMilitaryTrader;
 import hmggvcmob.military.EntityMilitaryUnit;
 import hmggvcmob.military.client.MilitaryClientEvents;
+import hmggvcmob.military.client.ArmyCommandScreen;
+import hmggvcmob.military.MilitaryNetwork;
+import hmggvcmob.military.client.MilitaryFieldManual;
 import hmggvcmob.military.client.MilitaryScreen;
 import hmggvcmob.military.client.RenderMilitaryUnit;
 import net.minecraft.entity.player.EntityPlayer;
@@ -47,6 +50,7 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 		FMLCommonHandler.instance().bus().register(overlay);
 		MinecraftForge.EVENT_BUS.register(new EventRenderPlatoonInfo());
         MinecraftForge.EVENT_BUS.register(new MilitaryClientEvents());
+        ArmyCommandScreen.register();
 	}
 
     @Override
@@ -58,11 +62,18 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
     public void handleMilitarySnapshot(int window, NBTTagCompound snapshot) {
         scheduleClientPacket(world -> {
             Minecraft client = Minecraft.getMinecraft();
+            if (window == MilitaryNetwork.MANUAL_WINDOW) {
+                openFieldManual();
+                return;
+            }
+            if (ArmyCommandScreen.snapshot(window, snapshot)) return;
             if (client.currentScreen instanceof MilitaryScreen) {
                 ((MilitaryScreen) client.currentScreen).applySnapshot(window, snapshot);
             }
         });
     }
+
+    @Override public void openFieldManual() { MilitaryFieldManual.open(Minecraft.getMinecraft()); }
 
 	@Override
 	public void scheduleClientPacket(java.util.function.Consumer<World> action) {

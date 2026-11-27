@@ -20,7 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class MilitaryNetwork {
     public static final int OPEN = 0, ROSTER = 1, WITHDRAW = 2, DEPOSIT_COINS = 3, DEPOSIT_FOOD = 4,
-            TAB = 5, ALL_COINS = 6, HIRE = 7;
+            TAB = 5, ALL_COINS = 6, HIRE = 7, GROUP_EDIT = 8, GROUP_FILTER = 9,
+            COMMAND_MENU = 10, COMMAND_ORDER = 11, PLEDGE = 12, CAPTURE = 13;
+    public static final int COMMAND_MENU_WINDOW = -1, COMMAND_MARKER_WINDOW = -2, MANUAL_WINDOW = -3;
     static final int GUI = 21;
     private static final SimpleNetworkWrapper CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel("GVCMilitary");
     private static final Map<UUID, Pending> PENDING = new ConcurrentHashMap<>();
@@ -50,16 +52,30 @@ public final class MilitaryNetwork {
             EntityPlayerMP player = (EntityPlayerMP) playerEntry;
             Pending batch = PENDING.remove(player.getUniqueID());
             if (batch == null || batch.sender != player || !player.isEntityAlive()) continue;
-            if (batch.open != null && player.openContainer == player.inventoryContainer) open(player);
+            if (player.openContainer == player.inventoryContainer) {
+                if (batch.menu != null) {
+                    MilitaryEconomy.Account account = MilitaryEconomy.get().account(player.getUniqueID());
+                    long now = MilitaryEconomy.now();
+                    if (now - account.lastMenu >= 4) {
+                        account.lastMenu = now;
+                        ArmyOrders.menu(player);
+                    }
+                }
+                if (batch.order != null) ArmyOrders.issue(player, ArmyOrders.Order.values()[batch.order.value], batch.order.preset, true);
+                if (batch.open != null) open(player);
+            }
             if (player.openContainer instanceof MilitaryContainer) {
                 deliver((MilitaryContainer)player.openContainer, batch.tab);
                 deliver((MilitaryContainer)player.openContainer, batch.roster);
+                deliver((MilitaryContainer)player.openContainer, batch.group);
                 deliver((MilitaryContainer)player.openContainer, batch.transaction);
             }
         }
         // Drop requests from sessions that disconnected before the game thread handled them.
         PENDING.entrySet().removeIf(entry -> !MinecraftServer.getServer().getConfigurationManager().playerEntityList.contains(entry.getValue().sender));
     }
+
+    static void clear() { PENDING.clear(); }
 
     private static void deliver(MilitaryContainer container, Request request) {
         if (request != null && container.windowId == request.window) {
@@ -69,7 +85,7 @@ public final class MilitaryNetwork {
 
     private static final class Pending {
         final EntityPlayerMP sender;
-        Request open, tab, roster, transaction;
+        Request open, tab, roster, group, transaction, menu, order;
 
         Pending(EntityPlayerMP sender) { this.sender = sender; }
 
@@ -77,9 +93,19 @@ public final class MilitaryNetwork {
             if (request.action == OPEN) open = request;
             else if (request.action == TAB) tab = request;
             else if (request.action == ROSTER) roster = request;
+            else if (request.action == GROUP_FILTER) group = request;
+            else if (request.action == COMMAND_MENU) menu = request;
+            else if (request.action == COMMAND_ORDER) {
+                if (order == null) order = request;
+            }
             else if (transaction == null) transaction = request;
             return this;
         }
+    }
+
+    private static boolean hasText(int action) {
+        return action == HIRE || action == GROUP_EDIT || action == GROUP_FILTER || action == COMMAND_ORDER
+                || action == PLEDGE || action == CAPTURE;
     }
 
     static void open(EntityPlayerMP player) {
@@ -106,18 +132,22 @@ public final class MilitaryNetwork {
             action = buffer.readUnsignedByte();
             value = buffer.readInt();
             transaction = buffer.readInt();
-            preset = action == HIRE ? ByteBufUtils.readUTF8String(buffer) : "";
+            preset = hasText(action) ? ByteBufUtils.readUTF8String(buffer) : "";
         }
         @Override public void toBytes(ByteBuf buffer) {
             buffer.writeInt(window).writeByte(action).writeInt(value).writeInt(transaction);
-            if (action == HIRE) ByteBufUtils.writeUTF8String(buffer, preset);
+            if (hasText(action)) ByteBufUtils.writeUTF8String(buffer, preset);
         }
     }
 
     public static final class RequestHandler implements IMessageHandler<Request, IMessage> {
         @Override public IMessage onMessage(Request request, MessageContext context) {
-            if (request.action < OPEN || request.action > HIRE
-                    || request.action == HIRE && !request.preset.matches("[a-z0-9_.-]{1,48}")) return null;
+            if (request.action < OPEN || request.action > CAPTURE || request.preset.length() > 20000
+                    || request.action == HIRE && !MilitaryRelations.validId(request.preset)
+                    || request.action == PLEDGE && !request.preset.isEmpty() && !MilitaryRelations.validId(request.preset)
+                    || request.action == COMMAND_ORDER && (request.value < 0 || request.value >= ArmyOrders.Order.values().length
+                        || request.preset.length() > 36)
+                    || (request.action == CAPTURE || request.action == GROUP_FILTER) && request.preset.length() > 36) return null;
             EntityPlayerMP player = context.getServerHandler().playerEntity;
             PENDING.compute(player.getUniqueID(), (id, previous) ->
                     (previous == null || previous.sender != player ? new Pending(player) : previous).enqueue(request));

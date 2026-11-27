@@ -121,7 +121,15 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
                 world.setBlock(x, y, z, camp.campsBlock, 0, 2);
             }
             TileEntity tile = world.getTileEntity(x, y, z);
-            if (tile instanceof TileEntityFlag) ((TileEntityFlag) tile).designate("village");
+            if (tile instanceof TileEntityFlag) {
+                TileEntityFlag flag = (TileEntityFlag) tile;
+                flag.designate("village");
+                Occupation post = flag.occupation();
+                if (post != null && post.tenure == 0 && MilitaryRelations.isFaction(faction) && !post.faction().equals(faction)) {
+                    post.setFaction(faction);
+                    hmggvcmob.world.WorldSavedData_Flag.get(world).markDirty();
+                }
+            }
         }
         return true;
     }

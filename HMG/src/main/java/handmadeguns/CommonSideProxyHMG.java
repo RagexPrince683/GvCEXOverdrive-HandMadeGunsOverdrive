@@ -37,6 +37,8 @@ public class CommonSideProxyHMG {
 	public EntityPlayer getEntityPlayerInstance() {return null;}
 	
 	public void registerClientInfo(){}
+
+	public void openFieldManual() {}
 	
 	public void IGuiHandler(){}
 	

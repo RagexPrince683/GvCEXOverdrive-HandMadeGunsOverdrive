@@ -10,7 +10,10 @@ public enum PlatoonOrder {
     Land(3, Modes.Land),
     Attack(4, Modes.Attack),
     Patrol(5, Modes.Go),
-    Defend(6, Modes.Wait);
+    Defend(6, Modes.Wait),
+    Hold(7, Modes.Wait),
+    Pause(8, Modes.Wait),
+    Rally(9, Modes.Go);
 
     private static final PlatoonOrder[] ORDERS = values();
     public final int id;

@@ -447,3 +447,12 @@ Developer/backend
 - Keep vanilla player respawns by default and add optional Hybrid and Beacon Only modes. Legacy soldier crafting is available through configuration.
 - Discover HMG firearms for NPC loadouts and publish compatibility diagnostics. GVCO troops have unlimited reserve ammunition and retain normal HMG magazine and reload behavior.
 - Add separate Overview, Personnel, Treasury, and Supplies tabs. Military traders open a recruitment screen with 3D previews, eligibility, pricing, and recurring costs.
+
+2026-11-27 02:57 — Add army command and faction progression
+
+- Command your army with a hold-to-open wheel or contextual keyboard orders. The wheel uses distinct order symbols and shows the highlighted action and personnel count in its center. Assign troops to named groups, appoint officers, choose formations, and set quick-command slots. The legacy Squad Command Device remains available through configuration.
+- Add persistent faction reputation and allegiance. Earn standing through military actions, unlock higher recruitment tiers and member-only offers, and receive standing and allegiance discounts.
+- Give Defense Corps, Insurgents, and Free Company their own insignia and infantry armbands. Existing faction IDs remain compatible with saves and pack definitions.
+- Neutralize defeated settlements or explicitly claim them for your pledged faction. Beacon state, trader affiliation, and reinforcements follow the saved settlement record. Player respawning uses vanilla rules by default.
+- Anchor soldier status labels to Minecraft’s interpolated render positions and show a temporary marker when the server accepts a positional order.
+- Add the in-game GVCO Field Manual and rebuild HMG’s Field Manual as a standalone item and reader. Open the manuals with `/military manual` and `/hmgmanual`. Both include searchable chapters and display relevant bindings from Controls.

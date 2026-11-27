@@ -69,5 +69,7 @@ public class HMGPacketHandler {
                 Side.CLIENT);
         INSTANCE.registerMessage(PacketTechTierSync.Handler.class, PacketTechTierSync.class, ++id,
                 Side.CLIENT);
+        INSTANCE.registerMessage(handmadeguns.guide.PacketFieldManual.Handler.class, handmadeguns.guide.PacketFieldManual.class, ++id,
+                Side.CLIENT);
     }
 }

@@ -17,10 +17,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public final class MilitaryContainer extends Container {
     public static final int VISIBLE_ROWS = 6;
-    public static final int TREASURY = 2, SUPPLIES = 3;
+    public static final int TREASURY = 2, SUPPLIES = 3, FACTIONS = 4;
     private final EntityPlayer owner;
     private final int traderId;
     final InventoryBasic deposit = new InventoryBasic("Military deposits", false, 2);
@@ -28,6 +29,10 @@ public final class MilitaryContainer extends Container {
     private boolean grouping;
     private long sentRevision = -1, sentCarried = -1;
     private String sentFaction = "";
+    private String groupFilter = MilitaryGroups.ALL;
+    private NBTTagCompound settlement = new NBTTagCompound();
+    private long settlementCheck = -1;
+    private boolean sentCooldown;
     private ItemStack lastCurrency, lastFood;
     private String result = "";
 
@@ -65,7 +70,7 @@ public final class MilitaryContainer extends Container {
     @Override
     public ItemStack slotClick(int slot, int button, int mode, EntityPlayer player) {
         if (isRecruitment() || slot >= inventorySlots.size()
-                || slot >= 0 && (view < TREASURY || slot < 2 && view - TREASURY != slot)) return null;
+                || slot >= 0 && (view != TREASURY && view != SUPPLIES || slot < 2 && view - TREASURY != slot)) return null;
         return super.slotClick(slot, button, mode, player);
     }
 
@@ -114,14 +119,33 @@ public final class MilitaryContainer extends Container {
             filter = value >> 10 & 3;
             grouping = (value & 4096) != 0;
         } else if (type == MilitaryNetwork.TAB) {
-            view = Math.max(0, Math.min(3, value));
+            view = Math.max(0, Math.min(FACTIONS, value));
             sentRevision = -1;
+        } else if (type == MilitaryNetwork.GROUP_FILTER && !isRecruitment()) {
+            MilitaryEconomy.Account account = MilitaryEconomy.get().account(owner.getUniqueID());
+            if (MilitaryGroups.ALL.equals(preset) || MilitaryGroups.UNGROUPED.equals(preset)
+                    || account.groups.containsKey(MilitaryEconomy.parseUuid(preset))) {
+                groupFilter = preset;
+                offset = 0;
+                grouping = false;
+                sentRevision = -1;
+            }
         } else if (transaction > lastTransaction) {
             lastTransaction = acknowledgement = transaction;
+            result = "invalid";
             if (type == MilitaryNetwork.HIRE && isRecruitment()) {
                 result = MilitaryRecruitment.hire(owner, traderId, preset);
+            } else if (type == MilitaryNetwork.PLEDGE && preset.isEmpty()) {
+                result = MilitaryRelations.pledge(owner, "");
+            } else if (type == MilitaryNetwork.PLEDGE && isRecruitment()) {
+                result = MilitaryRecruitment.pledge(owner, traderId, preset);
             } else if (!isRecruitment()) {
                 if (type == MilitaryNetwork.WITHDRAW) result = MilitarySupplies.withdraw(owner, value);
+                else if (type == MilitaryNetwork.GROUP_EDIT && view == 1) result = MilitaryGroups.edit(owner, value, preset);
+                else if (type == MilitaryNetwork.CAPTURE && view == FACTIONS) {
+                    result = MilitaryOccupation.resolve(owner, preset, value == 1);
+                    settlementCheck = -1;
+                }
                 else if (type == MilitaryNetwork.ALL_COINS) result = MilitarySupplies.depositAllCoins(owner, this);
                 else if (type == MilitaryNetwork.DEPOSIT_COINS || type == MilitaryNetwork.DEPOSIT_FOOD) {
                     boolean food = type == MilitaryNetwork.DEPOSIT_FOOD;
@@ -130,7 +154,6 @@ public final class MilitaryContainer extends Container {
                     result = MilitarySupplies.deposit(owner, this, food, count);
                 }
             }
-            if (result.isEmpty()) result = "invalid";
         }
         detectAndSendChanges();
     }
@@ -152,11 +175,21 @@ public final class MilitaryContainer extends Container {
         String faction = post == null ? "" : post.faction();
         MilitaryEconomy economy = MilitaryEconomy.get();
         MilitaryEconomy.Account account = economy.account(owner.getUniqueID());
+        long now = MilitaryEconomy.now();
+        boolean cooldown = account.allegianceAfter > now;
+        boolean settlementChanged = false;
+        if (view == FACTIONS && (settlementCheck < 0 || now >= settlementCheck || sentRevision != account.revision)) {
+            NBTTagCompound local = MilitaryOccupation.nearby(owner);
+            settlementChanged = !settlement.equals(local);
+            settlement = local;
+            settlementCheck = now + MilitaryConfig.occupationInterval;
+        }
         ItemStack currency = deposit.getStackInSlot(0);
         ItemStack food = deposit.getStackInSlot(1);
         long carried = view == TREASURY ? carriedCoins() : 0;
         int selection = offset | filter << 10 | (grouping ? 4096 : 0);
-        if (sentRevision == account.revision && sentRoster == selection && result.isEmpty()
+        if (sentRevision == account.revision && sentRoster == selection && result.isEmpty() && !settlementChanged
+                && sentCooldown == cooldown
                 && sentCarried == carried && sentFaction.equals(faction)
                 && ItemStack.areItemStacksEqual(lastCurrency, currency) && ItemStack.areItemStacksEqual(lastFood, food)) return;
 
@@ -190,14 +223,23 @@ public final class MilitaryContainer extends Container {
         snapshot.setInteger("FoodDeposit", MilitarySupplies.foodValue(food));
         snapshot.setInteger("Ack", acknowledgement);
         snapshot.setString("Result", result);
-        if (post == null) writeRoster(snapshot, economy, account);
-        else writeOffers(snapshot, post);
+        if (post != null) {
+            writeOffers(snapshot, post);
+            MilitaryRelations.writeFactions(snapshot, account.owner);
+        } else if (view == FACTIONS) {
+            MilitaryRelations.writeFactions(snapshot, account.owner);
+            snapshot.setTag("Settlement", settlement);
+        } else if (view == 1) {
+            writeGroups(snapshot, economy, account);
+            writeRoster(snapshot, economy, account);
+        }
 
         MilitaryNetwork.send(player, windowId, snapshot);
         sentRevision = account.revision;
         sentRoster = offset | filter << 10 | (grouping ? 4096 : 0);
         sentCarried = carried;
         sentFaction = faction;
+        sentCooldown = cooldown;
         lastCurrency = currency == null ? null : currency.copy();
         lastFood = food == null ? null : food.copy();
         result = "";
@@ -215,7 +257,8 @@ public final class MilitaryContainer extends Container {
     private void writeOffers(NBTTagCompound snapshot, Occupation post) {
         List<UnitPresets.Preset> offers = UnitPresets.pool(post.faction(), false);
         offers.sort(Comparator.comparingInt((UnitPresets.Preset p) -> p.tier).thenComparing(p -> p.name));
-        snapshot.setString("FactionLabel", "pmc".equals(post.faction()) ? "gvc.military.faction.pmc" : post.campObj.getTranslationKey());
+        snapshot.setString("FactionId", post.faction());
+        snapshot.setString("FactionLabel", MilitaryRelations.definition(post.faction()).name);
         snapshot.setInteger("Reputation", MilitaryRelations.playerRelation(owner, post.faction()));
         boundOffset(snapshot, offers.size());
         NBTTagList rows = new NBTTagList();
@@ -225,8 +268,9 @@ public final class MilitaryContainer extends Container {
             row.setString("Id", preset.id);
             row.setString("Name", preset.name);
             row.setInteger("Tier", preset.tier);
-            row.setInteger("Required", preset.requiredRelation);
-            row.setInteger("Price", preset.recruitmentCost);
+            row.setInteger("Required", MilitaryRelations.requirement(preset));
+            row.setInteger("Price", MilitaryRecruitment.price(owner.getUniqueID(), preset));
+            row.setString("Lock", MilitaryRecruitment.lock(owner, preset));
             row.setLong("Wage", Math.round(preset.currencyUpkeep * (double) MilitaryConfig.wageMultiplier));
             row.setLong("Ration", Math.round(preset.foodConsumption * (double) MilitaryConfig.rationMultiplier));
             writePreset(row, preset, preset.previewWeapon());
@@ -236,11 +280,19 @@ public final class MilitaryContainer extends Container {
     }
 
     private void writeRoster(NBTTagCompound snapshot, MilitaryEconomy economy, MilitaryEconomy.Account account) {
+        UUID group = MilitaryEconomy.parseUuid(groupFilter);
+        if (group != null && !account.groups.containsKey(group)) {
+            groupFilter = MilitaryGroups.ALL;
+            offset = 0;
+        }
+        snapshot.setString("GroupFilter", groupFilter);
         List<MilitaryEconomy.Personnel> personnel = new ArrayList<>(account.roster.values());
         personnel.sort(Comparator.comparing((MilitaryEconomy.Personnel p) -> !p.active())
                 .thenComparing(p -> Objects.toString(p.squad, "")).thenComparing(p -> -p.rank).thenComparing(p -> p.name));
         Map<String, RosterEntry> entries = new LinkedHashMap<>();
         for (MilitaryEconomy.Personnel person : personnel) {
+            UUID assigned = account.groups.containsKey(person.group) ? person.group : null;
+            if (!MilitaryGroups.ALL.equals(groupFilter) && !Objects.equals(group, assigned)) continue;
             boolean deployed = economy.loaded(person.id) != null;
             if (filter == 1 && (!person.active() || !deployed) || filter == 2 && (!person.active() || deployed)
                     || filter == 3 && person.active()) continue;
@@ -273,6 +325,68 @@ public final class MilitaryContainer extends Container {
             rows.appendTag(row);
         }
         snapshot.setTag("Rows", rows);
+    }
+
+    private void writeGroups(NBTTagCompound snapshot, MilitaryEconomy economy, MilitaryEconomy.Account account) {
+        NBTTagList rows = new NBTTagList();
+        Map<UUID, GroupSummary> summaries = new LinkedHashMap<>();
+        for (MilitaryEconomy.Personnel person : account.roster.values()) {
+            if (!person.active()) continue;
+            UUID group = account.groups.containsKey(person.group) ? person.group : null;
+            GroupSummary summary = summaries.computeIfAbsent(group, ignored -> new GroupSummary());
+            summary.count++;
+            if (economy.loaded(person.id) != null) summary.deployed++;
+            summary.wage += person.wage();
+            summary.ration += person.ration();
+            String order = person.assignment;
+            if (!order.isEmpty()) summary.orders.add(order);
+            UnitPresets.Preset preset = UnitPresets.get(person.preset);
+            summary.composition.merge(preset == null ? "infantry" : preset.classification, 1, Integer::sum);
+        }
+        NBTTagCompound ungrouped = summaries.getOrDefault(null, new GroupSummary()).tag();
+        ungrouped.setString("Id", MilitaryGroups.UNGROUPED);
+        rows.appendTag(ungrouped);
+        for (MilitaryGroups.Group group : account.groups.values()) {
+            NBTTagCompound row = summaries.getOrDefault(group.id, new GroupSummary()).tag();
+            row.setString("Id", group.id.toString());
+            row.setString("Name", group.name);
+            row.setInteger("Slot", group.slot);
+            MilitaryEconomy.Personnel leader = account.roster.get(group.leader);
+            if (leader != null && leader.active()) {
+                row.setString("Leader", leader.name);
+                row.setInteger("Capacity", MilitaryGroups.capacity(leader));
+                row.setBoolean("OfficerDeployed", economy.loaded(leader.id) != null);
+            }
+            rows.appendTag(row);
+        }
+        snapshot.setTag("Groups", rows);
+        snapshot.setBoolean("RequireOfficer", MilitaryConfig.requireOfficer);
+        snapshot.setInteger("GroupLimit", MilitaryConfig.groupLimit);
+    }
+
+    private static final class GroupSummary {
+        final Map<String, Integer> composition = new LinkedHashMap<>();
+        final java.util.Set<String> orders = new java.util.LinkedHashSet<>();
+        int count, deployed;
+        long wage, ration;
+
+        NBTTagCompound tag() {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setInteger("Count", count);
+            tag.setInteger("Deployed", deployed);
+            tag.setLong("Wage", wage);
+            tag.setLong("Ration", ration);
+            NBTTagList roles = new NBTTagList();
+            for (Map.Entry<String, Integer> role : composition.entrySet()) {
+                NBTTagCompound row = new NBTTagCompound();
+                row.setString("Classification", role.getKey());
+                row.setInteger("Count", role.getValue());
+                roles.appendTag(row);
+            }
+            tag.setTag("Composition", roles);
+            tag.setString("Orders", String.join(",", orders));
+            return tag;
+        }
     }
 
     private void boundOffset(NBTTagCompound snapshot, int size) {

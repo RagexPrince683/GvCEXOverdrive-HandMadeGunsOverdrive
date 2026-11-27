@@ -25,7 +25,7 @@ import handmadeguns.command.HMG_CommandReloadparm;
 import handmadeguns.command.HMG_CommandReloadSetOnlyHeldItem;
 import handmadeguns.command.HMG_CommandReloadparmNoModel;
 import handmadeguns.command.HMG_CommandManual;
-import handmadeguns.guide.HMGGuideIntegration;
+import handmadeguns.guide.FieldManualItem;
 import handmadeguns.entity.*;
 import handmadeguns.entity.bullets.*;
 import handmadeguns.event.*;
@@ -274,7 +274,9 @@ public class HandmadeGunsCore {
 		manualGunPickupRequiresLineOfSight = lconf.get("ManualGunPickup", "manualGunPickupRequiresLineOfSight", true, "When true, the server requires the player to be looking at the dropped gun with no block in the way.").getBoolean(true);
 		manualGunPickupOnlyGuns = lconf.get("ManualGunPickup", "manualGunPickupOnlyGuns", true, "When true, only HMG gun items use manual pickup. If false, other HandmadeGuns items may also use it; non-HMG items are never affected.").getBoolean(true);
 		enableGunGroundPhysicsRender = lconf.get("ManualGunPickup", "enableGunGroundPhysicsRender", false, "Client-side only: render dropped HMG guns with a flat, physical-looking orientation when supported by the HMG gun renderer.").getBoolean(false);
-		enableHMGGuideBook = lconf.get("GuideBook", "enableHMGGuideBook", true, "Enable the optional Guide-API HMG Field Manual. HMG still loads without Guide-API; when false, no Guide-API manual is registered even if Guide-API is installed.").getBoolean(true);
+		enableHMGGuideBook = lconf.get("GuideBook", "enableHMGGuideBook", true, "Enable the built-in HMG Field Manual and its recipe.").getBoolean(true);
+		FieldManualItem.register("FieldManual", "hmg_field_manual", tabhmg, net.minecraft.init.Items.flint,
+				enableHMGGuideBook, () -> HMG_proxy.openFieldManual());
 		enableCombativesRecoilIntegration = lconf.get("Compatibility", "enableCombativesRecoilIntegration", true, "Client-side only: when Combatives is installed and its camera API is active, route first-person visual weapon recoil through Combatives instead of HMG legacy look-rotation recoil.").getBoolean(true);
 		enableCombativesAimRecoilIntegration = lconf.get("Compatibility", "enableCombativesAimRecoilIntegration", true, "Client-side only: when Combatives visual recoil is accepted, apply HMG recoil as actual local pitch/yaw displacement with delayed recovery instead of relying on visual camera offsets for aim climb.").getBoolean(true);
 		combativesAimRecoilVerticalScale = lconf.get("Compatibility", "combativesAimRecoilVerticalScale", 0.55D, "Client-side scale for real pitch displacement added by HMG-to-Combatives aim recoil.", 0.0D, 4.0D).getDouble(0.55D);
@@ -891,7 +893,6 @@ public class HandmadeGunsCore {
 		HMG_proxy.registerTileEntity();
 		HMG_proxy.InitRendering();
 		HMG_proxy.getEntityPlayerInstance();
-		HMGGuideIntegration.registerIfAvailable();
 	}
 
 	//public static void registerBlocks() {

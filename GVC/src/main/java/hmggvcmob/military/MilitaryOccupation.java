@@ -9,6 +9,7 @@ import hmggvcmob.tile.TileEntityFlag;
 import hmggvcmob.world.WorldSavedData_Flag;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
@@ -19,7 +20,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public final class MilitaryOccupation {
@@ -27,29 +27,31 @@ public final class MilitaryOccupation {
 
     public static void update(TileEntityFlag flag, Occupation post, World world) {
         long now = world.getTotalWorldTime();
-        if (Math.floorMod(now + flag.xCoord * 11L + flag.zCoord * 7L, 20) != 0) return;
+        long phase = now + flag.xCoord * 11L + flag.zCoord * 7L;
+        if (Math.floorMod(phase, MilitaryConfig.occupationInterval) != 0) return;
         WorldSavedData_Flag data = WorldSavedData_Flag.get(world);
-        if (MilitaryConfig.recruitment && post.trader == null && post.nextTrader <= now) {
+        if (post.occupied() && MilitaryConfig.recruitment && post.trader == null && post.nextTrader <= now) {
             if (spawnTrader(world, post)) data.markDirty();
             else post.nextTrader = now + 100;
         }
-        if (!MilitaryConfig.occupation || world.difficultySetting == EnumDifficulty.PEACEFUL) return;
+        if (!MilitaryConfig.occupation) return;
         boolean wasContested = post.attacked;
-        if (Math.floorMod(now + flag.xCoord * 11L + flag.zCoord * 7L, 40) == 0) {
+        boolean simulated = world.difficultySetting != EnumDifficulty.PEACEFUL;
+        if (post.occupied() && simulated && Math.floorMod(phase, MilitaryConfig.occupationInterval * 2) == 0) {
             capture(world, post, data);
         }
         int previous = flag.flagHeight;
         int previousCountdown = flag.respawncycle;
-        flag.flagHeight = post.control * post.campObj.maxFlagHeight / MilitaryConfig.captureStrength;
+        flag.flagHeight = post.occupied() ? post.control * post.campObj.maxFlagHeight / MilitaryConfig.captureStrength : 0;
         flag.campObj = post.campObj;
-        if (post.nextReinforcement <= now && (!post.attacked || MilitaryConfig.reinforceContested)
+        if (post.occupied() && simulated && post.nextReinforcement <= now && (!post.attacked || MilitaryConfig.reinforceContested)
                 && world.getClosestPlayer(flag.xCoord + .5, flag.yCoord + .5, flag.zCoord + .5, MilitaryConfig.reinforcementDistance) != null) {
             post.nextReinforcement = now + MilitaryConfig.reinforcementInterval;
             reinforce(world, post, false);
             reinforce(world, post, true);
             data.markDirty();
         }
-        flag.respawncycle = (int) MathHelper.clamp_double(post.nextReinforcement - now, 0, MilitaryConfig.reinforcementInterval);
+        flag.respawncycle = post.occupied() ? (int) MathHelper.clamp_double(post.nextReinforcement - now, 0, MilitaryConfig.reinforcementInterval) : 0;
         if (previous != flag.flagHeight || previousCountdown / 100 != flag.respawncycle / 100
                 || wasContested != post.attacked) {
             flag.markDirty();
@@ -68,17 +70,16 @@ public final class MilitaryOccupation {
             EntityPlayer player = (EntityPlayer) entry;
             if (!player.isEntityAlive() || player.capabilities.disableDamage) continue;
             if (supporting(post, player.getUniqueID(), "pmc")) friendly += 6;
-            else if (MilitaryRelations.playerRelation(player, post.faction()) < 0) enemies.merge(new Claimant("pmc", player.getUniqueID()), 6, Integer::sum);
+            else if (MilitaryRelations.hostileToPlayer(player.getUniqueID(), post.faction())) enemies.merge(new Claimant(player.getUniqueID()), 6, Integer::sum);
         }
         for (Object entry : world.getEntitiesWithinAABB(EntityLiving.class, area)) {
             if (!(entry instanceof IflagBattler) || !((EntityLiving) entry).isEntityAlive()) continue;
             IflagBattler unit = (IflagBattler) entry;
-            String faction = MilitaryRelations.faction(unit.getCampObj());
+            String faction = MilitaryRelations.faction((EntityLiving) entry);
             UUID owner = unit instanceof EntityMilitaryUnit ? ((EntityMilitaryUnit)unit).owner() : null;
             if (supporting(post, owner, faction)) friendly++;
-            else if (owner == null ? MilitaryRelations.factionRelation(faction, post.faction()) < 0
-                    : MilitaryRelations.reputation(owner, post.faction()) < 0) {
-                enemies.merge(new Claimant(owner == null ? faction : "pmc", owner), 1, Integer::sum);
+            else if (owner != null && MilitaryRelations.hostileToPlayer(owner, post.faction())) {
+                enemies.merge(new Claimant(owner), 1, Integer::sum);
             }
         }
         Claimant lead = null;
@@ -94,6 +95,8 @@ public final class MilitaryOccupation {
         int previous = post.control;
         boolean wasContested = post.attacked;
         post.attacked = contested;
+        post.state = contested ? Occupation.State.CONTESTED : post.tenure > 0 && post.owner == null
+                ? Occupation.State.FACTION_CONTROLLED : Occupation.State.ACTIVE;
         if (contested) {
             int competing = enemies.values().stream().mapToInt(Integer::intValue).sum() - pressure;
             post.control = Math.max(0, Math.min(MilitaryConfig.captureStrength, post.control + (friendly + competing - pressure) * 10));
@@ -101,36 +104,111 @@ public final class MilitaryOccupation {
             post.control = Math.min(MilitaryConfig.captureStrength, post.control + Math.max(1, friendly) * 5);
         }
         if (lead != null && post.control == 0) {
-            transfer(world, post, lead.faction, lead.owner);
+            String allegiance = MilitaryRelations.allegiance(lead.owner);
+            boolean claimPossible = canClaim(lead.owner, post);
+            boolean canNeutralize = MilitaryConfig.neutralize && (MilitaryConfig.alignedNeutralize || allegiance.isEmpty() || !claimPossible);
+            deactivate(world, post, lead.owner, canNeutralize ? Occupation.State.NEUTRALIZED : Occupation.State.DISABLED);
         } else if (previous != post.control || wasContested != contested) {
             data.markDirty();
         }
     }
 
     private static boolean supporting(Occupation post, UUID owner, String faction) {
-        if (owner != null) return owner.equals(post.owner) || MilitaryRelations.reputation(owner, post.faction()) > 0;
+        if (owner != null) return owner.equals(post.owner) || !MilitaryRelations.hostileToPlayer(owner, post.faction())
+                && (MilitaryRelations.reputation(owner, post.faction()) > 0 || post.faction().equals(MilitaryRelations.allegiance(owner)));
         return MilitaryRelations.factionRelation(faction, post.faction()) > 0;
     }
 
     public static void transfer(World world, Occupation post, String faction, UUID claimant) {
-        post.campObj = MilitaryRelations.camp(faction);
+        post.setFaction(faction);
         post.owner = claimant;
         post.control = MilitaryConfig.captureStrength;
         post.attacked = false;
+        post.state = Occupation.State.FACTION_CONTROLLED;
+        post.defeatedBy = null;
+        post.nextReinforcement = world.getTotalWorldTime() + MilitaryConfig.reinforcementInterval;
+        resetGarrison(post);
+        updateBeacon(world, post);
+        if (MilitaryConfig.diagnostics) FMLLog.info("[GVC military] Settlement %s now belongs to %s (%s)", post.id, faction, claimant);
+    }
+
+    private static void deactivate(World world, Occupation post, UUID player, Occupation.State state) {
+        post.state = state;
+        post.defeatedBy = player;
+        post.owner = null;
+        post.attacked = false;
+        post.control = 0;
+        post.trader = null;
+        post.nextTrader = world.getTotalWorldTime() + MilitaryConfig.occupationInterval;
+        resetGarrison(post);
+        updateBeacon(world, post);
+    }
+
+    private static void resetGarrison(Occupation post) {
         post.tenure++;
         post.garrison = null;
         post.patrol = null;
-        post.nextReinforcement = world.getTotalWorldTime() + MilitaryConfig.reinforcementInterval;
+    }
+
+    private static void updateBeacon(World world, Occupation post) {
         WorldSavedData_Flag.get(world).markDirty();
         TileEntityFlag flag = getFlag(world, post);
         if (flag != null) {
             flag.campObj = post.campObj;
-            flag.flagHeight = flag.campObj.maxFlagHeight;
+            flag.flagHeight = post.occupied() ? flag.campObj.maxFlagHeight : 0;
+            if (!post.occupied()) flag.respawncycle = 0;
             flag.markDirty();
             world.markBlockForUpdate(flag.xCoord, flag.yCoord, flag.zCoord);
         }
         MilitarySystem.closeHostileTrade();
-        if (MilitaryConfig.diagnostics) FMLLog.info("[GVC military] Settlement %s now belongs to %s (%s)", post.id, faction, claimant);
+    }
+
+    static NBTTagCompound nearby(EntityPlayer player) {
+        NBTTagCompound result = new NBTTagCompound();
+        Occupation post = nearbyPost(player);
+        if (post == null) return result;
+        result.setString("Id", post.id.toString());
+        MilitaryRelations.Faction faction = MilitaryRelations.definition(post.faction());
+        result.setString("Faction", faction == null ? post.faction() : faction.name);
+        result.setString("Type", post.type);
+        result.setString("State", post.state.name());
+        result.setBoolean("Claim", !post.occupied() && canClaim(player.getUniqueID(), post) && mayResolve(player, post));
+        result.setBoolean("Neutralize", post.state == Occupation.State.DISABLED && mayResolve(player, post)
+                && (MilitaryConfig.alignedNeutralize || !canClaim(player.getUniqueID(), post)));
+        return result;
+    }
+
+    static String resolve(EntityPlayer player, String id, boolean claim) {
+        Occupation post = nearbyPost(player);
+        if (post == null || !post.id.toString().equals(id) || post.occupied() || !mayResolve(player, post)) return "capture_denied";
+        if (claim && canClaim(player.getUniqueID(), post)) {
+            transfer(player.worldObj, post, MilitaryRelations.allegiance(player.getUniqueID()), null);
+            return "occupied";
+        }
+        if (!claim && post.state == Occupation.State.DISABLED
+                && (MilitaryConfig.alignedNeutralize || !canClaim(player.getUniqueID(), post))) {
+            deactivate(player.worldObj, post, player.getUniqueID(), Occupation.State.NEUTRALIZED);
+            return "neutralized";
+        }
+        return "capture_denied";
+    }
+
+    private static Occupation nearbyPost(EntityPlayer player) {
+        if (!MilitaryConfig.occupation) return null;
+        TileEntityFlag flag = TileEntityFlag.findNearest(player.worldObj, player.posX, player.posY, player.posZ, 12, false,
+                tile -> !tile.vehicleBaseType && !tile.campObj.isOneTime && !tile.campObj.isRaidType);
+        return flag == null ? null : flag.occupation();
+    }
+
+    private static boolean mayResolve(EntityPlayer player, Occupation post) {
+        return player.getUniqueID().equals(post.defeatedBy) || MilitaryRelations.hostileToPlayer(player.getUniqueID(), post.faction());
+    }
+
+    private static boolean canClaim(UUID player, Occupation post) {
+        String allegiance = MilitaryRelations.allegiance(player);
+        MilitaryRelations.Faction faction = MilitaryRelations.definition(allegiance);
+        return MilitaryConfig.factionCapture && faction != null && faction.settlementCapture && !allegiance.equals(post.faction())
+                && !MilitaryRelations.hostileToPlayer(player, allegiance);
     }
 
     private static TileEntityFlag getFlag(World world, Occupation post) {
@@ -225,24 +303,20 @@ public final class MilitaryOccupation {
     }
 
     private static final class Claimant {
-        final String faction;
         final UUID owner;
 
-        Claimant(String faction, UUID owner) {
-            this.faction = faction;
-            this.owner = owner;
-        }
+        Claimant(UUID owner) { this.owner = owner; }
 
         String key() {
-            return faction + ":" + owner;
+            return owner.toString();
         }
 
-        @Override public int hashCode() { return Objects.hash(faction, owner); }
+        @Override public int hashCode() { return owner.hashCode(); }
 
         @Override public boolean equals(Object value) {
             if (!(value instanceof Claimant)) return false;
             Claimant other = (Claimant) value;
-            return faction.equals(other.faction) && Objects.equals(owner, other.owner);
+            return owner.equals(other.owner);
         }
     }
 }

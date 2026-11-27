@@ -10,9 +10,10 @@ On first launch, look for `config/GVCMob.cfg`, `config/GVCGuns.cfg`, and `config
 
 ## Factions and encounters
 
-- **ALLIES Radical Party** guerrillas fight players and allied troops. Units include riflemen, marksmen, machine gunners, grenadiers, shotgun infantry, and specialized variants.
-- **UNION** soldiers are friendly to players and fight guerrillas. The UNION flag can draw reinforcement and defense activity.
-- **PMC** infantry are friendly to players and can be issued squad orders using the Squad Command Device.
+- **Insurgents** start hostile to players. Their troops carry rust-red bands.
+- **Defense Corps** regulars start friendly and defend fortified outposts. Their troops carry sage-green bands.
+- **Free Company** contractors start friendly and offer infantry for hire. Their troops carry gold bands.
+- Faction standing changes for each player. The shield, triangle, and diamond insignia identify the three factions in the management and recruitment screens.
 - Military beacons reinforce their garrisons and patrols. A raid supply beacon still supports raid and resupply encounters. Beacon player respawns are optional, and normal vanilla respawn is the default.
 - Camp loot, gun boxes, and infantry loadouts use HMG items. GVC also supplies health packs, portable equipment, practice targets, and stationary sentries.
 
@@ -20,7 +21,7 @@ Natural spawns depend on difficulty, biome, and GVC configuration. Use a difficu
 
 ## Squads and orders
 
-Hold the **Squad Command Device**. Sneak and right-click to cycle orders. Right-click normally to issue the selected order to a matching PMC group within range. For a position order, aim at a block marking the destination. You can rename the device and use it on a PMC to assign a squad name.
+Hold **[** for the command wheel or press **]** for quick orders. Both bindings can be changed under **GVCO Army Command**. Open **Military → Personnel → Military groups** to assign recruits to groups and quick-command slots. The [military guide](military.md) lists controls and orders. The optional Squad Command Device continues to support legacy squads when enabled in configuration.
 
 | Order | Behavior |
 | --- | --- |
@@ -28,7 +29,7 @@ Hold the **Squad Command Device**. Sneak and right-click to cycle orders. Right-
 | Follow | Follow the issuing player and regroup after combat. If the player leaves, the squad waits and can resume following on return. |
 | Patrol | Travel between the leader's position at the time of the order and the marked position. |
 | Defend | Hold around the marked area and engage nearby threats. |
-| Attack | Advance toward the marked area and engage targets the infantry can detect. |
+| Attack | Designate a visible living opponent as the formation’s target. |
 
 A legacy platoon has up to eight members. Recruited leaders take command based on rank and have preset-defined capacities. The leader sets the route and other members follow with spacing. Infantry can engage independently and return to formation after losing a target. A surviving member takes leadership when the leader dies. Camp-oriented factions can acquire attack or defense orders from nearby flags.
 
@@ -60,7 +61,7 @@ The keys below use the names generated in `GVCMob.cfg`. On a dedicated server, e
 | `Guerrilla` | `cfg_CanusePlacedGun` | `true` | Allows supported infantry to use HMG placed guns. |
 | `Guerrilla` | `cfg_BeaconSpawnLevel` | `16` | Sets the default beacon reinforcement strength. |
 | `Guerrilla` | `cfg_Flagspawninterval` | `2000` | Sets the default beacon reinforcement interval in ticks. |
-| `Soldier` | `cfg_SoldierSpawnNormal` | `2.0` | Base weight for natural UNION spawns. |
+| `Soldier` | `cfg_SoldierSpawnNormal` | `2.0` | Base weight for natural Defense Corps spawns. |
 | `Soldier` | `ignoreSoldierTargetEntityClass` | empty | Comma-separated entity registry names omitted by friendly infantry target selection. |
 | `Infantry AI` | `reactionTicks` | `14` | Base delay after acquiring a target, with a small random variation. |
 | `Infantry AI` | `aimErrorMultiplier` | `1.0` | Scales NPC aim variation independently of weapon spread. |

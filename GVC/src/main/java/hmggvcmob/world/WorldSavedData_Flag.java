@@ -71,16 +71,24 @@ public class WorldSavedData_Flag extends WorldSavedData {
     }
 
     public Occupation atTerritory(double x, double z, boolean villageOnly) {
-        ChunkCoordIntPair chunk = new ChunkCoordIntPair(MathHelper.floor_double(x) >> 4, MathHelper.floor_double(z) >> 4);
-        return nearest(territory.get(chunk), x, z, villageOnly);
+        return atTerritory(x, z, villageOnly, false);
     }
 
-    private static Occupation nearest(List<Occupation> posts, double x, double z, boolean villageOnly) {
+    public Occupation atOccupiedTerritory(double x, double z, boolean villageOnly) {
+        return atTerritory(x, z, villageOnly, true);
+    }
+
+    private Occupation atTerritory(double x, double z, boolean villageOnly, boolean occupiedOnly) {
+        ChunkCoordIntPair chunk = new ChunkCoordIntPair(MathHelper.floor_double(x) >> 4, MathHelper.floor_double(z) >> 4);
+        return nearest(territory.get(chunk), x, z, villageOnly, occupiedOnly);
+    }
+
+    private static Occupation nearest(List<Occupation> posts, double x, double z, boolean villageOnly, boolean occupiedOnly) {
         if (posts == null) return null;
         Occupation best = null;
         double distance = Double.POSITIVE_INFINITY;
         for (Occupation post : posts) {
-            if ((villageOnly && !post.isVillage()) || !post.contains(x, z)) continue;
+            if (villageOnly && !post.isVillage() || occupiedOnly && !post.occupied() || !post.contains(x, z)) continue;
             double dx = x - post.flagPos[0] - .5;
             double dz = z - post.flagPos[2] - .5;
             double score = dx * dx + dz * dz;
@@ -108,7 +116,7 @@ public class WorldSavedData_Flag extends WorldSavedData {
                 if (add) covered.add(post);
                 else covered.remove(post);
                 if (covered.isEmpty()) territory.remove(chunk);
-                Occupation closest = nearest(covered, cx * 16 + 8, cz * 16 + 8, false);
+                Occupation closest = nearest(covered, cx * 16 + 8, cz * 16 + 8, false, false);
                 if (closest == null) campObjHashMap.remove(chunk);
                 else campObjHashMap.put(chunk, closest);
             }

@@ -91,8 +91,8 @@
   },
   {
     "id": "union_rifleman",
-    "name": "UNION Rifleman",
-    "description": "General-purpose UNION infantry.",
+    "name": "Defense Corps Rifleman",
+    "description": "General-purpose Defense Corps infantry.",
     "faction": "union",
     "classification": "rifleman",
     "tier": 2,
@@ -121,8 +121,8 @@
   },
   {
     "id": "allies_rifleman",
-    "name": "ALLIES Rifleman",
-    "description": "General-purpose ALLIES infantry.",
+    "name": "Insurgent Rifleman",
+    "description": "General-purpose Insurgent infantry.",
     "faction": "allies",
     "classification": "rifleman",
     "tier": 2,
@@ -429,7 +429,7 @@
   },
   {
     "id": "union_sergeant",
-    "name": "UNION Sergeant",
+    "name": "Defense Corps Sergeant",
     "description": "Commands up to eight assigned soldiers.",
     "faction": "union",
     "classification": "leader",
@@ -459,7 +459,7 @@
   },
   {
     "id": "allies_sergeant",
-    "name": "ALLIES Sergeant",
+    "name": "Insurgent Sergeant",
     "description": "Commands up to eight assigned soldiers.",
     "faction": "allies",
     "classification": "leader",

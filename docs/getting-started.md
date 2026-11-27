@@ -75,9 +75,11 @@ Manual gun pickup is enabled by default. Walking over a dropped HMG gun does not
 
 Servers control the allowed distance, line-of-sight requirement, and whether the rule applies only to guns. See [Configuration reference](configuration-reference.md#manualgunpickup).
 
-## Optional Field Manual
+## In-game Field Manual
 
-Guide-API is optional. When it is installed and `GuideBook.enableHMGGuideBook=true`, HMG registers an in-game Field Manual. Run `/hmgmanual` to see whether the integration is disabled, missing, registered, failed, or still pending.
+Run `/hmgmanual`, or craft a book with flint and right-click the HMG Field Manual. Use the index to find a topic or search by keyword. The manual covers the first loadout, Gun Smithing Table, ammunition, reloading, attachments, and troubleshooting. It shows the current bindings for the relevant controls.
+
+The manual is built into HMG. `GuideBook.enableHMGGuideBook` controls access and the crafting recipe. If your world used the old Guide-API edition, use `/hmgmanual` or craft the new item.
 
 ## Troubleshooting
 

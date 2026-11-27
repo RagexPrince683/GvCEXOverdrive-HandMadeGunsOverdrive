@@ -55,6 +55,15 @@ import static handmadeguns.HandmadeGunsCore.cfg_ADS_Toggle;
 import static handmadeguns.HandmadeGunsCore.cfg_SwapFireAndADSKeys;
 
 public class ClientProxyHMG extends CommonSideProxyHMG {
+	@Override
+	public void openFieldManual() {
+		Minecraft client = Minecraft.getMinecraft();
+		client.func_152344_a(() -> {
+			if (client.thePlayer != null && HandmadeGunsCore.enableHMGGuideBook) {
+				handmadeguns.guide.HMGFieldManual.open(client);
+			}
+		});
+	}
 	public static final KeyBinding_mod Reload					= new KeyBinding_mod("Reload Magazine", Keyboard.KEY_R, "HandmadeGuns");
 	public static final KeyBinding_mod Fire_AttachedGun		= new KeyBinding_mod("Fire AttachedGun", Keyboard.KEY_F, "HandmadeGuns");
 	public static final KeyBinding_mod ADS =

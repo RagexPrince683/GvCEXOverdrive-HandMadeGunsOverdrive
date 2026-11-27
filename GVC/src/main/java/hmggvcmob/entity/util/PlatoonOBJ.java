@@ -36,6 +36,11 @@ public class PlatoonOBJ {
     private final Data data;
     public EntityAndPos leader;
     private UUID leaderId;
+    private UUID managedOwner, appointedLeader, designatedTarget;
+    private int designatedEntityId = -1;
+    private long nextTargetLookup;
+    private boolean ceaseFire;
+    private Formation formation = Formation.DOUBLE_COLUMN;
     private int leaderRank, capacity = MAX_MEMBERS, patrolCapacity;
     private UUID playerId;
     private String legacyPlayerName;
@@ -57,8 +62,22 @@ public class PlatoonOBJ {
     }
 
     public static PlatoonOBJ create(EntityLiving owner) {
+        return create(owner, UUID.randomUUID());
+    }
+
+    public static PlatoonOBJ managed(EntityLiving member, UUID id, UUID owner) {
+        PlatoonOBJ squad = find(member.worldObj, id);
+        if (squad == null) {
+            squad = create(member, id);
+            squad.managedOwner = owner;
+        }
+        if (!owner.equals(squad.managedOwner)) throw new IllegalStateException("Unexpected managed platoon owner");
+        return squad;
+    }
+
+    private static PlatoonOBJ create(EntityLiving owner, UUID id) {
         Data data = Data.get(owner.worldObj);
-        PlatoonOBJ platoon = new PlatoonOBJ(data, UUID.randomUUID());
+        PlatoonOBJ platoon = new PlatoonOBJ(data, id);
         platoon.PlatoonTargetPos.set(owner.posX, owner.boundingBox.minY, owner.posZ);
         platoon.patrolOrigin.set(platoon.PlatoonTargetPos);
         data.platoons.put(platoon.id, platoon);
@@ -133,6 +152,40 @@ public class PlatoonOBJ {
         return leaderId;
     }
 
+    public UUID managedOwner() {
+        return managedOwner;
+    }
+
+    public boolean allMembersMatch(java.util.function.Predicate<UUID> test) {
+        return members.stream().allMatch(test);
+    }
+
+    public boolean allLoadedMembersMatch(java.util.function.Predicate<EntityLiving> test) {
+        return loadedMembers.size() == members.size() && loadedMembers.stream().allMatch(member -> test.test(member.entity));
+    }
+
+    public void forgetUnloadedMembers(java.util.function.Predicate<UUID> keep) {
+        if (managedOwner == null || !members.removeIf(id -> !keep.test(id)
+                && loadedMembers.stream().noneMatch(member -> id.equals(member.entity.getUniqueID())))) return;
+        if (!members.contains(leaderId)) {
+            leaderId = null;
+            leaderRank = 0;
+            leader = null;
+            electLeader();
+        }
+        if (!members.contains(appointedLeader)) appointedLeader = null;
+        data.markDirty();
+    }
+
+    public void setAppointedLeader(UUID selected) {
+        if (java.util.Objects.equals(appointedLeader, selected)) return;
+        appointedLeader = selected;
+        leader = null;
+        electLeader();
+        scheduled = false;
+        data.markDirty();
+    }
+
     public static PlatoonOBJ find(World world, UUID id) {
         return id == null ? null : Data.get(world).platoons.get(id);
     }
@@ -146,7 +199,8 @@ public class PlatoonOBJ {
         loadedMembers.add(member);
         ((IPlatoonable)entity).setPosObj(member);
         int rank = entity instanceof EntityPMCBase ? ((EntityPMCBase)entity).commandRank() : 0;
-        if (entity.getUniqueID().equals(leaderId) || leaderId == null || rank > leaderRank) appoint(member);
+        if (entity.getUniqueID().equals(appointedLeader) || appointedLeader == null
+                && (entity.getUniqueID().equals(leaderId) || leaderId == null || rank > leaderRank)) appoint(member);
         else if (leader == null) electLeader();
         scheduled = false;
     }
@@ -171,7 +225,7 @@ public class PlatoonOBJ {
     private void electLeader() {
         for (EntityAndPos member : loadedMembers) {
             if (!member.entity.isEntityAlive()) continue;
-            if (member.entity.getUniqueID().equals(leaderId)) {
+            if (member.entity.getUniqueID().equals(appointedLeader != null ? appointedLeader : leaderId)) {
                 leader = member;
                 return;
             }
@@ -222,23 +276,35 @@ public class PlatoonOBJ {
     }
 
     public void order(PlatoonOrder mode, double x, double y, double z) {
+        order(mode, x, y, z, null);
+    }
+
+    public void order(PlatoonOrder mode, double x, double y, double z, UUID target) {
         if (getOrder() == mode && PlatoonTargetPos.x == x && PlatoonTargetPos.y == y
-                && PlatoonTargetPos.z == z) return;
+                && PlatoonTargetPos.z == z && java.util.Objects.equals(designatedTarget, target)) return;
         if (mode == PlatoonOrder.Patrol && leader != null) {
             patrolOrigin.set(leader.entity.posX, leader.entity.boundingBox.minY, leader.entity.posZ);
             patrolOutbound = true;
         }
         playerId = null;
         legacyPlayerName = null;
+        designatedTarget = target;
+        designatedEntityId = -1;
+        nextTargetLookup = 0;
         PlatoonTargetPos.set(x, y, z);
         setOrder(mode);
         scheduled = false;
         data.markDirty();
     }
 
+    public void designate(EntityLivingBase target) {
+        if (target != null && target.getUniqueID().equals(designatedTarget)) designatedEntityId = target.getEntityId();
+    }
+
     public void follow(EntityPlayer player) {
         playerId = player.getUniqueID();
         legacyPlayerName = null;
+        designatedTarget = null;
         setOrder(PlatoonOrder.Follow);
         scheduled = false;
         data.markDirty();
@@ -254,11 +320,28 @@ public class PlatoonOBJ {
     }
 
     public boolean allowsEngagement(EntityLivingBase target) {
+        if (ceaseFire) return false;
         if (getOrder() == PlatoonOrder.Defend) {
             return target.getDistanceSq(PlatoonTargetPos.x, PlatoonTargetPos.y, PlatoonTargetPos.z) <= 24 * 24;
         }
         return true;
     }
+
+    public boolean ceasesFire() { return ceaseFire; }
+
+    public void setCeaseFire(boolean value) {
+        ceaseFire = value;
+        if (value) for (EntityAndPos member : loadedMembers) member.entity.setAttackTarget(null);
+        data.markDirty();
+    }
+
+    public void setFormation(Formation value) {
+        formation = value;
+        scheduled = false;
+        data.markDirty();
+    }
+
+    public enum Formation { DOUBLE_COLUMN, LINE, COLUMN, LOOSE }
 
     public void update(EntityLiving caller) {
         PlatoonOrder order = getOrder();
@@ -273,8 +356,34 @@ public class PlatoonOBJ {
         if (leader == null) return;
 
         EntityLiving captain = leader.entity;
-        boolean hold = order == PlatoonOrder.Wait || order == PlatoonOrder.Land;
+        boolean hold = order == PlatoonOrder.Wait || order == PlatoonOrder.Land || order == PlatoonOrder.Pause;
         Vector3d anchor = order == PlatoonOrder.Patrol && !patrolOutbound ? patrolOrigin : PlatoonTargetPos;
+        if (order == PlatoonOrder.Attack && designatedTarget != null) {
+            net.minecraft.entity.Entity registered = captain.worldObj.getEntityByID(designatedEntityId);
+            EntityLivingBase marked = registered instanceof EntityLivingBase && designatedTarget.equals(registered.getUniqueID())
+                    ? (EntityLivingBase) registered : null;
+            if (marked == null && tick >= nextTargetLookup) {
+                nextTargetLookup = tick + 100;
+                for (Object entry : captain.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, captain.boundingBox.expand(128, 40, 128))) {
+                    EntityLivingBase entity = (EntityLivingBase) entry;
+                    if (designatedTarget.equals(entity.getUniqueID())) {
+                        marked = entity;
+                        designatedEntityId = marked.getEntityId();
+                        break;
+                    }
+                }
+            }
+            if (marked != null && marked.isEntityAlive() && !((IFF) captain).is_this_entity_friend(marked)) {
+                anchor = new Vector3d(marked.posX, marked.boundingBox.minY, marked.posZ);
+                for (EntityAndPos member : loadedMembers) {
+                    EntityLiving soldier = member.entity;
+                    double range = soldier.getEntityAttribute(SharedMonsterAttributes.followRange).getAttributeValue();
+                    if (AIInfantryTarget.canEngage(soldier, marked, range) && soldier.getEntitySenses().canSee(marked)) {
+                        soldier.setAttackTarget(marked);
+                    }
+                }
+            }
+        }
         if (order == PlatoonOrder.Patrol && horizontalDistance(captain, anchor) < 9) {
             patrolOutbound = !patrolOutbound;
             anchor = patrolOutbound ? PlatoonTargetPos : patrolOrigin;
@@ -317,10 +426,24 @@ public class PlatoonOBJ {
         int slot = 0;
         for (EntityAndPos member : loadedMembers) {
             if (member == leader) continue;
+            if (order == PlatoonOrder.Pause) {
+                member.set(member.entity.posX, member.entity.boundingBox.minY, member.entity.posZ);
+                continue;
+            }
             int row = 1 + slot / 2;
             double side = (slot++ % 2 == 0 ? -1 : 1) * SPACING;
             EntityLiving soldier = member.entity;
             double behind = row * SPACING;
+            if (formation == Formation.LINE) {
+                behind = 0;
+                side = (slot % 2 == 0 ? 1 : -1) * ((slot + 1) / 2) * SPACING;
+            } else if (formation == Formation.COLUMN) {
+                behind = slot * SPACING;
+                side = 0;
+            } else if (formation == Formation.LOOSE) {
+                behind *= 1.7;
+                side *= 1.7;
+            }
             double x = captain.posX - forwardX * behind + forwardZ * side;
             double z = captain.posZ - forwardZ * behind - forwardX * side;
             if (((IGVCmob)soldier).getMoveToPositionMng().isBlocked()) {
@@ -393,6 +516,12 @@ public class PlatoonOBJ {
                 if (id == null) continue;
                 PlatoonOBJ squad = new PlatoonOBJ(this, id);
                 squad.leaderId = parseId(entry.getString("Leader"));
+                squad.managedOwner = parseId(entry.getString("ManagedOwner"));
+                squad.appointedLeader = parseId(entry.getString("AppointedLeader"));
+                squad.designatedTarget = parseId(entry.getString("DesignatedTarget"));
+                squad.ceaseFire = entry.getBoolean("CeaseFire");
+                int formation = entry.getInteger("Formation");
+                if (formation >= 0 && formation < Formation.values().length) squad.formation = Formation.values()[formation];
                 squad.leaderRank = entry.getInteger("LeaderRank");
                 squad.patrolCapacity = entry.getInteger("PatrolCapacity");
                 squad.capacity = entry.hasKey("Capacity") ? Math.max(1, Math.min(33, entry.getInteger("Capacity"))) : MAX_MEMBERS;
@@ -408,7 +537,7 @@ public class PlatoonOBJ {
                 squad.patrolOutbound = entry.getBoolean("Outbound");
                 squad.currentCamp = entry.getBoolean("Camp");
                 NBTTagList roster = entry.getTagList("Members", 8);
-                for (int j = 0; j < roster.tagCount() && j < 33; j++) {
+                for (int j = 0; j < roster.tagCount() && j < (squad.managedOwner == null ? 33 : 64); j++) {
                     UUID member = parseId(roster.getStringTagAt(j));
                     if (member != null) squad.members.add(member);
                 }
@@ -423,6 +552,11 @@ public class PlatoonOBJ {
                 NBTTagCompound entry = new NBTTagCompound();
                 entry.setString("Id", squad.id.toString());
                 if (squad.leaderId != null) entry.setString("Leader", squad.leaderId.toString());
+                if (squad.managedOwner != null) entry.setString("ManagedOwner", squad.managedOwner.toString());
+                if (squad.appointedLeader != null) entry.setString("AppointedLeader", squad.appointedLeader.toString());
+                if (squad.designatedTarget != null) entry.setString("DesignatedTarget", squad.designatedTarget.toString());
+                entry.setBoolean("CeaseFire", squad.ceaseFire);
+                entry.setInteger("Formation", squad.formation.ordinal());
                 entry.setInteger("LeaderRank", squad.leaderRank);
                 entry.setInteger("PatrolCapacity", squad.patrolCapacity);
                 entry.setInteger("Capacity", squad.capacity);

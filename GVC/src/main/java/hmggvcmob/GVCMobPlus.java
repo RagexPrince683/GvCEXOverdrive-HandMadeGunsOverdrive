@@ -655,7 +655,7 @@ public class GVCMobPlus
                 'r', Items.redstone,
                 'd', Items.diamond
         );
-        if (MilitaryConfig.legacyRecipes) GameRegistry.addRecipe(new ItemStack(defsetter, 1),
+        if (MilitaryConfig.legacyDevice) GameRegistry.addRecipe(new ItemStack(defsetter, 1),
                 "I ",
                 "dd",
                 'd', Items.emerald,'I',Items.iron_ingot

@@ -12,6 +12,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import hmggvcmob.GVCMobPlus;
+import handmadeguns.guide.FieldManualItem;
 import hmggvcmob.world.WorldSavedData_Flag;
 import net.minecraft.entity.IMerchant;
 import net.minecraft.entity.item.EntityItem;
@@ -26,6 +27,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 
 import java.io.File;
@@ -45,7 +47,8 @@ public final class MilitarySystem implements IGuiHandler {
     public static void registerItems(File mainConfig) {
         directory = mainConfig.toPath().getParent().resolve("gvc-military");
         MilitarySupplies.registerItems();
-        MilitaryRelations.load(MilitaryConfig.factionRelations);
+        FieldManualItem.register("FieldManual", "gvco_field_manual", GVCMobPlus.tabgvcm, net.minecraft.init.Items.paper,
+                true, () -> GVCMobPlus.proxy.openFieldManual());
         MilitarySupplies.load();
     }
 
@@ -69,6 +72,8 @@ public final class MilitarySystem implements IGuiHandler {
         } catch (IOException failure) {
             FMLLog.warning("[GVC military] Could not create configuration directory %s: %s", directory, failure.getMessage());
         }
+        MilitaryRelations.load(directory, MilitaryConfig.factionRelations);
+        MilitaryReputation.configure();
         WeaponCatalog.load(directory);
         UnitPresets.load(directory);
     }
@@ -84,6 +89,8 @@ public final class MilitarySystem implements IGuiHandler {
     }
 
     public static void stop() {
+        MilitaryReputation.stop();
+        MilitaryNetwork.clear();
         serverThread = null;
     }
 
@@ -91,8 +98,9 @@ public final class MilitarySystem implements IGuiHandler {
     public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || Thread.currentThread() != serverThread) return;
         MilitaryNetwork.drain();
-        closeHostileTrade();
         long now = MilitaryEconomy.now();
+        if (now % MilitaryConfig.tradeInterval == 0) closeHostileTrade();
+        if (now % 20 == 0) MilitaryReputation.sendNotices(now);
         if (now % MilitaryConfig.upkeepProcessing == 0) MilitaryEconomy.get().processUpkeep(now);
     }
 
@@ -132,18 +140,12 @@ public final class MilitarySystem implements IGuiHandler {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void militaryReputation(LivingDeathEvent event) {
-        if (MilitaryConfig.reputationPerKill == 0 || event.entityLiving.worldObj.isRemote
-                || !(event.source.getEntity() instanceof EntityPlayer)
-                || !(event.entityLiving instanceof hmggvcmob.entity.IflagBattler)
-                || event.entityLiving instanceof EntityMilitaryUnit && ((EntityMilitaryUnit)event.entityLiving).owner() != null) return;
-        EntityPlayer player = (EntityPlayer) event.source.getEntity();
-        if (!MilitaryRelations.hostile(event.entityLiving, player)) return;
-        String defeated = MilitaryRelations.faction(event.entityLiving);
-        for (String faction : MilitaryRelations.factions()) {
-            if (MilitaryRelations.factionRelation(defeated, faction) >= 0) continue;
-            int score = MilitaryRelations.playerRelation(player, faction);
-            if (score >= 0 && score < 100) MilitaryRelations.setReputation(player.getUniqueID(), faction, score + MilitaryConfig.reputationPerKill);
-        }
+        if (!event.entityLiving.worldObj.isRemote) MilitaryReputation.death(event.entityLiving, event.source);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void militaryDamage(LivingHurtEvent event) {
+        if (!event.entityLiving.worldObj.isRemote && event.ammount > 0) MilitaryReputation.hurt(event.entityLiving, event.source);
     }
 
     static void closeHostileTrade() {
@@ -166,8 +168,9 @@ public final class MilitarySystem implements IGuiHandler {
 
     private static boolean deniesTrade(EntityPlayer player, EntityVillager villager) {
         if (!MilitaryConfig.restrictVillagers || !MilitaryConfig.occupation) return false;
-        Occupation post = WorldSavedData_Flag.get(villager.worldObj).atTerritory(villager.posX, villager.posZ, true);
-        return post != null && !player.getUniqueID().equals(post.owner) && MilitaryRelations.playerRelation(player, post.faction()) < 0;
+        Occupation post = WorldSavedData_Flag.get(villager.worldObj).atOccupiedTerritory(villager.posX, villager.posZ, true);
+        return post != null && !player.getUniqueID().equals(post.owner)
+                && MilitaryRelations.hostileToPlayer(player.getUniqueID(), post.faction());
     }
 
     @Override
