@@ -4,21 +4,41 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import hmggvcmob.entity.IPlatoonable;
 import hmggvcmob.entity.util.PlatoonInfoData;
 import hmggvcmob.entity.util.PlatoonOrder;
+import hmggvcmob.military.EntityMilitaryUnit;
+import hmggvcmob.military.MilitaryRelations;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.StatCollector;
+import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import org.lwjgl.opengl.GL11;
 
 public final class EventRenderPlatoonInfo {
+    private static World allegianceWorld;
+    private static String allegiance = "";
+
+    public static void updateAllegiance(World world, String faction) {
+        allegianceWorld = world;
+        allegiance = faction;
+    }
+
+    @SubscribeEvent
+    public void unload(net.minecraftforge.event.world.WorldEvent.Unload event) {
+        if (event.world == allegianceWorld) updateAllegiance(null, "");
+    }
+
     @SubscribeEvent
     public void renderEntity(RenderLivingEvent.Post event) {
         Minecraft client = Minecraft.getMinecraft();
         if (client.thePlayer == null || client.gameSettings.hideGUI || event.entity.isInvisibleToPlayer(client.thePlayer)
                 || !(event.entity instanceof IPlatoonable) || event.entity.getDistanceSqToEntity(client.thePlayer) > 48 * 48) return;
+        String pledged = client.theWorld == allegianceWorld ? allegiance : "";
+        if (event.entity instanceof EntityMilitaryUnit) {
+            if (!((EntityMilitaryUnit)event.entity).showsOrdersTo(client.thePlayer.getUniqueID(), pledged)) return;
+        } else if (pledged.isEmpty() || !pledged.equals(MilitaryRelations.faction(event.entity))) return;
         PlatoonInfoData info = ((IPlatoonable) event.entity).getPlatoonMemberInfo();
         if (info == null || !info.isOnPlatoon) return;
 

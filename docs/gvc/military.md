@@ -53,7 +53,7 @@ Hostile players and their forces contest the beacon when they outnumber the defe
 
 A pledged player with claim rights can approach the defeated beacon, open **Military → Factions → Nearby settlement**, then choose **Claim for faction** and confirm. The site becomes **Faction-controlled**. Its military trader and future patrols and garrisons serve the new faction. A permitted commander can leave it neutralized, or choose **Neutralize settlement** at a disabled site. Active, contested, disabled, and captured sites retain their state through unloads and restarts.
 
-A village can generate a fortified outpost as a native village piece. The original design uses a cobblestone and gravel court, a broad entrance, a small lookout, and covered barracks. The references informed the courtyard, guarded entrance, and separate sleeping space. The structure uses vanilla rotation, collision checks, biome palettes and ground alignment, with shallow supports below its footprint. [Housesteads fort plans](https://www.english-heritage.org.uk/siteassets/home/visit/places-to-visit/housesteads-roman-fort/history/housesteads-roman-fort-phased-plans.pdf) · [Fort Scott parade ground](https://www.nps.gov/places/000/fs-parade-ground.htm) · [Fort Scott infantry barracks](https://www.nps.gov/places/000/infantry-barracks.htm)
+A village can generate a fortified occupation office as a native village piece. Its guarded gravel court leads to a covered entrance, a public counter, and a rear work area. Offices use faction building materials and follow vanilla village rotation, collision checks, and ground alignment. [Housesteads fort plans](https://www.english-heritage.org.uk/siteassets/home/visit/places-to-visit/housesteads-roman-fort/history/housesteads-roman-fort-phased-plans.pdf)
 
 Villagers within an occupied village can refuse trade based on each player’s reputation with the occupying faction. An open trading screen closes if the player becomes hostile. Military offers are checked again at purchase. A neutralized or disabled outpost lifts its occupation restrictions on civilian trade. A claimed site uses the new faction’s relations.
 
@@ -104,7 +104,7 @@ The following categories are written into the ordinary GVCMob Forge config. Pres
 | | factionRelations | union,pmc=30, union,allies=-50, pmc,allies=-50 |
 | | playerRespawnMode, respawnSearchRadius, blockBeaconOnlyBedSleep | VANILLA, 192 blocks, false |
 | Military.Villages | enabled, restrictHostileTrade | true, true |
-| | outpostWeight, outpostWidth | 8, 13 blocks |
+| | outpostWeight, outpostWidth | 8, 21 blocks |
 | | hostileOccupationPercent, initialFaction | 25, union |
 | | territoryRadius, garrisonSize, patrolSize | 64 blocks, 4, 3 |
 | | occupiedMessage | empty, uses the localized default |

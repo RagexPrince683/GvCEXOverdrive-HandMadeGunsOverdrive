@@ -48,6 +48,7 @@ public final class MilitarySystem implements IGuiHandler {
         directory = mainConfig.toPath().getParent().resolve("gvc-military");
         MilitarySupplies.registerItems();
         MilitaryMaterials.register();
+        cpw.mods.fml.common.registry.GameRegistry.registerItem(new ItemStructurePlan(), "structure_plan");
         FieldManualItem.register("FieldManual", "gvco_field_manual", GVCMobPlus.tabgvcm, net.minecraft.init.Items.paper,
                 true, () -> GVCMobPlus.proxy.openFieldManual());
         MilitarySupplies.load();
@@ -101,13 +102,35 @@ public final class MilitarySystem implements IGuiHandler {
     }
 
     @SubscribeEvent
+    public void playerLogin(cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.player instanceof EntityPlayerMP) MilitaryNetwork.syncAllegiance((EntityPlayerMP)event.player);
+    }
+
+    @SubscribeEvent
+    public void playerLogout(cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent event) {
+        MilitaryNetwork.removeReputationHud(event.player.getUniqueID());
+    }
+
+    @SubscribeEvent
+    public void playerChangedDimension(cpw.mods.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.player instanceof EntityPlayerMP) MilitaryNetwork.syncAllegiance((EntityPlayerMP)event.player);
+    }
+
+    @SubscribeEvent
+    public void playerRespawn(cpw.mods.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent event) {
+        if (event.player instanceof EntityPlayerMP) MilitaryNetwork.syncAllegiance((EntityPlayerMP)event.player);
+    }
+
+    @SubscribeEvent
     public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || Thread.currentThread() != serverThread) return;
         MilitaryNetwork.drain();
-        for (Object entry : MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
-            MilitaryQuests.visit((EntityPlayerMP)entry);
-        }
         long now = MilitaryEconomy.now();
+        for (Object entry : MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
+            EntityPlayerMP player = (EntityPlayerMP)entry;
+            MilitaryQuests.visit(player);
+            if (now % 20 == 0) MilitaryNetwork.updateReputationHud(player, false);
+        }
         if (now % MilitaryConfig.tradeInterval == 0) closeHostileTrade();
         if (now % 20 == 0) MilitaryReputation.sendNotices(now);
         if (now % MilitaryConfig.upkeepProcessing == 0) MilitaryEconomy.get().processUpkeep(now);

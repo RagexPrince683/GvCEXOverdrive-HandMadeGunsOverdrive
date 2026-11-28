@@ -37,13 +37,18 @@ Settlements support several services. Influence sites ordinarily have a lookout,
 | Northline Rangers | Northline Lodge | Northline Lookout, Northline Relay | |
 | Unclaimed | | | Deserted Warehouse, Deserted Watchtower, Deserted Farmstead, Deserted Platform |
 
-The 31 definitions use 15 layouts. A regional district can span 45 blocks and groups offices, housing, and warehouses around intersecting streets. Site definitions can set trade stations, loot, staffing, size, palette, rarity, permitted biomes, and up to four optional scavengers for an abandoned location. The library uses vanilla materials and GVCO's existing flag blocks. New insignia and the trader replacement coin use original geometry. [Site definitions](../../GVC/src/main/resources/assets/gvcmob/military/sites.json)
+Regional districts group offices, quarters, and warehouses around intersecting streets. Barracks and lodges have furnished sleeping areas. Depots have loading entrances and shelves, and supply compounds link command, trade, storage, and workshops by footpaths. Offshore platforms have raised structural decks, service rooms, cargo bays, and cranes. Faction materials and roof shapes help identify buildings at a distance.
+
+Site definitions can set trade stations, loot, staffing, size, palette, rarity, permitted biomes, and up to four optional scavengers for an abandoned location. Newly created server configs use larger footprints for selected barracks, farmsteads, depots, lodges, and offshore platforms. Existing configs keep their explicit widths. The updated layouts apply when a site is generated or placed. [Site definitions](../../GVC/src/main/resources/assets/gvcmob/military/sites.json)
+
+Some building plans vary with the world seed and site coordinates. Ordinary sites have a low occupation marker. A visible flag and player respawn service are reserved for sites with the `beacon` option enabled. The site still tracks its faction, guards, traders, and capture state. New defaults reserve the service for selected settlements and forts. [Architecture references](architecture-references.md)
 
 ### Design references
 
 - LOTR Legacy's Bree market, Dale's separate village and watchtower pieces, and the Near Harad and Forodwaith biome decorators informed the distribution of civilian locations, regional military architecture, and ruins. The trader respawn entity and mini-quest classes informed the visible vacancy and short, faction-associated objectives. [LOTR Legacy community source](https://github.com/Maltezak/LOTR-Mod)
 - The Fort Vancouver plans distinguish gates, warehouses, shops, office and sleeping quarters around a shared court. Those divisions informed the headquarters, barracks, and contract yard. Fort Scott's infantry barracks show how sleeping and mess functions fit around a parade ground. [Fort Vancouver plans](https://npshistory.com/publications/fova/hsr/plates-1.htm) · [Fort Scott barracks](https://www.nps.gov/places/000/infantry-barracks.htm)
 - Statfjord's raised topsides, supporting columns, and separated work areas informed the Company platform and the derelict version. [Norwegian Petroleum Museum](https://www.norskolje.museum.no/en/home/industrial-heritage/statfjord-industrial-heritage/)
+- Fort Vancouver's reconstructed buildings show how distinct entries and silhouettes identify field offices and workshops. The documented Statfjord accommodation and utility modules informed the separate deck buildings and work areas. [Fort Vancouver image archive](https://npgallery.nps.gov/SearchResults/albumid/57354831-92DB-F2B8-0C16E29139D0DCE4) · [Statfjord topside construction](https://statfjord.industriminne.no/en/2018/04/05/building-the-statfjord-a-topside/)
 - The trade screen pairs a merchant's listing with the player's inventory, using Minecraft item icons and a separate price confirmation. Freeman's equipment economy and Bannerlord's inventory and town interfaces informed the trade and contract flow. [Freeman: Guerrilla Warfare](https://store.steampowered.com/app/773951/Freeman_Guerrilla_Warfare/) · [Bannerlord inventory design](https://www.taleworlds.com/en/Games/Bannerlord/Blog/81) · [Bannerlord town services](https://www.taleworlds.com/en/games/bannerlord/blog/67)
 
 ## Traders and commerce
@@ -85,9 +90,21 @@ Regional interiors give extra weight to settlements. Outer regions give extra we
 
 Where adjacent procedural regions have mutually hostile owners, suitable terrain can generate a pair of opposing positions with a strip of damaged ground between them. Each side registers and reinforces independently. Border sites use smaller occupation records than settlements.
 
-Same-faction settlements and nearby posts can connect at recorded gates. Defense Corps and Free Company can form several links from one hub. Insurgent tracks usually connect one pair of sites and leave tunnel entrances unmarked. Roads follow the existing grade and span shallow water with short plank decks. The route waits for its terrain to be loaded and populated. Sites from earlier saves lack the recorded entrances required for road links.
+Supply roads connect same-faction settlements, supply towns, and regional command compounds at their gates. Supply towns have two approaches so a road can continue through town to a fortress. Independent patrol and influence sites remain points of interest along the way. Roads follow the existing grade and span shallow water with short plank decks. The route waits for its terrain to be loaded and populated. Sites need a recorded gate to participate.
 
-The `military.regions` configuration exposes `fieldworks`, `frontlines`, `frontlineCandidatePercent`, `factionRoads`, `maximumRoadLength`, and `roadsPerHub`. The server copies `fieldworks.json` alongside `sites.json` and accepts both in authored site entries. Sandbag Walls, Field Concrete, and Corrugated Steel are craftable GVCO building blocks.
+The largest command compound spans 81 blocks. These bases combine a two-level headquarters, service buildings, barracks and storage yards with local gates and open movement lanes. Supply towns have separate streets and building blocks. The village occupation office has a guarded entrance, a public service counter and an enclosed workroom. Newly generated village offices default to 21 blocks wide.
+
+The `military.regions` configuration exposes `fieldworks`, `frontlines`, `frontlineCandidatePercent`, `factionRoads`, `maximumRoadLength`, and `roadsPerHub`. The server loads `sites.json`, `fieldworks.json`, and `supply-sites.json`. Craftable GVCO materials include Barbed Wire, Riveted Steel Plate, Blast Wall Panels, Camouflage Canvas, Timber Revetment, Military Treadway, and Battlefield Rubble.
+
+## Structure testing
+
+Creative operators can select a **Structure Plan** from the GVCO item tab. Face the intended entrance, then right-click the approach to place the layout ahead of you. Sneak-right-click to place the occupied version. For an exact anchor and quarter-turn rotation, use `/militaryadmin structure preview <site> <x> <z> [0–3]` or `/militaryadmin structure live <site> <x> <z> [0–3]`. Both use the production layout and check the footprint. For offshore previews and tunnels, a deep flat preset gives the builder room for a basin or underground rooms.
+
+Use `/militaryadmin structure showcase` in a flat test world to disable automatic GVCO sites and protect the geometry-only gallery from occupied placement. Preview placement omits occupation registration, beacons, traders, guards, and loot.
+
+## Reputation on the HUD
+
+Use Left and Right to cycle available factions, Up to select your pledged faction, and Down to toggle the card. All four bindings are in the GVCO controls category. Orders are visible on units you command and troops of your pledged faction. Traders display their current faction and station role.
 
 ## Authored worlds and existing saves
 

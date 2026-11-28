@@ -21,6 +21,7 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
     private int ground = -1;
     private int width = 13;
     private String faction = "union";
+    private boolean redesigned;
 
     public VillageOutpost() {}
 
@@ -30,6 +31,7 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
         this.boundingBox = box;
         this.coordBaseMode = orientation;
         this.width = width;
+        redesigned = true;
         boolean insurgent = MilitaryRelations.available("allies") && random.nextInt(100) < MilitaryConfig.villageOccupation;
         if (insurgent && (!MilitaryConfig.regionalSites || !MilitarySites.protectedStartingArea(box.minX, box.minZ))) faction = "allies";
         else if (MilitaryRelations.available(MilitaryConfig.initialVillageFaction)) faction = MilitaryConfig.initialVillageFaction;
@@ -49,6 +51,7 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
         tag.setInteger("GVCGround", ground);
         tag.setInteger("GVCWidth", width);
         tag.setString("GVCFaction", faction);
+        tag.setBoolean("GVCOfficeDesign", redesigned);
     }
 
     @Override
@@ -57,10 +60,12 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
         ground = tag.getInteger("GVCGround");
         width = tag.getInteger("GVCWidth");
         faction = tag.getString("GVCFaction");
+        redesigned = tag.getBoolean("GVCOfficeDesign");
     }
 
     @Override
     public boolean addComponentParts(World world, Random random, StructureBoundingBox clip) {
+        if (MilitarySites.isShowcase(world)) return true;
         if (ground < 0) {
             ground = getAverageGroundLevel(world, clip);
             if (ground < 0) return true;
@@ -73,51 +78,22 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
         }
         int end = width - 1;
         int center = width / 2;
-        Block masonry = Blocks.cobblestone;
-        fillWithBlocks(world, clip, 0, 1, 0, end, 6, end, Blocks.air, Blocks.air, false);
-        fillWithBlocks(world, clip, 0, 0, 0, end, 0, end, masonry, masonry, false);
-        for (int x = 0; x <= end; x++) {
-            for (int z = 0; z <= end; z++) {
-                for (int y = -1; y >= -8; y--) {
-                    Block below = getBlockAtCurrentPosition(world, x, y, z, clip);
-                    if (below.getMaterial().isSolid()) break;
-                    placeBlockAtCurrentPosition(world, masonry, 0, x, y, z, clip);
-                }
+        int top = redesigned ? 10 : 6;
+        for (int x = 0; x <= end; x++) for (int z = 0; z <= end; z++) {
+            for (int y = 1; y <= top; y++) {
+                if (x != center || z != 3 || y != 1) placeBlockAtCurrentPosition(world, Blocks.air, 0, x, y, z, clip);
+            }
+            placeBlockAtCurrentPosition(world, MilitaryMaterials.CONCRETE, 0, x, 0, z, clip);
+            for (int y = -1; y >= -8; y--) {
+                Block below = getBlockAtCurrentPosition(world, x, y, z, clip);
+                if (below.getMaterial().isSolid()) break;
+                placeBlockAtCurrentPosition(world, Blocks.stonebrick, 0, x, y, z, clip);
             }
         }
-
-        for (int i = 0; i <= end; i++) {
-            wall(world, clip, 0, i);
-            wall(world, clip, end, i);
-            wall(world, clip, i, end);
-            if (Math.abs(i - center) > 1) wall(world, clip, i, 0);
-        }
-        fillWithBlocks(world, clip, center - 1, 0, 0, center + 1, 0, end - 5, Blocks.gravel, Blocks.gravel, false);
-        fillWithBlocks(world, clip, center - 2, 3, 0, center + 2, 3, 1, Blocks.planks, Blocks.planks, false);
-        placeBlockAtCurrentPosition(world, Blocks.torch, 5, center - 2, 2, 1, clip);
-        placeBlockAtCurrentPosition(world, Blocks.torch, 5, center + 2, 2, 1, clip);
-
-        int barracks = end - 4;
-        fillWithBlocks(world, clip, 1, 0, barracks, end - 1, 0, end - 1, Blocks.planks, Blocks.planks, false);
-        fillWithBlocks(world, clip, 1, 1, barracks, end - 1, 3, end - 1, masonry, Blocks.air, false);
-        fillWithBlocks(world, clip, 1, 4, barracks, end - 1, 4, end - 1, Blocks.planks, Blocks.planks, false);
-        for (int x = center - 1; x <= center + 1; x++) {
-            placeBlockAtCurrentPosition(world, Blocks.air, 0, x, 1, barracks, clip);
-            placeBlockAtCurrentPosition(world, Blocks.air, 0, x, 2, barracks, clip);
-        }
-        for (int x = 2; x <= end - 2; x += 2) {
-            placeBlockAtCurrentPosition(world, Blocks.glass_pane, 0, x, 2, end - 1, clip);
-            placeBlockAtCurrentPosition(world, Blocks.wool, 7, x, 1, end - 2, clip);
-        }
-        placeBlockAtCurrentPosition(world, Blocks.crafting_table, 0, 2, 1, barracks + 1, clip);
-        placeBlockAtCurrentPosition(world, Blocks.torch, 5, center, 1, end - 2, clip);
-
-        fillWithBlocks(world, clip, 1, 1, 1, 2, 3, 2, masonry, masonry, false);
-        for (int y = 1; y <= 4; y++) placeBlockAtCurrentPosition(world, Blocks.ladder, getMetadataWithOffset(Blocks.ladder, 3), 2, y, 3, clip);
-        fillWithBlocks(world, clip, 1, 4, 1, 2, 4, 2, Blocks.planks, Blocks.planks, false);
-        placeBlockAtCurrentPosition(world, Blocks.fence, 0, 1, 5, 1, clip);
-        placeBlockAtCurrentPosition(world, Blocks.fence, 0, 2, 5, 1, clip);
-        placeBlockAtCurrentPosition(world, Blocks.torch, 5, 1, 5, 2, clip);
+        VillageOffice office = new VillageOffice(width, faction, (x, y, z, block, metadata) ->
+                placeBlockAtCurrentPosition(world, block, metadata, x, y, z, clip));
+        if (redesigned) office.build();
+        else office.buildLegacy();
 
         int x = getXWithOffset(center, 3);
         int y = getYWithOffset(1);
@@ -140,17 +116,18 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
                     int gateX = getXWithOffset(center, 0), gateZ = getZWithOffset(center, 0);
                     post.entrance = new int[]{gateX, y, gateZ};
                     post.approach = gateX > x ? 1 : gateZ > z ? 2 : gateX < x ? 3 : 0;
+                    post.footprint = width - 4;
+                    Occupation.TraderLocation station = post.trader("main");
+                    if (station != null && station.y == 0) {
+                        station.position(new int[]{getXWithOffset(center + 2, center + 1), y,
+                                getZWithOffset(center + 2, center + 1)});
+                    }
                     hmggvcmob.world.WorldSavedData_Flag.get(world).markDirty();
                     MilitaryRoads.siteRegistered(world, post);
                 }
             }
         }
         return true;
-    }
-
-    private void wall(World world, StructureBoundingBox clip, int x, int z) {
-        placeBlockAtCurrentPosition(world, Blocks.cobblestone, 0, x, 1, z, clip);
-        placeBlockAtCurrentPosition(world, Blocks.cobblestone_wall, 0, x, 2, z, clip);
     }
 
     private static final class Handler implements VillagerRegistry.IVillageCreationHandler {
@@ -166,7 +143,7 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
         public Object buildComponent(StructureVillagePieces.PieceWeight weight, StructureVillagePieces.Start start,
                                      List pieces, Random random, int x, int y, int z, int orientation, int type) {
             int size = MilitaryConfig.outpostWidth;
-            StructureBoundingBox box = StructureBoundingBox.getComponentToAddBoundingBox(x, y, z, 0, 0, 0, size, 7, size, orientation);
+            StructureBoundingBox box = StructureBoundingBox.getComponentToAddBoundingBox(x, y, z, 0, 0, 0, size, 9, size, orientation);
             if (!canVillageGoDeeper(box) || StructureComponent.findIntersecting(pieces, box) != null) return null;
             return new VillageOutpost(start, type, box, orientation, size, random);
         }

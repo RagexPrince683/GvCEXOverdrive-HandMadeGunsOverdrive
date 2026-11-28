@@ -12,9 +12,11 @@ import hmggvcmob.GVCMobPlus;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,9 +26,11 @@ public final class MilitaryNetwork {
             COMMAND_MENU = 10, COMMAND_ORDER = 11, PLEDGE = 12, CAPTURE = 13, TRADE_QUERY = 14, TRADE = 15,
             QUEST = 16;
     public static final int COMMAND_MENU_WINDOW = -1, COMMAND_MARKER_WINDOW = -2, MANUAL_WINDOW = -3;
+    public static final int ALLEGIANCE_WINDOW = -4;
     static final int GUI = 21;
     private static final SimpleNetworkWrapper CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel("GVCMilitary");
     private static final Map<UUID, Pending> PENDING = new ConcurrentHashMap<>();
+    private static final Map<UUID, NBTTagCompound> HUD_SNAPSHOTS = new HashMap<>();
 
     private MilitaryNetwork() {}
 
@@ -46,6 +50,36 @@ public final class MilitaryNetwork {
     static void send(EntityPlayerMP player, int window, NBTTagCompound snapshot) {
         CHANNEL.sendTo(new Snapshot(window, snapshot), player);
     }
+
+    static void syncAllegiance(EntityPlayerMP player) {
+        updateReputationHud(player, true);
+    }
+
+    static void updateReputationHud(EntityPlayerMP player, boolean force) {
+        UUID id = player.getUniqueID();
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("Allegiance", MilitaryRelations.allegiance(id));
+        tag.setBoolean("Showcase", MilitarySites.isShowcase(player.worldObj));
+        NBTTagList factions = new NBTTagList();
+        for (String faction : MilitaryRelations.factions()) {
+            if (!MilitaryRelations.available(faction)) continue;
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setString("Id", faction);
+            entry.setString("Name", MilitaryRelations.displayName(faction));
+            entry.setInteger("Color", MilitaryRelations.color(faction));
+            int score = MilitaryRelations.reputation(id, faction);
+            entry.setInteger("Reputation", score);
+            entry.setString("Standing", MilitaryRelations.standing(score).label);
+            factions.appendTag(entry);
+        }
+        tag.setTag("Factions", factions);
+        if (force || !tag.equals(HUD_SNAPSHOTS.get(id))) {
+            HUD_SNAPSHOTS.put(id, tag);
+            send(player, ALLEGIANCE_WINDOW, tag);
+        }
+    }
+
+    static void removeReputationHud(UUID player) { HUD_SNAPSHOTS.remove(player); }
 
     static void drain() {
         if (PENDING.isEmpty()) return;
@@ -77,7 +111,10 @@ public final class MilitaryNetwork {
         PENDING.entrySet().removeIf(entry -> !MinecraftServer.getServer().getConfigurationManager().playerEntityList.contains(entry.getValue().sender));
     }
 
-    static void clear() { PENDING.clear(); }
+    static void clear() {
+        PENDING.clear();
+        HUD_SNAPSHOTS.clear();
+    }
 
     private static void deliver(MilitaryContainer container, Request request) {
         if (request != null && container.windowId == request.window) {

@@ -5,13 +5,16 @@ import handmadeguns.client.render.ModelSetAndData;
 import handmadeguns.client.render.IModelCustom_HMG;
 import hmggvcmob.tile.TileEntityFlag;
 import hmggvcmob.camp.CampObj;
+import hmggvcmob.block.GVCBlockFlag;
 
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.StatCollector;
 import org.lwjgl.opengl.GL11;
@@ -26,6 +29,7 @@ public class RenderTileFlag extends TileEntitySpecialRenderer {
     private final Map<CampObj, ModelSetAndData> models = new HashMap<>();
 
     public void renderTileEntityAt(TileEntityFlag tileEntity, double v, double v1, double v2, float v3) {
+        if (tileEntity.isMilitarySiteMarker() || tileEntity.getBlockMetadata() == GVCBlockFlag.SITE_MARKER) return;
         if (tileEntity.campObj != null) {
             ModelSetAndData flag = models.computeIfAbsent(tileEntity.campObj,
                     camp -> new ModelSetAndData(camp.campBlockObjModel, camp.campBlockTextureModel));
@@ -41,22 +45,28 @@ public class RenderTileFlag extends TileEntitySpecialRenderer {
             flag.model.renderPart("obj4");
             flag.model.renderPart("obj5");
             flag.model.renderPart("obj5a");
-            if (tileEntity.isUndergroundSite()) {
-                GL11.glPopMatrix();
-                return;
-            }
-            GL11.glScalef(1f/4, 1f/4, 1f/4);
-            GL11.glTranslatef(0.7f, 0.8f, 0.5f);
-            GL11.glRotatef(-90, 0, 1, 0);
-            GL11.glRotatef(180, 0, 0, 1);
-            GL11.glScalef(1f/128, 1f/128, 1f/128);
+            GL11.glPopMatrix();
+            if (tileEntity.isUndergroundSite()) return;
+            RenderManager camera = RenderManager.instance;
+            float oldLightX = OpenGlHelper.lastBrightnessX, oldLightY = OpenGlHelper.lastBrightnessY;
+            GL11.glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT);
+            GL11.glPushMatrix();
+            GL11.glTranslated(v + .5, v1 + 3.1, v2 + .5);
+            GL11.glRotatef(-camera.playerViewY, 0, 1, 0);
+            Minecraft client = FMLClientHandler.instance().getClient();
+            GL11.glRotatef(client.gameSettings.thirdPersonView == 2 ? -camera.playerViewX : camera.playerViewX, 1, 0, 0);
+            GL11.glScalef(-.017F, -.017F, .017F);
+            GL11.glDisable(GL_CULL_FACE);
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
             renderString(StatCollector.translateToLocalFormatted("gvc.flag.next_spawn", tileEntity.respawncycle / 20));
             GL11.glTranslatef(0, -16, 0);
             renderString(StatCollector.translateToLocalFormatted("gvc.flag.capture",
                     tileEntity.campObj.maxFlagHeight - tileEntity.flagHeight, tileEntity.campObj.maxFlagHeight));
             GL11.glTranslatef(0, -16, 0);
             renderString(StatCollector.translateToLocal(tileEntity.campObj.getTranslationKey()));
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldLightX, oldLightY);
             GL11.glPopMatrix();
+            GL11.glPopAttrib();
 
         }
     

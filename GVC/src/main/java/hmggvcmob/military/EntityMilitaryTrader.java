@@ -8,11 +8,13 @@ import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 import java.util.UUID;
 
 public final class EntityMilitaryTrader extends EntityCreature {
+    private static final int DISPLAY_FACTION = 20, DISPLAY_ROLE = 21;
     private UUID postId;
     private String station = "main";
 
@@ -26,7 +28,36 @@ public final class EntityMilitaryTrader extends EntityCreature {
     void bind(Occupation post, Occupation.TraderLocation location) {
         postId = post.id;
         station = location.key;
+        updateIdentity(post.traderFaction(location), location.role);
     }
+
+    @Override
+    protected void entityInit() {
+        super.entityInit();
+        dataWatcher.addObject(DISPLAY_FACTION, "");
+        dataWatcher.addObject(DISPLAY_ROLE, "");
+    }
+
+    private void updateIdentity(String faction, String role) {
+        dataWatcher.updateObject(DISPLAY_FACTION, faction);
+        dataWatcher.updateObject(DISPLAY_ROLE, role);
+    }
+
+    @Override
+    public boolean hasCustomNameTag() { return !dataWatcher.getWatchableObjectString(DISPLAY_ROLE).isEmpty(); }
+
+    @Override
+    public String getCustomNameTag() {
+        String role = dataWatcher.getWatchableObjectString(DISPLAY_ROLE);
+        if (role.isEmpty()) return super.getCustomNameTag();
+        String roleKey = "gvc.military.gui.role." + role;
+        return StatCollector.translateToLocalFormatted("gvc.military.trader.identity",
+                MilitaryRelations.displayName(dataWatcher.getWatchableObjectString(DISPLAY_FACTION)),
+                StatCollector.canTranslate(roleKey) ? StatCollector.translateToLocal(roleKey) : role);
+    }
+
+    @Override
+    public boolean getAlwaysRenderNameTagForRender() { return hasCustomNameTag(); }
 
     Occupation post() {
         if (postId == null || worldObj.isRemote) return null;
@@ -78,6 +109,7 @@ public final class EntityMilitaryTrader extends EntityCreature {
                 setDead();
                 return;
             }
+            updateIdentity(faction(), location.role);
             double x = location.x + .5;
             double z = location.z + .5;
             if (getDistanceSq(x, location.y, z) > .15) setPositionAndUpdate(x, location.y, z);

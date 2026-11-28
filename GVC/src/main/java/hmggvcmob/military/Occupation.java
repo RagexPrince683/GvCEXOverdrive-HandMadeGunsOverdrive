@@ -36,7 +36,7 @@ public final class Occupation extends CampObjAndPos {
     private int sitePrice = 100;
     String hierarchy = "local";
     String[] equipment = {}, quests = {};
-    int[] entrance = {}, patrolPoint = {}, guardPoint = {};
+    int[] entrance = {}, rearEntrance = {}, patrolPoint = {}, guardPoint = {};
     String guardPreset = "";
     int approach;
     int footprint;
@@ -166,6 +166,7 @@ public final class Occupation extends CampObjAndPos {
         }
         if (patrolPoint.length == 3) tag.setIntArray("RoadPatrolPoint", patrolPoint);
         if (guardPoint.length == 3) tag.setIntArray("GuardPoint", guardPoint);
+        if (rearEntrance.length == 3) tag.setIntArray("RearEntrance", rearEntrance);
         if (footprint > 0) tag.setInteger("Footprint", footprint);
         if (underground) tag.setBoolean("Underground", true);
         if (!guardPreset.isEmpty()) tag.setString("GuardPreset", guardPreset);
@@ -212,10 +213,11 @@ public final class Occupation extends CampObjAndPos {
         result.equipment = readPool(tag.getTagList("EquipmentPool", 8));
         result.quests = readPool(tag.getTagList("QuestPool", 8));
         result.entrance = readPoint(tag, "Entrance");
+        result.rearEntrance = readPoint(tag, "RearEntrance");
         result.approach = tag.getInteger("Approach") & 3;
         result.patrolPoint = readPoint(tag, "RoadPatrolPoint");
         result.guardPoint = readPoint(tag, "GuardPoint");
-        result.footprint = MathHelper.clamp_int(tag.getInteger("Footprint"), 0, 23);
+        result.footprint = MathHelper.clamp_int(tag.getInteger("Footprint"), 0, MilitarySiteLayout.MAX_WIDTH / 2);
         result.underground = tag.getBoolean("Underground");
         if (MilitaryRelations.validId(tag.getString("GuardPreset"))) result.guardPreset = tag.getString("GuardPreset");
         if (tag.hasKey("TraderLocations", 9)) {

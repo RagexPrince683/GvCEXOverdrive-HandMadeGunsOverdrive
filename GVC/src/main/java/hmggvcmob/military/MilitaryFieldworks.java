@@ -20,7 +20,7 @@ final class MilitaryFieldworks {
         compound = "TUNNEL_COMPOUND".equals(plan.site.layout);
         underground = compound || "TUNNEL_HIDEOUT".equals(plan.site.layout);
         facing = improvised ? Blocks.log : "industrial".equals(palette) ? MilitaryMaterials.CONCRETE : MilitaryMaterials.SANDBAGS;
-        retaining = improvised ? Blocks.planks : "sandstone".equals(palette) || "desert".equals(biome)
+        retaining = improvised ? MilitaryMaterials.REVETMENT : "sandstone".equals(palette) || "desert".equals(biome)
                 && "adaptive".equals(palette) ? Blocks.sandstone : MilitaryMaterials.CONCRETE;
     }
 
@@ -65,9 +65,7 @@ final class MilitaryFieldworks {
 
     private static boolean earth(Block block) {
         return block == Blocks.stone || block == Blocks.dirt || block == Blocks.grass || block == Blocks.sand
-                || block == Blocks.gravel || block == Blocks.sandstone || block == Blocks.coal_ore
-                || block == Blocks.iron_ore || block == Blocks.redstone_ore || block == Blocks.gold_ore
-                || block == Blocks.lapis_ore || block == Blocks.diamond_ore || block == Blocks.emerald_ore
+                || block == Blocks.gravel || block == Blocks.sandstone || MilitarySiteLayout.ore(block)
                 || block == Blocks.hardened_clay || block == Blocks.stained_hardened_clay || block == Blocks.clay;
     }
 
@@ -90,6 +88,9 @@ final class MilitaryFieldworks {
                 line(1, 4, -1, false);
                 bank(-4, -2, facing, 2);
                 bank(4, 0, facing, 2);
+                brace(-4, -3, -2);
+                brace(4, -1, 2);
+                plan.put(-3, deck + 1, -2, Blocks.crafting_table);
                 break;
             case "COVERED_NEST":
                 lane(-3, -2, 2, 1, deck);
@@ -97,6 +98,7 @@ final class MilitaryFieldworks {
                 line(-3, 2, -3, false);
                 shelter(-3, 2, -2, 0, improvised);
                 bank(-3, 1, facing, 2);
+                plan.put(-2, deck + 1, -1, Blocks.crafting_table);
                 break;
             case "TRENCH_LINE":
                 lane(-reach, -1, 0, 0, deck);
@@ -109,18 +111,34 @@ final class MilitaryFieldworks {
                 line(-reach, -reach + 2, -4, false);
                 line(reach - 2, reach, -5, false);
                 shelter(-4, -2, -1, 0, improvised);
-                if (!abandoned) shelter(2, 4, -2, -1, improvised);
+                if (!abandoned) {
+                    shelter(2, 4, -2, -1, improvised);
+                    plan.put(-reach + 1, deck + 1, -3, Blocks.crafting_table);
+                } else {
+                    plan.put(-reach + 1, deck + 1, -3, MilitaryMaterials.BATTLE_RUBBLE);
+                    plan.put(reach - 1, deck + 1, -4, MilitaryMaterials.BATTLE_RUBBLE);
+                }
                 break;
             case "BUNKER":
                 lane(-3, -2, 3, 2, deck);
                 lane(-1, 2, 1, rear - 1, deck);
-                line(-3, 3, -3, false);
-                for (int z = -2; z <= 2; z++) {
-                    bank(-3, z, retaining, 3);
-                    bank(3, z, retaining, 3);
+                for (int x = -3; x <= 3; x++) {
+                    bank(x, -3, retaining, 2);
+                    if (Math.abs(x) > 1) bank(x, 2, retaining, 2);
                 }
-                plan.fill(-3, deck + 3, -3, 3, deck + 3, 2, retaining);
-                plan.put(2, deck + 2, 1, Blocks.glowstone);
+                for (int z = -2; z <= 2; z++) {
+                    bank(-3, z, retaining, 2);
+                    bank(3, z, retaining, 2);
+                }
+                plan.fill(-4, deck + 3, -4, 4, deck + 3, 3, retaining);
+                plan.fill(-3, deck + 4, -4, 3, deck + 4, -4, facing);
+                for (int x : new int[]{-2, 0, 2}) plan.put(x, deck + 2, -3, Blocks.iron_bars);
+                plan.put(-2, deck + 1, -1, abandoned ? MilitaryMaterials.BATTLE_RUBBLE : Blocks.crafting_table);
+                plan.put(2, deck + 2, 1, abandoned ? Blocks.air : Blocks.glowstone);
+                if (abandoned) {
+                    plan.fill(3, deck + 2, -3, 4, deck + 3, -1, Blocks.air);
+                    plan.put(2, deck + 1, -1, MilitaryMaterials.BATTLE_RUBBLE);
+                }
                 break;
             case "RIDGE_POST":
                 lane(-2, -2, 2, 2, deck);
@@ -128,6 +146,8 @@ final class MilitaryFieldworks {
                 line(-2, 2, -3, false);
                 shelter(-2, 2, -2, 1, improvised);
                 bank(2, 2, facing, 2);
+                plan.put(-1, deck + 1, -2, Blocks.furnace);
+                plan.put(2, deck + 2, 0, Blocks.glowstone);
                 break;
             case "BARRIER":
                 lane(-2, -r, 2, r, deck);
@@ -135,7 +155,13 @@ final class MilitaryFieldworks {
                 line(-4, -2, -3, false);
                 bank(-2, 1, MilitaryMaterials.CONCRETE, 2);
                 bank(2, -2, MilitaryMaterials.CONCRETE, 2);
-                plan.put(-4, deck + 3, -1, MilitaryMaterials.CORRUGATED);
+                shelter(-4, -2, -2, 0, improvised);
+                plan.put(-3, deck + 1, -2, Blocks.crafting_table);
+                plan.put(2, deck + 3, -2, Blocks.glowstone);
+                for (int z : new int[]{-r + 1, r - 1}) {
+                    plan.put(-2, deck + 1, z, MilitaryMaterials.SANDBAGS);
+                    plan.put(2, deck + 1, z, MilitaryMaterials.SANDBAGS);
+                }
                 break;
             default:
                 throw new IllegalStateException(plan.site.layout);
@@ -152,11 +178,12 @@ final class MilitaryFieldworks {
             for (int[] p : new int[][]{{-4, 2}, {3, -2}, {-3, -4}, {4, 3}}) {
                 int top = plan.surface(p[0], p[1]);
                 if (plan.get(p[0], top + 1, p[1]) == Blocks.air && !(p[0] == 3 && "BARRIER".equals(plan.site.layout))) {
-                    plan.put(p[0], top + 1, p[1], Blocks.leaves, 4);
+                    if (plan.get(p[0], top, p[1]).getMaterial().isSolid()) plan.put(p[0], top + 1, p[1], Blocks.leaves, 4);
                 }
             }
         }
         int guardX = "BARRIER".equals(plan.site.layout) ? -3 : -1;
+        if (post == null) return;
         post.guardPoint = plan.point(guardX, anchor(), -1);
         post.patrolPoint = plan.point(1, anchor(), 1);
         if ("BARRIER".equals(plan.site.layout) || "RIDGE_POST".equals(plan.site.layout)) {
@@ -194,20 +221,25 @@ final class MilitaryFieldworks {
     }
 
     private void shelter(int from, int to, int z1, int z2, boolean concealed) {
-        bank(from, z1, retaining, 2);
-        bank(to, z2, retaining, 2);
+        for (int side : new int[]{from, to}) for (int end : new int[]{z1, z2}) bank(side, end, retaining, 2);
         for (int x = from; x <= to; x++) for (int z = z1; z <= z2; z++) {
-            plan.put(x, deck + 3, z, concealed ? Blocks.leaves : MilitaryMaterials.CORRUGATED, concealed ? 4 : 0);
+            plan.put(x, deck + 3, z, concealed ? MilitaryMaterials.CAMOUFLAGE : MilitaryMaterials.CORRUGATED);
+            if (concealed && Math.floorMod(x * 2 + z, 4) == 0) plan.put(x, deck + 4, z, Blocks.leaves, 4);
         }
+    }
+
+    private void brace(int x, int from, int to) {
+        for (int z = from; z <= to; z++) bank(x, z, retaining, 1);
     }
 
     private void tunnel(Occupation post, Random random) {
         chamber(-2, -2, 2, compound ? 6 : 3, retaining);
         chamber(-5, -1, -2, 3, Blocks.planks);
         plan.fill(-2, anchor(), 0, -2, anchor() + 1, 1, Blocks.air);
-        plan.stock(-4, anchor(), 2, random);
+        if (post != null) plan.stock(-4, anchor(), 2, random);
         plan.put(-4, anchor(), -1, Blocks.crafting_table);
         plan.put(-5, anchor(), 2, Blocks.bookshelf);
+        plan.bed(-4, 1, deck);
         if (compound) {
             chamber(2, -2, 6, 2, Blocks.planks);
             chamber(2, 3, 9, 6, Blocks.planks);
@@ -215,14 +247,18 @@ final class MilitaryFieldworks {
             plan.fill(2, anchor(), -1, 2, anchor() + 1, 0, Blocks.air);
             plan.fill(2, anchor(), 4, 2, anchor() + 1, 5, Blocks.air);
             plan.fill(-2, anchor(), 4, -2, anchor() + 1, 5, Blocks.air);
-            plan.stock(4, anchor(), 5, random);
+            if (post != null) plan.stock(4, anchor(), 5, random);
             plan.put(5, anchor(), -1, Blocks.anvil);
             plan.put(8, anchor(), 6, Blocks.crafting_table);
-            plan.fill(-8, anchor(), 5, -5, anchor(), 5, Blocks.wooden_slab);
+            plan.bed(-8, 4, deck);
+            plan.bed(-8, 5, deck);
+            plan.put(-5, anchor(), 5, Blocks.bookshelf);
+            plan.put(-4, anchor(), 5, Blocks.crafting_table);
             ramp(7, plan.r, 2);
             plan.fill(5, anchor(), 2, 8, anchor() + 1, 2, Blocks.air);
         }
         ramp(0, -plan.r, -2);
+        if (post == null) return;
         post.underground = true;
         post.guardPoint = plan.point(-3, anchor(), 1);
         post.patrolPoint = plan.point(1, anchor(), compound ? 4 : 2);
@@ -237,6 +273,9 @@ final class MilitaryFieldworks {
         plan.fill(x1 + 1, anchor(), z2, x2 - 1, anchor() + 2, z2, retaining);
         plan.fill(x1, anchor() + 3, z1, x2, anchor() + 3, z2, retaining);
         plan.put((x1 + x2) / 2, anchor() + 2, z2, Blocks.glowstone);
+        for (int z = z1 + 2; z < z2; z += 4) {
+            plan.fill(x1 + 1, anchor() + 2, z, x2 - 1, anchor() + 2, z, MilitaryMaterials.REVETMENT);
+        }
     }
 
     private void ramp(int x, int boundary, int end) {

@@ -113,7 +113,7 @@ public final class MilitaryConfig {
         borderWorks = config.getBoolean("frontlines", regions, true, "Generate opposing field positions where hostile regions meet.");
         borderPercent = config.getInt("frontlineCandidatePercent", regions, 42, 0, 100, "Chance per eligible border sector before the terrain survey.");
         factionRoads = config.getBoolean("factionRoads", regions, true, "Link nearby faction sites with roads and trails on loaded terrain.");
-        roadLength = config.getInt("maximumRoadLength", regions, 192, 48, 240, "Maximum distance between the sites connected by one road.");
+        roadLength = config.getInt("maximumRoadLength", regions, 288, 48, 384, "Maximum distance between supply road gates.");
         roadsPerHub = config.getInt("roadsPerHub", regions, 3, 1, 6, "Maximum direct roads from a regional seat or settlement.");
         reinforceContested = config.getBoolean("reinforceWhileContested", OCCUPATION, false, "Allow an occupied post to receive reinforcements during an attack.");
         neutralize = config.getBoolean("neutralizeOnDefeat", OCCUPATION, true, "Neutralize a defeated post before an explicit claim. Otherwise the defeated post becomes disabled and stops reinforcing.");
@@ -146,7 +146,7 @@ public final class MilitaryConfig {
         restrictVillagers = config.getBoolean("restrictHostileTrade", VILLAGES, true, "Close civilian trade to hostile players within an occupied village.");
         occupiedMessage = config.getString("occupiedMessage", VILLAGES, "", "Custom refusal message. An empty value uses the built-in localized message.");
         villageWeight = config.getInt("outpostWeight", VILLAGES, 8, 0, 100, "Relative selection weight of the fortified outpost during village generation.");
-        outpostWidth = config.getInt("outpostWidth", VILLAGES, 13, 11, 15, "Square outpost width; even values are rounded down.");
+        outpostWidth = config.getInt("outpostWidth", VILLAGES, 21, 11, 29, "Square occupation office width; even values are rounded down.");
         if ((outpostWidth & 1) == 0) outpostWidth--;
         villageOccupation = config.getInt("hostileOccupationPercent", VILLAGES, 25, 0, 100, "Chance to start occupied by ALLIES instead of the initial faction.");
         initialVillageFaction = config.getString("initialFaction", VILLAGES, "union", "Normal starting faction: union, allies, or pmc.");

@@ -289,6 +289,9 @@ public final class MilitaryRelations {
         account.allegiance = faction;
         account.allegianceAfter = now + MilitaryConfig.allegianceCooldown;
         economy.changed(account);
+        if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+            MilitaryNetwork.syncAllegiance((net.minecraft.entity.player.EntityPlayerMP)player);
+        }
         return faction.isEmpty() ? "renounced" : "pledged";
     }
 

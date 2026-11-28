@@ -12,6 +12,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -20,6 +22,7 @@ import static hmggvcmob.GVCMobPlus.beacon_defensive;
 import static hmggvcmob.GVCMobPlus.fn_PlayerFlag;
 
 public class GVCBlockFlag extends BlockContainer {
+    public static final int SITE_MARKER = 1;
     public CampObj campObj;
     public GVCBlockFlag(CampObj campObj) {
         super(Material.rock);
@@ -47,6 +50,27 @@ public class GVCBlockFlag extends BlockContainer {
     public boolean renderAsNormalBlock()
     {
         return false;
+    }
+
+    @Override
+    public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
+        if (world.getBlockMetadata(x, y, z) == SITE_MARKER) {
+            setBlockBounds(.1875F, 0, .1875F, .8125F, .125F, .8125F);
+        } else {
+            setBlockBoundsForItemRender();
+        }
+    }
+
+    @Override
+    public void setBlockBoundsForItemRender() {
+        setBlockBounds(.0625F, 0, .0625F, .9375F, .875F, .9375F);
+    }
+
+    @Override
+    public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
+        if (world.getBlockMetadata(x, y, z) == SITE_MARKER) return null;
+        setBlockBoundsForItemRender();
+        return super.getCollisionBoundingBoxFromPool(world, x, y, z);
     }
 
     public int tickRate(World p_149738_1_)

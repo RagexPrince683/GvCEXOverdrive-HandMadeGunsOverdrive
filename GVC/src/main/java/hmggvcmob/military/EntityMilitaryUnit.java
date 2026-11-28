@@ -22,6 +22,7 @@ import java.util.UUID;
 
 public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
     private static final int FACTION = 29;
+    private static final int COMMAND_OWNER = 30;
     private static final UUID HUNGER = UUID.fromString("3474f71d-1f8f-478a-aba9-f28d24025dff");
     private UUID owner, post;
     private int tenure;
@@ -66,12 +67,14 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
     protected void entityInit() {
         super.entityInit();
         dataWatcher.addObject(FACTION, "pmc");
+        dataWatcher.addObject(COMMAND_OWNER, "");
     }
 
     public void configure(UnitPresets.Preset definition, UUID owner, Occupation post) {
         this.preset = definition;
         this.presetId = definition.id;
         this.owner = owner;
+        dataWatcher.updateObject(COMMAND_OWNER, owner == null ? "" : owner.toString());
         this.post = post == null ? null : post.id;
         this.tenure = post == null ? 0 : post.tenure;
         dataWatcher.updateObject(FACTION, definition.faction);
@@ -98,6 +101,11 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
 
     public UUID owner() {
         return owner;
+    }
+
+    public boolean showsOrdersTo(UUID player, String allegiance) {
+        return player.toString().equals(dataWatcher.getWatchableObjectString(COMMAND_OWNER))
+                || !allegiance.isEmpty() && allegiance.equals(faction());
     }
 
     public String faction() {
@@ -260,6 +268,7 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
     public void readEntityFromNBT(NBTTagCompound tag) {
         super.readEntityFromNBT(tag);
         owner = MilitaryEconomy.parseUuid(tag.getString("MilitaryOwner"));
+        dataWatcher.updateObject(COMMAND_OWNER, owner == null ? "" : owner.toString());
         post = MilitaryEconomy.parseUuid(tag.getString("MilitaryPost"));
         tenure = tag.getInteger("MilitaryTenure");
         presetId = tag.getString("MilitaryPreset");

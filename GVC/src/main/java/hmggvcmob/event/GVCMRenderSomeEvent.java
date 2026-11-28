@@ -52,6 +52,8 @@ public class GVCMRenderSomeEvent {
         if (faction.isEmpty()) faction = net.minecraft.util.StatCollector.translateToLocal(nearestCamp.campObj.getTranslationKey());
         String text = net.minecraft.util.StatCollector.translateToLocalFormatted(
                 nearestCamp.isMilitarySiteMarker() ? "gvc.military.hud.site" : "gvc.military.hud.beacon", faction, distance);
-        Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, 5, 5, 0xEEEBDD);
+        net.minecraft.client.gui.FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+        int y = hmggvcmob.military.client.MilitaryReputationHud.nearestSiteY(event.resolution.getScaledWidth(), font.getStringWidth(text));
+        font.drawStringWithShadow(text, 5, y, 0xEEEBDD);
     }
 }

@@ -28,6 +28,7 @@ final class MilitaryRoadPlan {
     private static final Column OBSTACLE = new Column(0, 0, -1, false);
     private final World world;
     private final Occupation a, b;
+    private final int gates;
     private final List<Occupation> sites;
     private final IChunkProvider chunks;
     private final boolean trail;
@@ -39,11 +40,16 @@ final class MilitaryRoadPlan {
     private boolean waiting;
 
     MilitaryRoadPlan(World world, Occupation a, Occupation b, WorldSavedData_Flag sites) {
+        this(world, a, b, sites, MilitaryRoads.gates(a, b));
+    }
+
+    MilitaryRoadPlan(World world, Occupation a, Occupation b, WorldSavedData_Flag sites, int gates) {
         this.world = world;
         this.a = a;
         this.b = b;
+        this.gates = gates;
         trail = MilitaryRoads.rough(a.faction());
-        int ax = a.entrance[0], az = a.entrance[2], bx = b.entrance[0], bz = b.entrance[2];
+        int ax = gate(a)[0], az = gate(a)[2], bx = gate(b)[0], bz = gate(b)[2];
         x1 = Math.min(ax, bx) - MARGIN;
         z1 = Math.min(az, bz) - MARGIN;
         x2 = Math.max(ax, bx) + MARGIN;
@@ -51,6 +57,14 @@ final class MilitaryRoadPlan {
         this.sites = sites.near((ax + bx) / 2, (az + bz) / 2, (Math.abs(ax - bx) + Math.abs(az - bz)) / 2 + 50);
         chunks = world.getChunkProvider();
     }
+
+    private boolean rear(Occupation site) {
+        return site.rearEntrance.length == 3 && ((site == a ? 1 : 2) & gates) != 0;
+    }
+
+    int[] gate(Occupation site) { return MilitaryRoads.entrance(site, rear(site)); }
+
+    private int direction(Occupation site) { return (site.approach + (rear(site) ? 2 : 0)) & 3; }
 
     Result survey() {
         List<Column> start = approach(a), goal = approach(b);
@@ -75,7 +89,8 @@ final class MilitaryRoadPlan {
     }
 
     private List<Column> approach(Occupation site) {
-        int[] gate = site.entrance;
+        int[] gate = gate(site);
+        int direction = direction(site);
         if (!populated(gate[0], gate[2])) return null;
         if (!clear(gate[0], gate[1], gate[2]) || !clear(gate[0], gate[1] + 1, gate[2])
                 || !world.getBlock(gate[0], gate[1] - 1, gate[2]).getMaterial().isSolid()) return null;
@@ -83,7 +98,7 @@ final class MilitaryRoadPlan {
         Column last = new Column(gate[0], gate[2], gate[1] - 1, false);
         result.add(last);
         for (int i = 1; i <= 3; i++) {
-            Column next = column(gate[0] + DX[site.approach] * i, gate[2] + DZ[site.approach] * i);
+            Column next = column(gate[0] + DX[direction] * i, gate[2] + DZ[direction] * i);
             if (next == OBSTACLE || next.water) return null;
             int grade = Math.max(last.y - 1, Math.min(last.y + 1, next.y));
             if (grade != next.y) {
@@ -155,7 +170,7 @@ final class MilitaryRoadPlan {
             if (Math.abs(site.flagPos[0] - x) <= radius && Math.abs(site.flagPos[2] - z) <= radius
                     && (site != a && site != b || !outsideGate(site, x, z))) return OBSTACLE;
         }
-        int top = world.getHeightValue(x, z) - 1;
+        int top = MilitarySiteLayout.surfaceTop(world, x, z);
         if (top < 1 || top + 4 >= world.getActualHeight()) return OBSTACLE;
         if (nearVillageDoor(x, top, z)) return OBSTACLE;
         int surface = top;
@@ -168,7 +183,7 @@ final class MilitaryRoadPlan {
             }
             return OBSTACLE;
         }
-        return natural(x, surface, z) || block == MilitaryMaterials.CONCRETE || block == Blocks.cobblestone
+        return natural(x, surface, z) || block == MilitaryMaterials.CONCRETE || block == MilitaryMaterials.TREADWAY || block == Blocks.cobblestone
                 ? new Column(x, z, surface, false) : OBSTACLE;
     }
 
@@ -179,13 +194,15 @@ final class MilitaryRoadPlan {
         return present;
     }
 
-    private static boolean outsideGate(Occupation site, int x, int z) {
-        int dx = x - site.entrance[0], dz = z - site.entrance[2];
-        return dx * DX[site.approach] + dz * DZ[site.approach] > 0 && Math.abs(dx) + Math.abs(dz) <= 6;
+    private boolean outsideGate(Occupation site, int x, int z) {
+        int dx = x - gate(site)[0], dz = z - gate(site)[2];
+        int approach = direction(site);
+        int forward = dx * DX[approach] + dz * DZ[approach];
+        return forward > 0 && Math.abs(dx) + Math.abs(dz) <= (site.isVillage() ? site.footprint + 6 : 6);
     }
 
-    private static boolean nearGate(Occupation site, int x, int z) {
-        return Math.abs(x - site.entrance[0]) + Math.abs(z - site.entrance[2]) < 12;
+    private boolean nearGate(Occupation site, int x, int z) {
+        return Math.abs(x - gate(site)[0]) + Math.abs(z - gate(site)[2]) < 12;
     }
 
     private boolean nearVillageDoor(int x, int y, int z) {
@@ -220,7 +237,7 @@ final class MilitaryRoadPlan {
             int variation = Math.floorMod(c.x * 41 + c.z * 13, 9);
             Block road = c.water ? Blocks.planks : trail ? (variation < 2 ? Blocks.gravel : Blocks.dirt)
                     : "pmc".equals(faction) ? (variation < 2 ? Blocks.cobblestone : MilitaryMaterials.CONCRETE)
-                    : variation == 0 ? Blocks.cobblestone : Blocks.gravel;
+                    : variation < 2 ? Blocks.gravel : MilitaryMaterials.TREADWAY;
             if (road == Blocks.gravel && !world.getBlock(c.x, c.y - 1, c.z).getMaterial().isSolid()) road = Blocks.cobblestone;
             for (int y = c.surface + 1; y < c.y; y++) world.setBlock(c.x, y, c.z, Blocks.cobblestone, 0, 2);
             if (c.surface > c.y) world.setBlock(c.x, c.surface, c.z, Blocks.air, 0, 2);

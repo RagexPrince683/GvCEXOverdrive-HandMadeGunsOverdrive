@@ -472,3 +472,23 @@ Developer/backend
 - Place paired frontline positions where hostile regions meet, with small craters, debris, and obstacles in the buffer between their separate occupation sites.
 - Link nearby same-faction gates with gravel roads, concrete roads, or rough tracks on suitable terrain. Add patrol waypoints, roadside markers, and short crossings where the route passes through shallow water.
 - Add craftable Sandbag Walls, Field Concrete, and Corrugated Steel. Configure the new sites, border frequency, and road limits independently.
+
+2026-11-27 22:10 — Expand supply regions and add structure previews
+
+- Add command compounds up to 81 blocks across, multi-building supply settlements, and larger offshore logistics facilities. Rebuild village occupation offices with a reception room, access gate, and service station.
+- Connect settlements to other settlements and command compounds. Supply settlements can link from both ends of the main street.
+- Add Creative Structure Plans and operator commands for geometry previews and occupied placements. Correct terrain height sampling and rebuild unsupported offshore fixtures.
+- Add craftable barbed wire, steel plates, blast wall panels, camouflage canvas, timber revetment, military treadway, and battlefield rubble.
+- Show faction reputation during ordinary play with arrow-key controls. Identify traders by faction and station type, restrict order labels to commanded or pledged-faction soldiers, and turn beacon text toward the camera.
+
+2026-11-28 00:00 — Rebuild GVCO's existing structures
+
+- Give military, civilian, and industrial buildings distinct roofs, entrances, interior layouts, and furnishings. Enlarge selected barracks, farms, depots, lodges, and platforms.
+- Add braced observation towers, sheltered field positions, furnished tunnel rooms, and offshore work areas. Distinguish abandoned sites with breached roofs, damaged walls, and debris.
+- Clear tree canopies inside new sites and check the grade across both gates of existing supply layouts. Village occupation offices use an updated plan on new village pieces.
+
+2026-11-28 00:18 — Refine GVCO buildings and replace the barbed wire model
+
+- Generate joined flat, gabled, hipped, shed, barrel, and clerestory roofs. Add building variants with different proportions, entrances, bay layouts, and occupied floor counts.
+- Furnish barracks, aid rooms, service kitchens, administrative offices, and workshops. Correct elevated access in observation towers and stair facing in command buildings.
+- Use a low occupation marker at sites without a reinforcement beacon. Give barbed wire a three-dimensional coil that follows adjacent blocks while keeping existing placed wire and recipes.

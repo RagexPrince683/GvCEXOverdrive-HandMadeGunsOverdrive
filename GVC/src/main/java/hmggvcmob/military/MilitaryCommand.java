@@ -76,6 +76,10 @@ public final class MilitaryCommand extends CommandBase {
     }
 
     private void administer(ICommandSender sender, String[] arguments) {
+        if (arguments[0].equals("structure")) {
+            structure(sender, arguments);
+            return;
+        }
         if (arguments[0].equals("balance") && (arguments.length == 2 || arguments.length == 3)) {
             UUID target = playerId(sender, arguments[1]);
             if (arguments.length == 3) {
@@ -111,6 +115,23 @@ public final class MilitaryCommand extends CommandBase {
             return;
         }
         throw new WrongUsageException(getCommandUsage(sender));
+    }
+
+    private void structure(ICommandSender sender, String[] args) {
+        if (args.length == 2 && "showcase".equals(args[1])
+                && sender.getEntityWorld().getWorldInfo().getTerrainType() == net.minecraft.world.WorldType.FLAT) {
+            sender.getEntityWorld().getGameRules().setOrCreateGameRule(MilitarySites.SHOWCASE_RULE, "true");
+            sender.addChatMessage(new ChatComponentTranslation("gvc.military.structure.showcase"));
+            return;
+        }
+        if (args.length < 5 || args.length > 6 || !("preview".equals(args[1]) || "live".equals(args[1]))) {
+            throw new WrongUsageException("gvc.military.structure.command");
+        }
+        int x = parseIntBounded(sender, args[3], -29999871, 29999871);
+        int z = parseIntBounded(sender, args[4], -29999871, 29999871);
+        int rotation = args.length == 6 ? parseIntBounded(sender, args[5], 0, 3) : 0;
+        boolean placed = MilitarySites.testPlacement(sender.getEntityWorld(), args[2], x, z, rotation, "preview".equals(args[1]));
+        sender.addChatMessage(new ChatComponentTranslation("gvc.military.structure." + (placed ? "placed" : "rejected"), args[2], x, z));
     }
 
     private static void roster(EntityPlayerMP player, int page) {
@@ -154,7 +175,11 @@ public final class MilitaryCommand extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) return getListOfStringsMatchingLastWord(args, admin
-                ? new String[]{"balance", "relation", "occupy"} : new String[]{"hire", "assign", "roster", "order", "relation", "manual"});
+                ? new String[]{"balance", "relation", "occupy", "structure"} : new String[]{"hire", "assign", "roster", "order", "relation", "manual"});
+        if (admin && args[0].equals("structure")) {
+            if (args.length == 2) return getListOfStringsMatchingLastWord(args, "preview", "live", "showcase");
+            if (args.length == 3) return getListOfStringsMatchingLastWord(args, MilitarySites.ids().toArray(new String[0]));
+        }
         if (args.length == 2 && args[0].equals("order")) return getListOfStringsMatchingLastWord(args,
                 "follow", "hold", "wait", "move", "regroup", "patrol", "defend", "attack", "garrison",
                 "cease-fire", "fire-at-will", "line", "column", "loose", "double-column");

@@ -33,6 +33,7 @@ public final class MilitarySites implements IWorldGenerator {
     private static Overrides overrides = new Overrides();
     private static final long SITE_SALT = 0x456D67B883C30A41L;
     private static final long REGION_SALT = 0xD8933B2EF804615DL;
+    static final String SHOWCASE_RULE = "gvcoShowcase";
 
     static void load(Path directory) {
         DEFINITIONS.clear();
@@ -42,6 +43,7 @@ public final class MilitarySites implements IWorldGenerator {
         Definition[] fieldworks = read(directory, "fieldworks.json", Definition[].class, new Definition[0], true);
         addDefinitions(entries);
         addDefinitions(fieldworks);
+        addDefinitions(read(directory, "supply-sites.json", Definition[].class, new Definition[0], true));
         overrides = read(directory, "regions.json", Overrides.class, new Overrides(), true);
         if (overrides.regions == null) overrides.regions = new RegionOverride[0];
         if (overrides.sites == null) overrides.sites = new FixedSite[0];
@@ -104,7 +106,7 @@ public final class MilitarySites implements IWorldGenerator {
 
     @Override
     public void generate(Random ignored, int chunkX, int chunkZ, World world, IChunkProvider generator, IChunkProvider loaded) {
-        if (world.isRemote) return;
+        if (world.isRemote || isShowcase(world)) return;
         int dimension = world.provider.dimensionId;
         Map<Long, List<FixedSite>> fixedChunks = FIXED.get(dimension);
         List<FixedSite> fixedSites = fixedChunks == null ? null : fixedChunks.get(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
@@ -116,21 +118,24 @@ public final class MilitarySites implements IWorldGenerator {
         MilitaryFrontlines.generate(world, chunkX, chunkZ);
         MilitaryRoads.chunkReady(world, chunkX, chunkZ);
         generateRegional(world, chunkX, chunkZ);
-        if (MilitaryConfig.fieldworks && MilitaryConfig.factionRoads) {
-            for (Occupation post : WorldSavedData_Flag.get(world).near(chunkX * 16 + 8, chunkZ * 16 + 8, 121)) {
-                satellite(world, post, chunkX, chunkZ, false);
-            }
-        }
     }
 
     private static void generateRegional(World world, int chunkX, int chunkZ) {
         int grid = MilitaryConfig.siteSpacing;
-        int cellX = Math.floorDiv(chunkX, grid), cellZ = Math.floorDiv(chunkZ, grid);
+        int retryRange = (MilitarySiteLayout.MAX_WIDTH / 2 + 8) >> 4;
+        int x1 = Math.floorDiv(chunkX - retryRange + 1, grid), x2 = Math.floorDiv(chunkX + retryRange - 1, grid);
+        int z1 = Math.floorDiv(chunkZ - retryRange + 1, grid), z2 = Math.floorDiv(chunkZ + retryRange - 1, grid);
+        for (int cellX = x1; cellX <= x2; cellX++) for (int cellZ = z1; cellZ <= z2; cellZ++) {
+            generateCell(world, chunkX, chunkZ, grid, cellX, cellZ, retryRange);
+        }
+    }
+
+    private static void generateCell(World world, int chunkX, int chunkZ, int grid, int cellX, int cellZ, int retryRange) {
         Random random = random(world, cellX, cellZ, SITE_SALT);
         if (random.nextInt(100) >= MilitaryConfig.siteDensity) return;
         int centerChunkX = cellX * grid + 1 + random.nextInt(grid - 2);
         int centerChunkZ = cellZ * grid + 1 + random.nextInt(grid - 2);
-        if (Math.abs(centerChunkX - chunkX) > 1 || Math.abs(centerChunkZ - chunkZ) > 1) return;
+        if (Math.abs(centerChunkX - chunkX) > retryRange || Math.abs(centerChunkZ - chunkZ) > retryRange) return;
         int x = centerChunkX * 16 + 8, z = centerChunkZ * 16 + 8;
         RegionOverride authored = regionOverride(world, x, z);
         if (authored != null && !authored.procedural) return;
@@ -148,38 +153,35 @@ public final class MilitarySites implements IWorldGenerator {
         Definition site = chooseSite(faction, biome, random, regionalDepth(x, z));
         if (site != null && withinFootprint(chunkX, chunkZ, x, z, site.width / 2)) {
             int rotation = random.nextInt(4);
-            Occupation post = place(world, x, z, rotation, site, faction, site.layout.startsWith("TUNNEL_"));
-            if (post != null && MilitaryConfig.fieldworks && MilitaryConfig.factionRoads) satellite(world, post, 0, 0, true);
+            place(world, x, z, rotation, site, faction, site.layout.startsWith("TUNNEL_") || site.width > 47);
         }
     }
 
-    private static void satellite(World world, Occupation hub, int chunkX, int chunkZ, boolean anyChunk) {
-        if (hub.classification() != Occupation.Classification.SETTLEMENT || hub.entrance.length != 3 || hub.tenure > 0) return;
-        String id;
-        switch (hub.faction()) {
-            case "union": id = "corps_field_checkpoint"; break;
-            case "pmc": id = "company_security_checkpoint"; break;
-            case "allies": id = "irregular_track_post"; break;
-            default: return;
-        }
+    public static boolean isShowcase(World world) {
+        return world.getGameRules().getGameRuleBooleanValue(SHOWCASE_RULE);
+    }
+
+    static List<String> ids() { return new ArrayList<>(DEFINITIONS.keySet()); }
+
+    static Definition definition(String id) { return DEFINITIONS.get(id); }
+
+    static boolean testPlacement(World world, String id, int x, int z, int turn, boolean preview) {
+        MilitarySystem.requireServerThread();
         Definition site = DEFINITIONS.get(id);
-        if (site == null) return;
-        Random random = random(world, hub.flagPos[0], hub.flagPos[2], SITE_SALT ^ 0x40F756124C7AB573L);
-        int choice = random.nextInt(100);
-        if (choice >= ("allies".equals(hub.faction()) ? 45 : 78)) return;
-        int distance = 56 + random.nextInt(18), drift = random.nextInt(25) - 12;
-        int rotation = hub.approach;
+        if (site == null || world.isRemote || turn < 0 || turn > 3 || Math.abs((long)x) >= 29999872
+                || Math.abs((long)z) >= 29999872 || !preview && isShowcase(world)) return false;
         int half = site.width / 2;
-        for (int side = -1; side <= 1; side++) {
-            int dx = distance + (side == 0 ? 12 : 0), along = drift + side * 21;
-            int x = hub.entrance[0] + (rotation == 1 ? dx : rotation == 3 ? -dx : along);
-            int z = hub.entrance[2] + (rotation == 2 ? dx : rotation == 0 ? -dx : along);
-            if (!anyChunk && !withinFootprint(chunkX, chunkZ, x, z, half)) continue;
-            if (!proceduralAt(world, x, z) || !matches(site, biome(world, x, z), hub.faction())) continue;
-            List<String> influence = regionalFactions(world, x, z);
-            if (!influence.contains(hub.faction()) && MilitaryRelations.factionRelation(influence.get(0), hub.faction()) < 0) continue;
-            if (place(world, x, z, rotation, site, hub.faction()) != null) return;
+        IChunkProvider chunks = world.getChunkProvider();
+        for (int cx = ((x - half) >> 4) - 1; cx <= ((x + half) >> 4) + 1; cx++) {
+            for (int cz = ((z - half) >> 4) - 1; cz <= ((z + half) >> 4) + 1; cz++) chunks.loadChunk(cx, cz);
         }
+        if (!preview) return place(world, x, z, turn, site, site.faction, false, true) != null;
+        if (!populated(world, x - half, z - half, x + half, z + half)
+                || overlaps(world, x, z, half, 1)) return false;
+        MilitarySiteLayout plan = MilitarySiteLayout.survey(world, site, x, z, turn, biome(world, x, z), true);
+        if (plan == null) return false;
+        plan.build(null, random(world, x, z, SITE_SALT ^ REGION_SALT));
+        return true;
     }
 
     private static boolean withinFootprint(int chunkX, int chunkZ, int x, int z, int half) {
@@ -281,6 +283,7 @@ public final class MilitarySites implements IWorldGenerator {
 
     private static int siteWeight(Definition site, String biome, String faction, int depth) {
         if (!matches(site, biome, faction)) return 0;
+        if ("command".equals(site.hierarchy)) return depth < 12 ? 0 : site.weight * (depth >= 24 ? 6 : 2);
         if (site.classification == Occupation.Classification.SETTLEMENT) return site.weight * (depth >= 22 ? 3 : 1);
         return site.weight * (depth < 12 && site.fieldwork ? 3 : 2);
     }
@@ -312,7 +315,7 @@ public final class MilitarySites implements IWorldGenerator {
     public static Occupation placeAuthored(World world, String site, String faction, int x, int z, int rotation) {
         MilitarySystem.requireServerThread();
         Definition definition = DEFINITIONS.get(site);
-        if (definition == null || world.isRemote || rotation < 0 || rotation > 3) return null;
+        if (definition == null || world.isRemote || isShowcase(world) || rotation < 0 || rotation > 3) return null;
         return place(world, x, z, rotation, definition, faction == null ? definition.faction : faction);
     }
 
@@ -321,16 +324,28 @@ public final class MilitarySites implements IWorldGenerator {
     }
 
     private static Occupation place(World world, int x, int z, int rotation, Definition site, String faction, boolean tryOtherEntrances) {
+        return place(world, x, z, rotation, site, faction, tryOtherEntrances, false);
+    }
+
+    private static Occupation place(World world, int x, int z, int rotation, Definition site, String faction,
+                                    boolean tryOtherEntrances, boolean test) {
         if (site == null || !faction.isEmpty() && !MilitaryRelations.available(faction)) return null;
         int half = site.width / 2;
         if (!populated(world, x - half, z - half, x + half, z + half)) return null;
-        WorldSavedData_Flag data = WorldSavedData_Flag.get(world);
-        if (!data.near(x, z, Math.max(36, half * 2)).isEmpty()) return null;
+        if (overlaps(world, x, z, half, test ? 1 : 12)) return null;
         MilitarySiteLayout layout = survey(world, x, z, rotation, site);
         for (int retry = 1; tryOtherEntrances && layout == null && retry < 4; retry++) {
             layout = survey(world, x, z, (rotation + retry) & 3, site);
         }
         return layout == null ? null : complete(layout, faction);
+    }
+
+    private static boolean overlaps(World world, int x, int z, int half, int gap) {
+        for (Occupation other : WorldSavedData_Flag.get(world).near(x, z, (half + 42 + gap) * 2)) {
+            int spacing = half + Math.max(7, other.footprint) + gap;
+            if (Math.abs(other.flagPos[0] - x) <= spacing && Math.abs(other.flagPos[2] - z) <= spacing) return true;
+        }
+        return false;
     }
 
     static boolean populated(World world, int x1, int z1, int x2, int z2) {

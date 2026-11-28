@@ -82,7 +82,7 @@ final class MilitaryFrontlines {
             int y = scarGround(world, px, pz);
             if (y < 0 || world.getBlock(px, y + 1, pz) != Blocks.air) continue;
             int debris = Math.floorMod(along, 7);
-            Block obstacle = debris == 0 ? Blocks.log : debris <= 3 ? Blocks.iron_bars : Blocks.cobblestone_wall;
+            Block obstacle = debris == 0 ? Blocks.log : debris <= 3 ? MilitaryMaterials.BARBED_WIRE : MilitaryMaterials.BATTLE_RUBBLE;
             world.setBlock(px, y + 1, pz, obstacle, obstacle == Blocks.log ? 1 : 0, 2);
         }
     }
@@ -100,12 +100,12 @@ final class MilitaryFrontlines {
         if (!MilitarySiteLayout.natural(ground, world.getWorldChunkManager().getBiomeGenAt(x, z))) return;
         for (int y = top + 1; y > top - depth; y--) world.setBlock(x, y, z, Blocks.air, 0, 2);
         world.setBlock(x, top - depth, z, random.nextInt(3) == 0 ? Blocks.gravel : Blocks.dirt, 0, 2);
-        if (depth == 0 && random.nextInt(6) == 0) world.setBlock(x, top + 1, z, Blocks.mossy_cobblestone, 0, 2);
+        if (depth == 0 && random.nextInt(6) == 0) world.setBlock(x, top + 1, z, MilitaryMaterials.BATTLE_RUBBLE, 0, 2);
     }
 
     private static int scarGround(World world, int x, int z) {
         if (!MilitarySites.proceduralAt(world, x, z)) return -1;
-        int top = world.getHeightValue(x, z) - 1;
+        int top = MilitarySiteLayout.surfaceTop(world, x, z);
         int y = top;
         while (y > 1 && MilitarySiteLayout.vegetation(world.getBlock(x, y, z))) y--;
         if (top - y > 2 || !MilitarySiteLayout.natural(world.getBlock(x, y, z),

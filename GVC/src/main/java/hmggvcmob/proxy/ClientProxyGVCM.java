@@ -51,6 +51,7 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 		MinecraftForge.EVENT_BUS.register(new EventRenderPlatoonInfo());
         MinecraftForge.EVENT_BUS.register(new MilitaryClientEvents());
         ArmyCommandScreen.register();
+        hmggvcmob.military.client.MilitaryReputationHud.register();
 	}
 
     @Override
@@ -60,6 +61,13 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 
     @Override
     public void handleMilitarySnapshot(int window, NBTTagCompound snapshot) {
+        if (window == MilitaryNetwork.ALLEGIANCE_WINDOW) {
+            Minecraft client = Minecraft.getMinecraft();
+            client.func_152344_a(() -> {
+                if (client.theWorld != null) hmggvcmob.military.client.MilitaryReputationHud.accept(client.theWorld, snapshot);
+            });
+            return;
+        }
         scheduleClientPacket(world -> {
             Minecraft client = Minecraft.getMinecraft();
             if (window == MilitaryNetwork.MANUAL_WINDOW) {
@@ -88,6 +96,7 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 
 	public void initSome(){
 		super.initSome();
+        RenderMilitaryWire.register();
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityGuerrilla.class, new GVCRenderGuerrilla());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityGuerrilla_Flamer.class, GVCRenderGuerrilla.onlyoneTexture("guerrilla_f"));
 		//RenderingRegistry.registerEntityRenderingHandler(GVCEntityGuerrilla.class, new GVCRenderGuerrillaobj());
