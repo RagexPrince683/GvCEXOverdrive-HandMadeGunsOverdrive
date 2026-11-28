@@ -70,6 +70,35 @@ public class WorldSavedData_Flag extends WorldSavedData {
         markDirty();
     }
 
+    public boolean register(Occupation post) {
+        int[] pos = post.flagPos;
+        if (positions.containsKey(new ChunkCoordinates(pos[0], pos[1], pos[2])) || settlements.containsKey(post.id)) return false;
+        add(post);
+        markDirty();
+        return true;
+    }
+
+    public List<Occupation> near(int x, int z, int radius) {
+        java.util.Set<Occupation> found = new java.util.LinkedHashSet<>();
+        for (int cx = (x - radius) >> 4; cx <= (x + radius) >> 4; cx++) {
+            for (int cz = (z - radius) >> 4; cz <= (z + radius) >> 4; cz++) {
+                List<Occupation> posts = territory.get(new ChunkCoordIntPair(cx, cz));
+                if (posts != null) found.addAll(posts);
+            }
+        }
+        ArrayList<Occupation> results = new ArrayList<>(found);
+        long limit = (long)radius * radius;
+        results.removeIf(post -> distance(post, x, z) > limit);
+        results.sort(java.util.Comparator.comparingLong((Occupation post) -> distance(post, x, z))
+                .thenComparingInt(post -> post.flagPos[0]).thenComparingInt(post -> post.flagPos[2]));
+        return results;
+    }
+
+    private static long distance(Occupation post, int x, int z) {
+        long dx = (long)post.flagPos[0] - x, dz = (long)post.flagPos[2] - z;
+        return dx * dx + dz * dz;
+    }
+
     public Occupation atTerritory(double x, double z, boolean villageOnly) {
         return atTerritory(x, z, villageOnly, false);
     }

@@ -25,7 +25,11 @@ public class WWorld extends WorldGenDungeons implements IWorldGenerator {
 		switch(world.provider.dimensionId)
 		{
 			case -1: generateNether(world, random, chunkX * 16, chunkZ * 16); break;
-			case 0: generateSurface(world, random, chunkX * 16, chunkZ * 16); break;
+			case 0:
+                if (!hmggvcmob.military.MilitaryConfig.regionalSites || hmggvcmob.military.MilitaryConfig.legacySurfaceCamps) {
+                    generateSurface(world, random, chunkX * 16, chunkZ * 16);
+                }
+                break;
 			case 1: generateEnd(world, random, chunkX * 16, chunkZ * 16);
 		}
 //		if (worldchunkmanager != null)

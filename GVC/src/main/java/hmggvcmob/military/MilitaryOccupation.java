@@ -30,28 +30,29 @@ public final class MilitaryOccupation {
         long phase = now + flag.xCoord * 11L + flag.zCoord * 7L;
         if (Math.floorMod(phase, MilitaryConfig.occupationInterval) != 0) return;
         WorldSavedData_Flag data = WorldSavedData_Flag.get(world);
-        if (post.occupied() && MilitaryConfig.recruitment && post.trader == null && post.nextTrader <= now) {
-            if (spawnTrader(world, post)) data.markDirty();
-            else post.nextTrader = now + 100;
-        }
+        if (MilitaryConfig.recruitment) MilitaryTraders.update(world, post, now);
         if (!MilitaryConfig.occupation) return;
         boolean wasContested = post.attacked;
         boolean simulated = world.difficultySetting != EnumDifficulty.PEACEFUL;
-        if (post.occupied() && simulated && Math.floorMod(phase, MilitaryConfig.occupationInterval * 2) == 0) {
+        if (post.occupied() && post.capturable() && MilitaryRelations.available(post.faction())
+                && simulated && Math.floorMod(phase, MilitaryConfig.occupationInterval * 2) == 0) {
             capture(world, post, data);
         }
         int previous = flag.flagHeight;
         int previousCountdown = flag.respawncycle;
         flag.flagHeight = post.occupied() ? post.control * post.campObj.maxFlagHeight / MilitaryConfig.captureStrength : 0;
         flag.campObj = post.campObj;
-        if (post.occupied() && simulated && post.nextReinforcement <= now && (!post.attacked || MilitaryConfig.reinforceContested)
+        if (post.occupied() && MilitaryRelations.available(post.faction()) && simulated
+                && (post.personnelLimit(false) != 0 || post.personnelLimit(true) != 0)
+                && post.nextReinforcement <= now && (!post.attacked || MilitaryConfig.reinforceContested)
                 && world.getClosestPlayer(flag.xCoord + .5, flag.yCoord + .5, flag.zCoord + .5, MilitaryConfig.reinforcementDistance) != null) {
             post.nextReinforcement = now + MilitaryConfig.reinforcementInterval;
             reinforce(world, post, false);
             reinforce(world, post, true);
             data.markDirty();
         }
-        flag.respawncycle = post.occupied() ? (int) MathHelper.clamp_double(post.nextReinforcement - now, 0, MilitaryConfig.reinforcementInterval) : 0;
+        flag.respawncycle = post.occupied() && post.hasBeaconService()
+                ? (int) MathHelper.clamp_double(post.nextReinforcement - now, 0, MilitaryConfig.reinforcementInterval) : 0;
         if (previous != flag.flagHeight || previousCountdown / 100 != flag.respawncycle / 100
                 || wasContested != post.attacked) {
             flag.markDirty();
@@ -62,8 +63,9 @@ public final class MilitaryOccupation {
     private static void capture(World world, Occupation post, WorldSavedData_Flag data) {
         int[] pos = post.flagPos;
         int range = Math.min(20, post.radius);
-        AxisAlignedBB area = AxisAlignedBB.getBoundingBox(pos[0] - range, pos[1] - 8, pos[2] - range,
-                pos[0] + range + 1, pos[1] + 9, pos[2] + range + 1);
+        int vertical = post.underground ? 2 : 8;
+        AxisAlignedBB area = AxisAlignedBB.getBoundingBox(pos[0] - range, pos[1] - vertical, pos[2] - range,
+                pos[0] + range + 1, pos[1] + vertical + 1, pos[2] + range + 1);
         int friendly = 0;
         Map<Claimant, Integer> enemies = new HashMap<>();
         for (Object entry : world.getEntitiesWithinAABB(EntityPlayer.class, area)) {
@@ -133,15 +135,15 @@ public final class MilitaryOccupation {
     }
 
     private static void deactivate(World world, Occupation post, UUID player, Occupation.State state) {
+        boolean held = post.occupied();
         post.state = state;
         post.defeatedBy = player;
         post.owner = null;
         post.attacked = false;
         post.control = 0;
-        post.trader = null;
-        post.nextTrader = world.getTotalWorldTime() + MilitaryConfig.occupationInterval;
         resetGarrison(post);
         updateBeacon(world, post);
+        if (held) MilitaryQuests.control(world, post, player, post.faction(), false);
     }
 
     private static void resetGarrison(Occupation post) {
@@ -172,6 +174,10 @@ public final class MilitaryOccupation {
         result.setString("Faction", faction == null ? post.faction() : faction.name);
         result.setString("Type", post.type);
         result.setString("State", post.state.name());
+        result.setString("Classification", post.classification().name());
+        result.setBoolean("Beacon", post.hasBeaconService());
+        result.setString("Hierarchy", post.hierarchy);
+        result.setInteger("TraderStations", post.traders().size());
         result.setBoolean("Claim", !post.occupied() && canClaim(player.getUniqueID(), post) && mayResolve(player, post));
         result.setBoolean("Neutralize", post.state == Occupation.State.DISABLED && mayResolve(player, post)
                 && (MilitaryConfig.alignedNeutralize || !canClaim(player.getUniqueID(), post)));
@@ -182,7 +188,9 @@ public final class MilitaryOccupation {
         Occupation post = nearbyPost(player);
         if (post == null || !post.id.toString().equals(id) || post.occupied() || !mayResolve(player, post)) return "capture_denied";
         if (claim && canClaim(player.getUniqueID(), post)) {
+            String former = post.faction();
             transfer(player.worldObj, post, MilitaryRelations.allegiance(player.getUniqueID()), null);
+            MilitaryQuests.control(player.worldObj, post, player.getUniqueID(), former, true);
             return "occupied";
         }
         if (!claim && post.state == Occupation.State.DISABLED
@@ -201,13 +209,15 @@ public final class MilitaryOccupation {
     }
 
     private static boolean mayResolve(EntityPlayer player, Occupation post) {
-        return player.getUniqueID().equals(post.defeatedBy) || MilitaryRelations.hostileToPlayer(player.getUniqueID(), post.faction());
+        return post.capturable() && (post.faction().isEmpty() || player.getUniqueID().equals(post.defeatedBy)
+                || MilitaryRelations.hostileToPlayer(player.getUniqueID(), post.faction()));
     }
 
     private static boolean canClaim(UUID player, Occupation post) {
         String allegiance = MilitaryRelations.allegiance(player);
         MilitaryRelations.Faction faction = MilitaryRelations.definition(allegiance);
-        return MilitaryConfig.factionCapture && faction != null && faction.settlementCapture && !allegiance.equals(post.faction())
+        return post.capturable() && MilitaryConfig.factionCapture && faction != null && faction.enabled
+                && faction.settlementCapture && !allegiance.equals(post.faction())
                 && !MilitaryRelations.hostileToPlayer(player, allegiance);
     }
 
@@ -218,23 +228,11 @@ public final class MilitaryOccupation {
         return tile instanceof TileEntityFlag ? (TileEntityFlag) tile : null;
     }
 
-    private static boolean spawnTrader(World world, Occupation post) {
-        EntityMilitaryTrader trader = new EntityMilitaryTrader(world);
-        ChunkCoordinates spot = findSpace(world, post.flagPos[0], post.flagPos[1], post.flagPos[2], 1, 6, true, trader);
-        if (spot == null) return false;
-        post.traderX = spot.posX;
-        post.traderY = spot.posY;
-        post.traderZ = spot.posZ;
-        trader.bind(post);
-        post.trader = trader.getUniqueID();
-        if (world.spawnEntityInWorld(trader)) return true;
-        post.trader = null;
-        return false;
-    }
-
     private static void reinforce(World world, Occupation post, boolean patrol) {
         int limit = patrol ? MilitaryConfig.patrolSize : MilitaryConfig.garrisonSize;
         if (post.isVillage()) limit = patrol ? MilitaryConfig.villagePatrol : MilitaryConfig.villageGarrison;
+        int siteLimit = post.personnelLimit(patrol);
+        if (siteLimit >= 0) limit = Math.min(16, siteLimit * MilitaryConfig.reinforcementPercent / 100);
         int rate = patrol ? MilitaryConfig.patrolRate : MilitaryConfig.garrisonRate;
         if (limit == 0 || rate == 0) return;
         PlatoonOBJ team = PlatoonOBJ.find(world, patrol ? post.patrol : post.garrison);
@@ -247,13 +245,19 @@ public final class MilitaryOccupation {
 
         for (int i = 0; i < count; i++) {
             EntityMilitaryUnit unit = new EntityMilitaryUnit(world);
-            ChunkCoordinates spot = findSpace(world, post.flagPos[0], post.flagPos[1], post.flagPos[2], 2, 8, false, unit);
+            ChunkCoordinates spot = patrol || team != null ? null : standingSpace(world, post.guardPoint, unit);
+            if (spot == null) spot = findSpace(world, post.flagPos[0], post.flagPos[1], post.flagPos[2],
+                    2, 8, false, post.underground ? 1 : 4, unit);
             if (spot == null) break;
-            UnitPresets.Preset preset = choosePreset(presets, world.rand.nextInt(weight));
+            UnitPresets.Preset preset = team == null && !patrol ? UnitPresets.get(post.guardPreset) : null;
+            if (preset == null || !faction.equals(preset.faction)) preset = choosePreset(presets, world.rand.nextInt(weight));
             unit.configure(preset, null, post);
-            ChunkCoordinates waypoint = team == null && patrol
-                    ? findSpace(world, post.flagPos[0], post.flagPos[1], post.flagPos[2],
-                            Math.max(4, post.patrolRadius / 2), post.patrolRadius, false, unit) : null;
+            ChunkCoordinates waypoint = null;
+            if (team == null && patrol) {
+                waypoint = standingSpace(world, post.patrolPoint, unit);
+                if (waypoint == null) waypoint = findSpace(world, post.flagPos[0], post.flagPos[1], post.flagPos[2],
+                        Math.max(4, post.patrolRadius / 2), post.patrolRadius, false, unit);
+            }
             unit.setLocationAndAngles(spot.posX + .5, spot.posY, spot.posZ + .5, unit.rotationYaw, 0);
             if (!world.spawnEntityInWorld(unit)) continue;
             if (team == null) {
@@ -270,6 +274,14 @@ public final class MilitaryOccupation {
         }
     }
 
+    private static ChunkCoordinates standingSpace(World world, int[] spot, EntityLiving entity) {
+        if (spot.length != 3 || !world.getChunkProvider().chunkExists(spot[0] >> 4, spot[2] >> 4)
+                || !world.isSideSolid(spot[0], spot[1] - 1, spot[2], ForgeDirection.UP)) return null;
+        entity.setPosition(spot[0] + .5, spot[1], spot[2] + .5);
+        return world.checkNoEntityCollision(entity.boundingBox) && world.getCollidingBoundingBoxes(entity, entity.boundingBox).isEmpty()
+                && !world.isAnyLiquid(entity.boundingBox) ? new ChunkCoordinates(spot[0], spot[1], spot[2]) : null;
+    }
+
     private static UnitPresets.Preset choosePreset(List<UnitPresets.Preset> presets, int draw) {
         for (UnitPresets.Preset preset : presets) {
             draw -= preset.reinforcementWeight;
@@ -280,6 +292,11 @@ public final class MilitaryOccupation {
 
     static ChunkCoordinates findSpace(World world, int x, int y, int z, int inner, int outer,
                                       boolean sameChunk, EntityLiving entity) {
+        return findSpace(world, x, y, z, inner, outer, sameChunk, 4, entity);
+    }
+
+    private static ChunkCoordinates findSpace(World world, int x, int y, int z, int inner, int outer,
+                                              boolean sameChunk, int vertical, EntityLiving entity) {
         for (int i = 0; i < 36; i++) {
             int dx = world.rand.nextInt(outer * 2 + 1) - outer;
             int dz = world.rand.nextInt(outer * 2 + 1) - outer;
@@ -289,7 +306,7 @@ public final class MilitaryOccupation {
             int sz = z + dz;
             if ((sameChunk && ((sx >> 4) != (x >> 4) || (sz >> 4) != (z >> 4)))
                     || !world.getChunkProvider().chunkExists(sx >> 4, sz >> 4)) continue;
-            for (int level = 0; level < 9; level++) {
+            for (int level = 0; level <= vertical * 2; level++) {
                 int dy = (level + 1) / 2 * (level % 2 == 0 ? -1 : 1);
                 int sy = y + dy;
                 if (sy < 1 || sy > 253 || !world.isSideSolid(sx, sy - 1, sz, ForgeDirection.UP)) continue;

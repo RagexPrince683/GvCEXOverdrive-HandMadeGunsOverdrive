@@ -47,6 +47,22 @@ public enum FactionInsignia {
             "....#a#....",
             ".....#....."
     }),
+    RAIDERS(0xA26391, 0xF4D7C5, new String[]{
+            "##.......##", "#a#.....#a#", ".#a#...#a#.", "..#a#.#a#..", "...#aba#...",
+            "....#b#....", "...#aba#...", "..#a#.#a#..", ".#a#...#a#.", "#a#.....#a#", "##.......##"
+    }),
+    COOPERATIVE(0x7CAA9E, 0xFFEEBB, new String[]{
+            "...#####...", "..#aaaaa#..", ".#aabbbaa#.", "#aabaaabaa#", "#abaaaaaba#",
+            "#ababbaba#", "#abaaaaaba#", "#aabaaabaa#", ".#aabbbaa#.", "..#aaaaa#..", "...#####..."
+    }),
+    DUNE(0xD3A066, 0xFFF1C7, new String[]{
+            ".....#.....", "...##a##...", "..#aabaa#..", ".#aabbbaa#.", "#aabbbbbaa#",
+            "#aaaaaaaaa#", "#abbaaaaaa#", "#aaabbaaaa#", ".#aaaabba#.", "..#aaaaa#..", "...#####..."
+    }),
+    NORTHLINE(0x91AFD9, 0xF3F2EA, new String[]{
+            ".....#.....", "....#b#....", "...#bbb#...", "...#aba#...", "..#aabaa#..",
+            "..#abbba#..", ".#aabaaab#.", ".#aaaaaab#.", "#aaaaaaaab#", "#aaaaaaaaa#", "###########"
+    }),
     INDEPENDENT(0x899CA8, 0xEEEBDD, new String[]{
             "..#######..",
             ".#aaaaaaa#.",
@@ -71,15 +87,27 @@ public enum FactionInsignia {
 
     public static FactionInsignia of(String faction) {
         if (faction == null) return null;
-        switch (faction) {
-            case "union": return DEFENSE;
-            case "allies": return INSURGENTS;
-            case "pmc": return COMPANY;
+        return fromKey(hmggvcmob.military.MilitaryRelations.insignia(faction));
+    }
+
+    static FactionInsignia fromKey(String key) {
+        switch (key) {
+            case "defense": return DEFENSE;
+            case "insurgents": return INSURGENTS;
+            case "company": return COMPANY;
+            case "raiders": return RAIDERS;
+            case "cooperative": return COOPERATIVE;
+            case "dune": return DUNE;
+            case "northline": return NORTHLINE;
             default: return INDEPENDENT;
         }
     }
 
     public void draw(int x, int y) {
+        draw(x, y, color);
+    }
+
+    public void draw(int x, int y, int primary) {
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_LIGHTING);
@@ -88,7 +116,7 @@ public enum FactionInsignia {
         for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
             char pixel = pixels[row].charAt(col);
             if (pixel == '.') continue;
-            mesh.setColorOpaque_I(pixel == 'a' ? color : pixel == 'b' ? accent : OUTLINE);
+            mesh.setColorOpaque_I(pixel == 'a' ? primary : pixel == 'b' ? accent : OUTLINE);
             int left = x + col, top = y + row;
             mesh.addVertex(left, top + 1, 0);
             mesh.addVertex(left + 1, top + 1, 0);

@@ -13,7 +13,7 @@ public final class RenderMilitaryUnit extends RenderInfantry {
 
     @Override
     protected ResourceLocation getEntityTexture(EntityLiving entity) {
-        String faction = ((EntityMilitaryUnit) entity).faction();
+        String faction = hmggvcmob.military.MilitaryRelations.textureProfile(((EntityMilitaryUnit) entity).faction());
         return "union".equals(faction) ? UNION : "allies".equals(faction) ? ALLIES : PMC;
     }
 }

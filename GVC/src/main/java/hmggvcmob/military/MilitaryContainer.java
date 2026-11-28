@@ -22,6 +22,7 @@ import java.util.UUID;
 public final class MilitaryContainer extends Container {
     public static final int VISIBLE_ROWS = 6;
     public static final int TREASURY = 2, SUPPLIES = 3, FACTIONS = 4;
+    public static final int JOURNAL = 5, RECRUIT = 10, BUY = 11, SELL = 12, ALLEGIANCE = 13, CONTRACTS = 14;
     private final EntityPlayer owner;
     private final int traderId;
     final InventoryBasic deposit = new InventoryBasic("Military deposits", false, 2);
@@ -35,11 +36,20 @@ public final class MilitaryContainer extends Container {
     private boolean sentCooldown;
     private ItemStack lastCurrency, lastFood;
     private String result = "";
+    private int tradeOffset, tradeCategory, quote;
+    private String tradeQuery = "";
+    private long tradeCheck = -1;
+    private int tradeState;
+    private final Map<String, MilitaryCommerce.Bid> bids = new LinkedHashMap<>();
+    private final Map<String, MilitaryQuests.Contract> questOffers = new LinkedHashMap<>();
 
     public MilitaryContainer(EntityPlayer owner, int traderId) {
         this.owner = owner;
         this.traderId = traderId;
-        if (isRecruitment()) return;
+        if (isRecruitment()) {
+            view = RECRUIT;
+            return;
+        }
         addSlotToContainer(new Slot(deposit, 0, 17, 84) {
             @Override public boolean isItemValid(ItemStack stack) { return MilitarySupplies.coinIndex(stack) >= 0; }
         });
@@ -55,6 +65,7 @@ public final class MilitaryContainer extends Container {
     }
 
     public boolean isRecruitment() { return traderId >= 0; }
+    boolean isProvider(Entity provider) { return provider.worldObj == owner.worldObj && traderId == provider.getEntityId(); }
 
     public void positionInventory(int tab) {
         if (isRecruitment()) return;
@@ -79,8 +90,10 @@ public final class MilitaryContainer extends Container {
         if (player != owner || !player.isEntityAlive()) return false;
         if (!isRecruitment() || player.worldObj.isRemote) return true;
         Entity entity = player.worldObj.getEntityByID(traderId);
-        return entity instanceof EntityMilitaryTrader
-                && MilitaryRecruitment.permitted(player, (EntityMilitaryTrader)entity, ((EntityMilitaryTrader)entity).post());
+        if (entity instanceof EntityMilitaryTrader) {
+            return MilitaryRecruitment.permitted(player, (EntityMilitaryTrader)entity, ((EntityMilitaryTrader)entity).post());
+        }
+        return MilitaryQuests.permits(player, entity);
     }
 
     @Override
@@ -119,7 +132,17 @@ public final class MilitaryContainer extends Container {
             filter = value >> 10 & 3;
             grouping = (value & 4096) != 0;
         } else if (type == MilitaryNetwork.TAB) {
-            view = Math.max(0, Math.min(FACTIONS, value));
+            int tab = isRecruitment() ? Math.max(RECRUIT, Math.min(CONTRACTS, value)) : Math.max(0, Math.min(JOURNAL, value));
+            if (tab != view) {
+                bids.clear();
+                questOffers.clear();
+                view = tab;
+            }
+            sentRevision = -1;
+        } else if (type == MilitaryNetwork.TRADE_QUERY && isRecruitment() && (view == BUY || view == SELL)) {
+            tradeOffset = value & 65535;
+            tradeCategory = value >> 16 & 7;
+            tradeQuery = preset;
             sentRevision = -1;
         } else if (type == MilitaryNetwork.GROUP_FILTER && !isRecruitment()) {
             MilitaryEconomy.Account account = MilitaryEconomy.get().account(owner.getUniqueID());
@@ -135,6 +158,16 @@ public final class MilitaryContainer extends Container {
             result = "invalid";
             if (type == MilitaryNetwork.HIRE && isRecruitment()) {
                 result = MilitaryRecruitment.hire(owner, traderId, preset);
+            } else if (type == MilitaryNetwork.TRADE && isRecruitment() && (view == BUY || view == SELL)) {
+                MilitaryCommerce.Bid bid = bids.remove(preset);
+                Entity trader = owner.worldObj.getEntityByID(traderId);
+                result = trader instanceof EntityMilitaryTrader && bid != null && bid.sell == (view == SELL)
+                        ? MilitaryCommerce.transact(owner, (EntityMilitaryTrader)trader, bid, value) : "trade_changed";
+            } else if (type == MilitaryNetwork.QUEST && (view == JOURNAL || view == CONTRACTS)) {
+                Entity provider = isRecruitment() ? owner.worldObj.getEntityByID(traderId) : null;
+                UUID id = MilitaryEconomy.parseUuid(preset);
+                if (id != null) result = value == 0 ? MilitaryQuests.accept(owner, provider, questOffers.remove(preset))
+                        : MilitaryQuests.finish(owner, provider, id, value == 2);
             } else if (type == MilitaryNetwork.PLEDGE && preset.isEmpty()) {
                 result = MilitaryRelations.pledge(owner, "");
             } else if (type == MilitaryNetwork.PLEDGE && isRecruitment()) {
@@ -171,13 +204,31 @@ public final class MilitaryContainer extends Container {
             return;
         }
         Entity entity = isRecruitment() ? player.worldObj.getEntityByID(traderId) : null;
-        Occupation post = entity instanceof EntityMilitaryTrader ? ((EntityMilitaryTrader)entity).post() : null;
-        String faction = post == null ? "" : post.faction();
+        EntityMilitaryTrader trader = entity instanceof EntityMilitaryTrader ? (EntityMilitaryTrader)entity : null;
+        String faction = entity == null ? "" : MilitaryRelations.faction(entity);
+        if (faction == null) faction = "";
         MilitaryEconomy economy = MilitaryEconomy.get();
         MilitaryEconomy.Account account = economy.account(owner.getUniqueID());
         long now = MilitaryEconomy.now();
         boolean cooldown = account.allegianceAfter > now;
         boolean settlementChanged = false;
+        boolean tradeChanged = false;
+        boolean questView = view == JOURNAL || view == CONTRACTS;
+        boolean tradeView = trader != null && (view == BUY || view == SELL);
+        if ((questView || tradeView) && (tradeCheck < 0 || now >= tradeCheck)) {
+            int current;
+            if (tradeView) {
+                Occupation.TraderLocation location = trader.location();
+                current = Objects.hash(location.commerceEpoch, location.stockUsed, location.liquidityUsed, MilitaryCommerce.epoch(owner));
+            } else current = Long.hashCode(now / 100);
+            for (ItemStack stack : owner.inventory.mainInventory) {
+                current = 31 * current + (stack == null ? 0 : Objects.hash(stack.getItem(), stack.getItemDamage(),
+                        stack.stackSize, stack.getTagCompound()));
+            }
+            tradeChanged = tradeState != current;
+            tradeState = current;
+            tradeCheck = now + 10;
+        }
         if (view == FACTIONS && (settlementCheck < 0 || now >= settlementCheck || sentRevision != account.revision)) {
             NBTTagCompound local = MilitaryOccupation.nearby(owner);
             settlementChanged = !settlement.equals(local);
@@ -188,7 +239,7 @@ public final class MilitaryContainer extends Container {
         ItemStack food = deposit.getStackInSlot(1);
         long carried = view == TREASURY ? carriedCoins() : 0;
         int selection = offset | filter << 10 | (grouping ? 4096 : 0);
-        if (sentRevision == account.revision && sentRoster == selection && result.isEmpty() && !settlementChanged
+        if (sentRevision == account.revision && sentRoster == selection && result.isEmpty() && !settlementChanged && !tradeChanged
                 && sentCooldown == cooldown
                 && sentCarried == carried && sentFaction.equals(faction)
                 && ItemStack.areItemStacksEqual(lastCurrency, currency) && ItemStack.areItemStacksEqual(lastFood, food)) return;
@@ -223,15 +274,31 @@ public final class MilitaryContainer extends Container {
         snapshot.setInteger("FoodDeposit", MilitarySupplies.foodValue(food));
         snapshot.setInteger("Ack", acknowledgement);
         snapshot.setString("Result", result);
-        if (post != null) {
-            writeOffers(snapshot, post);
-            MilitaryRelations.writeFactions(snapshot, account.owner);
+        if (entity != null && MilitaryRelations.available(faction)) {
+            String role = MilitaryQuests.role(entity);
+            snapshot.setString("FactionId", faction);
+            snapshot.setString("FactionLabel", MilitaryRelations.displayName(faction));
+            snapshot.setInteger("Reputation", MilitaryRelations.playerRelation(owner, faction));
+            snapshot.setString("Role", role);
+            snapshot.setBoolean("CanRecruit", trader != null && MilitaryTraders.canRecruit(role));
+            snapshot.setBoolean("CanBuy", trader != null && MilitaryCommerce.enabled(role, false));
+            snapshot.setBoolean("CanSell", trader != null && MilitaryCommerce.enabled(role, true));
+            snapshot.setBoolean("QuestsEnabled", MilitaryQuests.providersEnabled() && MilitaryCommerce.offersQuests(role));
+            if (trader != null && view == RECRUIT) writeOffers(snapshot, trader);
+            if (tradeView) {
+                MilitaryCommerce.snapshot(snapshot, owner, trader, view == SELL, tradeCategory, tradeOffset, tradeQuery, ++quote, bids);
+                while (bids.size() > 126) bids.remove(bids.keySet().iterator().next());
+            }
+            if (questView) MilitaryQuests.writeJournal(snapshot, owner, entity, questOffers);
+            else MilitaryRelations.writeFactions(snapshot, account.owner);
         } else if (view == FACTIONS) {
             MilitaryRelations.writeFactions(snapshot, account.owner);
             snapshot.setTag("Settlement", settlement);
         } else if (view == 1) {
             writeGroups(snapshot, economy, account);
             writeRoster(snapshot, economy, account);
+        } else if (questView) {
+            MilitaryQuests.writeJournal(snapshot, owner, null, questOffers);
         }
 
         MilitaryNetwork.send(player, windowId, snapshot);
@@ -254,12 +321,11 @@ public final class MilitaryContainer extends Container {
         return total;
     }
 
-    private void writeOffers(NBTTagCompound snapshot, Occupation post) {
-        List<UnitPresets.Preset> offers = UnitPresets.pool(post.faction(), false);
+    private void writeOffers(NBTTagCompound snapshot, EntityMilitaryTrader trader) {
+        String faction = trader.faction();
+        List<UnitPresets.Preset> offers = MilitaryTraders.canRecruit(trader.location().role)
+                ? UnitPresets.pool(faction, false) : java.util.Collections.emptyList();
         offers.sort(Comparator.comparingInt((UnitPresets.Preset p) -> p.tier).thenComparing(p -> p.name));
-        snapshot.setString("FactionId", post.faction());
-        snapshot.setString("FactionLabel", MilitaryRelations.definition(post.faction()).name);
-        snapshot.setInteger("Reputation", MilitaryRelations.playerRelation(owner, post.faction()));
         boundOffset(snapshot, offers.size());
         NBTTagList rows = new NBTTagList();
         for (int index = offset; index < Math.min(offers.size(), offset + VISIBLE_ROWS); index++) {

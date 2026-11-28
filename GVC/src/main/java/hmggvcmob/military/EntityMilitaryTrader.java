@@ -14,6 +14,7 @@ import java.util.UUID;
 
 public final class EntityMilitaryTrader extends EntityCreature {
     private UUID postId;
+    private String station = "main";
 
     public EntityMilitaryTrader(World world) {
         super(world);
@@ -22,8 +23,9 @@ public final class EntityMilitaryTrader extends EntityCreature {
         tasks.addTask(2, new EntityAILookIdle(this));
     }
 
-    void bind(Occupation post) {
+    void bind(Occupation post, Occupation.TraderLocation location) {
         postId = post.id;
+        station = location.key;
     }
 
     Occupation post() {
@@ -31,9 +33,15 @@ public final class EntityMilitaryTrader extends EntityCreature {
         return WorldSavedData_Flag.get(worldObj).byId(postId);
     }
 
+    Occupation.TraderLocation location() {
+        Occupation post = post();
+        return post == null ? null : post.trader(station);
+    }
+
     String faction() {
         Occupation post = post();
-        return post == null ? null : post.faction();
+        Occupation.TraderLocation location = post == null ? null : post.trader(station);
+        return location == null ? "" : post.traderFaction(location);
     }
 
     @Override
@@ -64,15 +72,15 @@ public final class EntityMilitaryTrader extends EntityCreature {
 
     @Override
     public void onLivingUpdate() {
-        if (!worldObj.isRemote && (ticksExisted + getEntityId()) % 10 == 0) {
-            Occupation post = post();
-            if (post == null || !getUniqueID().equals(post.trader)) {
+        if (!worldObj.isRemote && isEntityAlive() && (ticksExisted + getEntityId()) % 10 == 0) {
+            Occupation.TraderLocation location = location();
+            if (location == null || !getUniqueID().equals(location.entity)) {
                 setDead();
                 return;
             }
-            double x = post.traderX + .5;
-            double z = post.traderZ + .5;
-            if (getDistanceSq(x, post.traderY, z) > .15) setPositionAndUpdate(x, post.traderY, z);
+            double x = location.x + .5;
+            double z = location.z + .5;
+            if (getDistanceSq(x, location.y, z) > .15) setPositionAndUpdate(x, location.y, z);
         }
         super.onLivingUpdate();
     }
@@ -81,10 +89,11 @@ public final class EntityMilitaryTrader extends EntityCreature {
     public void onDeath(DamageSource source) {
         super.onDeath(source);
         if (worldObj.isRemote) return;
-        Occupation post = post();
-        if (post == null || !getUniqueID().equals(post.trader)) return;
-        post.trader = null;
-        post.nextTrader = MilitaryConfig.traderReplacement == 0 ? Long.MAX_VALUE
+        Occupation.TraderLocation location = location();
+        if (location == null || !getUniqueID().equals(location.entity)) return;
+        location.entity = null;
+        location.waiting = true;
+        location.nextTrader = MilitaryConfig.traderReplacement == 0 ? Long.MAX_VALUE
                 : worldObj.getTotalWorldTime() + MilitaryConfig.traderReplacement;
         WorldSavedData_Flag.get(worldObj).markDirty();
     }
@@ -93,11 +102,13 @@ public final class EntityMilitaryTrader extends EntityCreature {
     public void readEntityFromNBT(NBTTagCompound tag) {
         super.readEntityFromNBT(tag);
         postId = MilitaryEconomy.parseUuid(tag.getString("MilitaryPost"));
+        if (tag.hasKey("MilitaryStation", 8)) station = tag.getString("MilitaryStation");
     }
 
     @Override
     public void writeEntityToNBT(NBTTagCompound tag) {
         super.writeEntityToNBT(tag);
         if (postId != null) tag.setString("MilitaryPost", postId.toString());
+        tag.setString("MilitaryStation", station);
     }
 }

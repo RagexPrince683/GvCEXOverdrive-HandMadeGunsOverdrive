@@ -47,6 +47,7 @@ public final class MilitarySystem implements IGuiHandler {
     public static void registerItems(File mainConfig) {
         directory = mainConfig.toPath().getParent().resolve("gvc-military");
         MilitarySupplies.registerItems();
+        MilitaryMaterials.register();
         FieldManualItem.register("FieldManual", "gvco_field_manual", GVCMobPlus.tabgvcm, net.minecraft.init.Items.paper,
                 true, () -> GVCMobPlus.proxy.openFieldManual());
         MilitarySupplies.load();
@@ -55,6 +56,8 @@ public final class MilitarySystem implements IGuiHandler {
     public static void register(GVCMobPlus mod) {
         EntityRegistry.registerModEntity(EntityMilitaryTrader.class, "MilitaryTrader", 90, mod, 80, 3, true);
         EntityRegistry.registerModEntity(EntityMilitaryUnit.class, "MilitaryUnit", 91, mod, 250, 3, true);
+        EntityRegistry.registerModEntity(EntityTraderMarker.class, "TraderMarker", 92, mod, 48, 10, false);
+        cpw.mods.fml.common.registry.GameRegistry.registerWorldGenerator(new MilitarySites(), 15);
         MilitaryNetwork.init();
         VillageOutpost.register();
         MilitarySystem events = new MilitarySystem();
@@ -76,6 +79,9 @@ public final class MilitarySystem implements IGuiHandler {
         MilitaryReputation.configure();
         WeaponCatalog.load(directory);
         UnitPresets.load(directory);
+        MilitarySites.load(directory);
+        MilitaryCommerce.load(directory);
+        MilitaryQuests.load(directory);
     }
 
     public static void start(FMLServerStartingEvent event) {
@@ -98,10 +104,25 @@ public final class MilitarySystem implements IGuiHandler {
     public void serverTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || Thread.currentThread() != serverThread) return;
         MilitaryNetwork.drain();
+        for (Object entry : MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
+            MilitaryQuests.visit((EntityPlayerMP)entry);
+        }
         long now = MilitaryEconomy.now();
         if (now % MilitaryConfig.tradeInterval == 0) closeHostileTrade();
         if (now % 20 == 0) MilitaryReputation.sendNotices(now);
         if (now % MilitaryConfig.upkeepProcessing == 0) MilitaryEconomy.get().processUpkeep(now);
+    }
+
+    @SubscribeEvent
+    public void worldTick(TickEvent.WorldTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && Thread.currentThread() == serverThread) MilitaryRoads.tick(event.world);
+    }
+
+    @SubscribeEvent
+    public void load(ChunkEvent.Load event) {
+        if (Thread.currentThread() == serverThread) {
+            MilitaryRoads.chunkReady(event.world, event.getChunk().xPosition, event.getChunk().zPosition);
+        }
     }
 
     @SubscribeEvent
@@ -127,12 +148,20 @@ public final class MilitarySystem implements IGuiHandler {
 
     @SubscribeEvent
     public void drops(LivingDropsEvent event) {
+        if (event.entityLiving.worldObj.isRemote) return;
+        if (event.entityLiving instanceof EntityMilitaryTrader) {
+            event.drops.clear();
+            return;
+        }
+        if (event.entityLiving instanceof EntityMilitaryUnit) {
+            MilitaryLoot.drop(event, (EntityMilitaryUnit)event.entityLiving);
+            return;
+        }
         if (MilitaryConfig.hostileCoinDrop <= 0 || event.entityLiving.worldObj.isRemote
                 || !event.recentlyHit || !(event.source.getEntity() instanceof EntityPlayer)
                 || !(event.entityLiving instanceof hmggvcmob.entity.IflagBattler)) return;
         EntityPlayer player = (EntityPlayer) event.source.getEntity();
-        if (!MilitaryRelations.hostile(event.entityLiving, player)
-                || event.entityLiving instanceof EntityMilitaryUnit && ((EntityMilitaryUnit)event.entityLiving).owner() != null) return;
+        if (!MilitaryRelations.hostile(event.entityLiving, player)) return;
         int count = 1 + event.entityLiving.getRNG().nextInt(MilitaryConfig.hostileCoinDrop);
         event.drops.add(new EntityItem(event.entityLiving.worldObj, event.entityLiving.posX, event.entityLiving.posY,
                 event.entityLiving.posZ, new ItemStack(MilitarySupplies.coinItem(0), count)));

@@ -31,10 +31,17 @@ public final class UnitPresets {
 
     public static void load(Path directory) {
         PRESETS.clear();
-        Path presets = directory.resolve("unit-presets.json");
+        load(directory, "unit-presets.json");
+        load(directory, "regional-unit-presets.json");
+        load(directory, "field-unit-presets.json");
+        FMLLog.info("[GVC military] Loaded %d military presets", PRESETS.size());
+    }
+
+    private static void load(Path directory, String filename) {
+        Path presets = directory.resolve(filename);
         try {
             if (!Files.exists(presets)) {
-                try (InputStream defaults = defaults()) {
+                try (InputStream defaults = defaults(filename)) {
                     Files.copy(defaults, presets);
                 }
             }
@@ -42,19 +49,17 @@ public final class UnitPresets {
                 read(reader);
             }
         } catch (IOException | RuntimeException failure) {
-            PRESETS.clear();
             FMLLog.warning("[GVC military] Cannot load %s: %s. Using bundled presets.", presets, failure.getMessage());
-            try (Reader reader = new InputStreamReader(defaults(), StandardCharsets.UTF_8)) {
+            try (Reader reader = new InputStreamReader(defaults(filename), StandardCharsets.UTF_8)) {
                 read(reader);
             } catch (IOException fallbackFailure) {
                 throw new IllegalStateException("Bundled military presets unavailable", fallbackFailure);
             }
         }
-        FMLLog.info("[GVC military] Loaded %d military presets", PRESETS.size());
     }
 
-    private static InputStream defaults() {
-        InputStream stream = UnitPresets.class.getResourceAsStream("/assets/gvcmob/military/unit-presets.json");
+    private static InputStream defaults(String filename) {
+        InputStream stream = UnitPresets.class.getResourceAsStream("/assets/gvcmob/military/" + filename);
         if (stream == null) throw new IllegalStateException("Missing bundled unit presets");
         return stream;
     }
@@ -85,8 +90,11 @@ public final class UnitPresets {
 
     static List<Preset> pool(String faction, boolean reinforcement) {
         List<Preset> available = new ArrayList<>();
+        if (!MilitaryRelations.available(faction)) return available;
+        String[] recruitment = MilitaryRelations.definition(faction).recruitment;
         for (Preset preset : PRESETS.values()) {
             if (!faction.equals(preset.faction)) continue;
+            if (!reinforcement && recruitment.length > 0 && !java.util.Arrays.asList(recruitment).contains(preset.id)) continue;
             if (reinforcement ? preset.reinforcementWeight > 0 : preset.recruitable) available.add(preset);
         }
         return available;

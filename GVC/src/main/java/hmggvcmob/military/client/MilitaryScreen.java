@@ -40,10 +40,10 @@ public final class MilitaryScreen extends GuiContainer {
     private static final int LIST_X = 11, LIST_Y = 65, LIST_W = 125, ROW_H = 23, SCROLL_X = 138;
     private static final int RIGHT = 150;
     private static final ResourceLocation ICONS = new ResourceLocation("gvcmob:textures/gui/military_icons.png");
-    private static final int OVERVIEW = 0, PERSONNEL = 1, TREASURY = 2, SUPPLIES = 3, FACTIONS = 4;
-    private static final String[] TABS = {"overview", "personnel", "treasury", "supplies", "factions"};
-    private static final int[] TAB_LEFT = {9, 62, 119, 174, 226};
-    private static final int[] TAB_WIDTH = {52, 56, 54, 51, 53};
+    private static final int OVERVIEW = 0, PERSONNEL = 1, TREASURY = 2, SUPPLIES = 3, FACTIONS = 4, JOURNAL = 5;
+    private static final String[] TABS = {"overview", "personnel", "treasury", "supplies", "factions", "quests"};
+    private static final int[] TAB_LEFT = {9, 55, 103, 150, 196, 242};
+    private static final int[] TAB_WIDTH = {45, 47, 46, 45, 45, 37};
     private static final String[] FILTERS = {"everyone", "deployed", "away", "losses"};
     private static final int[] QUICK = {100, 500, 1000};
     private static int lastTab;
@@ -65,6 +65,9 @@ public final class MilitaryScreen extends GuiContainer {
     private List<String> hover = Collections.emptyList();
     private final Set<String> selectedUnits = new LinkedHashSet<>();
     private boolean organization, settlementView, allegianceView;
+    private int serviceTab = MilitaryContainer.RECRUIT;
+    private final TradePanel commerce = new TradePanel();
+    private final QuestPanel journal = new QuestPanel();
     private int groupOffset, factionOffset, nameAction = -1, confirmation = -1;
     private String selectedGroup = "-", selectedFaction = "";
 
@@ -81,6 +84,15 @@ public final class MilitaryScreen extends GuiContainer {
         if (inventorySlots.windowId != window || data == null) return;
         boolean hadAllegiance = !snapshot.getString("Allegiance").isEmpty();
         snapshot = data;
+        if (recruiting && !snapshot.getString("Role").equals(priorRole)) {
+            priorRole = snapshot.getString("Role");
+            if (!snapshot.getBoolean("CanRecruit") && snapshot.getBoolean("CanBuy")) selectService(MilitaryContainer.BUY);
+            else if (!snapshot.getBoolean("CanRecruit") && snapshot.getBoolean("CanSell")) selectService(MilitaryContainer.SELL);
+            else if (!snapshot.getBoolean("CanRecruit") && snapshot.getBoolean("QuestsEnabled")) selectService(MilitaryContainer.CONTRACTS);
+            else refreshControls();
+        }
+        if (trading()) commerce.reconcile();
+        if (questView()) journal.reconcile();
         offset = data.getInteger("Offset");
         if (hasList()) reconcileSelection();
         if (data.getInteger("Ack") >= pending && pending > 0) {
@@ -108,6 +120,7 @@ public final class MilitaryScreen extends GuiContainer {
         groupName = new GuiTextField(fontRendererObj, guiLeft + 156, guiTop + 127, 115, 16);
         groupName.setMaxStringLength(32);
         groupName.setText(groupInput);
+        commerce.init();
         container.positionInventory(tab);
         refreshControls();
     }
@@ -115,7 +128,32 @@ public final class MilitaryScreen extends GuiContainer {
     private void refreshControls() {
         buttonList.clear();
         if (recruiting) {
-            control(60, 11, 47, 126, 15, label(allegianceView ? "back_to_offers" : "allegiance"));
+            int left = 10;
+            if (snapshot.getBoolean("CanRecruit")) {
+                styled(70, left, 28, 51, 17, label("recruit_tab"), -1, serviceTab == MilitaryContainer.RECRUIT);
+                left += 53;
+            }
+            if (snapshot.getBoolean("CanBuy")) {
+                styled(71, left, 28, 51, 17, label("buy"), -1, serviceTab == MilitaryContainer.BUY);
+                left += 53;
+            }
+            if (snapshot.getBoolean("CanSell")) {
+                styled(72, left, 28, 51, 17, label("sell"), -1, serviceTab == MilitaryContainer.SELL);
+                left += 53;
+            }
+            if (snapshot.getBoolean("QuestsEnabled")) {
+                styled(74, left, 28, 49, 17, label("quests"), -1, serviceTab == MilitaryContainer.CONTRACTS);
+                left += 51;
+            }
+            if (snapshot.getBoolean("CanRecruit")) styled(73, left, 28, 58, 17, label("allegiance"), -1, allegianceView);
+            if (trading()) {
+                commerce.controls();
+                return;
+            }
+            if (questView()) {
+                journal.controls();
+                return;
+            }
             if (allegianceView) control(61, 157, 199, 113, 20, label("pledge"));
             else control(20, 157, 199, 113, 20, label("hire"));
             return;
@@ -144,7 +182,7 @@ public final class MilitaryScreen extends GuiContainer {
             } else if (!snapshot.getString("Allegiance").isEmpty()) {
                 control(62, 155, 205, 117, 17, label("renounce"));
             }
-        }
+        } else if (tab == JOURNAL) journal.controls();
         if (tab == OVERVIEW) control(66, 219, 7, 58, 15, label("field_manual"));
     }
 
@@ -191,6 +229,18 @@ public final class MilitaryScreen extends GuiContainer {
 
     @Override protected void actionPerformed(GuiButton button) {
         int id = button.id;
+        if (recruiting && id >= 70 && id <= 74) {
+            selectService(MilitaryContainer.RECRUIT + id - 70);
+            return;
+        }
+        if (trading() && id >= 80 && id <= 86) {
+            commerce.action(id);
+            return;
+        }
+        if (questView() && id >= 90 && id <= 94) {
+            journal.action(id);
+            return;
+        }
         if (!recruiting && id < TABS.length) switchTab(id);
         if (id == 10) {
             filter = (filter + 1) % FILTERS.length;
@@ -334,7 +384,28 @@ public final class MilitaryScreen extends GuiContainer {
         return Math.max(0, snapshot.getInteger("Total") - MilitaryContainer.VISIBLE_ROWS);
     }
 
-    private boolean hasList() { return recruiting || tab == PERSONNEL; }
+    private boolean hasList() { return recruiting ? serviceTab == MilitaryContainer.RECRUIT : tab == PERSONNEL; }
+
+    private String priorRole = "";
+
+    private boolean trading() {
+        return recruiting && (serviceTab == MilitaryContainer.BUY || serviceTab == MilitaryContainer.SELL);
+    }
+
+    private boolean questView() {
+        return recruiting ? serviceTab == MilitaryContainer.CONTRACTS : tab == JOURNAL;
+    }
+
+    private void selectService(int service) {
+        serviceTab = service;
+        allegianceView = service == MilitaryContainer.ALLEGIANCE;
+        confirmation = -1;
+        feedback = "";
+        request(MilitaryNetwork.TAB, service);
+        if (trading()) commerce.query(0);
+        if (questView()) journal.reconcile();
+        refreshControls();
+    }
 
     private NBTTagList rows() { return snapshot.getTagList("Rows", 10); }
     private NBTTagList groups() { return snapshot.getTagList("Groups", 10); }
@@ -374,7 +445,9 @@ public final class MilitaryScreen extends GuiContainer {
         int x = Mouse.getEventX() * width / mc.displayWidth - guiLeft;
         int y = height - Mouse.getEventY() * height / mc.displayHeight - 1 - guiTop;
         int wheel = Mouse.getEventDWheel();
-        if (wheel != 0 && hasList() && x >= LIST_X && x < 146 && y >= LIST_Y && y < LIST_Y + ROW_H * MilitaryContainer.VISIBLE_ROWS) {
+        if (wheel != 0 && trading() && inside(x, y, 10, 83, 135, 117)) {
+            commerce.query(snapshot.getInteger("TradeOffset") + (wheel < 0 ? 6 : -6));
+        } else if (wheel != 0 && hasList() && x >= LIST_X && x < 146 && y >= LIST_Y && y < LIST_Y + ROW_H * MilitaryContainer.VISIBLE_ROWS) {
             scrollTo(offset + (wheel < 0 ? 1 : -1));
         } else if (wheel != 0 && !recruiting && tab == PERSONNEL && organization && x >= 150 && y >= 64 && y < 106) {
             groupOffset = Math.max(0, Math.min(Math.max(0, groups().tagCount() - 3), groupOffset + (wheel < 0 ? 1 : -1)));
@@ -387,12 +460,15 @@ public final class MilitaryScreen extends GuiContainer {
         super.updateScreen();
         ticks++;
         if (!recruiting && pending == 0 && ticks % 8 == 1 && snapshot.getInteger("View") != tab) request(MilitaryNetwork.TAB, tab);
+        if (recruiting && pending == 0 && ticks % 8 == 1 && snapshot.getInteger("View") != serviceTab) request(MilitaryNetwork.TAB, serviceTab);
         amount.updateCursorCounter();
         groupName.updateCursorCounter();
         NBTTagCompound group = group(selectedGroup), pledge = faction(snapshot.getString("FactionId"));
         NBTTagCompound settlement = snapshot.getCompoundTag("Settlement");
         boolean custom = group != null && !"-".equals(selectedGroup);
         boolean ready = pending == 0;
+        if (trading()) commerce.update();
+        if (questView()) journal.update();
         for (Object entry : buttonList) {
             GuiButton button = (GuiButton)entry;
             if (!(button instanceof DeskButton)) continue;
@@ -446,6 +522,7 @@ public final class MilitaryScreen extends GuiContainer {
     }
 
     @Override protected void keyTyped(char character, int key) {
+        if (trading() && commerce.keyTyped(character, key)) return;
         if (!recruiting && key == 15) {
             switchTab((tab + (isShiftKeyDown() ? TABS.length - 1 : 1)) % TABS.length);
             return;
@@ -474,6 +551,8 @@ public final class MilitaryScreen extends GuiContainer {
 
     @Override protected void mouseClicked(int x, int y, int button) {
         int relativeX = x - guiLeft, relativeY = y - guiTop;
+        if (trading() && commerce.click(x, y, relativeX, relativeY, button)) return;
+        if (questView() && button == 0 && journal.click(relativeX, relativeY)) return;
         if (!recruiting && tab == FACTIONS && button == 0 && inside(relativeX, relativeY, LIST_X, LIST_Y, LIST_W, ROW_H * 6)) {
             int index = factionOffset + (relativeY - LIST_Y) / ROW_H;
             if (index < factions().tagCount()) {
@@ -550,7 +629,12 @@ public final class MilitaryScreen extends GuiContainer {
         background(1, 1, WIDTH - 1, HEIGHT - 1, FRAME);
         background(2, 2, WIDTH - 2, 3, LINE);
         background(3, 3, WIDTH - 3, 26, 0xFF30382F);
-        if (hasList() || tab == FACTIONS) background(149, LIST_Y, 278, 224, PANEL);
+        if (hasList() || !recruiting && tab == FACTIONS || allegianceView) background(149, LIST_Y, 278, 224, PANEL);
+        if (trading()) commerce.background();
+        if (questView()) {
+            background(9, 66, 145, 223, PANEL);
+            background(149, 66, 278, 223, PANEL);
+        }
         if (!recruiting && (tab == TREASURY || tab == SUPPLIES)) {
             background(9, 51, 140, 131, PANEL);
             background(149, 51, 279, 131, PANEL);
@@ -573,8 +657,14 @@ public final class MilitaryScreen extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         int x = mouseX - guiLeft, y = mouseY - guiTop;
         emblem(recruiting ? PERSONNEL : OVERVIEW, 10, 7);
-        title(recruiting ? label("recruitment") : label("title"), 31, 11, 206);
-        if (recruiting) roster(x, y);
+        title(recruiting ? label("role." + (priorRole.isEmpty() ? "quartermaster" : priorRole)) : label("title"), 31, 11, 151);
+        if (recruiting) {
+            String coins = label("trade_balance", number(snapshot.getLong("Currency")));
+            title(coins, Math.max(174, 279 - fontRendererObj.getStringWidth(coins)), 11, 105, GOLD);
+        }
+        if (trading()) commerce.draw(x, y);
+        else if (questView()) journal.draw(x, y);
+        else if (recruiting) roster(x, y);
         else if (tab == OVERVIEW) overview(x, y);
         else if (tab == PERSONNEL) roster(x, y);
         else if (tab == TREASURY) treasury(x, y);
@@ -638,12 +728,10 @@ public final class MilitaryScreen extends GuiContainer {
         if (recruiting) {
             NBTTagCompound faction = faction(snapshot.getString("FactionId"));
             String factionName = snapshot.getString("FactionLabel");
-            if (faction != null) FactionInsignia.of(faction.getString("Id")).draw(11, 31);
-            title(factionName, 25, 34, 121, MUTED);
-            title(label("account_coins", number(snapshot.getLong("Currency"))), RIGHT, 34, 129, GOLD);
+            if (faction != null) FactionInsignia.fromKey(faction.getString("Insignia")).draw(12, 47, faction.getInteger("Color"));
+            title(factionName, 27, 49, 121, MUTED);
             if (faction != null) {
                 title(label("faction_score", faction.getString("Standing"), number(faction.getInteger("Score"))), RIGHT, 47, 125, MUTED);
-                if (faction.getInteger("Discount") > 0) title(label("recruit_discount", faction.getInteger("Discount")), 216, 11, 59, GOLD);
             }
         }
         if (rows.tagCount() == 0) {
@@ -680,6 +768,428 @@ public final class MilitaryScreen extends GuiContainer {
         else if (!recruiting && organization) organizationPanel(x, y);
         else if (selected != null) details(selected, x, y);
         else wrapped(label(recruiting ? "pick_offer" : "pick_unit"), 157, LIST_Y + 9, 111, 3, MUTED);
+    }
+
+    private final class TradePanel {
+        private final String[] categories = {"all", "firearms", "ammunition", "attachments", "equipment", "supplies", "resources"};
+        private GuiTextField search;
+        private NBTTagCompound item;
+        private int category, quantity = 1, viewedSlot = -1;
+        private String confirmed = "";
+
+        void init() {
+            String text = search == null ? "" : search.getText();
+            search = new GuiTextField(fontRendererObj, guiLeft + 11, guiTop + 50, 130, 15);
+            search.setMaxStringLength(64);
+            search.setText(text);
+        }
+
+        NBTTagList offers() { return snapshot.getTagList("TradeRows", 10); }
+
+        void reconcile() {
+            NBTTagCompound former = item;
+            item = null;
+            boolean current = snapshot.getInteger("View") == serviceTab;
+            if (!current) return;
+            NBTTagList rows = offers();
+            for (int i = 0; i < rows.tagCount(); i++) {
+                NBTTagCompound row = rows.getCompoundTagAt(i);
+                if (former != null && former.getString("Id").equals(row.getString("Id"))
+                        && former.getInteger("Slot") == row.getInteger("Slot")) {
+                    item = row;
+                    if (former.getInteger("Price") != row.getInteger("Price")) confirmed = "";
+                    break;
+                }
+            }
+            if (item == null && former != null && serviceTab == MilitaryContainer.SELL && former.getInteger("Slot") >= 0) {
+                NBTTagCompound carried = carried(former.getInteger("Slot"));
+                if (carried != null && carried.hasKey("Key") && former.getString("Id").equals(carried.getString("Id"))) item = carried;
+            }
+            if (item == null && viewedSlot < 0 && rows.tagCount() > 0) select(rows.getCompoundTagAt(0));
+            quantity = Math.max(1, Math.min(quantity, maximum()));
+        }
+
+        void query(int offset) {
+            confirmed = "";
+            if (search != null && inventorySlots.windowId != 0) MilitaryNetwork.request(inventorySlots.windowId,
+                    MilitaryNetwork.TRADE_QUERY, Math.max(0, Math.min(65535, offset)) | category << 16, 0, search.getText());
+        }
+
+        void controls() {
+            control(80, 150, 49, 127, 17, label("trade_category." + categories[category]));
+            control(81, 11, 204, 24, 16, "<");
+            control(82, 117, 204, 24, 16, ">");
+            control(83, 152, 184, 21, 15, "−");
+            control(84, 214, 184, 21, 15, "+");
+            control(85, 238, 184, 36, 15, label("trade_max"));
+            control(86, 152, 204, 122, 16, label("trade_preview"));
+        }
+
+        void action(int id) {
+            if (id == 86) {
+                if (item == null || maximum() <= 0) return;
+                String key = item.getString("Key");
+                if (!confirmed.equals(key)) confirmed = key;
+                else {
+                    confirmed = "";
+                    transact(MilitaryNetwork.TRADE, quantity, key);
+                }
+                return;
+            }
+            confirmed = "";
+            feedback = "";
+            if (id == 80) {
+                category = (category + 1) % categories.length;
+                query(0);
+                refreshControls();
+            } else if (id == 81 || id == 82) {
+                query(snapshot.getInteger("TradeOffset") + (id == 82 ? 6 : -6));
+            } else {
+                quantity = Math.max(1, Math.min(maximum(), id == 85 ? maximum() : quantity + (id == 84 ? 1 : -1)));
+            }
+        }
+
+        int maximum() {
+            if (item == null) return 0;
+            int max = item.getInteger("Max");
+            if (serviceTab == MilitaryContainer.BUY) max = (int)Math.min(max,
+                    snapshot.getLong("Currency") / Math.max(1, item.getInteger("Price")));
+            return max;
+        }
+
+        void update() {
+            if (search != null) search.updateCursorCounter();
+            for (Object entry : buttonList) {
+                GuiButton button = (GuiButton)entry;
+                int offset = snapshot.getInteger("TradeOffset");
+                switch (button.id) {
+                    case 81: button.enabled = offset > 0; break;
+                    case 82: button.enabled = offset + 6 < snapshot.getInteger("TradeTotal"); break;
+                    case 83: button.enabled = quantity > 1; break;
+                    case 84: case 85: button.enabled = maximum() > quantity; break;
+                    case 86:
+                        button.enabled = pending == 0 && maximum() >= quantity;
+                        button.displayString = label(confirmed.isEmpty() ? "trade_preview"
+                                : serviceTab == MilitaryContainer.BUY ? "trade_confirm_buy" : "trade_confirm_sell");
+                        break;
+                    default: break;
+                }
+            }
+        }
+
+        boolean keyTyped(char character, int key) {
+            if (search != null && search.isFocused() && key != 1 && search.textboxKeyTyped(character, key)) {
+                viewedSlot = -1;
+                query(0);
+                return true;
+            }
+            return false;
+        }
+
+        boolean click(int x, int y, int rx, int ry, int button) {
+            if (search != null) search.mouseClicked(x, y, button);
+            if (button != 0) return false;
+            if (inside(rx, ry, 11, 85, 130, 114)) {
+                int row = (ry - 85) / 19;
+                if (row < offers().tagCount()) select(offers().getCompoundTagAt(row));
+                return true;
+            }
+            if (inside(rx, ry, 154, 85, 120, 60)) {
+                viewedSlot = ((ry - 85) / 15) * 9 + (rx - 154) / 13;
+                if (viewedSlot < 0 || viewedSlot >= 36) return true;
+                for (int i = 0; i < offers().tagCount(); i++) {
+                    NBTTagCompound row = offers().getCompoundTagAt(i);
+                    if (row.getInteger("Slot") == viewedSlot) {
+                        select(row);
+                        return true;
+                    }
+                }
+                if (serviceTab == MilitaryContainer.SELL) {
+                    NBTTagCompound stack = carried(viewedSlot);
+                    if (stack != null && stack.hasKey("Key")) select(stack);
+                    else item = null;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        NBTTagCompound carried(int slot) {
+            NBTTagList carried = snapshot.getTagList("Carried", 10);
+            for (int i = 0; i < carried.tagCount(); i++) {
+                NBTTagCompound row = carried.getCompoundTagAt(i);
+                if (row.getInteger("Slot") == slot) return row;
+            }
+            return null;
+        }
+
+        void select(NBTTagCompound row) {
+            item = row;
+            viewedSlot = -1;
+            quantity = 1;
+            feedback = "";
+            confirmed = "";
+        }
+
+        void background() {
+            MilitaryScreen.this.background(9, 68, 144, 223, PANEL);
+            MilitaryScreen.this.background(149, 68, 278, 223, PANEL);
+            if (search != null) search.drawTextBox();
+        }
+
+        void draw(int x, int y) {
+            boolean selling = serviceTab == MilitaryContainer.SELL;
+            title(label(selling ? "trade_accepted" : "trade_inventory"), 12, 73, 126, MUTED);
+            title(label("trade_pack"), 153, 73, 118, MUTED);
+            if (search != null && search.getText().isEmpty() && !search.isFocused()) title(label("trade_search"), 15, 54, 120, MUTED);
+            NBTTagList rows = offers();
+            if (rows.tagCount() == 0) wrapped(label("trade_no_results"), 15, 92, 120, 3, MUTED);
+            for (int i = 0; i < rows.tagCount(); i++) {
+                NBTTagCompound row = rows.getCompoundTagAt(i);
+                int ry = 85 + i * 19;
+                drawRect(11, ry, 142, ry + 18, item != null && row.getString("Id").equals(item.getString("Id"))
+                        && row.getInteger("Slot") == item.getInteger("Slot") ? PICKED : INSET);
+                icon(row, 13, ry + 1, 1);
+                title(itemName(row), 33, ry + 2, 106, INK);
+                title(label("trade_unit_value", number(row.getInteger("Price"))), 33, ry + 10, 108,
+                        row.getInteger("Max") > 0 ? GOLD : MUTED);
+                if (inside(x, y, 11, ry, 130, 18)) itemTooltip(row);
+            }
+            title(label("trade_page", snapshot.getInteger("TradeOffset") / 6 + 1,
+                    Math.max(1, (snapshot.getInteger("TradeTotal") + 5) / 6)), 43, 209, 69, MUTED);
+            for (int slot = 0; slot < 36; slot++) {
+                int sx = 154 + slot % 9 * 13, sy = 85 + slot / 9 * 15;
+                boolean selected = item != null && item.getInteger("Slot") == slot || slot == viewedSlot;
+                drawRect(sx, sy, sx + 12, sy + 14, selected ? PICKED : INSET);
+            }
+            NBTTagList carried = snapshot.getTagList("Carried", 10);
+            for (int index = 0; index < carried.tagCount(); index++) {
+                NBTTagCompound row = carried.getCompoundTagAt(index);
+                int slot = row.getInteger("Slot"), sx = 154 + slot % 9 * 13, sy = 85 + slot / 9 * 15;
+                icon(row, sx, sy + 1, .75F);
+                if (row.getInteger("Count") > 1) {
+                    String count = Integer.toString(row.getInteger("Count"));
+                    GL11.glPushMatrix();
+                    try {
+                        GL11.glTranslatef(sx + 13 - fontRendererObj.getStringWidth(count) * .6F, sy + 9, 250);
+                        GL11.glScalef(.6F, .6F, 1);
+                        fontRendererObj.drawStringWithShadow(count, 0, 0, INK);
+                    } finally {
+                        GL11.glPopMatrix();
+                    }
+                }
+                if (inside(x, y, sx, sy, 12, 14)) itemTooltip(row);
+            }
+            if (item == null) {
+                title(label(selling && viewedSlot >= 0 ? "trade_not_listed" : "trade_pick_item"), 153, 153, 120, MUTED);
+            } else {
+                title(itemName(item), 153, 150, 120, INK);
+                String detail = item.getString("Classification");
+                ItemStack ammo = ItemStack.loadItemStackFromNBT(item.getCompoundTag("Magazine"));
+                if (ammo != null) detail = label("trade_ammo", ammo.getDisplayName());
+                title(detail, 153, 160, 120, MUTED);
+                long total = (long)quantity * item.getInteger("Price");
+                String status = item.getInteger("Max") <= 0
+                        ? label(snapshot.getInteger("Reputation") < item.getInteger("Reputation") ? "trade_locked" : "trade_unavailable")
+                        : label("trade_total", number(total));
+                title(status, 153, 171, 120, maximum() >= quantity ? GOLD : RED);
+                title(number(quantity), 180, 188, 32, INK);
+            }
+            String footer = feedback.isEmpty() && !selling && snapshot.getInteger("TradeDiscount") > 0
+                    ? label("recruit_discount", snapshot.getInteger("TradeDiscount"))
+                    : feedback.isEmpty() ? "" : result(feedback);
+            title(footer, 13, 223, 260, feedback.isEmpty() ? GOLD : feedbackColor());
+        }
+
+        void icon(NBTTagCompound row, int x, int y, float scale) {
+            ItemStack item = ItemStack.loadItemStackFromNBT(row.getCompoundTag("Stack"));
+            if (item == null) return;
+            GL11.glPushMatrix();
+            try {
+                GL11.glTranslatef(x, y, 0);
+                GL11.glScalef(scale, scale, 1);
+                net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+                itemRender.renderItemAndEffectIntoGUI(fontRendererObj, mc.getTextureManager(), item, 0, 0);
+                net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
+            } finally {
+                GL11.glPopMatrix();
+            }
+        }
+
+        String itemName(NBTTagCompound row) {
+            if (row.hasKey("CustomName")) return row.getString("CustomName");
+            ItemStack stack = ItemStack.loadItemStackFromNBT(row.getCompoundTag("Stack"));
+            return stack == null ? "?" : stack.getDisplayName();
+        }
+
+        void itemTooltip(NBTTagCompound row) {
+            ItemStack stack = ItemStack.loadItemStackFromNBT(row.getCompoundTag("Stack"));
+            if (stack == null) return;
+            List<String> lines = new ArrayList<>();
+            lines.add(itemName(row));
+            int count = row.getInteger("Count");
+            if (count > 1) lines.add(label("trade_stack", number(count)));
+            if (row.hasKey("Price")) lines.add(label("trade_unit_value", number(row.getInteger("Price"))));
+            if (!row.getString("Classification").isEmpty()) lines.add(row.getString("Classification"));
+            ItemStack ammo = ItemStack.loadItemStackFromNBT(row.getCompoundTag("Magazine"));
+            if (ammo != null) lines.add(label("trade_ammo", ammo.getDisplayName()));
+            if (row.hasKey("Slot") && !row.hasKey("Price") && serviceTab == MilitaryContainer.SELL) {
+                lines.add(label("trade_pack_slot"));
+            }
+            hover = lines;
+        }
+    }
+
+    private final class QuestPanel {
+        private String selected = "";
+        private boolean accepted, confirming;
+        private int page;
+
+        NBTTagList rows() {
+            return snapshot.getTagList(recruiting && !accepted ? "QuestOffers" : "Contracts", 10);
+        }
+
+        NBTTagCompound current() { return findRow(rows(), selected); }
+
+        void reconcile() {
+            NBTTagList rows = rows();
+            page = Math.max(0, Math.min(page, (rows.tagCount() - 1) / 6));
+            if (current() == null) {
+                selected = rows.tagCount() == 0 ? "" : rows.getCompoundTagAt(page * 6).getString("Id");
+                confirming = false;
+            }
+        }
+
+        void controls() {
+            if (recruiting) {
+                styled(90, 11, 48, 62, 15, label("quest_offers"), -1, !accepted);
+                styled(91, 76, 48, 66, 15, label("quest_active"), -1, accepted);
+            }
+            control(92, 152, 204, 122, 18, label(recruiting && !accepted ? "quest_accept" : "quest_abandon"));
+            if (recruiting && accepted) control(93, 152, 183, 122, 17, label("quest_report"));
+            if (rows().tagCount() > 6) control(94, 11, 204, 130, 16, label("quest_more"));
+        }
+
+        void action(int id) {
+            if (id == 90 || id == 91 || id == 94) {
+                if (id == 94) page = (page + 1) % (Math.max(0, rows().tagCount() - 1) / 6 + 1);
+                else {
+                    accepted = id == 91;
+                    page = 0;
+                }
+                selected = "";
+                feedback = "";
+                reconcile();
+                refreshControls();
+                return;
+            }
+            if (current() == null) return;
+            if (id == 93) transact(MilitaryNetwork.QUEST, 1, selected);
+            else if (recruiting && !accepted) transact(MilitaryNetwork.QUEST, 0, selected);
+            else if (confirming) {
+                confirming = false;
+                transact(MilitaryNetwork.QUEST, 2, selected);
+            } else confirming = true;
+        }
+
+        void update() {
+            NBTTagCompound row = current();
+            for (Object entry : buttonList) {
+                GuiButton button = (GuiButton)entry;
+                if (button.id == 92) {
+                    button.enabled = pending == 0 && row != null && (!recruiting || accepted || !row.getBoolean("Invalid"));
+                    if (confirming) button.displayString = label("confirm_action");
+                } else if (button.id == 93) button.enabled = pending == 0 && row != null && row.getBoolean("TurnIn");
+            }
+        }
+
+        boolean click(int x, int y) {
+            if (!inside(x, y, 11, 77, 131, 120)) return false;
+            int i = page * 6 + (y - 77) / 20;
+            NBTTagList rows = rows();
+            if (i < rows.tagCount()) {
+                selected = rows.getCompoundTagAt(i).getString("Id");
+                confirming = false;
+                feedback = "";
+            }
+            return true;
+        }
+
+        void draw(int x, int y) {
+            NBTTagList rows = rows();
+            boolean offers = recruiting && !accepted;
+            title(label(offers ? "quest_available" : "quest_active_count", snapshot.getTagList("Contracts", 10).tagCount(),
+                    snapshot.getInteger("QuestLimit")), 11, 69, 129, MUTED);
+            if (rows.tagCount() == 0) {
+                wrapped(label(!snapshot.getBoolean("QuestsEnabled") ? "quest_disabled" : offers ? "quest_no_offers" : "quest_empty"),
+                        15, 88, 121, 4, MUTED);
+            }
+            for (int i = 0; i < 6 && page * 6 + i < rows.tagCount(); i++) {
+                int ry = 77 + i * 20;
+                NBTTagCompound row = rows.getCompoundTagAt(page * 6 + i);
+                drawRect(11, ry, 142, ry + 19, selected.equals(row.getString("Id")) ? PICKED : INSET);
+                title(questName(row), 14, ry + 2, 125, INK);
+                title(offers ? label("trade_balance", number(row.getLong("Reward"))) : questStatus(row), 14, ry + 10, 125, MUTED);
+            }
+            NBTTagCompound row = current();
+            if (row != null) {
+                title(questName(row), 153, 72, 120, INK);
+                title(row.getString("FactionName"), 153, 84, 120, GOLD);
+                wrapped(questObjective(row), 153, 96, 119, 3, INK);
+                int[] location = row.getIntArray("Location");
+                if (location.length == 3) title(label("quest_coordinates", location[0], location[2]), 153, 121, 120, MUTED);
+                title(offers ? questProvider(row) : questStatus(row), 153, 132, 120, row.getBoolean("Invalid") ? RED : MUTED);
+                title(label("quest_reward", number(row.getLong("Reward")), row.getInteger("ReputationReward")), 153, 143, 120, GOLD);
+                NBTTagList rewards = row.getTagList("RewardItems", 10);
+                for (int i = 0; i < rewards.tagCount(); i++) {
+                    NBTTagCompound reward = rewards.getCompoundTagAt(i);
+                    ItemStack stack = ItemStack.loadItemStackFromNBT(reward);
+                    if (stack == null) continue;
+                    NBTTagCompound icon = new NBTTagCompound();
+                    icon.setTag("Stack", reward);
+                    int position = 153 + i * 15;
+                    commerce.icon(icon, position, 155, .75F);
+                    if (inside(x, y, position, 155, 14, 14)) hint(label("quest_reward_item", reward.getInteger("RewardCount"), stack.getDisplayName()));
+                }
+                if (inside(x, y, 151, 70, 126, 84)) {
+                    ArrayList<String> lines = new ArrayList<>();
+                    lines.add(questName(row));
+                    lines.add(questProvider(row));
+                    lines.add(questObjective(row));
+                    if (location.length == 3) lines.add(label("quest_location", location[0], location[1], location[2], row.getInteger("Dimension")));
+                    if (row.getLong("Remaining") >= 0) lines.add(label("quest_remaining", (row.getLong("Remaining") + 1199) / 1200));
+                    hover = lines;
+                }
+            }
+            if (!feedback.isEmpty()) title(result(feedback), 11, 223, 262, feedbackColor());
+        }
+
+        String questStatus(NBTTagCompound row) {
+            return row.getBoolean("Invalid") ? label("quest_invalid") : row.getBoolean("Complete") ? label("quest_complete")
+                    : label("quest_progress", row.getInteger("Progress"), row.getInteger("Amount"));
+        }
+
+        String questProvider(NBTTagCompound row) {
+            String provider = row.getString("Provider");
+            return label("quest_provider", row.getBoolean("ProviderRole") ? label("role." + provider) : provider);
+        }
+
+        String questObjective(NBTTagCompound row) {
+            int amount = row.getInteger("Amount");
+            String type = row.getString("Type");
+            ItemStack item = ItemStack.loadItemStackFromNBT(row.getCompoundTag("Required"));
+            if (item != null) return label("quest_objective." + type, amount, item.getDisplayName());
+            if ("HOSTILES".equals(type)) return label("quest_objective.HOSTILES", amount);
+            if ("FACTION".equals(type)) return label("quest_objective.FACTION", amount, row.getString("TargetFactionName"));
+            if ("UNIT".equals(type)) return label("quest_objective.UNIT", amount,
+                    row.getString("Classification").replace('_', ' '), row.getString("TargetFactionName"));
+            return label("quest_objective." + type, label("site." + row.getString("TargetType")));
+        }
+
+        String questName(NBTTagCompound row) {
+            String id = row.getString("Definition"), text = label("quest_name." + id);
+            return text.startsWith("gvc.military.gui.") ? questObjective(row) : text;
+        }
     }
 
     private void organizationPanel(int x, int y) {
@@ -749,7 +1259,7 @@ public final class MilitaryScreen extends GuiContainer {
             boolean selected = selectedFaction.equals(faction.getString("Id"));
             drawRect(LIST_X, top, LIST_X + LIST_W, top + ROW_H - 1, selected ? PICKED : INSET);
             drawRect(LIST_X, top, LIST_X + 2, top + ROW_H - 1, 0xFF000000 | faction.getInteger("Color"));
-            FactionInsignia.of(faction.getString("Id")).draw(LIST_X + 6, top + 5);
+            FactionInsignia.fromKey(faction.getString("Insignia")).draw(LIST_X + 6, top + 5, faction.getInteger("Color"));
             title(faction.getString("Name"), LIST_X + 23, top + 3, 99, INK);
             int tint = faction.getBoolean("Hostile") ? RED : GREEN;
             String score = number(faction.getInteger("Score"));
@@ -786,11 +1296,17 @@ public final class MilitaryScreen extends GuiContainer {
         if (inside(x, y, 149, 65, 129, 137)) {
             ArrayList<String> lines = new ArrayList<>();
             lines.add(row.getString("Name"));
+            if (!row.getString("Doctrine").isEmpty()) lines.add(label("faction_doctrine", row.getString("Doctrine")));
+            if (!row.getString("Architecture").isEmpty()) lines.add(label("faction_architecture", row.getString("Architecture")));
             lines.add(label("pledge_discount", row.getInteger("PledgeDiscount")));
             lines.add(label(row.getBoolean("Capture") ? "privilege_capture" : "privilege_no_capture"));
             lines.add(label(row.getBoolean("Infrastructure") ? "privilege_infrastructure" : "privilege_no_infrastructure"));
+            lines.add(label("faction_record", row.getInteger("CompletedQuests"), row.getInteger("Discovered")));
+            lines.add(label("faction_defeated", row.getInteger("Defeated")));
+            lines.add(label("faction_sites_controlled", row.getInteger("Captured"), row.getInteger("Neutralized")));
             if (!allies.isEmpty()) lines.add(label("faction_allies", allies));
             if (!enemies.isEmpty()) lines.add(label("faction_enemies", enemies));
+            if (!row.getString("Neutral").isEmpty()) lines.add(label("faction_neutral", row.getString("Neutral")));
             hover = lines;
         }
         if (confirmation == 62) wrapped(label("leaving_warning", snapshot.getInteger("AllegiancePenalty")), 11, 204, 126, 3, RED);
@@ -805,12 +1321,16 @@ public final class MilitaryScreen extends GuiContainer {
             return;
         }
         title(label("site." + post.getString("Type")), 156, 72, 118, INK);
-        title(post.getString("Faction"), 156, 84, 118, GOLD);
+        title(post.getString("Faction").isEmpty() ? label("faction_unclaimed") : post.getString("Faction"), 156, 84, 118, GOLD);
         String state = post.getString("State");
         title(label("beacon." + state), 156, 96, 118, state.equals("CONTESTED") ? RED : MUTED);
         String detail = confirmation == 64 ? "claim_warning" : confirmation == 65 ? "neutralize_warning"
                 : post.getBoolean("Claim") ? "claim_available" : state.equals("NEUTRALIZED") ? "neutralized_site" : "capture_site_hint";
         wrapped(label(detail), 156, 113, 115, 5, confirmation >= 0 ? GOLD : MUTED);
+        if (confirmation < 0) {
+            title(label("site_class." + post.getString("Classification")), 156, 147, 118, MUTED);
+            title(label("site_stations", post.getInteger("TraderStations")), 156, 158, 118, MUTED);
+        }
         if (!feedback.isEmpty()) title(result(feedback), 156, 210, 115, feedbackColor());
     }
 
@@ -895,6 +1415,10 @@ public final class MilitaryScreen extends GuiContainer {
             int scale = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
             GL11.glScissor((guiLeft + 156) * scale, mc.displayHeight - (guiTop + 155) * scale, 41 * scale, 49 * scale);
+            // GuiContainer can reach its foreground with depth testing disabled when there are no inventory slots.
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthMask(true);
+            GL11.glDepthFunc(GL11.GL_LEQUAL);
             GuiInventory.func_147046_a(177, 151, 20,
                     Math.max(-18, Math.min(18, 175 - mouseX)), Math.max(-10, Math.min(10, 125 - mouseY)), portrait);
         } catch (RuntimeException failedRender) {
@@ -1109,9 +1633,29 @@ public final class MilitaryScreen extends GuiContainer {
                 emblem(icon, 0, 0);
                 GL11.glPopMatrix();
             }
+            if ((id >= 0 && id <= JOURNAL) || (id >= 70 && id <= 74)) {
+                drawTabLabel(client);
+                return;
+            }
             String title = fit(client, displayString, xPosition + width - left - 3);
             if (icon < 0) left = xPosition + (width - client.fontRenderer.getStringWidth(title)) / 2;
             client.fontRenderer.drawString(title, left, yPosition + (height - 8) / 2, enabled ? selected ? GOLD : INK : 0x91988B);
+        }
+
+        private void drawTabLabel(Minecraft client) {
+            int textWidth = client.fontRenderer.getStringWidth(displayString);
+            float scale = textWidth == 0 ? 1F : Math.max(.82F, Math.min(1F, (width - 5F) / textWidth));
+            String text = fit(client, displayString, (int)((width - 4F) / scale));
+            float left = xPosition + (width - client.fontRenderer.getStringWidth(text) * scale) / 2F;
+            float top = yPosition + (height - 8 * scale) / 2F;
+            GL11.glPushMatrix();
+            try {
+                GL11.glTranslatef(left, top, 0);
+                GL11.glScalef(scale, scale, 1);
+                client.fontRenderer.drawString(text, 0, 0, enabled ? selected ? GOLD : INK : 0x91988B);
+            } finally {
+                GL11.glPopMatrix();
+            }
         }
     }
 }

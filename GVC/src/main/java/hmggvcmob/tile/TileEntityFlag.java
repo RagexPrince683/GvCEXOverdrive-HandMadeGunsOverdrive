@@ -50,6 +50,8 @@ public class TileEntityFlag extends TileEntity {
     private Occupation territory;
     private String militaryType = "";
     private String militaryFactionName = "";
+    private boolean undergroundSite;
+    private boolean militarySiteMarker;
     private boolean wasCountingDown;
 
     public TileEntityFlag() {}
@@ -88,6 +90,8 @@ public class TileEntityFlag extends TileEntity {
         writeToNBT(tag);
         if (territory != null && !territory.campObj.isRaidType) {
             tag.setString("MilitaryFactionName", hmggvcmob.military.MilitaryRelations.displayName(territory.faction()));
+            tag.setBoolean("MilitarySiteMarker", !territory.hasBeaconService());
+            tag.setBoolean("UndergroundSite", territory.isUnderground());
         }
         return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 0, tag);
     }
@@ -97,9 +101,16 @@ public class TileEntityFlag extends TileEntity {
         NBTTagCompound tag = packet.func_148857_g();
         readFromNBT(tag);
         militaryFactionName = tag.getString("MilitaryFactionName");
+        militarySiteMarker = tag.getBoolean("MilitarySiteMarker");
+        undergroundSite = tag.getBoolean("UndergroundSite");
     }
 
     public String militaryFactionName() { return militaryFactionName; }
+    public boolean isMilitarySiteMarker() { return militarySiteMarker; }
+    public boolean isUndergroundSite() { return undergroundSite; }
+    public boolean showsOnHud(double viewerY) {
+        return isActiveBeacon() && (!undergroundSite || Math.abs(yCoord + .5 - viewerY) < 4);
+    }
 
     @Override
     public void onChunkUnload() {
@@ -138,8 +149,9 @@ public class TileEntityFlag extends TileEntity {
         if (!vehicleBaseType && !campObj.isOneTime && !campObj.isRaidType
                 && (MilitaryConfig.occupation || MilitaryConfig.recruitment)) {
             MilitaryOccupation.update(this, territory, worldObj);
-            if (MilitaryConfig.occupation) return;
         }
+        if ((MilitaryConfig.occupation && !vehicleBaseType && !campObj.isOneTime && !campObj.isRaidType)
+                || territory.isRegionalSite()) return;
         if (worldObj.difficultySetting == EnumDifficulty.PEACEFUL) {
             territory.attacked = false;
             return;

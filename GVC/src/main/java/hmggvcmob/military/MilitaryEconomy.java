@@ -237,6 +237,7 @@ public final class MilitaryEconomy extends WorldSavedData {
             account.allegianceAfter = tag.getLong("AllegianceAfter");
             account.reputationWindow = tag.getLong("ReputationWindow");
             account.creditedKills = tag.getInteger("CreditedKills");
+            MilitaryQuests.load(account, tag);
             MilitaryGroups.Group.readAll(account, tag.getTagList("Groups", 10));
             NBTTagList roster = tag.getTagList("Roster", 10);
             for (int i = 0; i < roster.tagCount(); i++) {
@@ -265,6 +266,7 @@ public final class MilitaryEconomy extends WorldSavedData {
             tag.setLong("AllegianceAfter", account.allegianceAfter);
             tag.setLong("ReputationWindow", account.reputationWindow);
             tag.setInteger("CreditedKills", account.creditedKills);
+            MilitaryQuests.save(account, tag);
             NBTTagList groups = new NBTTagList();
             for (MilitaryGroups.Group group : account.groups.values()) groups.appendTag(group.write());
             tag.setTag("Groups", groups);
@@ -299,6 +301,13 @@ public final class MilitaryEconomy extends WorldSavedData {
         final Map<UUID, Personnel> roster = new LinkedHashMap<>();
         final Map<String, Integer> relations = new HashMap<>();
         final Map<UUID, MilitaryGroups.Group> groups = new LinkedHashMap<>();
+        final Map<UUID, MilitaryQuests.Contract> contracts = new LinkedHashMap<>();
+        final Map<String, Long> questCooldowns = new LinkedHashMap<>();
+        final Map<UUID, String> discovered = new LinkedHashMap<>();
+        final Map<String, Integer> finishedQuests = new LinkedHashMap<>(), defeated = new LinkedHashMap<>(),
+                captured = new LinkedHashMap<>(), neutralized = new LinkedHashMap<>();
+        UUID lastVisited;
+        long questNotice;
 
         Account(UUID owner) {
             this.owner = owner;

@@ -141,7 +141,8 @@ public final class MilitaryRespawn {
     }
 
     private static boolean eligible(Occupation post, EntityPlayer player) {
-        return post != null && post.occupied() && !post.attacked && post.control >= MilitaryConfig.captureStrength / 2 && post.permits(player);
+        return post != null && post.hasBeaconService() && post.occupied() && !post.attacked
+                && post.control >= MilitaryConfig.captureStrength / 2 && post.permits(player);
     }
 
     private static boolean arrive(EntityPlayerMP player, WorldServer world, Occupation post) {

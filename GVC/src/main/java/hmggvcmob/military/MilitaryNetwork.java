@@ -21,7 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class MilitaryNetwork {
     public static final int OPEN = 0, ROSTER = 1, WITHDRAW = 2, DEPOSIT_COINS = 3, DEPOSIT_FOOD = 4,
             TAB = 5, ALL_COINS = 6, HIRE = 7, GROUP_EDIT = 8, GROUP_FILTER = 9,
-            COMMAND_MENU = 10, COMMAND_ORDER = 11, PLEDGE = 12, CAPTURE = 13;
+            COMMAND_MENU = 10, COMMAND_ORDER = 11, PLEDGE = 12, CAPTURE = 13, TRADE_QUERY = 14, TRADE = 15,
+            QUEST = 16;
     public static final int COMMAND_MENU_WINDOW = -1, COMMAND_MARKER_WINDOW = -2, MANUAL_WINDOW = -3;
     static final int GUI = 21;
     private static final SimpleNetworkWrapper CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel("GVCMilitary");
@@ -68,6 +69,7 @@ public final class MilitaryNetwork {
                 deliver((MilitaryContainer)player.openContainer, batch.tab);
                 deliver((MilitaryContainer)player.openContainer, batch.roster);
                 deliver((MilitaryContainer)player.openContainer, batch.group);
+                deliver((MilitaryContainer)player.openContainer, batch.trade);
                 deliver((MilitaryContainer)player.openContainer, batch.transaction);
             }
         }
@@ -85,7 +87,7 @@ public final class MilitaryNetwork {
 
     private static final class Pending {
         final EntityPlayerMP sender;
-        Request open, tab, roster, group, transaction, menu, order;
+        Request open, tab, roster, group, trade, transaction, menu, order;
 
         Pending(EntityPlayerMP sender) { this.sender = sender; }
 
@@ -94,6 +96,7 @@ public final class MilitaryNetwork {
             else if (request.action == TAB) tab = request;
             else if (request.action == ROSTER) roster = request;
             else if (request.action == GROUP_FILTER) group = request;
+            else if (request.action == TRADE_QUERY) trade = request;
             else if (request.action == COMMAND_MENU) menu = request;
             else if (request.action == COMMAND_ORDER) {
                 if (order == null) order = request;
@@ -105,7 +108,7 @@ public final class MilitaryNetwork {
 
     private static boolean hasText(int action) {
         return action == HIRE || action == GROUP_EDIT || action == GROUP_FILTER || action == COMMAND_ORDER
-                || action == PLEDGE || action == CAPTURE;
+                || action == PLEDGE || action == CAPTURE || action == TRADE_QUERY || action == TRADE || action == QUEST;
     }
 
     static void open(EntityPlayerMP player) {
@@ -113,7 +116,11 @@ public final class MilitaryNetwork {
     }
 
     static void openRecruitment(EntityPlayerMP player, EntityMilitaryTrader trader) {
-        player.openGui(GVCMobPlus.INSTANCE, GUI, player.worldObj, trader.getEntityId(), 0, 0);
+        openProvider(player, trader);
+    }
+
+    static void openProvider(EntityPlayerMP player, net.minecraft.entity.Entity provider) {
+        player.openGui(GVCMobPlus.INSTANCE, GUI, player.worldObj, provider.getEntityId(), 0, 0);
     }
 
     public static final class Request implements IMessage {
@@ -142,7 +149,10 @@ public final class MilitaryNetwork {
 
     public static final class RequestHandler implements IMessageHandler<Request, IMessage> {
         @Override public IMessage onMessage(Request request, MessageContext context) {
-            if (request.action < OPEN || request.action > CAPTURE || request.preset.length() > 20000
+            if (request.action < OPEN || request.action > QUEST || request.preset.length() > 20000
+                    || request.action == QUEST && (request.preset.length() != 36 || request.value < 0 || request.value > 2)
+                    || request.action == TRADE_QUERY && request.preset.length() > 64
+                    || request.action == TRADE && request.preset.length() > 20
                     || request.action == HIRE && !MilitaryRelations.validId(request.preset)
                     || request.action == PLEDGE && !request.preset.isEmpty() && !MilitaryRelations.validId(request.preset)
                     || request.action == COMMAND_ORDER && (request.value < 0 || request.value >= ArmyOrders.Order.values().length

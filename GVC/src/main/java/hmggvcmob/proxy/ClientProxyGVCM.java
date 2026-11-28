@@ -140,6 +140,8 @@ public class ClientProxyGVCM extends CommonSideProxyGVCM {
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMC.class, new GVCRenderPMC());
         RenderingRegistry.registerEntityRenderingHandler(EntityMilitaryUnit.class, new RenderMilitaryUnit());
         RenderingRegistry.registerEntityRenderingHandler(EntityMilitaryTrader.class, new GVCRenderPMC());
+        RenderingRegistry.registerEntityRenderingHandler(hmggvcmob.military.EntityTraderMarker.class,
+                new hmggvcmob.military.client.RenderTraderMarker());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMCSP.class, new GVCRenderPMCSP());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMCMG.class, new GVCRenderPMCMG());
 		RenderingRegistry.registerEntityRenderingHandler(GVCEntityPMCRPG.class, new GVCRenderPMCRPG());

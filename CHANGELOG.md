@@ -456,3 +456,19 @@ Developer/backend
 - Neutralize defeated settlements or explicitly claim them for your pledged faction. Beacon state, trader affiliation, and reinforcements follow the saved settlement record. Player respawning uses vanilla rules by default.
 - Anchor soldier status labels to Minecraft’s interpolated render positions and show a temporary marker when the server accepts a positional order.
 - Add the in-game GVCO Field Manual and rebuild HMG’s Field Manual as a standalone item and reader. Open the manuals with `/military manual` and `/hmgmanual`. Both include searchable chapters and display relevant bindings from Controls.
+
+2026-11-27 08:07 — Expand faction worldbuilding and Survival progression
+
+- Discover faction-controlled checkpoints, military compounds, commercial settlements, coastal facilities, offshore platforms, and unclaimed ruins in normal Overworlds. Meet the Cinder Raiders, Crossroads Cooperative, Dunewatch, and Northline Rangers.
+- Buy firearms, ammunition, attachments, and supplies from specialized traders. Sell captured equipment and valuable vanilla resources into the military treasury. Check prices, stock, discounts, and quantity before confirming a transaction.
+- Accept faction contracts from soldiers, officers, and traders. Track deliveries, patrol combat, reconnaissance, and occupation objectives in the military quest journal.
+- Mortal traders leave a rotating coin at their station while a replacement is pending. Multiple stations can be saved at one site, and replacements serve the current owner.
+- Customize faction profiles, regional influence, structures, commerce, and contracts through server definitions. Authored maps can assign regions and fixed sites while using the same military accounts and ownership records.
+- Correct the depth rendering of soldier previews so the face, uniform, and held equipment are visible together.
+
+2026-11-27 16:26 — Generate faction fieldworks, underground sites, and roads
+
+- Generate fighting pits, irregular covered nests, reinforced checkpoints, bunkers, and trenches using faction-specific materials. Insurgent tunnel sites add lit rooms, supplies, and a secondary exit in larger compounds.
+- Place paired frontline positions where hostile regions meet, with small craters, debris, and obstacles in the buffer between their separate occupation sites.
+- Link nearby same-faction gates with gravel roads, concrete roads, or rough tracks on suitable terrain. Add patrol waypoints, roadside markers, and short crossings where the route passes through shallow water.
+- Add craftable Sandbag Walls, Field Concrete, and Corrugated Steel. Configure the new sites, border frequency, and road limits independently.

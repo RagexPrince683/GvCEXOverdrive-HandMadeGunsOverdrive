@@ -34,12 +34,17 @@ public class RenderTileFlag extends TileEntitySpecialRenderer {
             GL11.glDepthMask(true);
             GL11.glPushMatrix();
             GL11.glTranslatef((float) v + 0.5f, (float) v1 + 1f, (float) v2 + 0.5f);
-            GL11.glScalef(4, 4, 4);
+            float scale = tileEntity.isUndergroundSite() ? 1.1F : 4;
+            GL11.glScalef(scale, scale, scale);
             GL11.glRotatef((float) toDegrees(atan2(tileEntity.xCoord, tileEntity.zCoord)) + 90, 0, 1, 0);
             flag.model.renderPart("obj2");
             flag.model.renderPart("obj4");
             flag.model.renderPart("obj5");
             flag.model.renderPart("obj5a");
+            if (tileEntity.isUndergroundSite()) {
+                GL11.glPopMatrix();
+                return;
+            }
             GL11.glScalef(1f/4, 1f/4, 1f/4);
             GL11.glTranslatef(0.7f, 0.8f, 0.5f);
             GL11.glRotatef(-90, 0, 1, 0);

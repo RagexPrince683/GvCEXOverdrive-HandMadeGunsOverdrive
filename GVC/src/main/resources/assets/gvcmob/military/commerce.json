@@ -1,0 +1,171 @@
+{
+  "enabled": true,
+  "vanillaResources": true,
+  "oreDictionary": false,
+  "maxQuantity": 64,
+  "discountCap": 30,
+  "saleBonus": 20,
+  "restockTicks": 12000,
+  "blacklist": [],
+  "roles": {
+    "quartermaster": {
+      "categories": [
+        "firearms",
+        "ammunition",
+        "attachments",
+        "equipment",
+        "supplies",
+        "resources"
+      ]
+    },
+    "contract": {
+      "categories": [
+        "firearms",
+        "ammunition",
+        "attachments",
+        "equipment",
+        "supplies",
+        "resources"
+      ],
+      "price": 105
+    },
+    "weapons": {
+      "categories": [
+        "firearms",
+        "ammunition",
+        "attachments",
+        "equipment"
+      ],
+      "price": 98
+    },
+    "ammunition": {
+      "categories": [
+        "ammunition",
+        "attachments",
+        "supplies"
+      ],
+      "price": 95
+    },
+    "resources": {
+      "categories": [
+        "resources",
+        "supplies"
+      ],
+      "price": 97
+    },
+    "general": {
+      "categories": [
+        "resources",
+        "supplies",
+        "equipment"
+      ]
+    },
+    "recruitment": {
+      "recruit": true
+    }
+  },
+  "items": {
+    "minecraft:coal": {
+      "category": "resources",
+      "sell": 2
+    },
+    "minecraft:coal_ore": {
+      "category": "resources",
+      "sell": 2
+    },
+    "minecraft:iron_ore": {
+      "category": "resources",
+      "sell": 6
+    },
+    "minecraft:gold_ore": {
+      "category": "resources",
+      "sell": 9
+    },
+    "minecraft:diamond_ore": {
+      "category": "resources",
+      "sell": 29
+    },
+    "minecraft:emerald_ore": {
+      "category": "resources",
+      "sell": 34
+    },
+    "minecraft:redstone_ore": {
+      "category": "resources",
+      "sell": 5
+    },
+    "minecraft:lapis_ore": {
+      "category": "resources",
+      "sell": 7
+    },
+    "minecraft:quartz_ore": {
+      "category": "resources",
+      "sell": 4
+    },
+    "minecraft:iron_ingot": {
+      "category": "resources",
+      "sell": 8
+    },
+    "minecraft:gold_ingot": {
+      "category": "resources",
+      "sell": 12
+    },
+    "minecraft:diamond": {
+      "category": "resources",
+      "sell": 36
+    },
+    "minecraft:emerald": {
+      "category": "resources",
+      "sell": 26
+    },
+    "minecraft:redstone": {
+      "category": "resources",
+      "sell": 3
+    },
+    "minecraft:dye@4": {
+      "category": "resources",
+      "sell": 4
+    },
+    "minecraft:quartz": {
+      "category": "resources",
+      "sell": 4
+    },
+    "minecraft:bread": {
+      "category": "supplies",
+      "buy": 8,
+      "sell": 0
+    },
+    "minecraft:cooked_beef": {
+      "category": "supplies",
+      "buy": 12,
+      "sell": 0
+    },
+    "minecraft:leather": {
+      "category": "supplies",
+      "buy": 15,
+      "sell": 0
+    },
+    "minecraft:torch": {
+      "category": "supplies",
+      "buy": 5,
+      "sell": 0
+    },
+    "GVCGuns:HealthPack": {
+      "category": "supplies",
+      "buy": 34,
+      "sell": 7
+    },
+    "GVCGuns:cm": {
+      "category": "supplies",
+      "buy": 16,
+      "sell": 3
+    },
+    "ore:ingotCopper": {
+      "category": "resources",
+      "sell": 4
+    },
+    "ore:ingotTin": {
+      "category": "resources",
+      "sell": 5
+    }
+  }
+}

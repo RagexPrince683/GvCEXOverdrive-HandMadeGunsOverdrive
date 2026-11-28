@@ -30,7 +30,8 @@ final class MilitaryRecruitment {
         Occupation post = trader.post();
         if (!permitted(player, trader, post)) return "denied";
         UnitPresets.Preset preset = UnitPresets.get(presetId);
-        if (preset == null || !preset.recruitable || !post.faction().equals(preset.faction)) return "unavailable";
+        if (preset == null || !UnitPresets.pool(trader.faction(), false).contains(preset)
+                || !MilitaryTraders.canRecruit(trader.location().role)) return "unavailable";
         String lock = lock(player, preset);
         if (!lock.isEmpty()) return lock;
         MilitaryEconomy economy = MilitaryEconomy.get();
@@ -40,7 +41,8 @@ final class MilitaryRecruitment {
         if (account.currency < price) return "funds";
 
         EntityMilitaryUnit unit = new EntityMilitaryUnit(player.worldObj);
-        ChunkCoordinates spot = MilitaryOccupation.findSpace(player.worldObj, post.traderX, post.traderY, post.traderZ, 1, 5, false, unit);
+        Occupation.TraderLocation location = trader.location();
+        ChunkCoordinates spot = MilitaryOccupation.findSpace(player.worldObj, location.x, location.y, location.z, 1, 5, false, unit);
         if (spot == null) return "space";
         unit.configure(preset, player.getUniqueID(), null);
         if (!player.worldObj.spawnEntityInWorld(unit)) return "space";
@@ -54,9 +56,12 @@ final class MilitaryRecruitment {
     }
 
     static boolean permitted(EntityPlayer player, EntityMilitaryTrader trader, Occupation post) {
-        return post != null && MilitaryConfig.recruitment && trader.isEntityAlive() && trader.getUniqueID().equals(post.trader)
+        Occupation.TraderLocation location = trader.location();
+        return post != null && location != null && MilitaryConfig.recruitment && trader.isEntityAlive()
+                && trader.getUniqueID().equals(location.entity)
                 && player.isEntityAlive() && player.getDistanceSqToEntity(trader) <= 64
-                && player.canEntityBeSeen(trader) && post.permitsTrade(player);
+                && player.canEntityBeSeen(trader) && (post.owner == null || post.owner.equals(player.getUniqueID()))
+                && MilitaryRelations.permitsTrade(player, trader.faction());
     }
 
     static int price(UUID player, UnitPresets.Preset preset) {
@@ -76,7 +81,8 @@ final class MilitaryRecruitment {
         if (!(entity instanceof EntityMilitaryTrader)) return "trader";
         EntityMilitaryTrader trader = (EntityMilitaryTrader) entity;
         Occupation post = trader.post();
-        if (!permitted(player, trader, post) || !post.faction().equals(faction)) return "denied";
+        if (!permitted(player, trader, post) || !trader.faction().equals(faction)
+                || !MilitaryTraders.canRecruit(trader.location().role)) return "denied";
         return MilitaryRelations.pledge(player, faction);
     }
 

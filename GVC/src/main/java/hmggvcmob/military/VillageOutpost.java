@@ -30,8 +30,10 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
         this.boundingBox = box;
         this.coordBaseMode = orientation;
         this.width = width;
-        faction = random.nextInt(100) < MilitaryConfig.villageOccupation ? "allies"
-                : MilitaryRelations.isFaction(MilitaryConfig.initialVillageFaction) ? MilitaryConfig.initialVillageFaction : "union";
+        boolean insurgent = MilitaryRelations.available("allies") && random.nextInt(100) < MilitaryConfig.villageOccupation;
+        if (insurgent && (!MilitaryConfig.regionalSites || !MilitarySites.protectedStartingArea(box.minX, box.minZ))) faction = "allies";
+        else if (MilitaryRelations.available(MilitaryConfig.initialVillageFaction)) faction = MilitaryConfig.initialVillageFaction;
+        else faction = MilitaryRelations.factions().stream().filter(MilitaryRelations::available).findFirst().orElse("");
     }
 
     static void register() {
@@ -63,6 +65,11 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
             ground = getAverageGroundLevel(world, clip);
             if (ground < 0) return true;
             boundingBox.offset(0, ground - boundingBox.minY, 0);
+            if (MilitaryConfig.regionalSites && "allies".equals(faction) && !"allies".equals(MilitaryConfig.initialVillageFaction)
+                    && MilitaryRelations.available(MilitaryConfig.initialVillageFaction)
+                    && MilitarySites.protectedStartingArea(world, boundingBox.minX, boundingBox.minZ)) {
+                faction = MilitaryConfig.initialVillageFaction;
+            }
         }
         int end = width - 1;
         int center = width / 2;
@@ -128,6 +135,13 @@ public final class VillageOutpost extends StructureVillagePieces.Village {
                 if (post != null && post.tenure == 0 && MilitaryRelations.isFaction(faction) && !post.faction().equals(faction)) {
                     post.setFaction(faction);
                     hmggvcmob.world.WorldSavedData_Flag.get(world).markDirty();
+                }
+                if (post != null && post.entrance.length == 0) {
+                    int gateX = getXWithOffset(center, 0), gateZ = getZWithOffset(center, 0);
+                    post.entrance = new int[]{gateX, y, gateZ};
+                    post.approach = gateX > x ? 1 : gateZ > z ? 2 : gateX < x ? 3 : 0;
+                    hmggvcmob.world.WorldSavedData_Flag.get(world).markDirty();
+                    MilitaryRoads.siteRegistered(world, post);
                 }
             }
         }

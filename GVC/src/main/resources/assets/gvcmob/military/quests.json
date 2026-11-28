@@ -1,0 +1,222 @@
+{
+  "enabled": true,
+  "notifications": true,
+  "maxActive": 4,
+  "discoveryRadius": 28,
+  "searchRadius": 384,
+  "definitions": [
+    {
+      "id": "field_rations",
+      "type": "DELIVER",
+      "amount": 5,
+      "currency": 18,
+      "rewardReputation": 6,
+      "item": "minecraft:bread",
+      "roles": [
+        "soldier",
+        "quartermaster",
+        "general",
+        "contract"
+      ]
+    },
+    {
+      "id": "iron_shipment",
+      "type": "DELIVER",
+      "amount": 4,
+      "currency": 38,
+      "rewardReputation": 8,
+      "item": "minecraft:iron_ingot",
+      "roles": [
+        "resources",
+        "quartermaster",
+        "contract"
+      ]
+    },
+    {
+      "id": "ammunition_shipment",
+      "type": "DELIVER",
+      "amount": 8,
+      "currency": 47,
+      "rewardReputation": 8,
+      "item": "HandmadeGuns:bulletbase_hmg",
+      "roles": [
+        "ammunition",
+        "weapons",
+        "quartermaster"
+      ]
+    },
+    {
+      "id": "winter_supplies",
+      "type": "DELIVER",
+      "amount": 8,
+      "currency": 30,
+      "rewardReputation": 9,
+      "item": "minecraft:coal",
+      "roles": [
+        "officer",
+        "quartermaster",
+        "resources",
+        "soldier"
+      ],
+      "factions": [
+        "northline"
+      ]
+    },
+    {
+      "id": "leather_shipment",
+      "type": "DELIVER",
+      "amount": 5,
+      "currency": 25,
+      "rewardReputation": 7,
+      "item": "minecraft:leather",
+      "factions": [
+        "dune",
+        "crossroads",
+        "allies"
+      ],
+      "roles": [
+        "general",
+        "soldier",
+        "resources"
+      ]
+    },
+    {
+      "id": "recover_equipment",
+      "type": "RECOVER",
+      "amount": 1,
+      "currency": 27,
+      "rewardReputation": 8,
+      "item": "GVCGuns:HealthPack",
+      "roles": [
+        "officer",
+        "contract",
+        "weapons"
+      ],
+      "rewards": [
+        "minecraft:bread*2"
+      ]
+    },
+    {
+      "id": "intercept_patrol",
+      "type": "HOSTILES",
+      "amount": 4,
+      "currency": 44,
+      "rewardReputation": 12,
+      "roles": [
+        "soldier",
+        "officer",
+        "recruitment",
+        "contract"
+      ],
+      "rewards": [
+        "minecraft:bread*2"
+      ],
+      "duration": 48000
+    },
+    {
+      "id": "push_back_raiders",
+      "type": "FACTION",
+      "amount": 3,
+      "currency": 36,
+      "rewardReputation": 10,
+      "target": "cinder",
+      "roles": [
+        "soldier",
+        "officer",
+        "contract",
+        "quartermaster",
+        "recruitment"
+      ]
+    },
+    {
+      "id": "defeat_specialist",
+      "type": "UNIT",
+      "amount": 2,
+      "currency": 36,
+      "rewardReputation": 12,
+      "classification": "rifleman",
+      "roles": [
+        "officer",
+        "contract",
+        "recruitment"
+      ]
+    },
+    {
+      "id": "reconnaissance",
+      "type": "DISCOVER",
+      "amount": 1,
+      "currency": 17,
+      "rewardReputation": 7,
+      "roles": [
+        "soldier",
+        "officer",
+        "quartermaster",
+        "general",
+        "resources",
+        "recruitment"
+      ],
+      "repeatable": true
+    },
+    {
+      "id": "liaison_visit",
+      "type": "VISIT",
+      "amount": 1,
+      "currency": 19,
+      "rewardReputation": 7,
+      "roles": [
+        "soldier",
+        "general",
+        "resources",
+        "officer",
+        "contract",
+        "recruitment",
+        "quartermaster"
+      ]
+    },
+    {
+      "id": "clear_outpost",
+      "type": "CLEAR",
+      "amount": 1,
+      "currency": 71,
+      "rewardReputation": 20,
+      "roles": [
+        "officer",
+        "soldier",
+        "contract",
+        "recruitment"
+      ],
+      "rewards": [
+        "GVCMob:MilitaryCoin1*2"
+      ],
+      "duration": 96000
+    },
+    {
+      "id": "liberate_village",
+      "type": "LIBERATE",
+      "amount": 1,
+      "currency": 80,
+      "rewardReputation": 24,
+      "roles": [
+        "officer",
+        "recruitment",
+        "quartermaster"
+      ],
+      "duration": 96000
+    },
+    {
+      "id": "take_settlement",
+      "type": "CAPTURE",
+      "amount": 1,
+      "currency": 115,
+      "rewardReputation": 35,
+      "allegiance": true,
+      "roles": [
+        "officer",
+        "recruitment",
+        "contract",
+        "quartermaster"
+      ],
+      "duration": 120000
+    }
+  ]
+}

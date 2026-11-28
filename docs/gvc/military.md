@@ -3,6 +3,8 @@
 
 GVCOverdrive requires the matching Handmade Guns Overdrive build on both client and server. The military systems run on Forge 1.7.10 with Java 8. Optional content packs and mods can contribute firearms, food, or rewards through existing item registries and the GVCO API.
 
+For regional locations, trader commerce, and faction contracts, see [Factions and Survival](survival.md).
+
 ## Recruiting and commanding
 
 Open your inventory and choose **Military** in the upper right, or run `/military`. **Overview** shows your army’s readiness, upkeep per Minecraft day, and estimated reserves. **Personnel** lets you scroll, filter by status, group identical units, and select a soldier for their assignments and equipment. **Factions** shows standing, discounts, allegiance, faction relationships, and the status of a nearby settlement.
@@ -45,7 +47,7 @@ The command wheel follows the press-and-hold selection pattern used in Battlefie
 
 ## Settlements and respawns
 
-A beacon anchors a permanent post record. The record keeps its faction, any saved player owner, boundary, trader, reinforcement schedule, and garrison and patrol squad IDs. Native camps and compatible structure packs use the same beacon path. Raid supply beacons retain their raid and resupply behavior. A settlement works while its beacon chunk is loaded. Reinforcement waves need a nearby player and use saved squad membership to enforce their caps.
+A flag anchors a permanent post record. The record keeps its faction, any saved player owner, boundary, trader stations, reinforcement schedule, and garrison and patrol squad IDs. Native camps and compatible structure packs use the same record. Raid supply beacons retain their raid and resupply behavior. A settlement works while its flag chunk is loaded. Reinforcement waves need a nearby player and use saved squad membership to enforce their caps.
 
 Hostile players and their forces contest the beacon when they outnumber the defenders. At zero control, the beacon stops reinforcing. By default the site is **Neutralized**. A server can instead leave it **Disabled** pending a decision. An unaligned commander can free an occupied site without gaining a player-owned base or replacements.
 
@@ -83,7 +85,7 @@ The following categories are written into the ordinary GVCMob Forge config. Pres
 | --- | --- | --- |
 | Military.Recruitment | enabled | true |
 | | legacyRecipes, legacyHiring | false, inherits legacyRecipes when first generated |
-| | invulnerableTraders, traderReplacementTicks | true, 12000 (0 disables replacement) |
+| | invulnerableTraders, traderReplacementTicks, traderReplacementMarkers | false, 12000 (0 disables replacement), true |
 | | playerPersonnelLimit | 64 |
 | | reputationPerHostileKill | 1 |
 | Military.Command | legacyDevice, radialMenu, quickCommands | false, true, true |

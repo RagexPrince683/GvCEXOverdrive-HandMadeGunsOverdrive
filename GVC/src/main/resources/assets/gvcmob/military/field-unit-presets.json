@@ -1,0 +1,44 @@
+[
+  {
+    "id": "corps_nest_gunner",
+    "name": "Defense Corps Machine Gunner",
+    "faction": "union",
+    "classification": "support",
+    "behavior": "support",
+    "primary": "HandmadeGuns:FN M249 (Minimi)",
+    "primaryPools": ["MACHINE_GUN"],
+    "health": 25,
+    "armor": 5,
+    "speed": 0.27,
+    "range": 42,
+    "recruitable": false
+  },
+  {
+    "id": "company_site_gunner",
+    "name": "Free Company Support Gunner",
+    "faction": "pmc",
+    "classification": "support",
+    "behavior": "support",
+    "primary": "HandmadeGuns:FN M249 (Minimi)",
+    "primaryPools": ["MACHINE_GUN"],
+    "health": 25,
+    "armor": 5,
+    "speed": 0.28,
+    "range": 42,
+    "recruitable": false
+  },
+  {
+    "id": "cinder_nest_gunner",
+    "name": "Cinder Machine Gunner",
+    "faction": "cinder",
+    "classification": "support",
+    "behavior": "support",
+    "primary": "HandmadeGuns:PKM",
+    "primaryPools": ["MACHINE_GUN"],
+    "health": 24,
+    "armor": 3,
+    "speed": 0.27,
+    "range": 40,
+    "recruitable": false
+  }
+]

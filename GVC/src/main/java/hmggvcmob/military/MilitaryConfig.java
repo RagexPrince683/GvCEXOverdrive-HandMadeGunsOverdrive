@@ -38,6 +38,11 @@ public final class MilitaryConfig {
     public static int reputationLoss, ownFactionPenalty, reputationWindow, reputationKillLimit, assistTicks, noticeTicks;
     public static int allegianceCooldown, allegiancePenalty, retaliationTicks;
     public static String[] militaryStandings, classificationValues;
+    public static boolean regionalSites, abandonedSites, traderMarkers, legacySurfaceCamps;
+    public static int regionSize, siteSpacing, siteDensity, influenceStrength, spawnBuffer, reinforcementPercent;
+    public static boolean fieldworks, borderWorks, factionRoads;
+    public static int borderPercent, roadLength, roadsPerHub;
+    public static int weaponLoot, ammunitionLoot, supplyLoot, reinforcementLootCooldown;
 
     private MilitaryConfig() {}
 
@@ -58,7 +63,8 @@ public final class MilitaryConfig {
         targetingRange = config.getInt("targetRange", command, 80, 8, 128, "Maximum server crosshair targeting distance in blocks.");
         commandCooldown = config.getInt("orderCooldownTicks", command, 4, 1, 40, "Minimum time between accepted battlefield order requests.");
         recruitment = config.getBoolean("enabled", RECRUITMENT, true, "Enable military traders and currency-based hiring.");
-        invulnerableTraders = config.getBoolean("invulnerableTraders", RECRUITMENT, true, "Reject all incoming damage to military traders.");
+        invulnerableTraders = config.getBoolean("invulnerableTraders", RECRUITMENT, false, "Reject all incoming damage to military traders.");
+        traderMarkers = config.getBoolean("traderReplacementMarkers", RECRUITMENT, true, "Show a floating coin at a vacant trader station.");
         traderReplacement = config.getInt("traderReplacementTicks", RECRUITMENT, 12000, 0, 1200000, "Ticks after a trader dies before replacement. Zero disables replacement.");
         playerLimit = config.getInt("playerPersonnelLimit", RECRUITMENT, 64, 1, 512, "Maximum active hired personnel per player.");
         reputationPerKill = config.getInt("reputationPerHostileKill", RECRUITMENT, 1, 0, 20,
@@ -92,6 +98,23 @@ public final class MilitaryConfig {
         }, "Positive point multiplier per preset classification, in classification=multiplier form.");
 
         occupation = config.getBoolean("enabled", OCCUPATION, true, "Enable faction occupation and preset-based garrisons and patrols.");
+        String regions = "Military.Regions";
+        regionalSites = config.getBoolean("proceduralSites", regions, true, "Generate regional sites in newly populated Overworld chunks.");
+        legacySurfaceCamps = config.getBoolean("legacySurfaceCamps", regions, false, "Also generate the previous Overworld flag camps while regional sites are enabled.");
+        abandonedSites = config.getBoolean("abandonedSites", regions, true, "Include unoccupied ruins and abandoned industrial sites.");
+        regionSize = config.getInt("regionSizeChunks", regions, 48, 12, 512, "Width of a deterministic faction influence region.");
+        siteSpacing = config.getInt("siteGridChunks", regions, 9, 5, 48, "Width of each grid cell eligible for a site.");
+        siteDensity = config.getInt("candidatePercent", regions, 90, 0, 100, "Percentage of site cells considered before terrain checks.");
+        influenceStrength = config.getInt("influencePercent", regions, 74, 0, 100, "Chance a site uses one of its region's leading factions.");
+        spawnBuffer = config.getInt("hostileSpawnBufferBlocks", regions, 256, 0, 2048,
+                "Keep hostile procedural sites this far from world spawn and the origin.");
+        reinforcementPercent = config.getInt("reinforcementPercent", regions, 100, 0, 200, "Population capacity of newly generated sites relative to their definitions.");
+        fieldworks = config.getBoolean("fieldworks", regions, true, "Add terrain-blended fortifications and tunnel sites to the regional pools.");
+        borderWorks = config.getBoolean("frontlines", regions, true, "Generate opposing field positions where hostile regions meet.");
+        borderPercent = config.getInt("frontlineCandidatePercent", regions, 42, 0, 100, "Chance per eligible border sector before the terrain survey.");
+        factionRoads = config.getBoolean("factionRoads", regions, true, "Link nearby faction sites with roads and trails on loaded terrain.");
+        roadLength = config.getInt("maximumRoadLength", regions, 192, 48, 240, "Maximum distance between the sites connected by one road.");
+        roadsPerHub = config.getInt("roadsPerHub", regions, 3, 1, 6, "Maximum direct roads from a regional seat or settlement.");
         reinforceContested = config.getBoolean("reinforceWhileContested", OCCUPATION, false, "Allow an occupied post to receive reinforcements during an attack.");
         neutralize = config.getBoolean("neutralizeOnDefeat", OCCUPATION, true, "Neutralize a defeated post before an explicit claim. Otherwise the defeated post becomes disabled and stops reinforcing.");
         factionCapture = config.getBoolean("factionCapture", OCCUPATION, true, "Allow pledged players to claim defeated settlements for their faction.");
@@ -139,6 +162,11 @@ public final class MilitaryConfig {
         }
         maxWithdrawal = config.getInt("maxWithdrawal", ECONOMY, 100000, 1, 1000000, "Maximum amount per withdrawal. Larger balances can be withdrawn in multiple transactions.");
         hostileCoinDrop = config.getInt("hostileCoinDrop", ECONOMY, 4, 0, 64, "Maximum base-denomination coins dropped by hostile infantry killed by a player. Zero disables drops.");
+        weaponLoot = config.getInt("weaponLootPercent", ECONOMY, 22, 0, 100, "Chance to salvage a hostile military unit's weapon.");
+        ammunitionLoot = config.getInt("ammunitionLootPercent", ECONOMY, 45, 0, 100, "Chance to recover compatible ammunition from a hostile military unit.");
+        supplyLoot = config.getInt("supplyLootPercent", ECONOMY, 30, 0, 100, "Chance to salvage a faction supply from a hostile military unit.");
+        reinforcementLootCooldown = config.getInt("reinforcementLootCooldownTicks", ECONOMY, 600, 0, 72000,
+                "Minimum time between supply-bearing casualties from the same reinforcing site.");
         hungerMultiplier = config.getFloat("hungerMultiplier", ECONOMY, 2, 0, 1000, "Supply points per hunger point.");
         saturationMultiplier = config.getFloat("saturationMultiplier", ECONOMY, 1, 0, 1000, "Supply points per restored saturation point.");
         foodOverrides = config.getStringList("foodOverrides", ECONOMY, new String[0], "Item-specific values: mod:item[@metadata]=points.");

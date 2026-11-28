@@ -13,7 +13,7 @@ On first launch, look for `config/GVCMob.cfg`, `config/GVCGuns.cfg`, and `config
 - **Insurgents** start hostile to players. Their troops carry rust-red bands.
 - **Defense Corps** regulars start friendly and defend fortified outposts. Their troops carry sage-green bands.
 - **Free Company** contractors start friendly and offer infantry for hire. Their troops carry gold bands.
-- Faction standing changes for each player. The shield, triangle, and diamond insignia identify the three factions in the management and recruitment screens.
+- Explore regional faction settlements and abandoned sites, trade equipment and resources, and take contracts. Faction standings and allegiance affect the services available to each player. [Factions and Survival](survival.md)
 - Military beacons reinforce their garrisons and patrols. A raid supply beacon still supports raid and resupply encounters. Beacon player respawns are optional, and normal vanilla respawn is the default.
 - Camp loot, gun boxes, and infantry loadouts use HMG items. GVC also supplies health packs, portable equipment, practice targets, and stationary sentries.
 

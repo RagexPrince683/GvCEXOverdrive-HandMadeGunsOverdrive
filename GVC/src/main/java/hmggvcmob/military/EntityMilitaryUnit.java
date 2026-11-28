@@ -9,6 +9,7 @@ import hmggvcmob.entity.util.PlatoonOBJ;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -28,12 +29,37 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
     private UnitPresets.Preset preset;
     private ItemStack stowedWeapon;
     private boolean holdingSecondary, shortSupply, checkRegistration = true;
+    private EntityPlayer talkingWith;
 
     public EntityMilitaryUnit(World world) {
         super(world);
         canuseAlreadyPlacedGun = false;
         setCanPickUpLoot(false);
         for (int i = 0; i <= 4; i++) setEquipmentDropChance(i, 0);
+        tasks.addTask(0, new EntityAIBase() {
+            {
+                setMutexBits(3);
+            }
+
+            @Override public boolean shouldExecute() {
+                return talkingWith != null && getAttackTarget() == null
+                        && talkingWith.openContainer instanceof MilitaryContainer
+                        && ((MilitaryContainer)talkingWith.openContainer).isProvider(EntityMilitaryUnit.this)
+                        && MilitaryQuests.permits(talkingWith, EntityMilitaryUnit.this);
+            }
+
+            @Override public void startExecuting() {
+                getNavigator().clearPathEntity();
+            }
+
+            @Override public void updateTask() {
+                getLookHelper().setLookPositionWithEntity(talkingWith, 30F, 20F);
+            }
+
+            @Override public void resetTask() {
+                talkingWith = null;
+            }
+        });
     }
 
     @Override
@@ -89,6 +115,7 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
     }
 
     boolean isReinforcement() { return post != null; }
+    UUID homeSite() { return post; }
 
     @Override
     public boolean canBeCommandedBy(EntityPlayer player) {
@@ -175,8 +202,12 @@ public class EntityMilitaryUnit extends GVCEntityPMC implements NpcFirearmUser {
 
     @Override
     public boolean interact(EntityPlayer player) {
-        if (!canBeCommandedBy(player)) return false;
+        if (!canBeCommandedBy(player)) return !worldObj.isRemote && MilitaryQuests.open(player, this);
         return super.interact(player);
+    }
+
+    void talkWith(EntityPlayer player) {
+        talkingWith = player;
     }
 
     @Override

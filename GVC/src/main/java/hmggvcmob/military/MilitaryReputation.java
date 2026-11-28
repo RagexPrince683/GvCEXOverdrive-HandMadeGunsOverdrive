@@ -86,6 +86,7 @@ final class MilitaryReputation {
             }
         }
         if (killer == null) return;
+        MilitaryQuests.combat(killer, victim, defeated);
         apply(killer, victim, defeated, 1);
         if (MilitaryConfig.shareReputation) {
             for (Map.Entry<UUID, Long> participant : combat.participants.entrySet()) {
@@ -96,7 +97,7 @@ final class MilitaryReputation {
         }
     }
 
-    private static UUID responsible(DamageSource damage) {
+    static UUID responsible(DamageSource damage) {
         Entity source = damage.getEntity();
         if (source instanceof EntityVehicle) {
             if (!MilitaryConfig.attributeVehicle) return null;
